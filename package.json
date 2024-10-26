@@ -102,5 +102,6 @@
       "^@login/login(|/.*)$": "<rootDir>/libs/login/src/$1",
       "^@prisma/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1"
     }
+    
   }
 }
