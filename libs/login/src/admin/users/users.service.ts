@@ -36,143 +36,125 @@ export class UsersService {
    * @param user Usuario que crea el usuario
    * @returns Objetos con los datos del usuario creado
    */
-  async create(createUserDto: CreateUserDto, user: UserData): Promise<HttpResponse<UserData>> {
-    try {
-      const newUser = await this.prisma.$transaction(async (prisma) => {
-        const { roles, email, password, ...dataUser } = createUserDto;
+    async create(createUserDto: CreateUserDto, user: UserData): Promise<HttpResponse<UserData>> {
+      try {
+          const newUser = await this.prisma.$transaction(async (prisma) => {
+              const { roles, email, password, ...dataUser } = createUserDto;
 
-        // Verificar que el rol exista y este activo
-
-        if (!roles || roles.length === 0) {
-          throw new BadRequestException('Roles is required');
-        }
-
-        for (const rol of roles) {
-          const rolExist = await this.rolService.findById(rol);
-
-          if (!rolExist) {
-            throw new BadRequestException('Rol not found or inactive');
-          }
-
-          // Verificar que no se pueda crear un usuario con el rol superadmin
-          const rolIsSuperAdmin = await this.rolService.isRolSuperAdmin(rol);
-
-          if (rolIsSuperAdmin) {
-            throw new BadRequestException('You cannot create a user with the superadmin role');
-          }
-        }
-
-        // Verificamos si el email ya existe y este activo
-        const existEmail = await this.checkEmailExist(email);
-
-        if (existEmail) {
-          throw new BadRequestException('Email already exists');
-        }
-
-        // Verificamos si el email ya existe y esta inactivo
-        const inactiveEmail = await this.checkEmailInactive(email);
-
-        if (inactiveEmail) {
-          throw new BadRequestException({
-            statusCode: HttpStatus.CONFLICT,
-            message:
-              'Email already exists but inactive, contact the administrator to reactivate the account',
-            data: {
-              id: (await this.findByEmailInactive(email)).id
-            }
-          });
-        }
-
-        // Encriptamos la contraseña
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Creamos el usuario
-        const newUser = await prisma.user.create({
-          data: {
-            email,
-            ...dataUser,
-            password: hashedPassword
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            isSuperAdmin: true
-          }
-        });
-
-        // Enviamos el usuario al correo con la contraseña temporal
-        const emailResponse = await this.eventEmitter.emitAsync('user.welcome-admin-first', {
-          name: newUser.name.toUpperCase(),
-          email,
-          password,
-          webAdmin: process.env.WEB_URL
-        });
-
-        if (emailResponse.every((response) => response !== true)) {
-          throw new BadRequestException('Failed to send email');
-        }
-
-        const userRoles: Omit<Rol, 'description'>[] = [];
-
-        for (const rol of roles) {
-          // Creamos la asignacion de un rol a un usuario
-          const newUserRol = await prisma.userRol.create({
-            data: {
-              userId: newUser.id,
-              rolId: rol
-            },
-            select: {
-              rol: {
-                select: {
-                  id: true,
-                  name: true
-                }
+              // Verificar que el rol exista y esté activo
+              if (!roles || roles.length === 0) {
+                  throw new BadRequestException('Roles are required');
               }
-            }
+
+              for (const rol of roles) {
+                  const rolExist = await this.rolService.findById(rol);
+                  if (!rolExist) {
+                      throw new BadRequestException('Role not found or inactive');
+                  }
+
+                  // Verificar que no se pueda crear un usuario con el rol superadmin
+                  const rolIsSuperAdmin = await this.rolService.isRolSuperAdmin(rol);
+                  if (rolIsSuperAdmin) {
+                      throw new BadRequestException('You cannot create a user with the superadmin role');
+                  }
+              }
+
+              // Verificamos si el email ya existe y está activo
+              const existEmail = await this.checkEmailExist(email);
+              if (existEmail) {
+                  throw new BadRequestException('Email already exists');
+              }
+
+              // Verificamos si el email ya existe y está inactivo
+              const inactiveEmail = await this.checkEmailInactive(email);
+              if (inactiveEmail) {
+                  throw new BadRequestException({
+                      statusCode: HttpStatus.CONFLICT,
+                      message: 'Email already exists but inactive, contact the administrator to reactivate the account',
+                      data: {
+                          id: (await this.findByEmailInactive(email)).id
+                      }
+                  });
+              }
+
+              // Encriptamos la contraseña
+              const hashedPassword = await bcrypt.hash(password, 10);
+
+              // Creamos el usuario
+              const newUser = await prisma.user.create({
+                  data: {
+                      email,
+                      ...dataUser,
+                      password: hashedPassword
+                  },
+                  select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      phone: true,
+                      isSuperAdmin: true
+                  }
+              });
+
+              const userRoles: Omit<Rol, 'description'>[] = [];
+              for (const rol of roles) {
+                  // Creamos la asignación de un rol a un usuario
+                  const newUserRol = await prisma.userRol.create({
+                      data: {
+                          userId: newUser.id,
+                          rolId: rol
+                      },
+                      select: {
+                          rol: {
+                              select: {
+                                  id: true,
+                                  name: true
+                              }
+                          }
+                      }
+                  });
+
+                  userRoles.push({
+                      id: newUserRol.rol.id,
+                      name: newUserRol.rol.name
+                  });
+
+                  await this.audit.create({
+                      entityId: newUser.id,
+                      entityType: 'user',
+                      action: AuditActionType.CREATE,
+                      performedById: user.id,
+                      createdAt: new Date()
+                  });
+              }
+
+              return {
+                  ...newUser,
+                  roles: userRoles
+              };
           });
 
-          userRoles.push({
-            id: newUserRol.rol.id,
-            name: newUserRol.rol.name
-          });
-
-          await this.audit.create({
-            entityId: newUser.id,
-            entityType: 'user',
-            action: AuditActionType.CREATE,
-            performedById: user.id,
-            createdAt: new Date()
-          });
-        }
-
-        return {
-          ...newUser,
-          roles: userRoles
-        };
-      });
-
-      return {
-        statusCode: HttpStatus.CREATED,
-        message: 'User created',
-        data: {
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          phone: newUser.phone,
-          isSuperAdmin: newUser.isSuperAdmin,
-          roles: newUser.roles
-        }
-      };
-    } catch (error) {
-      this.logger.error(`Error creating a user for email: ${createUserDto.email}`, error.stack);
-      if (error instanceof BadRequestException) {
-        throw error;
+          return {
+              statusCode: HttpStatus.CREATED,
+              message: 'User created',
+              data: {
+                  id: newUser.id,
+                  name: newUser.name,
+                  email: newUser.email,
+                  phone: newUser.phone,
+                  isSuperAdmin: newUser.isSuperAdmin,
+                  roles: newUser.roles
+              }
+          };
+      } catch (error) {
+          this.logger.error(`Error creating a user for email: ${createUserDto.email}`, error.stack);
+          if (error instanceof BadRequestException) {
+              throw error;
+          }
+          handleException(error, 'Error creating a user');
       }
-      handleException(error, 'Error creating a user');
-    }
   }
+
 
   /**
    * Actualizar un usuario en la base de datos
