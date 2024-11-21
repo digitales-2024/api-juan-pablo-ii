@@ -14,6 +14,22 @@
     "@login/login/(.*)": "<rootDir>/../libs/login/src/$1",
     "@login/login": "<rootDir>/../libs/login/src",
     "@prisma/prisma/(.*)": "<rootDir>/../libs/prisma/src/$1",
-    "@prisma/prisma": "<rootDir>/../libs/prisma/src"
+    "@prisma/prisma": "<rootDir>/../libs/prisma/src",
+    "@clients/clients/(.*)": "<rootDir>/../libs/clients/src/$1",
+    "@clients/clients": "<rootDir>/../libs/clients/src",
+    "@inventory/inventory/(.*)": "<rootDir>/../libs/inventory/src/$1",
+    "@inventory/inventory": "<rootDir>/../libs/inventory/src",
+    "@pay/pay/(.*)": "<rootDir>/../libs/pay/src/$1",
+    "@pay/pay": "<rootDir>/../libs/pay/src",
+    "@prescription/prescription/(.*)": "<rootDir>/../libs/prescription/src/$1",
+    "@prescription/prescription": "<rootDir>/../libs/prescription/src",
+    "@doc-appointment/doc-appointment/(.*)": "<rootDir>/../libs/doc-appointment/src/$1",
+    "@doc-appointment/doc-appointment": "<rootDir>/../libs/doc-appointment/src",
+    "@working-hours/working-hours/(.*)": "<rootDir>/../libs/working-hours/src/$1",
+    "@working-hours/working-hours": "<rootDir>/../libs/working-hours/src",
+    "@medical-procedure/medical-procedure/(.*)": "<rootDir>/../libs/medical-procedure/src/$1",
+    "@medical-procedure/medical-procedure": "<rootDir>/../libs/medical-procedure/src",
+    "@medical-consultation/medical-consultation/(.*)": "<rootDir>/../libs/medical-consultation/src/$1",
+    "@medical-consultation/medical-consultation": "<rootDir>/../libs/medical-consultation/src"
   }
 }

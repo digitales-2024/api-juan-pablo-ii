@@ -1,46 +1,66 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as cookieParser from 'cookie-parser'; // Importar cookieParser
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';// Importar swagger
+import * as cookieParser from 'cookie-parser';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Habilitar CORS con configuración específica
   app.enableCors({
     origin: process.env.WEB_URL,
     credentials: true,
   });
 
-  // Usar cookie-parser para parsear cookies en las solicitudes
   app.use(cookieParser());
 
-  // Configuración de Swagger
-  const config = new DocumentBuilder()
-    .setTitle('API') // Título de la documentación
-    .setDescription('API description') // Descripción de la API
-    .setVersion('1.0') // Versión de la API
-    .addTag('API') // Etiqueta general para la API
-    .build();
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
 
-  // Crear el documento Swagger
-  const document = SwaggerModule.createDocument(app, config);
+  app.setGlobalPrefix('api');
 
-  // Definir etiquetas específicas para la documentación
-  document.tags = [
-    { name: 'Auth', description: 'Operations about authentication' },
-    { name: 'Admin', description: 'Operations about admin' },
-    { name: 'Users', description: 'Operations about users' },
-    { name: 'Rol', description: 'Operations about roles' },
-    { name: 'Modules', description: 'Operations about modules' },
-    { name: 'Permissions', description: 'Operations about permissions' },
-    { name: 'Audit', description: 'Operations about audit' },
-  ];
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
-  // Configurar la ruta para acceder a la documentación Swagger
-  SwaggerModule.setup('login', app, document);
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Trazo API')
+      .setDescription('API for Trazo')
+      .setVersion('1.0')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
 
-  // Iniciar la aplicación en el puerto especificado en .env
-  await app.listen(parseInt(process.env.PORT));
+    document.tags = [
+      { name: 'Auth', description: 'Operations about authentication' },
+      { name: 'Admin', description: 'Operations about admin' },
+      { name: 'Users', description: 'Operations about users' },
+      { name: 'Rol', description: 'Operations about roles' },
+      { name: 'Modules', description: 'Operations about modules' },
+      { name: 'Permissions', description: 'Operations about permissions' },
+      { name: 'Audit', description: 'Operations about audit' },
+      { name: 'Business', description: 'Operations about the business' },
+      { name: 'Quotation', description: 'Operations about quotations' },
+      { name: 'Levels', description: 'Operations about levels' },
+    ];
+
+    SwaggerModule.setup('api', app, document);
+
+    app.use(
+      '/reference',
+      apiReference({
+        spec: {
+          content: document,
+        },
+      }),
+    );
+  }
+
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

@@ -11,12 +11,19 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
+    "forceConsistentCasingInFileNames": false,
     "skipLibCheck": true,
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@kitajs/html",
+    "plugins": [
+      {
+        "name": "@kitajs/ts-html-plugin"
+      }
+    ],
     "paths": {
       "@login/login": [
         "libs/login/src"
@@ -29,6 +36,54 @@
       ],
       "@prisma/prisma/*": [
         "libs/prisma/src/*"
+      ],
+      "@clients/clients": [
+        "libs/clients/src"
+      ],
+      "@clients/clients/*": [
+        "libs/clients/src/*"
+      ],
+      "@inventory/inventory": [
+        "libs/inventory/src"
+      ],
+      "@inventory/inventory/*": [
+        "libs/inventory/src/*"
+      ],
+      "@pay/pay": [
+        "libs/pay/src"
+      ],
+      "@pay/pay/*": [
+        "libs/pay/src/*"
+      ],
+      "@prescription/prescription": [
+        "libs/prescription/src"
+      ],
+      "@prescription/prescription/*": [
+        "libs/prescription/src/*"
+      ],
+      "@doc-appointment/doc-appointment": [
+        "libs/doc-appointment/src"
+      ],
+      "@doc-appointment/doc-appointment/*": [
+        "libs/doc-appointment/src/*"
+      ],
+      "@working-hours/working-hours": [
+        "libs/working-hours/src"
+      ],
+      "@working-hours/working-hours/*": [
+        "libs/working-hours/src/*"
+      ],
+      "@medical-procedure/medical-procedure": [
+        "libs/medical-procedure/src"
+      ],
+      "@medical-procedure/medical-procedure/*": [
+        "libs/medical-procedure/src/*"
+      ],
+      "@medical-consultation/medical-consultation": [
+        "libs/medical-consultation/src"
+      ],
+      "@medical-consultation/medical-consultation/*": [
+        "libs/medical-consultation/src/*"
       ]
     }
   }

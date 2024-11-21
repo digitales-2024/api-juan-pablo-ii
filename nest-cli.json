@@ -4,7 +4,10 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true
+    "webpack": true,
+    "assets": [
+      "libs/login/src/email/templates/**/*"
+    ]
   },
   "projects": {
     "login": {
@@ -24,7 +27,78 @@
       "compilerOptions": {
         "tsConfigPath": "libs/prisma/tsconfig.lib.json"
       }
+    },
+    "clients": {
+      "type": "library",
+      "root": "libs/clients",
+      "entryFile": "index",
+      "sourceRoot": "libs/clients/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/clients/tsconfig.lib.json"
+      }
+    },
+    "inventory": {
+      "type": "library",
+      "root": "libs/inventory",
+      "entryFile": "index",
+      "sourceRoot": "libs/inventory/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/inventory/tsconfig.lib.json"
+      }
+    },
+    "pay": {
+      "type": "library",
+      "root": "libs/pay",
+      "entryFile": "index",
+      "sourceRoot": "libs/pay/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/pay/tsconfig.lib.json"
+      }
+    },
+    "prescription": {
+      "type": "library",
+      "root": "libs/prescription",
+      "entryFile": "index",
+      "sourceRoot": "libs/prescription/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/prescription/tsconfig.lib.json"
+      }
+    },
+    "doc-appointment": {
+      "type": "library",
+      "root": "libs/doc-appointment",
+      "entryFile": "index",
+      "sourceRoot": "libs/doc-appointment/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/doc-appointment/tsconfig.lib.json"
+      }
+    },
+    "working-hours": {
+      "type": "library",
+      "root": "libs/working-hours",
+      "entryFile": "index",
+      "sourceRoot": "libs/working-hours/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/working-hours/tsconfig.lib.json"
+      }
+    },
+    "medical-procedure": {
+      "type": "library",
+      "root": "libs/medical-procedure",
+      "entryFile": "index",
+      "sourceRoot": "libs/medical-procedure/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/medical-procedure/tsconfig.lib.json"
+      }
+    },
+    "medical-consultation": {
+      "type": "library",
+      "root": "libs/medical-consultation",
+      "entryFile": "index",
+      "sourceRoot": "libs/medical-consultation/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/medical-consultation/tsconfig.lib.json"
+      }
     }
   }
-  
 }

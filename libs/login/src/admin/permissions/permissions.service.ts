@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Permission } from '@login/login/interfaces';
-import { PrismaService } from '@prisma/prisma';
+import { PrismaService } from '@prisma/prisma/prisma.service';
 import { handleException } from '@login/login/utils';
 
 @Injectable()
@@ -17,14 +17,14 @@ export class PermissionsService {
     try {
       const permissions = await this.prisma.permission.findMany({
         orderBy: {
-          name: 'asc'
+          name: 'asc',
         },
         select: {
           id: true,
           cod: true,
           name: true,
-          description: true
-        }
+          description: true,
+        },
       });
 
       return permissions;
@@ -42,7 +42,7 @@ export class PermissionsService {
   async findOne(id: string): Promise<Permission & { id: string }> {
     try {
       const permissionDB = await this.prisma.permission.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!permissionDB) {
@@ -53,7 +53,7 @@ export class PermissionsService {
         id: permissionDB.id,
         cod: permissionDB.cod,
         name: permissionDB.name,
-        description: permissionDB.description
+        description: permissionDB.description,
       };
     } catch (error) {
       this.logger.error(`Error getting permission with id: ${id}`, error.stack);

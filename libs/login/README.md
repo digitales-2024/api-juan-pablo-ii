@@ -308,12 +308,6 @@ http://localhost:3000/users/"id-del usuario"}
 
 ```
 
-## Dependencias
-
-Esta librería depende de la librería [prisma](https://github.com/TiAcideLibrerias/prisma)
-para acceder a la base de datos.
-
-
 ## Soporte
 
 Documetacion Nest [read more here](https://docs.nestjs.com/support).

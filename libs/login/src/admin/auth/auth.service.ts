@@ -3,7 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  UnauthorizedException
+  UnauthorizedException,
 } from '@nestjs/common';
 import { LoginAuthDto } from './dto';
 import { UsersService } from '../users/users.service';
@@ -22,7 +22,7 @@ export class AuthService {
   constructor(
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -49,12 +49,10 @@ export class AuthService {
       // Actualizamos el ultimo login del usuario
       await this.userService.updateLastLogin(userDB.id);
 
-      /*
-      Ya no lo exigimos al usuario que cambie la contraseña
+      // Indicar que el usuario debe cambiar la contraseña si es la primera vez que inicia sesión
       if (userDB.mustChangePassword) {
         throw new ForbiddenException('You must change your password');
       }
-        */
 
       // Genera el token
       const token = this.getJwtToken({ id: userDB.id });
@@ -66,7 +64,9 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
-        expires: new Date(Date.now() + this.configService.get('COOKIE_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
+        ),
       });
 
       res.cookie('logged_in', true, {
@@ -74,7 +74,9 @@ export class AuthService {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
-        expires: new Date(Date.now() + this.configService.get('COOKIE_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
+        ),
       });
 
       // Genera el refresh token
@@ -87,7 +89,9 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_REFRESH_EXPIRES_IN'), // Asegúrate de que esta configuración exista
-        expires: new Date(Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'),
+        ),
       });
 
       res.json({
@@ -96,10 +100,13 @@ export class AuthService {
         email: userDB.email,
         phone: userDB.phone,
         isSuperAdmin: userDB.isSuperAdmin,
-        roles: userDB.roles
+        roles: userDB.roles,
       });
     } catch (error) {
-      this.logger.error(`Error logging in for email: ${loginAuthDto.email}`, error.stack);
+      this.logger.error(
+        `Error logging in for email: ${loginAuthDto.email}`,
+        error.stack,
+      );
       if (
         error instanceof UnauthorizedException ||
         error instanceof NotFoundException ||
@@ -120,19 +127,19 @@ export class AuthService {
     // Borra la cookie que contiene el token JWT
     res.cookie('access_token', '', {
       httpOnly: true,
-      expires: new Date(0) // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
+      expires: new Date(0), // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
     });
 
     // Borra la cookie que contiene el refresh token
     res.cookie('refresh_token', '', {
       httpOnly: true,
-      expires: new Date(0) // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
+      expires: new Date(0), // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
     });
 
     // Borra la cookie que indica que el usuario está logueado
     res.cookie('logged_in', '', {
       httpOnly: false,
-      expires: new Date(0) // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
+      expires: new Date(0), // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
     });
 
     // Enviar una respuesta de éxito
@@ -144,24 +151,29 @@ export class AuthService {
    * @param updatePasswordDto Datos para actualizar la contraseña
    * @returns Datos del usuario logueado
    */
-  async updatePasswordTemp(updatePasswordDto: UpdatePasswordDto, res: Response): Promise<void> {
+  async updatePasswordTemp(
+    updatePasswordDto: UpdatePasswordDto,
+    res: Response,
+  ): Promise<void> {
     try {
-      const { email, password, newPassword, confirmPassword } = updatePasswordDto;
+      const { email, password, newPassword, confirmPassword } =
+        updatePasswordDto;
 
       const userDB = await this.userService.findByEmail(email);
 
-      if (!userDB.mustChangePassword) {
-        throw new ForbiddenException('You do not need to change your password');
-      }
-
-      const isPasswordMatching = await bcrypt.compare(password, userDB.password);
+      const isPasswordMatching = await bcrypt.compare(
+        password,
+        userDB.password,
+      );
 
       if (!isPasswordMatching) {
         throw new UnauthorizedException('Password current do not match');
       }
 
       if (newPassword === password) {
-        throw new ForbiddenException('The new password must be different from the current one');
+        throw new ForbiddenException(
+          'The new password must be different from the current one',
+        );
       }
 
       if (newPassword !== confirmPassword) {
@@ -180,7 +192,9 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
-        expires: new Date(Date.now() + this.configService.get('COOKIE_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
+        ),
       });
 
       // Genera el refresh_token
@@ -193,7 +207,9 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_REFRESH_EXPIRES_IN'),
-        expires: new Date(Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'),
+        ),
       });
 
       res.json({
@@ -202,7 +218,7 @@ export class AuthService {
         email: userDB.email,
         phone: userDB.phone,
         isSuperAdmin: userDB.isSuperAdmin,
-        roles: userDB.roles
+        roles: userDB.roles,
       });
     } catch (error) {
       this.logger.error('Error updating password', error.stack);
@@ -218,7 +234,7 @@ export class AuthService {
   private getJwtToken(payload: JwtPayload) {
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
-      expiresIn: this.configService.get('JWT_EXPIRES_IN')
+      expiresIn: this.configService.get('JWT_EXPIRES_IN'),
     });
     return token;
   }
@@ -231,7 +247,7 @@ export class AuthService {
   private getJwtRefreshToken(payload: any): string {
     return this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN')
+      expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
     });
   }
 
@@ -251,7 +267,7 @@ export class AuthService {
    */
   verifyRefreshToken(token: string): JwtPayload {
     return this.jwtService.verify(token, {
-      secret: this.configService.get('JWT_REFRESH_SECRET')
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
     });
   }
 
@@ -290,7 +306,9 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get<number>('COOKIE_EXPIRES_IN'), // tiempo corto para el access_token
-        expires: new Date(Date.now() + this.configService.get('COOKIE_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
+        ),
       });
 
       const newRefreshToken = this.getJwtRefreshToken({ id: payload.id });
@@ -301,7 +319,9 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get<number>('COOKIE_REFRESH_EXPIRES_IN'), // tiempo largo para el refresh_token
-        expires: new Date(Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'),
+        ),
       });
 
       res.cookie('logged_in', true, {
@@ -309,12 +329,14 @@ export class AuthService {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
-        expires: new Date(Date.now() + this.configService.get('COOKIE_EXPIRES_IN'))
+        expires: new Date(
+          Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
+        ),
       });
 
       res.status(200).json({
         status: 'success',
-        access_token: newAccessToken
+        access_token: newAccessToken,
       });
     } catch (error) {
       console.error('Error refreshing token:', error);

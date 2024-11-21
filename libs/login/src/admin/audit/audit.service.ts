@@ -12,7 +12,7 @@ export class AuditService {
    */
   async create(createAuditDto: CreateAuditDto): Promise<void> {
     await this.prismaService.audit.create({
-      data: createAuditDto
+      data: createAuditDto,
     });
   }
 }
