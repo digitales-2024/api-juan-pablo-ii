@@ -105,7 +105,7 @@ jobs:
             docker pull ${{ env.DOCKER_TAG }}
             
             # Update the API service without affecting others
-            cd /path/to/docker-compose
+            cd ~/docker/acide/juan-pablo-ii
             sed -i "s|image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:.*|image: ${{ env.DOCKER_TAG }}|" docker-compose.${{ env.ENV_TAG }}.yml
             
             # Restart only the API service
