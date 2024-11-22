@@ -1,0 +1,29 @@
+repository:
+  name: api-juan-pablo-ii
+  description: Api proyecto Juan Pablo II
+  homepage: github.com/digitales-2024/api-juan-pablo-ii
+  topics: nodejs, typescript, nestjs
+  has_wiki: false
+  private: false
+  has_issues: true
+  has_projects: false
+  default_branch: main
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: false
+  delete_branch_on_merge: false
+  enable_automated_security_fixes: false
+  enable_vulnerability_alerts: false
+branches:
+  - name: main
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+      required_status_checks:
+        strict: true
+        contexts: []
+      enforce_admins: false
+      required_linear_history: true
+      restrictions: null
