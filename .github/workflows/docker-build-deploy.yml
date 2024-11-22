@@ -82,11 +82,15 @@ jobs:
         env:
           DOCKER_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.sha }}
           ENV_TAG: ${{ env.ENV_TAG }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          REPO_NAME: ${{ env.REPO_NAME }}
         run: |
           ssh deployment-target "bash -s" << 'ENDSSH'
             # Export variables passed from GitHub Actions
             export DOCKER_TAG="$DOCKER_TAG"
             export ENV_TAG="$ENV_TAG"
+            export DOCKERHUB_USERNAME="$DOCKERHUB_USERNAME"
+            export REPO_NAME="$REPO_NAME"
             
             # Pull new image
             docker pull "$DOCKER_TAG"
@@ -112,4 +116,4 @@ jobs:
             
             # Cleanup old images (usando un comando compatible con versiones antiguas)
             docker images -q --filter "dangling=true" | xargs -r docker rmi
-ENDSSH
+          ENDSSH
