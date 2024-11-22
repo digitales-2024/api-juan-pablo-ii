@@ -1,5 +1,5 @@
 FROM node:22-alpine3.20 AS base
-ENV DIR /app
+ENV DIR=/app
 WORKDIR $DIR
 
 FROM base AS build
@@ -11,13 +11,10 @@ COPY tsconfig*.json ./
 COPY nest-cli.json ./
 COPY src ./src
 COPY libs ./libs
-
 # Generar el cliente de Prisma
 RUN npx prisma generate
-
 # Construir Tailwind si lo usas
 RUN npm run tailwind:build || true
-
 # Construir la aplicación
 RUN npm run build && \
     npm prune --production
@@ -35,8 +32,4 @@ RUN chmod +x docker-entrypoint.sh && \
     chown node:node docker-entrypoint.sh
 USER $USER
 EXPOSE $PORT
-
 ENTRYPOINT ["./docker-entrypoint.sh"]
-
-
-

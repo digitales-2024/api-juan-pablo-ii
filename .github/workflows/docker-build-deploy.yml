@@ -19,8 +19,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          # Get repository name in lowercase
-          REPO_NAME="$(echo "${{ github.repository }}" | awk -F '/' '{print $2}' | tr '[:upper:]' '[:lower:]')"
+          # Get repository name in lowercase, removing any organization prefix
+          REPO_NAME="$(echo "${{ github.repository }}" | sed 's/.*\///' | tr '[:upper:]' '[:lower:]')"
           echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
           
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
@@ -55,7 +55,8 @@ jobs:
     steps:
       - name: Set environment variables
         run: |
-          REPO_NAME="$(echo "${{ github.repository }}" | awk -F '/' '{print $2}' | tr '[:upper:]' '[:lower:]')"
+          # Get repository name in lowercase, removing any organization prefix
+          REPO_NAME="$(echo "${{ github.repository }}" | sed 's/.*\///' | tr '[:upper:]' '[:lower:]')"
           echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
           
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
