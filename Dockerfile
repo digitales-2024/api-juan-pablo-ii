@@ -32,11 +32,13 @@ COPY --from=build $DIR/node_modules ./node_modules
 COPY --from=build $DIR/dist ./dist
 COPY --from=build $DIR/prisma ./prisma
 COPY --from=build $DIR/static ./static
+COPY docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh && \
+    chown node:node docker-entrypoint.sh
 USER $USER
 EXPOSE $PORT
 
-# Script para esperar la BD y ejecutar migraciones
-COPY --chown=node:node docker-entrypoint.sh /
-RUN chmod +x ./docker-entrypoint.sh
+ENTRYPOINT ["./docker-entrypoint.sh"]
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+
+

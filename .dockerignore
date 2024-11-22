@@ -8,3 +8,4 @@
 !/src
 !/libs
 !/prisma
+!docker-entrypoint.sh
