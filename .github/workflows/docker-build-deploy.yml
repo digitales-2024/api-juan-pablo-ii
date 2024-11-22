@@ -96,18 +96,33 @@ jobs:
               exit 1
             fi
             
+            # Hacer backup del archivo docker-compose
+            cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
+            
             # Update image in docker-compose file
-            sed -i "s|image: .*|image: __DOCKER_TAG__|" "docker-compose.__ENV_TAG__.yml"
+            sed -i "/image:.*acide-api-jpii/c\    image: __DOCKER_TAG__" "docker-compose.__ENV_TAG__.yml"
+            
+            # Verificar si el archivo fue modificado correctamente
+            if ! grep -q "__DOCKER_TAG__" "docker-compose.__ENV_TAG__.yml"; then
+              echo "Error: Failed to update image in docker-compose file"
+              cat "docker-compose.__ENV_TAG__.yml"
+              # Restaurar el backup
+              mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
+              exit 1
+            fi
             
             # Restart only the API service
             if command -v docker-compose &> /dev/null; then
-              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
             else
-              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api
+              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
             fi
             
             # Cleanup old images
             docker images -q --filter "dangling=true" | xargs -r docker rmi
+            
+            # Eliminar el backup si todo salió bien
+            rm "docker-compose.__ENV_TAG__.yml.bak"
           EOF
           )
 
