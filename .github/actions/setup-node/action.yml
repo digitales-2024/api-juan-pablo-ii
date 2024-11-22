@@ -1,3 +1,4 @@
+---
 name: 'Setup node'
 
 description: 'Setup node with project version and install dependencies'
