@@ -6,7 +6,6 @@ FROM base AS build
 RUN apk update && apk add --no-cache dumb-init=1.2.5-r3
 COPY package*.json ./
 COPY prisma ./prisma/
-COPY static ./static/
 RUN npm ci
 COPY tsconfig*.json ./
 COPY nest-cli.json ./

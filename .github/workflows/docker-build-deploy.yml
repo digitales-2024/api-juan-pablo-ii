@@ -13,20 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Set environment variables
         run: |
-          # Get repository name in lowercase (solo el nombre del repo, no la org)
-          REPO_NAME=$(echo "${{ github.repository }}" | awk -F '/' '{print $2}' | tr '[:upper:]' '[:lower:]')
-          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+          # Get repository name in lowercase
+          REPO_NAME="$(echo "${{ github.repository }}" | awk -F '/' '{print $2}' | tr '[:upper:]' '[:lower:]')"
+          echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
           
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            echo "ENV_TAG=prod" >> $GITHUB_ENV
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "ENV_TAG=prod" >> "${GITHUB_ENV}"
           else
-            echo "ENV_TAG=stage" >> $GITHUB_ENV
+            echo "ENV_TAG=stage" >> "${GITHUB_ENV}"
           fi
 
       - name: Login to Docker Hub
@@ -55,15 +55,15 @@ jobs:
     steps:
       - name: Set environment variables
         run: |
-          REPO_NAME=$(echo "${{ github.repository }}" | awk -F '/' '{print $2}' | tr '[:upper:]' '[:lower:]')
-          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+          REPO_NAME="$(echo "${{ github.repository }}" | awk -F '/' '{print $2}' | tr '[:upper:]' '[:lower:]')"
+          echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
           
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            echo "ENV_TAG=prod" >> $GITHUB_ENV
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "ENV_TAG=prod" >> "${GITHUB_ENV}"
           else
-            echo "ENV_TAG=stage" >> $GITHUB_ENV
+            echo "ENV_TAG=stage" >> "${GITHUB_ENV}"
           fi
-          echo "DOCKER_TAG=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "DOCKER_TAG=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.sha }}" >> "${GITHUB_ENV}"
 
       - name: Configure SSH
         uses: shimataro/ssh-key-action@v2
@@ -82,14 +82,14 @@ jobs:
         run: |
           ssh deployment-target << 'ENDSSH'
             # Pull new image
-            docker pull ${{ env.DOCKER_TAG }}
+            docker pull "${DOCKER_TAG}"
             
             # Update the API service without affecting others
             cd ~/docker/acide/juan-pablo-ii
-            sed -i "s|image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:.*|image: ${{ env.DOCKER_TAG }}|" docker-compose.${{ env.ENV_TAG }}.yml
+            sed -i "s|image: ${DOCKERHUB_USERNAME}/${REPO_NAME}:.*|image: ${DOCKER_TAG}|" "docker-compose.${ENV_TAG}.yml"
             
             # Restart only the API service
-            docker-compose -f docker-compose.${{ env.ENV_TAG }}.yml up -d --no-deps api
+            docker-compose -f "docker-compose.${ENV_TAG}.yml" up -d --no-deps api
             
             # Cleanup old images
             docker image prune -f
