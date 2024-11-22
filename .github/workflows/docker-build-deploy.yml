@@ -48,8 +48,6 @@ jobs:
           cache-to: type=inline
           provenance: false
           sbom: false
-          tagswithref: true
-          tagswithsha: true
 
   deploy:
     needs: build-and-push
