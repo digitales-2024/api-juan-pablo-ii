@@ -37,6 +37,6 @@ EXPOSE $PORT
 
 # Script para esperar la BD y ejecutar migraciones
 COPY --chown=node:node docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -1,0 +1,63 @@
+services:
+  acide-api-jpii:
+    container_name: acide-api-jpii
+    image: ${DOCKERHUB_USERNAME}/${REPO_NAME}:${IMAGE_TAG}
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    restart: unless-stopped
+    depends_on:
+      acide-jpii-db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: "production"
+      PORT: "${PORT:-3000}"
+      DATABASE_URL: "postgresql://root:root@acide-jpii-db:5432/trazo?schema=public"
+      WEB_URL: "${WEB_URL}"
+      JWT_SECRET: "${JWT_SECRET}"
+      JWT_EXPIRES_IN: "${JWT_EXPIRES_IN:-1h}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET}"
+      JWT_REFRESH_EXPIRES_IN: "${JWT_REFRESH_EXPIRES_IN:-7d}"
+      COOKIE_EXPIRES_IN: "${COOKIE_EXPIRES_IN:-3600000}"
+      COOKIE_REFRESH_EXPIRES_IN: "${COOKIE_REFRESH_EXPIRES_IN:-604800000}"
+      CHANGE_SUNAT: "${CHANGE_SUNAT:-https://www.sunat.gob.pe/a/txt/tipoCambio.txt}"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "512m"
+        reservations:
+          cpus: "0.25"
+          memory: "256m"
+    networks:
+      - jpii-backend-network
+
+  acide-jpii-db:
+    image: postgres:15-alpine
+    container_name: acide-jpii-db
+    restart: unless-stopped
+    shm_size: 128mb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: "${DB_USER:-root}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-root}"
+      POSTGRES_DB: "juanpabloii"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-root} -d juanpabloii"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: "256m"
+    networks:
+      - jpii-backend-network
+
+volumes:
+  postgres_data:
+
+networks:
+  jpii-backend-network:
+    driver: bridge
