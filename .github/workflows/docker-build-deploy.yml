@@ -55,7 +55,6 @@ jobs:
     steps:
       - name: Set environment variables
         run: |
-          # Get repository name in lowercase, removing any organization prefix
           REPO_NAME="$(echo "${{ github.repository }}" | sed 's/.*\///' | tr '[:upper:]' '[:lower:]')"
           echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
           
@@ -80,18 +79,37 @@ jobs:
               StrictHostKeyChecking no
 
       - name: Update docker-compose on server
+        env:
+          DOCKER_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.sha }}
+          ENV_TAG: ${{ env.ENV_TAG }}
         run: |
-          ssh deployment-target << 'ENDSSH'
+          ssh deployment-target "bash -s" << 'ENDSSH'
+            # Export variables passed from GitHub Actions
+            export DOCKER_TAG="$DOCKER_TAG"
+            export ENV_TAG="$ENV_TAG"
+            
             # Pull new image
-            docker pull "${DOCKER_TAG}"
+            docker pull "$DOCKER_TAG"
             
             # Update the API service without affecting others
             cd ~/docker/acide/juan-pablo-ii
-            sed -i "s|image: ${DOCKERHUB_USERNAME}/${REPO_NAME}:.*|image: ${DOCKER_TAG}|" "docker-compose.${ENV_TAG}.yml"
+            
+            # Verificar si el archivo docker-compose existe
+            if [ ! -f "docker-compose.$ENV_TAG.yml" ]; then
+              echo "Error: docker-compose.$ENV_TAG.yml not found"
+              exit 1
+            fi
+            
+            # Update image in docker-compose file
+            sed -i "s|image: .*|image: $DOCKER_TAG|" "docker-compose.$ENV_TAG.yml"
             
             # Restart only the API service
-            docker-compose -f "docker-compose.${ENV_TAG}.yml" up -d --no-deps api
+            if command -v docker-compose &> /dev/null; then
+              docker-compose -f "docker-compose.$ENV_TAG.yml" up -d --no-deps api
+            else
+              docker compose -f "docker-compose.$ENV_TAG.yml" up -d --no-deps api
+            fi
             
-            # Cleanup old images
-            docker image prune -f
-          ENDSSH
+            # Cleanup old images (usando un comando compatible con versiones antiguas)
+            docker images -q --filter "dangling=true" | xargs -r docker rmi
+ENDSSH
