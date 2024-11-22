@@ -79,41 +79,41 @@ jobs:
               StrictHostKeyChecking no
 
       - name: Update docker-compose on server
-        env:
-          DOCKER_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.sha }}
-          ENV_TAG: ${{ env.ENV_TAG }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          REPO_NAME: ${{ env.REPO_NAME }}
         run: |
-          ssh deployment-target "bash -s" << 'ENDSSH'
-            # Export variables passed from GitHub Actions
-            export DOCKER_TAG="$DOCKER_TAG"
-            export ENV_TAG="$ENV_TAG"
-            export DOCKERHUB_USERNAME="$DOCKERHUB_USERNAME"
-            export REPO_NAME="$REPO_NAME"
-            
+          # Crear el script que se ejecutará en el servidor
+          REMOTE_SCRIPT=$(cat << 'EOF'
             # Pull new image
-            docker pull "$DOCKER_TAG"
+            docker pull "__DOCKER_TAG__"
             
             # Update the API service without affecting others
             cd ~/docker/acide/juan-pablo-ii
             
             # Verificar si el archivo docker-compose existe
-            if [ ! -f "docker-compose.$ENV_TAG.yml" ]; then
-              echo "Error: docker-compose.$ENV_TAG.yml not found"
+            if [ ! -f "docker-compose.__ENV_TAG__.yml" ]; then
+              echo "Error: docker-compose.__ENV_TAG__.yml not found"
+              ls -la
+              pwd
               exit 1
             fi
             
             # Update image in docker-compose file
-            sed -i "s|image: .*|image: $DOCKER_TAG|" "docker-compose.$ENV_TAG.yml"
+            sed -i "s|image: .*|image: __DOCKER_TAG__|" "docker-compose.__ENV_TAG__.yml"
             
             # Restart only the API service
             if command -v docker-compose &> /dev/null; then
-              docker-compose -f "docker-compose.$ENV_TAG.yml" up -d --no-deps api
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api
             else
-              docker compose -f "docker-compose.$ENV_TAG.yml" up -d --no-deps api
+              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api
             fi
             
-            # Cleanup old images (usando un comando compatible con versiones antiguas)
+            # Cleanup old images
             docker images -q --filter "dangling=true" | xargs -r docker rmi
-          ENDSSH
+          EOF
+          )
+
+          # Reemplazar los placeholders con los valores reales
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__DOCKER_TAG__/${{ env.DOCKER_TAG }}}"
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__ENV_TAG__/${{ env.ENV_TAG }}}"
+
+          # Ejecutar el script en el servidor remoto
+          echo "$REMOTE_SCRIPT" | ssh deployment-target bash
