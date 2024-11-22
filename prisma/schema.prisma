@@ -25,8 +25,7 @@ model User {
   auditsPerformed Audit[] @relation("AuditPerformedBy")
 
   // Relación con UserRol
-  userRols       UserRol[]       @relation("UserId")
-  designProjects DesignProject[] @relation("DesignerDesignProjects")
+  userRols UserRol[] @relation("UserId")
 
   @@unique([email, isActive])
 }
@@ -137,7 +136,8 @@ enum AuditActionType {
   UPDATE
   DELETE
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//tabla de clientes
 model Client {
   id         String  @id @unique @default(uuid())
   name       String
@@ -148,203 +148,99 @@ model Client {
   phone      String?
   isActive   Boolean @default(true)
 
-  // Relacion con Quotation
-  clientQuotations Quotation[] @relation("client")
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
 
-  designProjects DesignProject[] @relation("ClientDesignProjects")
+// tabla pacientes que va a ser usuarios
+model Patient {
+  id       String @id @unique @default(uuid())
+  name     String
+  lastName String
+  dni      String @unique
+  birth    String
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
-// tabla ambientes
-model Spaces {
+//tabla tipo de servicio
+model ServiceType {
   id          String  @id @unique @default(uuid())
-  name        String  @unique
+  name        String
   description String?
-  isActive    Boolean @default(true)
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
-
-  // relacion muchos-a-muchos con Level
-  LevelsOnSpaces LevelsOnSpaces[]
-}
-
-model BusinessConfig {
-  id           String @id @unique @default(uuid())
-  name         String
-  ruc          String
-  address      String
-  legalRepName String
-  legalRepDni  String
+  services Service[] // Relación inversa con Service
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
-// Tabla de cotizaciones (Quotation)
-model Quotation {
-  id String @id @unique @default(uuid()) // Clave primaria
-
-  // Un número autoincrementable que se muestra en el PDF de la cotizacion
-  // TRAZ-140
-  publicCode Int @default(autoincrement())
-
-  name        String @default("SGC-P-04-F3") // Nombre del proyecto
-  description String @default("") // Descripcion del proyecto. Ejm: "Se planifica diseño de una vivienda multifamiliar..."
-  code        String // Código de la cotizacion.
-
-  status       QuotationStatusType @default(PENDING) // Estado de la cotización
-  discount     Float // Descuento aplicado
-  totalAmount  Float               @default(0) // Monto total de la cotización
-  deliveryTime Int // Tiempo de entrega en meses
-  exchangeRate Float // Tasa de cambio
-  landArea     Float // Área del terreno en m²
-
-  paymentSchedule Json // Cronograma de pagos (30%, 50%, 20%)
-
-  // Proyecto integral: Planos y detalles de cada área
-  integratedProjectDetails Json // JSON con detalles del proyecto integral (descripción, unidad, metraje, costo por m²)
-
-  architecturalCost Float
-  structuralCost    Float
-  electricCost      Float
-  sanitaryCost      Float
-  metering          Float // Metrado total del proyecto
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
-
-  // Relacion con Level
-  levels         Level[]         @relation("level")
-  designProjects DesignProject[] @relation("QuotationDesignProjects")
-  // Relacion con Client
-  client         Client          @relation("client", fields: [clientId], references: [id])
-  clientId       String // Llave foránea a la tabla de clientes
-  // Relación con Zoning
-  zoning         Zoning          @relation(fields: [zoningId], references: [id])
-  zoningId       String
-}
-
-// Estado de una cotizacion
-enum QuotationStatusType {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-// Nivel (piso) de una cotizacion
-model Level {
-  id   String @id @unique @default(uuid()) // Clave primaria
-  name String // Nombre del nivel. Ejm: "Primer nivel"
-
-  quotation   Quotation @relation("level", fields: [quotationId], references: [id])
-  quotationId String
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
-
-  // Relacion muchos-a-muchos con Spaces
-  LevelsOnSpaces LevelsOnSpaces[]
-}
-
-model LevelsOnSpaces {
-  id String @id @unique @default(uuid()) // Clave primaria
-
-  amount Int // cantidad de ambientes
-  area   Float // area del ambiente en m2
-
-  level   Level  @relation(fields: [levelId], references: [id])
-  levelId String
-
-  space   Spaces @relation(fields: [spaceId], references: [id])
-  spaceId String
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt
-}
-
-model DesignProject {
-  id   String @id @unique @default(uuid())
-  code String @unique
-  name String
-
-  status DesignProjectStatus @default(APPROVED)
-
-  ubicationProject String
-  province         String
-  department       String
-
-  dateArchitectural String?
-  dateStructural    String?
-  dateElectrical    String?
-  dateSanitary      String?
-
-  //Relaciones
-  client   Client @relation("ClientDesignProjects", fields: [clientId], references: [id])
-  clientId String
-
-  quotation   Quotation @relation("QuotationDesignProjects", fields: [quotationId], references: [id])
-  quotationId String    @unique
-
-  designer   User   @relation("DesignerDesignProjects", fields: [designerId], references: [id])
-  designerId String
-
-  projectCharters ProjectCharter[] @relation("DesignProjectCharters")
-
-  startProjectDate String
-  createdAt        DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime @updatedAt
-}
-
-enum DesignProjectStatus {
-  APPROVED
-  ENGINEERING
-  CONFIRMATION
-  PRESENTATION
-  COMPLETED
-}
-
-model Zoning {
-  id            String  @id @unique @default(uuid())
-  zoneCode      String  @unique
+//tabla servicios
+model Service {
+  id            String      @id @unique @default(uuid())
+  name          String
   description   String?
-  buildableArea Float
-  openArea      Float
-  isActive      Boolean @default(true)
+  price         Float
+  serviceTypeId String // Clave foránea a ServiceType
+  serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id])
+  isActive      Boolean     @default(true)
 
-  createdAt DateTime    @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime    @updatedAt
-  Quotation Quotation[]
-}
-
-model ProjectCharter {
-  id String @id @unique @default(uuid())
-
-  // Relación con DesignProject
-  designProject   DesignProject @relation("DesignProjectCharters", fields: [designProjectId], references: [id])
-  designProjectId String
-
-  // Relación con Observations
-  observations Observation[] @relation("ChartObservations")
-
-  // Timestamps
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
-// New model for observations
-model Observation {
-  id String @id @unique @default(uuid())
+//tabla especialidad
+model Specialty {
+  id          String  @id @unique @default(uuid())
+  name        String
+  description String?
 
-  observation String
+  doctors Doctor[] // Relación con Doctor
 
-  // Relación con ProjectCharter
-  projectCharter   ProjectCharter @relation("ChartObservations", fields: [projectCharterId], references: [id])
-  projectCharterId String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
 
-  // Timestamps
+//tabla medicos que van a ser usuarios
+model Doctor {
+  id          String    @id @unique @default(uuid())
+  name        String
+  lastName    String
+  dni         String    @unique
+  birth       String
+  specialtyId String // Clave foránea a Specialty
+  specialty   Specialty @relation(fields: [specialtyId], references: [id])
+
+  scheduleDays ScheduleDay[] // Relación con ScheduleDay
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+//tabla horario
+model Schedule {
+  id        String  @id @unique @default(uuid())
+  day       String
+  startHour String
+  endHour   String
+  isActive  Boolean @default(true)
+
+  scheduleDays ScheduleDay[] // Relación con ScheduleDay
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+//tabla cronograma
+model ScheduleDay {
+  id         String   @id @unique @default(uuid())
+  day        String
+  doctorId   String
+  doctor     Doctor   @relation(fields: [doctorId], references: [id])
+  scheduleId String
+  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
