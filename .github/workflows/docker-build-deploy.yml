@@ -139,9 +139,9 @@ jobs:
             
             # Restart only the API service
             if command -v docker-compose &> /dev/null; then
-              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api-juan-pablo-ii
             else
-              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
+              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api-juan-pablo-ii
             fi
             
             # Cleanup old images
@@ -153,9 +153,9 @@ jobs:
             # Debug: Verificar el estado final del servicio
             echo "Service status:"
             if command -v docker-compose &> /dev/null; then
-              docker-compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" ps api-juan-pablo-ii
             else
-              docker compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+              docker compose -f "docker-compose.__ENV_TAG__.yml" ps api-juan-pablo-ii
             fi
           EOF
           )
