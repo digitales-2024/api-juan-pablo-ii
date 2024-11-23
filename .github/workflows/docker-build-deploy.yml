@@ -114,18 +114,18 @@ jobs:
             
             # Debug: Mostrar la línea actual de la imagen
             echo "Current image line:"
-            grep -n "^    image: ch3v/" "docker-compose.__ENV_TAG__.yml" || echo "Image line not found"
+            grep -n "image:" "docker-compose.__ENV_TAG__.yml"
             
-            # Actualizar la imagen manteniendo la indentación correcta (4 espacios)
-            sed -i -E 's/^([[:space:]]*)image: ch3v\/.*/    image: __DOCKER_TAG__/' "docker-compose.__ENV_TAG__.yml"
+            # Solo reemplazar la parte después de "image:"
+            sed -i 's|\(.*image: \).*|\1__DOCKER_TAG__|' "docker-compose.__ENV_TAG__.yml"
             
             # Debug: Mostrar la nueva línea de la imagen
             echo "New image line:"
             grep -n "image:" "docker-compose.__ENV_TAG__.yml"
             
-            # Verificar que la imagen y la indentación son correctas
-            if ! grep -q "^    image: ch3v/api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"; then
-              echo "Error: Image format or indentation is incorrect"
+            # Verificar que la imagen se actualizó correctamente
+            if ! grep -q "image:.*ch3v/api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"; then
+              echo "Error: Image update failed"
               echo "Current image line:"
               grep -n "image:" "docker-compose.__ENV_TAG__.yml"
               # Restaurar el backup
