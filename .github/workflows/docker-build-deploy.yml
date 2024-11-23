@@ -94,6 +94,14 @@ jobs:
             # Update the API service without affecting others
             cd ~/docker/acide/juan-pablo-ii
             
+            # Debug: Mostrar el contenido del directorio
+            echo "Directory contents:"
+            ls -la
+            
+            # Debug: Mostrar el contenido del docker-compose antes del cambio
+            echo "Current docker-compose content:"
+            cat "docker-compose.__ENV_TAG__.yml"
+            
             # Verificar si el archivo docker-compose existe
             if [ ! -f "docker-compose.__ENV_TAG__.yml" ]; then
               echo "Error: docker-compose.__ENV_TAG__.yml not found"
@@ -105,13 +113,22 @@ jobs:
             # Hacer backup del archivo docker-compose
             cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
             
+            # Debug: Mostrar la línea actual de la imagen
+            echo "Current image line:"
+            grep -n "image:.*ch3v/api-juan-pablo-ii" "docker-compose.__ENV_TAG__.yml"
+            
             # Update image in docker-compose file
-            sed -i "/image:.*acide-api-jpii/c\    image: __DOCKER_TAG__" "docker-compose.__ENV_TAG__.yml"
+            sed -i "/image:.*ch3v\/api-juan-pablo-ii/c\    image: __DOCKER_TAG__" "docker-compose.__ENV_TAG__.yml"
+            
+            # Debug: Mostrar el contenido después del cambio
+            echo "New docker-compose content:"
+            cat "docker-compose.__ENV_TAG__.yml"
             
             # Verificar si el archivo fue modificado correctamente
             if ! grep -q "__DOCKER_TAG__" "docker-compose.__ENV_TAG__.yml"; then
               echo "Error: Failed to update image in docker-compose file"
-              cat "docker-compose.__ENV_TAG__.yml"
+              echo "Attempting to find the current image line:"
+              grep -n "image:" "docker-compose.__ENV_TAG__.yml"
               # Restaurar el backup
               mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
               exit 1
@@ -129,12 +146,24 @@ jobs:
             
             # Eliminar el backup si todo salió bien
             rm "docker-compose.__ENV_TAG__.yml.bak"
+
+            # Debug: Verificar el estado final del servicio
+            echo "Service status:"
+            if command -v docker-compose &> /dev/null; then
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+            else
+              docker compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+            fi
           EOF
           )
 
           # Reemplazar los placeholders con los valores reales
           REMOTE_SCRIPT="${REMOTE_SCRIPT//__DOCKER_TAG__/${{ env.DOCKER_TAG }}}"
           REMOTE_SCRIPT="${REMOTE_SCRIPT//__ENV_TAG__/${{ env.ENV_TAG }}}"
+
+          # Debug: Mostrar el script que se va a ejecutar
+          echo "Script to be executed:"
+          echo "$REMOTE_SCRIPT"
 
           # Ejecutar el script en el servidor remoto
           echo "$REMOTE_SCRIPT" | ssh deployment-target bash
