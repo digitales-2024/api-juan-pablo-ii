@@ -30,8 +30,8 @@ async function bootstrap() {
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Trazo API')
-      .setDescription('API for Trazo')
+      .setTitle('Juan Pablo API')
+      .setDescription('API for Juan Pablo')
       .setVersion('1.0')
       .build();
     const document = SwaggerModule.createDocument(app, config);
