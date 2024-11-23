@@ -108,25 +108,25 @@ jobs:
             # Hacer backup del archivo docker-compose
             cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
             
-            # Debug: Mostrar la línea actual de la imagen
-            echo "Current api-juan-pablo-ii image:"
-            sed -n '/api-juan-pablo-ii:/,/image:/p' "docker-compose.__ENV_TAG__.yml"
+            # Debug: Mostrar la configuración actual
+            echo "Current service configuration:"
+            grep -A 3 "container_name: __REPO_NAME__" "docker-compose.__ENV_TAG__.yml"
             
-            # Usar perl para reemplazar específicamente la imagen del servicio api-juan-pablo-ii
-            perl -i -pe '
-              BEGIN {undef $/;}  # Enable slurp mode
-              s/(api-juan-pablo-ii:.*?\n\s*image: )([^\n]*)/$1__DOCKER_TAG__/s
+            # Usar sed con una expresión que busca el container_name específico y luego actualiza la siguiente línea de image
+            sed -i '
+              /container_name: __REPO_NAME__/{
+                n
+                s|image: .*|image: __DOCKER_TAG__|
+              }
             ' "docker-compose.__ENV_TAG__.yml"
             
-            # Debug: Mostrar la nueva línea de la imagen
-            echo "New api-juan-pablo-ii image:"
-            sed -n '/api-juan-pablo-ii:/,/image:/p' "docker-compose.__ENV_TAG__.yml"
+            # Debug: Mostrar la nueva configuración
+            echo "New service configuration:"
+            grep -A 3 "container_name: __REPO_NAME__" "docker-compose.__ENV_TAG__.yml"
             
             # Verificar que la imagen se actualizó correctamente
-            if ! grep -A 2 "api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml" | grep -q "image:.*__DOCKER_TAG__"; then
+            if ! grep -A 2 "container_name: __REPO_NAME__" "docker-compose.__ENV_TAG__.yml" | grep -q "image: __DOCKER_TAG__"; then
               echo "Error: Image update failed"
-              echo "Current service configuration:"
-              grep -A 10 "api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"
               # Restaurar el backup
               mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
               exit 1
@@ -138,9 +138,9 @@ jobs:
             
             # Restart only the API service
             if command -v docker-compose &> /dev/null; then
-              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api-juan-pablo-ii
             else
-              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
+              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps api-juan-pablo-ii
             fi
             
             # Cleanup old images
@@ -152,9 +152,9 @@ jobs:
             # Debug: Verificar el estado final del servicio
             echo "Service status:"
             if command -v docker-compose &> /dev/null; then
-              docker-compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" ps api-juan-pablo-ii
             else
-              docker compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+              docker compose -f "docker-compose.__ENV_TAG__.yml" ps api-juan-pablo-ii
             fi
           EOF
           )
@@ -162,6 +162,7 @@ jobs:
           # Reemplazar los placeholders con los valores reales
           REMOTE_SCRIPT="${REMOTE_SCRIPT//__DOCKER_TAG__/${{ env.DOCKER_TAG }}}"
           REMOTE_SCRIPT="${REMOTE_SCRIPT//__ENV_TAG__/${{ env.ENV_TAG }}}"
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__REPO_NAME__/${{ env.REPO_NAME }}}"
 
           # Debug: Mostrar el script que se va a ejecutar
           echo "Script to be executed:"
