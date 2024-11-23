@@ -97,10 +97,6 @@ jobs:
             echo "Directory contents:"
             ls -la
             
-            # Debug: Mostrar contenido actual del docker-compose
-            echo "Current docker-compose content:"
-            cat "docker-compose.__ENV_TAG__.yml"
-            
             # Verificar si el archivo docker-compose existe
             if [ ! -f "docker-compose.__ENV_TAG__.yml" ]; then
               echo "Error: docker-compose.__ENV_TAG__.yml not found"
@@ -113,32 +109,21 @@ jobs:
             cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
             
             # Debug: Mostrar la línea actual de la imagen
-            echo "Current image line:"
-            grep -A 5 "api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"
+            echo "Current api-juan-pablo-ii image:"
+            sed -n '/api-juan-pablo-ii:/,/image:/p' "docker-compose.__ENV_TAG__.yml"
             
-            # Usar awk para reemplazar específicamente la imagen del servicio api-juan-pablo-ii
-            awk -v new_image="__DOCKER_TAG__" '
-              /api-juan-pablo-ii:/ {
-                in_service = 1
-                print
-                next
-              }
-              in_service && /image:/ {
-                print "    image: " new_image
-                in_service = 0
-                next
-              }
-              { print }
-            ' "docker-compose.__ENV_TAG__.yml" > "docker-compose.__ENV_TAG__.yml.tmp"
-            
-            mv "docker-compose.__ENV_TAG__.yml.tmp" "docker-compose.__ENV_TAG__.yml"
+            # Usar perl para reemplazar específicamente la imagen del servicio api-juan-pablo-ii
+            perl -i -pe '
+              BEGIN {undef $/;}  # Enable slurp mode
+              s/(api-juan-pablo-ii:.*?\n\s*image: )([^\n]*)/$1__DOCKER_TAG__/s
+            ' "docker-compose.__ENV_TAG__.yml"
             
             # Debug: Mostrar la nueva línea de la imagen
-            echo "New image line:"
-            grep -A 5 "api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"
+            echo "New api-juan-pablo-ii image:"
+            sed -n '/api-juan-pablo-ii:/,/image:/p' "docker-compose.__ENV_TAG__.yml"
             
             # Verificar que la imagen se actualizó correctamente
-            if ! grep -A 5 "api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml" | grep -q "image:.*__DOCKER_TAG__"; then
+            if ! grep -A 2 "api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml" | grep -q "image:.*__DOCKER_TAG__"; then
               echo "Error: Image update failed"
               echo "Current service configuration:"
               grep -A 10 "api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"
