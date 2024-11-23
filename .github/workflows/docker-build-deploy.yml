@@ -1,173 +1,172 @@
 name: Docker Build and Deploy
 
 on:
- push:
-   branches: [ main, stage ]
-   paths-ignore:
-     - '**.md'
-     - '.github/**'
-     - '!.github/workflows/docker-build-deploy.yml'
+  push:
+    branches: [ main, stage ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/docker-build-deploy.yml'
 
 jobs:
- build-and-push:
-   runs-on: ubuntu-latest
-   steps:
-     - uses: actions/checkout@v4
-     
-     - name: Set up QEMU
-       uses: docker/setup-qemu-action@v3
-     
-     - name: Set up Docker Buildx
-       uses: docker/setup-buildx-action@v3
-       with:
-         platforms: linux/amd64,linux/arm64
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
 
-     - name: Set environment variables
-       run: |
-         # Get repository name in lowercase, removing any organization prefix
-         REPO_NAME="$(echo "${{ github.repository }}" | sed 's/.*\///' | tr '[:upper:]' '[:lower:]')"
-         echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
-         
-         if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-           echo "ENV_TAG=prod" >> "${GITHUB_ENV}"
-         else
-           echo "ENV_TAG=stage" >> "${GITHUB_ENV}"
-         fi
+      - name: Set environment variables
+        run: |
+          # Get repository name in lowercase, removing any organization prefix
+          REPO_NAME="$(echo "${{ github.repository }}" | sed 's/.*\///' | tr '[:upper:]' '[:lower:]')"
+          echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
+          
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "ENV_TAG=prod" >> "${GITHUB_ENV}"
+          else
+            echo "ENV_TAG=stage" >> "${GITHUB_ENV}"
+          fi
 
-     - name: Login to Docker Hub
-       uses: docker/login-action@v3
-       with:
-         username: ${{ secrets.DOCKERHUB_USERNAME }}
-         password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-     - name: Build and push Docker image
-       uses: docker/build-push-action@v5
-       with:
-         context: .
-         platforms: linux/amd64,linux/arm64
-         push: true
-         tags: |
-           ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.sha }}
-           ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.ref_name }}
-           ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:latest-${{ env.ENV_TAG }}
-         cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:latest-${{ env.ENV_TAG }}
-         cache-to: type=inline
-         provenance: false
-         sbom: false
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:latest-${{ env.ENV_TAG }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:latest-${{ env.ENV_TAG }}
+          cache-to: type=inline
+          provenance: false
+          sbom: false
 
- deploy:
-   needs: build-and-push
-   runs-on: ubuntu-latest
-   steps:
-     - name: Set environment variables
-       run: |
-         REPO_NAME="$(echo "${{ github.repository }}" | sed 's/.*\///' | tr '[:upper:]' '[:lower:]')"
-         echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
-         
-         if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-           echo "ENV_TAG=prod" >> "${GITHUB_ENV}"
-         else
-           echo "ENV_TAG=stage" >> "${GITHUB_ENV}"
-         fi
-         echo "DOCKER_TAG=${{ secrets.DOCKERHUB_USERNAME }}/api-juan-pablo-ii:${{ github.sha }}" >> "${GITHUB_ENV}"
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set environment variables
+        run: |
+          REPO_NAME="$(echo "${{ github.repository }}" | sed 's/.*\///' | tr '[:upper:]' '[:lower:]')"
+          echo "REPO_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
+          
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "ENV_TAG=prod" >> "${GITHUB_ENV}"
+          else
+            echo "ENV_TAG=stage" >> "${GITHUB_ENV}"
+          fi
+          echo "DOCKER_TAG=${{ secrets.DOCKERHUB_USERNAME }}/api-juan-pablo-ii:${{ github.sha }}" >> "${GITHUB_ENV}"
 
-     - name: Configure SSH
-       uses: shimataro/ssh-key-action@v2
-       with:
-         key: ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_PRIVATE_KEY || secrets.STAGE_SSH_PRIVATE_KEY }}
-         known_hosts: unnecessary
-         if_key_exists: replace
-         config: |
-           Host deployment-target
-             HostName ${{ github.ref == 'refs/heads/main' && secrets.PROD_SERVER_HOST || secrets.STAGE_SERVER_HOST }}
-             User ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_USERNAME || secrets.STAGE_SSH_USERNAME }}
-             Port ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_PORT || secrets.STAGE_SSH_PORT || 22 }}
-             StrictHostKeyChecking no
+      - name: Configure SSH
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_PRIVATE_KEY || secrets.STAGE_SSH_PRIVATE_KEY }}
+          known_hosts: unnecessary
+          if_key_exists: replace
+          config: |
+            Host deployment-target
+              HostName ${{ github.ref == 'refs/heads/main' && secrets.PROD_SERVER_HOST || secrets.STAGE_SERVER_HOST }}
+              User ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_USERNAME || secrets.STAGE_SSH_USERNAME }}
+              Port ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_PORT || secrets.STAGE_SSH_PORT || 22 }}
+              StrictHostKeyChecking no
 
-     - name: Update docker-compose on server
-       run: |
-         # Crear el script que se ejecutará en el servidor
-         REMOTE_SCRIPT=$(cat << 'EOF'
-           # Pull new image
-           docker pull "__DOCKER_TAG__"
-           
-           # Update the API service without affecting others
-           cd ~/docker/acide/juan-pablo-ii
-           
-           # Debug: Mostrar el contenido del directorio
-           echo "Directory contents:"
-           ls -la
-           
-           # Debug: Mostrar contenido actual del docker-compose
-           echo "Current docker-compose content:"
-           cat "docker-compose.__ENV_TAG__.yml"
-           
-           # Verificar si el archivo docker-compose existe
-           if [ ! -f "docker-compose.__ENV_TAG__.yml" ]; then
-             echo "Error: docker-compose.__ENV_TAG__.yml not found"
-             ls -la
-             pwd
-             exit 1
-           fi
-           
-           # Hacer backup del archivo docker-compose
-           cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
-           
-           # Debug: Mostrar la línea actual de la imagen
-           echo "Current image line:"
-           grep -n "image: ch3v/" "docker-compose.__ENV_TAG__.yml"
-           
-           # Update image in docker-compose file with correct indentation
-           sed -i "s|image: ch3v/.*|    image: __DOCKER_TAG__|" "docker-compose.__ENV_TAG__.yml"
-           
-           # Debug: Mostrar la nueva línea de la imagen
-           echo "New image line:"
-           grep -n "image: " "docker-compose.__ENV_TAG__.yml"
-           
-           # Verificar que la imagen tiene el formato correcto
-           if ! grep -q "image: ch3v/api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"; then
-             echo "Error: Image format is incorrect"
-             echo "Current image line:"
-             grep -n "image: ch3v/" "docker-compose.__ENV_TAG__.yml"
-             # Restaurar el backup
-             mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
-             exit 1
-           fi
-           
-           # Debug: Mostrar el contenido final del docker-compose
-           echo "Final docker-compose content:"
-           cat "docker-compose.__ENV_TAG__.yml"
-           
-           # Restart only the API service
-           if command -v docker-compose &> /dev/null; then
-             docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
-           else
-             docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
-           fi
-           
-           # Cleanup old images
-           docker images -q --filter "dangling=true" | xargs -r docker rmi
-           
-           # Eliminar el backup si todo salió bien
-           rm "docker-compose.__ENV_TAG__.yml.bak"
+      - name: Update docker-compose on server
+        run: |
+          REMOTE_SCRIPT=$(cat << 'EOF'
+            # Pull new image
+            docker pull "__DOCKER_TAG__"
+            
+            # Update the API service without affecting others
+            cd ~/docker/acide/juan-pablo-ii
+            
+            # Debug: Mostrar el contenido del directorio
+            echo "Directory contents:"
+            ls -la
+            
+            # Debug: Mostrar contenido actual del docker-compose
+            echo "Current docker-compose content:"
+            cat "docker-compose.__ENV_TAG__.yml"
+            
+            # Verificar si el archivo docker-compose existe
+            if [ ! -f "docker-compose.__ENV_TAG__.yml" ]; then
+              echo "Error: docker-compose.__ENV_TAG__.yml not found"
+              ls -la
+              pwd
+              exit 1
+            fi
+            
+            # Hacer backup del archivo docker-compose
+            cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
+            
+            # Debug: Mostrar la línea actual de la imagen
+            echo "Current image line:"
+            grep -n "^    image: ch3v/" "docker-compose.__ENV_TAG__.yml" || echo "Image line not found"
+            
+            # Actualizar la imagen manteniendo la indentación correcta (4 espacios)
+            sed -i -E 's/^([[:space:]]*)image: ch3v\/.*/    image: __DOCKER_TAG__/' "docker-compose.__ENV_TAG__.yml"
+            
+            # Debug: Mostrar la nueva línea de la imagen
+            echo "New image line:"
+            grep -n "image:" "docker-compose.__ENV_TAG__.yml"
+            
+            # Verificar que la imagen y la indentación son correctas
+            if ! grep -q "^    image: ch3v/api-juan-pablo-ii:" "docker-compose.__ENV_TAG__.yml"; then
+              echo "Error: Image format or indentation is incorrect"
+              echo "Current image line:"
+              grep -n "image:" "docker-compose.__ENV_TAG__.yml"
+              # Restaurar el backup
+              mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
+              exit 1
+            fi
+            
+            # Debug: Mostrar el contenido final del docker-compose
+            echo "Final docker-compose content:"
+            cat "docker-compose.__ENV_TAG__.yml"
+            
+            # Restart only the API service
+            if command -v docker-compose &> /dev/null; then
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
+            else
+              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps acide-api-jpii
+            fi
+            
+            # Cleanup old images
+            docker images -q --filter "dangling=true" | xargs -r docker rmi
+            
+            # Eliminar el backup si todo salió bien
+            rm "docker-compose.__ENV_TAG__.yml.bak"
 
-           # Debug: Verificar el estado final del servicio
-           echo "Service status:"
-           if command -v docker-compose &> /dev/null; then
-             docker-compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
-           else
-             docker compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
-           fi
-         EOF
-         )
+            # Debug: Verificar el estado final del servicio
+            echo "Service status:"
+            if command -v docker-compose &> /dev/null; then
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+            else
+              docker compose -f "docker-compose.__ENV_TAG__.yml" ps acide-api-jpii
+            fi
+          EOF
+          )
 
-         # Reemplazar los placeholders con los valores reales
-         REMOTE_SCRIPT="${REMOTE_SCRIPT//__DOCKER_TAG__/${{ env.DOCKER_TAG }}}"
-         REMOTE_SCRIPT="${REMOTE_SCRIPT//__ENV_TAG__/${{ env.ENV_TAG }}}"
+          # Reemplazar los placeholders con los valores reales
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__DOCKER_TAG__/${{ env.DOCKER_TAG }}}"
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__ENV_TAG__/${{ env.ENV_TAG }}}"
 
-         # Debug: Mostrar el script que se va a ejecutar
-         echo "Script to be executed:"
-         echo "$REMOTE_SCRIPT"
+          # Debug: Mostrar el script que se va a ejecutar
+          echo "Script to be executed:"
+          echo "$REMOTE_SCRIPT"
 
-         # Ejecutar el script en el servidor remoto
-         echo "$REMOTE_SCRIPT" | ssh deployment-target bash
+          # Ejecutar el script en el servidor remoto
+          echo "$REMOTE_SCRIPT" | ssh deployment-target bash
