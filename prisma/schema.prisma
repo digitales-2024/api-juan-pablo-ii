@@ -27,6 +27,8 @@ model User {
   // Relación con UserRol
   userRols UserRol[] @relation("UserId")
 
+  personal Personal[] // Relación con personal
+
   @@unique([email, isActive])
 }
 
@@ -136,8 +138,9 @@ enum AuditActionType {
   UPDATE
   DELETE
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//tabla de clientes
+//tabla de cliente
 model Client {
   id         String  @id @unique @default(uuid())
   name       String
@@ -148,20 +151,25 @@ model Client {
   phone      String?
   isActive   Boolean @default(true)
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt
+  OrdenCompra OrdenCompra[]
 }
 
 // tabla pacientes que va a ser usuarios
-model Patient {
+model Paciente {
   id       String @id @unique @default(uuid())
   name     String
   lastName String
   dni      String @unique
   birth    String
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt
+  HistoriaMedica HistoriaMedica[]
+
+  ConsultaMedica ConsultaMedica[]
+  RecetaMedica   RecetaMedica[]
 }
 
 //tabla tipo de servicio
@@ -186,60 +194,322 @@ model Service {
   serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id])
   isActive      Boolean     @default(true)
 
+  ConsultaMedica ConsultaMedica[] // Relación con ConsultaMedica
+
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
 //tabla especialidad
-model Specialty {
+model Especialidad {
   id          String  @id @unique @default(uuid())
   name        String
   description String?
 
-  doctors Doctor[] // Relación con Doctor
+  personal Personal[] // Relación con Personal
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
 //tabla medicos que van a ser usuarios
-model Doctor {
-  id          String    @id @unique @default(uuid())
-  name        String
-  lastName    String
-  dni         String    @unique
-  birth       String
-  specialtyId String // Clave foránea a Specialty
-  specialty   Specialty @relation(fields: [specialtyId], references: [id])
+model Personal {
+  id String @id @unique @default(uuid())
 
-  scheduleDays ScheduleDay[] // Relación con ScheduleDay
+  especialidadId String // Clave foránea a especialidad
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
+
+  userId String // Clave foránea a user
+  User   User   @relation(fields: [userId], references: [id])
+
+  name     String
+  lastName String
+  dni      String @unique
+  birth    String
+
+  cronograma Cronograma[] // Relación con Cronograma
+
+  HistoriaMedica HistoriaMedica[] // Relación con Cronograma
+
+  CitaMedica CitaMedica[] // Relación con CitaMedica
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
 //tabla horario
-model Schedule {
+model Horario {
   id        String  @id @unique @default(uuid())
   day       String
   startHour String
   endHour   String
   isActive  Boolean @default(true)
 
-  scheduleDays ScheduleDay[] // Relación con ScheduleDay
+  cronograma Cronograma[] // Relación con Cronograma
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
 //tabla cronograma
-model ScheduleDay {
+model Cronograma {
   id         String   @id @unique @default(uuid())
   day        String
-  doctorId   String
-  doctor     Doctor   @relation(fields: [doctorId], references: [id])
-  scheduleId String
-  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+  personalId String
+  personal   Personal @relation(fields: [personalId], references: [id])
+  horarioId  String
+  horario    Horario  @relation(fields: [horarioId], references: [id])
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+//tabla tipoProducto
+model TipoProducto {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  Producto Producto[] // Relación con Product
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+//tabla producto
+model Producto {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  //relacion con tipo de producto
+  tipoProductoId String
+  tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
+
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt
+  Almacen   Almacen[]
+}
+
+//tabla almacen
+model Almacen {
+  id         String   @id @default(uuid())
+  //relacion con producto
+  productoId String
+  Producto   Producto @relation(fields: [productoId], references: [id])
+  name       String
+  location   String?
+
+  ingreso Ingreso[] // Relación con Ingreso
+  salida  Salida[] // Relación con Salida
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+//tabla tipo movimiento
+model TipoMovimiento {
+  id            String      @id @default(uuid())
+  //relacion con la tabla ondenCompra
+  ordenCompraId String
+  OrdenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id])
+
+  name        String
+  description String?
+
+  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime     @updatedAt
+  Movimiento Movimiento[]
+}
+
+// tabla movimientos
+model Movimiento {
+  id String @id @default(uuid())
+
+  //relacion con la tabla Ingreso
+  ingresoId String
+  Ingreso   Ingreso @relation(fields: [ingresoId], references: [id])
+
+  //relacion con la tabla Salida
+  salidaId String
+  Salida   Salida @relation(fields: [salidaId], references: [id])
+
+  quantity Int
+  date     DateTime @default(now()) @db.Timestamptz(6)
+
+  createdAt        DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime        @updatedAt
+  TipoMovimiento   TipoMovimiento? @relation(fields: [tipoMovimientoId], references: [id])
+  tipoMovimientoId String?
+}
+
+//tabla ingresos
+model Ingreso {
+  id        String   @id @default(uuid())
+  almacenId String
+  almacen   Almacen  @relation(fields: [almacenId], references: [id])
+  quantity  Int
+  date      DateTime @default(now()) @db.Timestamptz(6)
+
+  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime     @updatedAt
+  Movimiento Movimiento[]
+}
+
+//tabla salidas
+model Salida {
+  id String @id @default(uuid())
+
+  almacenId String
+  almacen   Almacen  @relation(fields: [almacenId], references: [id])
+  quantity  Int
+  date      DateTime @default(now()) @db.Timestamptz(6)
+
+  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime     @updatedAt
+  Movimiento Movimiento[]
+}
+
+//tabla historias
+model HistoriaMedica {
+  id          String   @id @default(uuid())
+  pacienteId  String
+  paciente    Paciente @relation(fields: [pacienteId], references: [id])
+  personalId  String
+  personal    Personal @relation(fields: [personalId], references: [id])
+  date        DateTime
+  description String
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+//tabla recetas medicas
+model RecetaMedica {
+  id         String   @id @default(uuid())
+  //relacion con paciente
+  pacienteId String
+  Paciente   Paciente @relation(fields: [pacienteId], references: [id])
+
+  description String
+
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt
+  OrdenCompra OrdenCompra[]
+}
+
+//tabla sucursal
+model Sucursal {
+  id       String  @id @default(uuid())
+  name     String
+  address  String
+  phone    String?
+  isActive Boolean @default(true)
+
+  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt
+  ConsultaMedica ConsultaMedica[] // Relación con ConsultaMedica
+}
+
+//tabla consultas medicas
+model ConsultaMedica {
+  id         String   @id @default(uuid())
+  //realcion tabla servicios
+  serviceId  String
+  Service    Service  @relation(fields: [serviceId], references: [id])
+  //realcion tabla paciente
+  pacienteId String
+  paciente   Paciente @relation(fields: [pacienteId], references: [id])
+  //realcion tabla sucursal
+  sucursalId String
+  Sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
+
+  description String
+  date        DateTime
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt
+
+  CitaMedica  CitaMedica[] // Relación con CitaMedica
+  OrdenCompra OrdenCompra[] // Relación con OrdenCompra
+}
+
+//tabla tipo de citasMedicas
+model TipoCitaMedica {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime     @updatedAt
+  CitaMedica CitaMedica[]
+}
+
+//tabla citas medicas
+model CitaMedica {
+  id               String         @id @default(uuid())
+  //relacion con tipo de cita medica
+  tipoCitaMedicaId String
+  TipoCitaMedica   TipoCitaMedica @relation(fields: [tipoCitaMedicaId], references: [id])
+  //relacion con personal
+  personalId       String
+  personal         Personal       @relation(fields: [personalId], references: [id])
+  //relacion con consulta medica
+  consultaId       String
+  ConsultaMedica   ConsultaMedica @relation(fields: [consultaId], references: [id])
+
+  date        DateTime
+  description String
+
+  createdAt           DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime              @updatedAt
+  ProcedimientoMedico ProcedimientoMedico[]
+}
+
+//tabla ProcedimientoMedico
+model ProcedimientoMedico {
+  id           String     @id @default(uuid())
+  //relacion con cita medica
+  citaMedicaId String
+  CitaMedica   CitaMedica @relation(fields: [citaMedicaId], references: [id])
+  name         String
+  description  String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+//tabla venta
+model OrdenCompra {
+  id String @id @default(uuid())
+
+  //relacion consulta medica
+  consultaMedicaId String
+  ConsultaMedica   ConsultaMedica @relation(fields: [consultaMedicaId], references: [id])
+  //relacion orden de compra si el paciente dese comprar los medicamentos
+  recetaMedicaId   String
+  RecetaMedica     RecetaMedica   @relation(fields: [recetaMedicaId], references: [id])
+  //relacion con cliente si no es un paciente y desea comprar productos
+  clientId         String
+  Client           Client         @relation(fields: [clientId], references: [id])
+
+  date        DateTime
+  total       Float
+  description String?
+
+  Pago Pago[] // Relación con Pago
+
+  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt
+  TipoMovimiento TipoMovimiento[]
+}
+
+//tabla pago
+model Pago {
+  id            String      @id @default(uuid())
+  ordenCompraId String
+  ordenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id])
+  date          DateTime
+  amount        Float
+  description   String?
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
