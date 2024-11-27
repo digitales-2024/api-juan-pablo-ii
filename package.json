@@ -42,7 +42,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/serve-static": "^4.0.2",
-    "@nestjs/swagger": "^7.4.2",
+    "@nestjs/swagger": "^8.0.7",
     "@prisma/client": "^5.21.1",
     "@scalar/nestjs-api-reference": "^0.3.167",
     "axios": "^1.7.7",
