@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ServiceTypeRepository } from '../repositories/service-type.repository';
-import { CreateServiceTypeDto, UpdateServiceTypeDto } from '../dto';
+import { CreateServiceTypeDto } from '../dto';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { ServiceType } from '../entities/service.entity';
@@ -91,22 +91,11 @@ export class ServiceTypeService {
     }
   }
 
-  async findAll() {
-    return this.serviceTypeRepository.findMany();
-  }
   async findById(id: string): Promise<ServiceType> {
     const serviceType = await this.serviceTypeRepository.findById(id);
     if (!serviceType) {
       throw new BadRequestException(`Tipo de servicio no encontrado`);
     }
     return serviceType;
-  }
-
-  async update(id: string, updateServiceTypeDto: UpdateServiceTypeDto) {
-    return this.serviceTypeRepository.update(id, updateServiceTypeDto);
-  }
-
-  async remove(id: string) {
-    return this.serviceTypeRepository.softDelete(id);
   }
 }

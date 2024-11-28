@@ -133,6 +133,37 @@ export abstract class BaseRepository<T extends { id: string }> {
     );
   }
 
+  async softDeleteMany(ids: string[]): Promise<T[]> {
+    // Verifica que todos los registros existan
+    const existingRecords = await this.findMany({
+      where: { id: { in: ids } },
+    });
+
+    if (existingRecords.length !== ids.length) {
+      const missingIds = ids.filter(
+        (id) => !existingRecords.find((record) => record.id === id),
+      );
+      throw new NotFoundException(
+        `${String(this.modelName)} with ids ${missingIds.join(', ')} not found`,
+      );
+    }
+
+    // Actualiza todos los registros y retorna los actualizados
+    await this.prisma.measureQuery(
+      `softDeleteMany${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).updateMany({
+          where: { id: { in: ids } },
+          data: { isActive: false },
+        }),
+    );
+
+    // Obtiene y retorna los registros actualizados
+    return this.findMany({
+      where: { id: { in: ids } },
+    });
+  }
+
   /**
    * Ejecuta una transacción con la base de datos.
    * @param operation - Función que contiene las operaciones a ejecutar dentro de la transacción.
@@ -151,19 +182,5 @@ export abstract class BaseRepository<T extends { id: string }> {
    */
   protected mapDtoToEntity<D>(dto: D): any {
     return dto;
-  }
-
-  /**
-   * Valida que una entidad con el id proporcionado exista.
-   * @param id - ID de la entidad a validar.
-   * @throws {NotFoundException} Si la entidad no se encuentra.
-   */
-  protected async validateExists(id: string): Promise<void> {
-    const exists = await this.findById(id);
-    if (!exists) {
-      throw new NotFoundException(
-        `${String(this.modelName)} with id ${id} not found`,
-      );
-    }
   }
 }

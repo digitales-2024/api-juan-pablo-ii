@@ -3,16 +3,18 @@ import {
   HttpStatus,
   Injectable,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
-import { ServiceRepository } from '../repositories/service.repository';
 import { CreateServiceDto, UpdateServiceDto } from '../dto';
-import { ServiceTypeService } from './service-type.service';
-import { AuditService } from '@login/login/admin/audit/audit.service';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
-import { AuditActionType } from '@prisma/client';
+import { CreateServiceUseCase } from '../use-cases/create-service.use-case';
+import { UpdateServiceUseCase } from '../use-cases/update-service.use-case';
 import { handleException } from '@login/login/utils';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
+import { ServiceRepository } from '../repositories/service.repository';
+import { DeleteServiceUseCase } from '../use-cases/delete-service.use-case';
+import { DeleteServicesDto } from '../dto/delete-services.dto';
+import { DeleteServicesUseCase } from '../use-cases/delete-services.use-case';
 
 /**
  * Servicio que implementa la lógica de negocio para servicios médicos.
@@ -25,8 +27,10 @@ export class ServiceService {
   private readonly logger = new Logger(ServiceService.name);
   constructor(
     private readonly serviceRepository: ServiceRepository,
-    private readonly serviceTypeService: ServiceTypeService,
-    private readonly auditService: AuditService,
+    private readonly createServiceUseCase: CreateServiceUseCase,
+    private readonly updateServiceUseCase: UpdateServiceUseCase,
+    private readonly deleteServiceUseCase: DeleteServiceUseCase,
+    private readonly deleteServicesUseCase: DeleteServicesUseCase,
   ) {}
 
   /**
@@ -42,36 +46,7 @@ export class ServiceService {
     user: UserData,
   ): Promise<HttpResponse<Service>> {
     try {
-      // Verificar que existe el tipo de servicio
-      await this.serviceTypeService.findById(createServiceDto.serviceTypeId);
-
-      // Usar transacción para crear el servicio y registrar auditoría
-      const newService = await this.serviceRepository.transaction(async () => {
-        const service = await this.serviceRepository.create({
-          name: createServiceDto.name,
-          description: createServiceDto.description,
-          price: createServiceDto.price,
-          serviceTypeId: createServiceDto.serviceTypeId,
-          isActive: true,
-        });
-
-        // Registrar auditoría
-        await this.auditService.create({
-          entityId: service.id,
-          entityType: 'service',
-          action: AuditActionType.CREATE,
-          performedById: user.id,
-          createdAt: new Date(),
-        });
-
-        return service;
-      });
-
-      return {
-        statusCode: HttpStatus.CREATED,
-        message: 'Service created successfully',
-        data: newService,
-      };
+      return await this.createServiceUseCase.execute(createServiceDto, user);
     } catch (error) {
       if (error instanceof BadRequestException) {
         this.logger.warn(`Error creating Service: ${error.message}`);
@@ -81,46 +56,138 @@ export class ServiceService {
           `Error creating Service: ${error.message}`,
           error.stack,
         );
-        handleException(error, 'Error creating Service');
+        handleException(error, 'Error creando Servicio');
       }
     }
   }
 
-  async findAll() {
-    return this.serviceRepository.findMany({
-      where: {
-        isActive: true,
-      },
-      include: {
-        serviceType: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+  async update(
+    id: string,
+    updateServiceDto: UpdateServiceDto,
+    user: UserData,
+  ): Promise<HttpResponse<Service>> {
+    try {
+      // Obtener el servicio existente
+      const currentService = await this.serviceRepository.findById(id);
+
+      // Validar si hay cambios significativos
+      if (!validateChanges(updateServiceDto, currentService)) {
+        this.logger.log('No significant changes, omitting update');
+        return {
+          statusCode: HttpStatus.OK,
+          message: 'Service actualizado correctamente',
+          data: currentService,
+        };
+      }
+      return await this.updateServiceUseCase.execute(
+        id,
+        updateServiceDto,
+        user,
+      );
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        this.logger.warn(`Error updating Service: ${error.message}`);
+        throw error;
+      } else {
+        this.logger.error(
+          `Error updating Service: ${error.message}`,
+          error.stack,
+        );
+        handleException(error, 'Error actualizando Servicio');
+      }
+    }
   }
 
-  async findById(id: string) {
-    const service = await this.serviceRepository.findById(id, {
-      serviceType: true,
-    });
+  async findOne(id: string): Promise<Service> {
+    try {
+      return this.findById(id);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        this.logger.warn(`Error geting Service: ${error.message}`);
+        throw error;
+      } else {
+        this.logger.error(
+          `Error geting Service: ${error.message}`,
+          error.stack,
+        );
+        handleException(error, 'Error obteniendo Service');
+      }
+    }
+  }
 
+  async findAll(): Promise<Service[]> {
+    try {
+      return this.serviceRepository.findMany();
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        this.logger.warn(`Error geting Service: ${error.message}`);
+        throw error;
+      } else {
+        this.logger.error(
+          `Error geting Service: ${error.message}`,
+          error.stack,
+        );
+        handleException(error, 'Error obteniendo Service');
+      }
+    }
+  }
+
+  /**
+   * Elimina (softdelete) un servicio.
+   * @param {string} id - ID del servicio a eliminar.
+   * @param {UserData} user - Datos del usuario que realiza la eliminación.
+   * @returns {Promise<HttpResponse<Service>>} - Respuesta HTTP con el servicio eliminado.
+   */
+  async delete(id: string, user: UserData): Promise<HttpResponse<Service>> {
+    try {
+      return await this.deleteServiceUseCase.execute(id, user);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        this.logger.warn(`Error deleting Service: ${error.message}`);
+        throw error;
+      } else {
+        this.logger.error(
+          `Error deleting Service: ${error.message}`,
+          error.stack,
+        );
+        handleException(error, 'Error deleting Service');
+      }
+    }
+  }
+
+  /**
+   * Elimina (softdelete) múltiples servicios.
+   * @param {DeleteServicesDto} deleteServicesDto - DTO con los IDs de los servicios a eliminar.
+   * @param {UserData} user - Datos del usuario que realiza la eliminación.
+   * @returns {Promise<HttpResponse<Service[]>>} - Respuesta HTTP con los servicios eliminados.
+   */
+  async deleteMany(
+    deleteServicesDto: DeleteServicesDto,
+    user: UserData,
+  ): Promise<HttpResponse<Service[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(deleteServicesDto.ids, 'IDs de servicios');
+
+      return await this.deleteServicesUseCase.execute(deleteServicesDto, user);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        this.logger.warn(`Error deleting multiple services: ${error.message}`);
+        throw error;
+      } else {
+        this.logger.error(
+          `Error deleting multiple services: ${error.message}`,
+          error.stack,
+        );
+        handleException(error, 'Error eliminando múltiples servicios');
+      }
+    }
+  }
+  async findById(id: string): Promise<Service> {
+    const service = await this.serviceRepository.findById(id);
     if (!service) {
-      throw new NotFoundException(`Service with id ${id} not found`);
+      throw new BadRequestException(`Servicio no encontrado`);
     }
-
     return service;
-  }
-
-  async update(id: string, updateServiceDto: UpdateServiceDto) {
-    if (updateServiceDto.serviceTypeId) {
-      await this.serviceTypeService.findById(updateServiceDto.serviceTypeId);
-    }
-
-    return this.serviceRepository.update(id, updateServiceDto);
-  }
-
-  async remove(id: string) {
-    return this.serviceRepository.softDelete(id);
   }
 }

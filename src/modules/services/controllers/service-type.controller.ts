@@ -1,15 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Put,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { ServiceTypeService } from '../services/service-type.service';
 import { CreateServiceTypeDto } from '../dto/create-service-type.dto';
-import { UpdateServiceTypeDto } from '../dto/update-service-type.dto';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
@@ -40,28 +31,5 @@ export class ServiceTypeController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<ServiceType>> {
     return this.serviceTypeService.create(createServiceTypeDto, user);
-  }
-
-  @Get()
-  findAll() {
-    return this.serviceTypeService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.serviceTypeService.findById(id);
-  }
-
-  @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateServiceTypeDto: UpdateServiceTypeDto,
-  ) {
-    return this.serviceTypeService.update(id, updateServiceTypeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.serviceTypeService.remove(id);
   }
 }
