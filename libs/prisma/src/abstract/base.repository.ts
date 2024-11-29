@@ -97,7 +97,7 @@ export abstract class BaseRepository<T extends { id: string }> {
    * @param id - ID del registro a eliminar.
    * @throws {NotFoundException} Si el registro no se encuentra.
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<T> {
     const exists = await this.findById(id);
     if (!exists) {
       throw new NotFoundException(
@@ -105,10 +105,12 @@ export abstract class BaseRepository<T extends { id: string }> {
       );
     }
 
-    await this.prisma.measureQuery(`delete${String(this.modelName)}`, () =>
-      (this.prisma[this.modelName] as any).delete({
-        where: { id },
-      }),
+    return await this.prisma.measureQuery(
+      `delete${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).delete({
+          where: { id },
+        }),
     );
   }
   /**
