@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
@@ -114,27 +116,38 @@ export class PrismaService
   /**
    * Ejecuta operaciones dentro de una transacción.
    * @param operation - Función que contiene las operaciones a ejecutar
+   * @returns Promise con el resultado de la operación
    */
   async withTransaction<T>(
     operation: (tx: PrismaTransaction) => Promise<T>,
   ): Promise<T> {
     const startTime = Date.now();
-
     try {
       const result = await this.$transaction(async (tx) => {
         return await operation(tx as PrismaTransaction);
       });
-
       const duration = Date.now() - startTime;
-      this.logger.log(`Transaction completed in ${duration}ms`);
-
+      this.logger.debug(`Transaction completed in ${duration}ms`);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(
-        `Transaction failed after ${duration}ms: ${error.message}`,
-        error.stack,
-      );
+
+      // Para errores esperados del negocio, solo propagar el mensaje
+      if (error instanceof NotFoundException) {
+        this.logger.warn(error.message);
+        throw new NotFoundException(error.message);
+      }
+
+      if (error instanceof BadRequestException) {
+        this.logger.warn(error.message);
+        throw new BadRequestException(error.message);
+      }
+
+      // Para errores inesperados, registrar más detalles
+      this.logger.error(`Unexpected transaction error after ${duration}ms`, {
+        message: error.message,
+        duration,
+      });
       throw error;
     }
   }
