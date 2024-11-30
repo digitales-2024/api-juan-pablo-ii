@@ -13,6 +13,7 @@ import { DeleteServicesUseCase } from './use-cases/delete-services.use-case';
 import { CreateServiceTypeUseCase } from './use-cases/create-servicetype.use-case';
 import { UpdateServiceTypeUseCase } from './use-cases/update-servicetype.use-case';
 import { DeleteServiceTypeUseCase } from './use-cases/delete-servicetype.use-case';
+import { DeleteServiceTypesUseCase } from './use-cases/delete=servicetypes.use-case';
 
 /**
  * Módulo que gestiona los servicios y tipos de servicios del sistema.
@@ -33,6 +34,7 @@ import { DeleteServiceTypeUseCase } from './use-cases/delete-servicetype.use-cas
     CreateServiceTypeUseCase,
     UpdateServiceTypeUseCase,
     DeleteServiceTypeUseCase,
+    DeleteServiceTypesUseCase,
   ],
   controllers: [ServiceController, ServiceTypeController],
   exports: [ServiceService, ServiceTypeService],

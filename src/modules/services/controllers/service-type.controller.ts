@@ -21,6 +21,7 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { ServiceType } from '../entities/service.entity';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { UpdateServiceTypeDto } from '../dto';
+import { DeleteServiceTypesDto } from '../dto/delete-service-types.dto';
 
 @ApiTags('ServiceTypes')
 @ApiBadRequestResponse({ description: 'Bad Request' })
@@ -67,6 +68,16 @@ export class ServiceTypeController {
   })
   findAll(): Promise<ServiceType[]> {
     return this.serviceTypeService.findAll();
+  }
+
+  @Delete('remove/all')
+  @ApiOkResponse({ description: 'Types deleted successfully' })
+  @ApiBadRequestResponse({ description: 'Validation failed or bad request' })
+  deleteMany(
+    @Body() deleteServiceTypesDto: DeleteServiceTypesDto,
+    @GetUser() user: UserData,
+  ) {
+    return this.serviceTypeService.deleteMany(deleteServiceTypesDto, user);
   }
 
   @Delete(':id')

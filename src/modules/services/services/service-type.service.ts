@@ -11,9 +11,11 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { ServiceType } from '../entities/service.entity';
 import { handleException } from '@login/login/utils';
 import { CreateServiceTypeUseCase } from '../use-cases/create-servicetype.use-case';
-import { validateChanges } from '@prisma/prisma/utils';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { UpdateServiceTypeUseCase } from '../use-cases/update-servicetype.use-case';
 import { DeleteServiceTypeUseCase } from '../use-cases/delete-servicetype.use-case';
+import { DeleteServiceTypesDto } from '../dto/delete-services-type.dto';
+import { DeleteServiceTypesUseCase } from '../use-cases/delete=servicetypes.use-case';
 
 /**
  * Servicio que implementa la lógica de negocio para tipos de servicios médicos.
@@ -29,6 +31,7 @@ export class ServiceTypeService {
     private readonly createServiceTypeUseCase: CreateServiceTypeUseCase,
     private readonly updateServiceTypeUseCase: UpdateServiceTypeUseCase,
     private readonly deleteServiceTypeUseCase: DeleteServiceTypeUseCase,
+    private readonly deleteServiceTypesUseCase: DeleteServiceTypesUseCase,
   ) {}
 
   /**
@@ -151,35 +154,38 @@ export class ServiceTypeService {
     }
   }
 
-  // /**
-  //  * Elimina (softdelete) múltiples servicios.
-  //  * @param {DeleteServicesDto} deleteServicesDto - DTO con los IDs de los servicios a eliminar.
-  //  * @param {UserData} user - Datos del usuario que realiza la eliminación.
-  //  * @returns {Promise<HttpResponse<Service[]>>} - Respuesta HTTP con los servicios eliminados.
-  //  */
-  // async deleteMany(
-  //   deleteServicesDto: DeleteServicesDto,
-  //   user: UserData,
-  // ): Promise<HttpResponse<Service[]>> {
-  //   try {
-  //     // Validar el array de IDs
-  //     validateArray(deleteServicesDto.ids, 'IDs de servicios');
-  //
-  //     return await this.deleteServicesUseCase.execute(deleteServicesDto, user);
-  //   } catch (error) {
-  //     if (error instanceof BadRequestException) {
-  //       this.logger.warn(`Error deleting multiple services: ${error.message}`);
-  //       throw error;
-  //     } else {
-  //       this.logger.error(
-  //         `Error deleting multiple services: ${error.message}`,
-  //         error.stack,
-  //       );
-  //       handleException(error, 'Error eliminando múltiples servicios');
-  //     }
-  //   }
-  // }
-  //
+  /**
+   * Elimina (softdelete) múltiples servicios.
+   * @param {DeleteServiceTypesDto} deleteServiceTypesDto - DTO con los IDs de los servicios a eliminar.
+   * @param {UserData} user - Datos del usuario que realiza la eliminación.
+   * @returns {Promise<HttpResponse<Service[]>>} - Respuesta HTTP con los servicios eliminados.
+   */
+  async deleteMany(
+    deleteServiceTypesDto: DeleteServiceTypesDto,
+    user: UserData,
+  ): Promise<HttpResponse<ServiceType[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(deleteServiceTypesDto.ids, 'IDs de servicios');
+
+      return await this.deleteServiceTypesUseCase.execute(
+        deleteServiceTypesDto,
+        user,
+      );
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        this.logger.warn(`Error deleting multiple services: ${error.message}`);
+        throw error;
+      } else {
+        this.logger.error(
+          `Error deleting multiple services: ${error.message}`,
+          error.stack,
+        );
+        handleException(error, 'Error eliminando múltiples servicios');
+      }
+    }
+  }
+
   async findById(id: string): Promise<ServiceType> {
     const serviceType = await this.serviceTypeRepository.findById(id);
     if (!serviceType) {
