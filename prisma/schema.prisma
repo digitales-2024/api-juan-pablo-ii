@@ -177,6 +177,7 @@ model ServiceType {
   id          String  @id @unique @default(uuid())
   name        String
   description String?
+  isActive      Boolean     @default(true)
 
   services Service[] // Relación inversa con Service
 
