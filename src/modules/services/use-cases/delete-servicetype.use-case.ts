@@ -4,6 +4,7 @@ import { Injectable, HttpStatus } from '@nestjs/common';
 import { AuditActionType } from '@prisma/client';
 import { ServiceTypeRepository } from '../repositories/service-type.repository';
 import { ServiceType } from '../entities/service.entity';
+import { DeleteServiceTypesDto } from '../dto/delete-service-types.dto';
 
 @Injectable()
 export class DeleteServiceTypeUseCase {
@@ -25,12 +26,12 @@ export class DeleteServiceTypeUseCase {
     // Realizar la eliminación lógica (softdelete) del servicio
     const deletedServiceType = await this.serviceTypeRepository.transaction(
       async () => {
-        const serviceType = await this.serviceTypeRepository.delete(id);
+        const serviceType = await this.serviceTypeRepository.softDelete(id);
 
         // Registrar auditoría
         await this.auditService.create({
           entityId: serviceType.id,
-          entityType: 'service',
+          entityType: 'serviceType',
           action: AuditActionType.DELETE,
           performedById: user.id,
           createdAt: new Date(),
@@ -44,6 +45,49 @@ export class DeleteServiceTypeUseCase {
       statusCode: HttpStatus.OK,
       message: 'Service deleted successfully',
       data: deletedServiceType,
+    };
+  }
+}
+
+@Injectable()
+export class DeleteServiceTypesUseCase {
+  constructor(
+    private readonly serviceTypeRepository: ServiceTypeRepository,
+    private readonly auditService: AuditService,
+  ) {}
+
+  async execute(
+    deleteServiceTypesDto: DeleteServiceTypesDto,
+    user: UserData,
+  ): Promise<HttpResponse<ServiceType[]>> {
+    const deletedServiceTypes = await this.serviceTypeRepository.transaction(
+      async () => {
+        // Realiza el soft delete y obtiene los servicios actualizados
+        const serviceTypes = await this.serviceTypeRepository.softDeleteMany(
+          deleteServiceTypesDto.ids,
+        );
+
+        // Registra la auditoría para cada servicio eliminado
+        await Promise.all(
+          serviceTypes.map((service) =>
+            this.auditService.create({
+              entityId: service.id,
+              entityType: 'serviceType',
+              action: AuditActionType.DELETE,
+              performedById: user.id,
+              createdAt: new Date(),
+            }),
+          ),
+        );
+
+        return serviceTypes;
+      },
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Services deleted successfully',
+      data: deletedServiceTypes,
     };
   }
 }
