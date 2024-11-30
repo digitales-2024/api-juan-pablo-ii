@@ -113,6 +113,39 @@ export abstract class BaseRepository<T extends { id: string }> {
         }),
     );
   }
+
+  /**
+   * Elimina múltiples registros por sus IDs.
+   * @param ids - Array de IDs de los registros a eliminar
+   * @returns Array con los registros eliminados
+   * @throws {NotFoundException} Si alguno de los registros no se encuentra
+   */
+  async deleteMany(ids: string[]): Promise<T[]> {
+    // Verifica que todos los registros existan
+    const existingRecords = await this.findMany({
+      where: { id: { in: ids } },
+    });
+
+    if (existingRecords.length !== ids.length) {
+      const missingIds = ids.filter(
+        (id) => !existingRecords.find((record) => record.id === id),
+      );
+      throw new NotFoundException(
+        `${String(this.modelName)} with ids ${missingIds.join(', ')} not found`,
+      );
+    }
+
+    // Elimina todos los registros y retorna los eliminados
+    await this.prisma.measureQuery(`deleteMany${String(this.modelName)}`, () =>
+      (this.prisma[this.modelName] as any).deleteMany({
+        where: { id: { in: ids } },
+      }),
+    );
+
+    // Retorna los registros que fueron eliminados
+    return existingRecords;
+  }
+
   /**
    * Elimina lógicamente un registro por su id.
    * @param id - ID del registro a eliminar lógicamente.
