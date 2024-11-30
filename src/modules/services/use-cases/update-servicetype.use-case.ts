@@ -29,7 +29,7 @@ export class UpdateServiceTypeUseCase {
         // Registrar auditoría
         await this.auditService.create({
           entityId: service.id,
-          entityType: 'service',
+          entityType: 'serviceType',
           action: AuditActionType.UPDATE,
           performedById: user.id,
           createdAt: new Date(),
