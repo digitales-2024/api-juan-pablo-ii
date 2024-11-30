@@ -8,12 +8,18 @@ import { ServiceTypeController } from './controllers/service-type.controller';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { CreateServiceUseCase } from './use-cases/create-service.use-case';
 import { UpdateServiceUseCase } from './use-cases/update-service.use-case';
-import { DeleteServiceUseCase } from './use-cases/delete-service.use-case';
-import { DeleteServicesUseCase } from './use-cases/delete-services.use-case';
+import {
+  DeleteServiceUseCase,
+  DeleteServicesUseCase,
+} from './use-cases/delete-service.use-case';
 import { CreateServiceTypeUseCase } from './use-cases/create-servicetype.use-case';
 import { UpdateServiceTypeUseCase } from './use-cases/update-servicetype.use-case';
-import { DeleteServiceTypeUseCase } from './use-cases/delete-servicetype.use-case';
-import { DeleteServiceTypesUseCase } from './use-cases/delete=servicetypes.use-case';
+import {
+  DeleteServiceTypeUseCase,
+  DeleteServiceTypesUseCase,
+} from './use-cases/delete-servicetype.use-case';
+import { ReactivateServicesUseCase } from './use-cases/reactive-service.use-case';
+import { ReactivateServiceTypesUseCase } from './use-cases/reactive-servicetype.use-case';
 
 /**
  * Módulo que gestiona los servicios y tipos de servicios del sistema.
@@ -35,6 +41,8 @@ import { DeleteServiceTypesUseCase } from './use-cases/delete=servicetypes.use-c
     UpdateServiceTypeUseCase,
     DeleteServiceTypeUseCase,
     DeleteServiceTypesUseCase,
+    ReactivateServicesUseCase,
+    ReactivateServiceTypesUseCase,
   ],
   controllers: [ServiceController, ServiceTypeController],
   exports: [ServiceService, ServiceTypeService],
