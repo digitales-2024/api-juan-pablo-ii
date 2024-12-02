@@ -5,24 +5,26 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+
 import { ServiceTypeRepository } from '../repositories/service-type.repository';
-import { CreateServiceTypeDto, UpdateServiceTypeDto } from '../dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { ServiceType } from '../entities/service.entity';
 import { handleException } from '@login/login/utils';
 import { CreateServiceTypeUseCase } from '../use-cases/create-servicetype.use-case';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { UpdateServiceTypeUseCase } from '../use-cases/update-servicetype.use-case';
-import {
-  DeleteServiceTypesUseCase,
-  DeleteServiceTypeUseCase,
-} from '../use-cases/delete-servicetype.use-case';
-import { DeleteServiceTypesDto } from '../dto/delete-service-types.dto';
+import { DeleteServiceTypesUseCase } from '../use-cases/delete-servicetype.use-case';
 import { ReactivateServiceTypesUseCase } from '../use-cases/reactive-servicetype.use-case';
 import {
   BaseErrorHandler,
   serviceTypeErrorMessages,
 } from 'src/common/error-handlers/service-error.handler';
+
+import {
+  CreateServiceTypeDto,
+  UpdateServiceTypeDto,
+  DeleteServiceTypesDto,
+} from '../dto';
 
 /**
  * Servicio que implementa la lógica de negocio para tipos de servicios médicos.
@@ -41,7 +43,6 @@ export class ServiceTypeService {
     private readonly serviceTypeRepository: ServiceTypeRepository,
     private readonly createServiceTypeUseCase: CreateServiceTypeUseCase,
     private readonly updateServiceTypeUseCase: UpdateServiceTypeUseCase,
-    private readonly deleteServiceTypeUseCase: DeleteServiceTypeUseCase,
     private readonly deleteServiceTypesUseCase: DeleteServiceTypesUseCase,
     private readonly reactivateServiceTypesUseCase: ReactivateServiceTypesUseCase,
   ) {
