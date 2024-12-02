@@ -121,7 +121,8 @@
       "^@doc-appointment/doc-appointment(|/.*)$": "<rootDir>/libs/doc-appointment/src/$1",
       "^@working-hours/working-hours(|/.*)$": "<rootDir>/libs/working-hours/src/$1",
       "^@medical-procedure/medical-procedure(|/.*)$": "<rootDir>/libs/medical-procedure/src/$1",
-      "^@medical-consultation/medical-consultation(|/.*)$": "<rootDir>/libs/medical-consultation/src/$1"
+      "^@medical-consultation/medical-consultation(|/.*)$": "<rootDir>/libs/medical-consultation/src/$1",
+      "^@pacient/pacient(|/.*)$": "<rootDir>/libs/pacient/src/$1"
     }
   }
 }

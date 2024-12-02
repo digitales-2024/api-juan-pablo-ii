@@ -84,6 +84,12 @@
       ],
       "@medical-consultation/medical-consultation/*": [
         "libs/medical-consultation/src/*"
+      ],
+      "@pacient/pacient": [
+        "libs/pacient/src"
+      ],
+      "@pacient/pacient/*": [
+        "libs/pacient/src/*"
       ]
     }
   }
