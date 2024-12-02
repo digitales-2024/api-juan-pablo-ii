@@ -160,31 +160,31 @@ model Client {
 model Paciente {
   id                      String   @id @unique @default(uuid())
   nombre                  String   @db.VarChar(100)
-  apellido                String
+  apellido                String?
   dni                     String   @unique
-  cumpleaños             DateTime @db.Date
+  cumpleaños              DateTime @db.Date
   sexo                    Boolean
-  direccion               String   @db.VarChar(255)
-  telefono                String   @db.VarChar(15)
-  correo                  String   @db.VarChar(100)
+  direccion               String?  @db.VarChar(255)
+  telefono                String?  @db.VarChar(15)
+  correo                  String?  @db.VarChar(100)
   fechaRegistro           DateTime @db.Date
-  alergias                String   @db.Text
-  medicamentosActuales    String   @db.Text
-  contactoEmergencia      String   @db.VarChar(100)
-  telefonoEmergencia      String   @db.VarChar(15)
-  seguroMedico            String   @db.VarChar(100)
-  estadoCivil             String   @db.VarChar(20)
-  ocupacion               String   @db.VarChar(100)
-  lugarTrabajo            String   @db.VarChar(255)
-  tipoSangre              String   @db.VarChar(3)
-  antecedentesFamiliares  String   @db.Text
-  habitosVida             String   @db.Text
+  alergias                String?  @db.Text
+  medicamentosActuales    String?  @db.Text
+  contactoEmergencia      String?  @db.VarChar(100)
+  telefonoEmergencia      String?  @db.VarChar(15)
+  seguroMedico            String?  @db.VarChar(100)
+  estadoCivil             String?  @db.VarChar(20)
+  ocupacion               String?  @db.VarChar(100)
+  lugarTrabajo            String?  @db.VarChar(255)
+  tipoSangre              String?  @db.VarChar(3)
+  antecedentesFamiliares  String?  @db.Text
+  habitosVida             String?  @db.Text
   vacunas                 Int
-  medicoCabecera          String   @db.VarChar(100)
-  idioma                  String   @db.VarChar(50)
-  autorizacionTratamiento String   @db.VarChar(255)
-  observaciones           String   @db.Text
-  fotografiaPaciente      String   @db.Text
+  medicoCabecera          String?  @db.VarChar(100)
+  idioma                  String?  @db.VarChar(50)
+  autorizacionTratamiento String?  @db.VarChar(255)
+  observaciones           String?  @db.Text
+  fotografiaPaciente      String?  @db.Text
 
   //no tocar
   createdAt      DateTime         @default(now()) @db.Timestamptz(6)
