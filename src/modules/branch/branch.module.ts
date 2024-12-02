@@ -5,6 +5,8 @@ import { BranchRepository } from './repositories/branch.repository';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { CreateBranchUseCase } from './use-cases/create-branch.use-case';
 import { UpdateBranchUseCase } from './use-cases/update-branch.use-case';
+import { DeleteBranchesUseCase } from './use-cases/delete-branch.use-case';
+import { ReactivateBranchesUseCase } from './use-cases/reactive-branch.use-case';
 
 @Module({
   imports: [AuditModule],
@@ -14,6 +16,8 @@ import { UpdateBranchUseCase } from './use-cases/update-branch.use-case';
     BranchRepository,
     CreateBranchUseCase,
     UpdateBranchUseCase,
+    DeleteBranchesUseCase,
+    ReactivateBranchesUseCase,
   ],
   exports: [BranchService],
 })
