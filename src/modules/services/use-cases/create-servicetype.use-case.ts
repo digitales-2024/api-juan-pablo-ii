@@ -42,6 +42,7 @@ export class CreateServiceTypeUseCase {
         const serviceType = await this.serviceTypeRepository.create({
           name: createServiceTypeDto.name,
           description: createServiceTypeDto.description,
+          isActive: true,
         });
 
         // Registrar auditoría
