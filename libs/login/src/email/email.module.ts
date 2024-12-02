@@ -23,7 +23,7 @@ import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
           },
         },
         defaults: {
-          from: 'Trazo',
+          from: 'Juan Pablo II',
         },
         template: {
           dir: join(
