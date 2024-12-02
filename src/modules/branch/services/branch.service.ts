@@ -20,6 +20,16 @@ import {
   ReactivateBranchesUseCase,
 } from '../use-cases';
 
+/**
+ * Servicio que implementa la lógica de negocio para sucursales.
+ * Utiliza BranchRepository para acceder a la base de datos y varios casos de uso
+ * para implementar las operaciones principales.
+ *
+ * @remarks
+ * Este servicio maneja las operaciones CRUD sobre sucursales y utiliza
+ * casos de uso específicos para cada operación principal.
+ */
+
 @Injectable()
 export class BranchService {
   private readonly logger = new Logger(BranchService.name);
@@ -38,7 +48,13 @@ export class BranchService {
       branchErrorMessages,
     );
   }
-
+  /**
+   * Crea una nueva sucursal
+   * @param createBranchDto - DTO con los datos de la sucursal a crear
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con la sucursal creada
+   * @throws {BadRequestException} Si la sucursal ya existe
+   */
   async create(
     createBranchDto: CreateBranchDto,
     user: UserData,
@@ -50,6 +66,14 @@ export class BranchService {
     }
   }
 
+  /**
+   * Actualiza una sucursal existente
+   * @param id - ID de la sucursal a actualizar
+   * @param updateBranchDto - DTO con los datos a actualizar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con la sucursal actualizada
+   * @throws {NotFoundException} Si la sucursal no existe
+   */
   async update(
     id: string,
     updateBranchDto: UpdateBranchDto,
@@ -72,6 +96,10 @@ export class BranchService {
     }
   }
 
+  /**
+   * Obtiene todas las sucursales
+   * @returns Lista de todas las sucursales
+   */
   async findAll(): Promise<Branch[]> {
     try {
       return this.branchRepository.findMany();
@@ -79,7 +107,6 @@ export class BranchService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
-
   /**
    * Desactiva múltiples sucursales
    * @param deleteBranchesDto - DTO con los IDs de las sucursales a desactivar
@@ -101,6 +128,12 @@ export class BranchService {
     }
   }
 
+  /**
+   * Busca una sucursal por su ID
+   * @param id - ID de la sucursal a buscar
+   * @returns La sucursal encontrada
+   * @throws {NotFoundException} Si la sucursal no existe
+   */
   async findOne(id: string): Promise<Branch> {
     try {
       return this.findById(id);
@@ -109,6 +142,13 @@ export class BranchService {
     }
   }
 
+  /**
+   * Reactiva múltiples sucursales
+   * @param ids - Lista de IDs de las sucursales a reactivar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con las sucursales reactivadas
+   * @throws {NotFoundException} Si alguna sucursal no existe
+   */
   async reactivateMany(
     ids: string[],
     user: UserData,
@@ -122,31 +162,6 @@ export class BranchService {
       this.errorHandler.handleError(error, 'reactivating');
     }
   }
-  //
-  // async deleteMany(
-  //   ids: string[],
-  //   user: UserData,
-  // ): Promise<HttpResponse<Branch[]>> {
-  //   try {
-  //     validateArray(ids, 'IDs de sucursales');
-  //     // Implementation
-  //   } catch (error) {
-  //     this.errorHandler.handleError(error, 'deactivating');
-  //   }
-  // }
-  //
-  // async reactivateMany(
-  //   ids: string[],
-  //   user: UserData,
-  // ): Promise<HttpResponse<Branch[]>> {
-  //   try {
-  //     validateArray(ids, 'IDs de sucursales');
-  //     // Implementation
-  //   } catch (error) {
-  //     this.errorHandler.handleError(error, 'reactivating');
-  //   }
-  // }
-
   /**
    * Busca una Sucursal por su ID (método interno)
    * @param id - ID del servicio a buscar

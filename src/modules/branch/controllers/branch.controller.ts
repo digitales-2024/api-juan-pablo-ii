@@ -62,24 +62,6 @@ export class BranchController {
   }
 
   /**
-   * Actualiza una sucursal existente
-   */
-  @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar sucursal existente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Sucursal actualizada exitosamente',
-    type: Branch,
-  })
-  update(
-    @Param('id') id: string,
-    @Body() updateBranchDto: UpdateBranchDto,
-    @GetUser() user: UserData,
-  ): Promise<HttpResponse<Branch>> {
-    return this.branchService.update(id, updateBranchDto, user);
-  }
-
-  /**
    * Obtiene un servicio por su ID
    */
   @ApiOperation({ summary: 'Obtener sucursal por ID' })
@@ -108,6 +90,24 @@ export class BranchController {
   })
   findAll(): Promise<Branch[]> {
     return this.branchService.findAll();
+  }
+
+  /**
+   * Actualiza una sucursal existente
+   */
+  @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar sucursal existente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sucursal actualizada exitosamente',
+    type: Branch,
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateBranchDto: UpdateBranchDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Branch>> {
+    return this.branchService.update(id, updateBranchDto, user);
   }
 
   /**
