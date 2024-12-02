@@ -33,7 +33,7 @@
     "@kitajs/html": "^4.2.4",
     "@kitajs/ts-html-plugin": "^4.1.0",
     "@nestjs-modules/mailer": "^2.0.2",
-    "@nestjs/common": "^10.0.0",
+    "@nestjs/common": "^10.4.12",
     "@nestjs/config": "^3.2.3",
     "@nestjs/core": "^10.0.0",
     "@nestjs/event-emitter": "^2.0.4",
