@@ -1,6 +1,9 @@
 import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { handleException } from '@login/login/utils';
 
+/**
+ * Define tipos de acciones que pueden generar errores
+ */
 export type ServiceAction =
   | 'creating'
   | 'updating'
@@ -11,15 +14,10 @@ export type ServiceAction =
   | 'activating'
   | 'processing';
 
-export type ServiceType =
-  | 'Service'
-  | 'ServiceType'
-  | 'User'
-  | 'Client'
-  | 'Product' // Ejemplo de cómo agregar un nuevo servicio
-  | 'Order'; // Ejemplo de cómo agregar un nuevo servicio
-
-interface ErrorMessages {
+/**
+ * Interface para mensajes de error de cada entidad
+ */
+export interface ErrorMessages {
   notFound: string;
   alreadyExists: string;
   invalidData: string;
@@ -30,75 +28,18 @@ interface ErrorMessages {
   [key: string]: string;
 }
 
-const errorMessages: Record<ServiceType, ErrorMessages> = {
-  Service: {
-    notFound: 'Servicio no encontrado',
-    alreadyExists: 'El servicio ya existe',
-    invalidData: 'Datos del servicio inválidos',
-    notActive: 'El servicio no está activo',
-    alreadyActive: 'El servicio ya está activo',
-    inUse: 'El servicio está en uso y no puede ser eliminado',
-    invalidOperation: 'Operación inválida para el servicio',
-  },
-  ServiceType: {
-    notFound: 'Tipo de servicio no encontrado',
-    alreadyExists: 'El tipo de servicio ya existe',
-    invalidData: 'Datos del tipo de servicio inválidos',
-    notActive: 'El tipo de servicio no está activo',
-    alreadyActive: 'El tipo de servicio ya está activo',
-    inUse: 'El tipo de servicio está en uso y no puede ser eliminado',
-    invalidOperation: 'Operación inválida para el tipo de servicio',
-  },
-  User: {
-    notFound: 'Usuario no encontrado',
-    alreadyExists: 'El usuario ya existe',
-    invalidData: 'Datos del usuario inválidos',
-    notActive: 'El usuario no está activo',
-    alreadyActive: 'El usuario ya está activo',
-    inUse: 'El usuario está en uso y no puede ser eliminado',
-    invalidOperation: 'Operación inválida para el usuario',
-  },
-  Client: {
-    notFound: 'Cliente no encontrado',
-    alreadyExists: 'El cliente ya existe',
-    invalidData: 'Datos del cliente inválidos',
-    notActive: 'El cliente no está activo',
-    alreadyActive: 'El cliente ya está activo',
-    inUse: 'El cliente está en uso y no puede ser eliminado',
-    invalidOperation: 'Operación inválida para el cliente',
-  },
-  // Ejemplo de mensajes para un nuevo servicio
-  Product: {
-    notFound: 'Producto no encontrado',
-    alreadyExists: 'El producto ya existe',
-    invalidData: 'Datos del producto inválidos',
-    notActive: 'El producto no está activo',
-    alreadyActive: 'El producto ya está activo',
-    inUse: 'El producto está en uso y no puede ser eliminado',
-    invalidOperation: 'Operación inválida para el producto',
-  },
-  Order: {
-    notFound: 'Orden no encontrada',
-    alreadyExists: 'La orden ya existe',
-    invalidData: 'Datos de la orden inválidos',
-    notActive: 'La orden no está activa',
-    alreadyActive: 'La orden ya está activa',
-    inUse: 'La orden está en uso y no puede ser eliminada',
-    invalidOperation: 'Operación inválida para la orden',
-  },
-};
-
-export class ServiceErrorHandler {
+/**
+ * Manejador base de errores que puede ser utilizado por cualquier entidad
+ */
+export class BaseErrorHandler {
   constructor(
     private readonly logger: Logger,
-    private readonly serviceName: ServiceType,
+    private readonly entityName: string,
+    private readonly errorMessages: ErrorMessages,
   ) {}
 
-  /**
-   * Maneja errores para operaciones CRUD básicas
-   */
   handleError(error: Error, action: ServiceAction): never {
-    const logMessage = `Error ${action} ${this.serviceName}`;
+    const logMessage = `Error ${action} ${this.entityName}`;
 
     if (
       error instanceof BadRequestException ||
@@ -112,53 +53,8 @@ export class ServiceErrorHandler {
     handleException(error, this.getSpanishErrorMessage(action));
   }
 
-  /**
-   * Maneja errores específicamente para operaciones de búsqueda
-   */
-  handleFindError(error: Error): never {
-    const logMessage = `Error retrieving ${this.serviceName}`;
-
-    if (
-      error instanceof BadRequestException ||
-      error instanceof NotFoundException
-    ) {
-      this.logger.warn(`${logMessage}: ${error.message}`);
-      throw new BadRequestException(this.getSpanishMessage(error.message));
-    }
-
-    this.logger.error(`${logMessage}: ${error.message}`, error.stack);
-    handleException(
-      error,
-      `Error al obtener ${this.getServiceNameInSpanish()}`,
-    );
-  }
-
-  /**
-   * Maneja errores para operaciones en lote
-   */
-  handleBatchError(error: Error, action: ServiceAction): never {
-    const logMessage = `Error in batch ${action} ${this.serviceName}`;
-
-    if (
-      error instanceof BadRequestException ||
-      error instanceof NotFoundException
-    ) {
-      this.logger.warn(`${logMessage}: ${error.message}`);
-      throw new BadRequestException(this.getSpanishMessage(error.message));
-    }
-
-    this.logger.error(`${logMessage}: ${error.message}`, error.stack);
-    handleException(
-      error,
-      `Error al procesar múltiples ${this.getServiceNameInSpanish()}`,
-    );
-  }
-
-  /**
-   * Maneja errores de validación específicos
-   */
   handleValidationError(error: Error, context: string): never {
-    const logMessage = `Validation error in ${this.serviceName}`;
+    const logMessage = `Validation error in ${this.entityName}`;
 
     if (error instanceof BadRequestException) {
       this.logger.warn(`${logMessage}: ${error.message}`);
@@ -169,38 +65,39 @@ export class ServiceErrorHandler {
     handleException(error, `Error de validación en ${context}`);
   }
 
-  /**
-   * Obtiene el mensaje de error en español basado en el mensaje original
-   */
-  private getSpanishMessage(originalMessage: string): string {
-    const messages = errorMessages[this.serviceName];
+  handleBatchError(error: Error, action: ServiceAction): never {
+    const logMessage = `Error in batch ${action} ${this.entityName}`;
 
-    if (originalMessage.includes('not found')) {
-      return messages.notFound;
-    }
-    if (originalMessage.includes('already exists')) {
-      return messages.alreadyExists;
-    }
-    if (originalMessage.includes('invalid')) {
-      return messages.invalidData;
-    }
-    if (originalMessage.includes('not active')) {
-      return messages.notActive;
-    }
-    if (originalMessage.includes('already active')) {
-      return messages.alreadyActive;
-    }
-    if (originalMessage.includes('in use')) {
-      return messages.inUse;
+    if (
+      error instanceof BadRequestException ||
+      error instanceof NotFoundException
+    ) {
+      this.logger.warn(`${logMessage}: ${error.message}`);
+      throw new BadRequestException(this.getSpanishMessage(error.message));
     }
 
-    // Mensaje genérico si no hay mapeo específico
-    return `Error al procesar la solicitud`;
+    this.logger.error(`${logMessage}: ${error.message}`, error.stack);
+    handleException(
+      error,
+      `Error al procesar múltiples ${this.getEntityNameInSpanish()}`,
+    );
   }
 
-  /**
-   * Obtiene el mensaje de error genérico en español según la acción
-   */
+  private getSpanishMessage(originalMessage: string): string {
+    if (originalMessage.includes('not found'))
+      return this.errorMessages.notFound;
+    if (originalMessage.includes('already exists'))
+      return this.errorMessages.alreadyExists;
+    if (originalMessage.includes('invalid'))
+      return this.errorMessages.invalidData;
+    if (originalMessage.includes('not active'))
+      return this.errorMessages.notActive;
+    if (originalMessage.includes('already active'))
+      return this.errorMessages.alreadyActive;
+    if (originalMessage.includes('in use')) return this.errorMessages.inUse;
+    return 'Error al procesar la solicitud';
+  }
+
   private getSpanishErrorMessage(action: ServiceAction): string {
     const actionMessages = {
       creating: 'crear',
@@ -213,22 +110,62 @@ export class ServiceErrorHandler {
       processing: 'procesar',
     };
 
-    return `Error al ${actionMessages[action]} ${this.getServiceNameInSpanish()}`;
+    return `Error al ${actionMessages[action]} ${this.getEntityNameInSpanish()}`;
   }
 
-  /**
-   * Obtiene el nombre del servicio en español
-   */
-  private getServiceNameInSpanish(): string {
-    const serviceNames = {
-      Service: 'servicio',
-      ServiceType: 'tipo de servicio',
-      User: 'usuario',
-      Client: 'cliente',
-      Product: 'producto',
-      Order: 'orden',
-    };
-
-    return serviceNames[this.serviceName] || this.serviceName.toLowerCase();
+  private getEntityNameInSpanish(): string {
+    return this.entityName.toLowerCase();
   }
+}
+
+// Mensajes de error para cada entidad
+export const serviceErrorMessages: ErrorMessages = {
+  notFound: 'Servicio no encontrado',
+  alreadyExists: 'El servicio ya existe',
+  invalidData: 'Datos del servicio inválidos',
+  notActive: 'El servicio no está activo',
+  alreadyActive: 'El servicio ya está activo',
+  inUse: 'El servicio está en uso y no puede ser eliminado',
+  invalidOperation: 'Operación inválida para el servicio',
+};
+
+export const serviceTypeErrorMessages: ErrorMessages = {
+  notFound: 'Tipo de servicio no encontrado',
+  alreadyExists: 'El tipo de servicio ya existe',
+  invalidData: 'Datos del tipo de servicio inválidos',
+  notActive: 'El tipo de servicio no está activo',
+  alreadyActive: 'El tipo de servicio ya está activo',
+  inUse: 'El tipo de servicio está en uso y no puede ser eliminado',
+  invalidOperation: 'Operación inválida para el tipo de servicio',
+};
+
+// Mensajes de error para el módulo de sucursales
+export const branchErrorMessages: ErrorMessages = {
+  notFound: 'Sucursal no encontrada',
+  alreadyExists: 'La sucursal ya existe',
+  invalidData: 'Datos de la sucursal inválidos',
+  notActive: 'La sucursal no está activa',
+  alreadyActive: 'La sucursal ya está activa',
+  inUse: 'La sucursal está en uso y no puede ser eliminada',
+  invalidOperation: 'Operación inválida para la sucursal',
+};
+
+// Registro de todos los mensajes de error por entidad
+export const entityErrorMessages = {
+  service: serviceErrorMessages,
+  serviceType: serviceTypeErrorMessages,
+  branch: branchErrorMessages,
+  // Para agregar un nuevo módulo:
+  // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
+  // 2. Agregar aquí con una clave apropiada
+  // Ejemplo:
+  // inventory: inventoryErrorMessages,
+} as const;
+
+// Helper de TypeScript para obtener tipos de entidad
+export type EntityType = keyof typeof entityErrorMessages;
+
+// Función auxiliar para obtener mensajes de error de una entidad
+export function getErrorMessagesForEntity(entity: EntityType): ErrorMessages {
+  return entityErrorMessages[entity];
 }
