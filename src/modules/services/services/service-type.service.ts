@@ -19,7 +19,10 @@ import {
 } from '../use-cases/delete-servicetype.use-case';
 import { DeleteServiceTypesDto } from '../dto/delete-service-types.dto';
 import { ReactivateServiceTypesUseCase } from '../use-cases/reactive-servicetype.use-case';
-import { ServiceErrorHandler } from 'src/common/error-handlers/service-error.handler';
+import {
+  BaseErrorHandler,
+  serviceTypeErrorMessages,
+} from 'src/common/error-handlers/service-error.handler';
 
 /**
  * Servicio que implementa la lógica de negocio para tipos de servicios médicos.
@@ -33,7 +36,7 @@ import { ServiceErrorHandler } from 'src/common/error-handlers/service-error.han
 @Injectable()
 export class ServiceTypeService {
   private readonly logger = new Logger(ServiceTypeService.name);
-  private readonly errorHandler: ServiceErrorHandler;
+  private readonly errorHandler: BaseErrorHandler;
   constructor(
     private readonly serviceTypeRepository: ServiceTypeRepository,
     private readonly createServiceTypeUseCase: CreateServiceTypeUseCase,
@@ -42,7 +45,11 @@ export class ServiceTypeService {
     private readonly deleteServiceTypesUseCase: DeleteServiceTypesUseCase,
     private readonly reactivateServiceTypesUseCase: ReactivateServiceTypesUseCase,
   ) {
-    this.errorHandler = new ServiceErrorHandler(this.logger, 'ServiceType');
+    this.errorHandler = new BaseErrorHandler(
+      this.logger,
+      'ServiceType',
+      serviceTypeErrorMessages,
+    );
   }
 
   /**

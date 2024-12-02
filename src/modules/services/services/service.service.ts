@@ -15,7 +15,10 @@ import { DeleteServiceUseCase } from '../use-cases/delete-service.use-case';
 import { DeleteServicesDto } from '../dto/delete-services.dto';
 import { DeleteServicesUseCase } from '../use-cases/delete-service.use-case';
 import { ReactivateServicesUseCase } from '../use-cases/reactive-service.use-case';
-import { ServiceErrorHandler } from 'src/common/error-handlers/service-error.handler';
+import {
+  BaseErrorHandler,
+  serviceErrorMessages,
+} from 'src/common/error-handlers/service-error.handler';
 
 /**
  * Servicio que implementa la lógica de negocio para servicios médicos.
@@ -30,7 +33,7 @@ import { ServiceErrorHandler } from 'src/common/error-handlers/service-error.han
 @Injectable()
 export class ServiceService {
   private readonly logger = new Logger(ServiceService.name);
-  private readonly errorHandler: ServiceErrorHandler;
+  private readonly errorHandler: BaseErrorHandler;
   constructor(
     private readonly serviceRepository: ServiceRepository,
     private readonly createServiceUseCase: CreateServiceUseCase,
@@ -39,7 +42,11 @@ export class ServiceService {
     private readonly deleteServicesUseCase: DeleteServicesUseCase,
     private readonly reactivateServicesUseCase: ReactivateServicesUseCase,
   ) {
-    this.errorHandler = new ServiceErrorHandler(this.logger, 'Service');
+    this.errorHandler = new BaseErrorHandler(
+      this.logger,
+      'Servicio',
+      serviceErrorMessages,
+    );
   }
 
   /**
