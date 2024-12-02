@@ -4,21 +4,21 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { CreateServiceDto, UpdateServiceDto } from '../dto';
+import { CreateServiceDto, DeleteServicesDto, UpdateServiceDto } from '../dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
-import { CreateServiceUseCase } from '../use-cases/create-service.use-case';
-import { UpdateServiceUseCase } from '../use-cases/update-service.use-case';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { ServiceRepository } from '../repositories/service.repository';
-import { DeleteServiceUseCase } from '../use-cases/delete-service.use-case';
-import { DeleteServicesDto } from '../dto/delete-services.dto';
-import { DeleteServicesUseCase } from '../use-cases/delete-service.use-case';
-import { ReactivateServicesUseCase } from '../use-cases/reactive-service.use-case';
 import {
   BaseErrorHandler,
   serviceErrorMessages,
 } from 'src/common/error-handlers/service-error.handler';
+import {
+  CreateServiceUseCase,
+  UpdateServiceUseCase,
+  DeleteServicesUseCase,
+  ReactivateServicesUseCase,
+} from '../use-cases';
 
 /**
  * Servicio que implementa la lógica de negocio para servicios médicos.
@@ -38,7 +38,6 @@ export class ServiceService {
     private readonly serviceRepository: ServiceRepository,
     private readonly createServiceUseCase: CreateServiceUseCase,
     private readonly updateServiceUseCase: UpdateServiceUseCase,
-    private readonly deleteServiceUseCase: DeleteServiceUseCase,
     private readonly deleteServicesUseCase: DeleteServicesUseCase,
     private readonly reactivateServicesUseCase: ReactivateServicesUseCase,
   ) {

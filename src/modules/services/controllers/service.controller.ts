@@ -8,7 +8,6 @@ import {
   Post,
 } from '@nestjs/common';
 import { ServiceService } from '../services/service.service';
-import { CreateServiceDto } from '../dto/create-service.dto';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import {
@@ -21,9 +20,8 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { UpdateServiceDto } from '../dto';
 import { Service } from '../entities/service.entity';
-import { DeleteServicesDto } from '../dto/delete-services.dto';
+import { CreateServiceDto, UpdateServiceDto, DeleteServicesDto } from '../dto';
 
 /**
  * Controlador REST para gestionar servicios médicos.

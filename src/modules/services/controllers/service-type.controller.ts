@@ -8,7 +8,6 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ServiceTypeService } from '../services/service-type.service';
-import { CreateServiceTypeDto } from '../dto/create-service-type.dto';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
@@ -22,8 +21,11 @@ import {
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { ServiceType } from '../entities/service.entity';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { UpdateServiceTypeDto } from '../dto';
-import { DeleteServiceTypesDto } from '../dto/delete-service-types.dto';
+import {
+  CreateServiceTypeDto,
+  UpdateServiceTypeDto,
+  DeleteServiceTypesDto,
+} from '../dto';
 
 /**
  * Controlador REST para gestionar tipos de servicios médicos.
