@@ -17,11 +17,9 @@ import {
   CreateAppointmentTypeUseCase,
   UpdateAppointmentTypeUseCase,
 } from '../use-cases';
-import {
-  BaseErrorHandler,
-  serviceTypeErrorMessages,
-} from 'src/common/error-handlers/service-error.handler';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { DeleteAppointmentTypesUseCase } from '../use-cases/delete-appointment-type.use-case';
+import { serviceTypeErrorMessages } from 'src/modules/services/errors/errors-service-type';
 
 /**
  * Servicio que implementa la lógica de negocio para tipos de citas médicas.

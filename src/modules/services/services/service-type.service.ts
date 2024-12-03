@@ -15,16 +15,14 @@ import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { UpdateServiceTypeUseCase } from '../use-cases/update-servicetype.use-case';
 import { DeleteServiceTypesUseCase } from '../use-cases/delete-servicetype.use-case';
 import { ReactivateServiceTypesUseCase } from '../use-cases/reactive-servicetype.use-case';
-import {
-  BaseErrorHandler,
-  serviceTypeErrorMessages,
-} from 'src/common/error-handlers/service-error.handler';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 
 import {
   CreateServiceTypeDto,
   UpdateServiceTypeDto,
   DeleteServiceTypesDto,
 } from '../dto';
+import { serviceTypeErrorMessages } from '../errors/errors-service-type';
 
 /**
  * Servicio que implementa la lógica de negocio para tipos de servicios médicos.

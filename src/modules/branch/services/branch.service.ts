@@ -6,10 +6,7 @@ import {
 } from '@nestjs/common';
 import { BranchRepository } from '../repositories/branch.repository';
 import { Branch } from '../entities/branch.entity';
-import {
-  BaseErrorHandler,
-  branchErrorMessages,
-} from 'src/common/error-handlers/service-error.handler';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateBranchDto, UpdateBranchDto, DeleteBranchesDto } from '../dto';
@@ -19,6 +16,7 @@ import {
   DeleteBranchesUseCase,
   ReactivateBranchesUseCase,
 } from '../use-cases';
+import { branchErrorMessages } from '../errors/errors-branch';
 
 /**
  * Servicio que implementa la lógica de negocio para sucursales.

@@ -9,16 +9,14 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { ServiceRepository } from '../repositories/service.repository';
-import {
-  BaseErrorHandler,
-  serviceErrorMessages,
-} from 'src/common/error-handlers/service-error.handler';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import {
   CreateServiceUseCase,
   UpdateServiceUseCase,
   DeleteServicesUseCase,
   ReactivateServicesUseCase,
 } from '../use-cases';
+import { serviceErrorMessages } from '../errors/errors-service';
 
 /**
  * Servicio que implementa la lógica de negocio para servicios médicos.
