@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateServiceTypeDto {
@@ -7,6 +8,7 @@ export class CreateServiceTypeDto {
     example: 'Consultation',
   })
   @IsString()
+  @Transform(({ value }) => value.trim().toLowerCase())
   @MinLength(2)
   name: string;
 
@@ -16,6 +18,7 @@ export class CreateServiceTypeDto {
     required: false,
   })
   @IsString()
+  @Transform(({ value }) => value.trim().toLowerCase())
   @IsOptional()
   description?: string;
 }

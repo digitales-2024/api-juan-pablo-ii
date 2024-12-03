@@ -80,7 +80,7 @@ export class BranchService {
     user: UserData,
   ): Promise<HttpResponse<Branch>> {
     try {
-      const currentBranch = await this.branchRepository.findById(id);
+      const currentBranch = await this.findById(id);
 
       if (!validateChanges(updateBranchDto, currentBranch)) {
         return {

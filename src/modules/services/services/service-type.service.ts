@@ -91,7 +91,7 @@ export class ServiceTypeService {
   ): Promise<HttpResponse<ServiceType>> {
     try {
       // Obtener el tipo de servicio existente
-      const currentServiceType = await this.serviceTypeRepository.findById(id);
+      const currentServiceType = await this.findById(id);
 
       // Validar si hay cambios significativos
       if (!validateChanges(updateServiceTypeDto, currentServiceType)) {

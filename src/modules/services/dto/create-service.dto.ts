@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsString,
   IsNumber,
@@ -20,6 +21,7 @@ export class CreateServiceDto {
     example: 'Consultation',
   })
   @IsString()
+  @Transform(({ value }) => value.trim().toLowerCase())
   @MinLength(2)
   name: string;
 
@@ -29,6 +31,7 @@ export class CreateServiceDto {
     required: false,
   })
   @IsString()
+  @Transform(({ value }) => value.trim().toLowerCase())
   @IsOptional()
   description?: string;
 

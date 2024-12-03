@@ -121,28 +121,27 @@ export abstract class BaseRepository<T extends { id: string }> {
    * @throws {NotFoundException} Si alguno de los registros no se encuentra
    */
   async deleteMany(ids: string[]): Promise<T[]> {
-    // Verifica que todos los registros existan
+    // Find existing records
     const existingRecords = await this.findMany({
       where: { id: { in: ids } },
     });
 
-    if (existingRecords.length !== ids.length) {
-      const missingIds = ids.filter(
-        (id) => !existingRecords.find((record) => record.id === id),
-      );
-      throw new NotFoundException(
-        `${String(this.modelName)} with ids ${missingIds.join(', ')} not found`,
-      );
+    // If no records found, end early
+    if (existingRecords.length === 0) {
+      return [];
     }
 
-    // Elimina todos los registros y retorna los eliminados
+    // Get IDs of existing records
+    const existingIds = existingRecords.map((record) => record.id);
+
+    // Delete only existing records
     await this.prisma.measureQuery(`deleteMany${String(this.modelName)}`, () =>
       (this.prisma[this.modelName] as any).deleteMany({
-        where: { id: { in: ids } },
+        where: { id: { in: existingIds } },
       }),
     );
 
-    // Retorna los registros que fueron eliminados
+    // Return deleted records
     return existingRecords;
   }
 

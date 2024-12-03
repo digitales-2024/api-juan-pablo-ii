@@ -82,7 +82,7 @@ export class ServiceService {
   ): Promise<HttpResponse<Service>> {
     try {
       // Obtener el servicio existente
-      const currentService = await this.serviceRepository.findById(id);
+      const currentService = await this.findById(id);
 
       // Validar si hay cambios significativos
       if (!validateChanges(updateServiceDto, currentService)) {
@@ -128,21 +128,6 @@ export class ServiceService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
-  //
-  // /**
-  //  * Elimina (softdelete) un servicio.
-  //  * @param {string} id - ID del servicio a eliminar.
-  //  * @param {UserData} user - Datos del usuario que realiza la eliminación.
-  //  * @returns {Promise<HttpResponse<Service>>} - Respuesta HTTP con el servicio eliminado.
-  //  */
-  // async delete(id: string, user: UserData): Promise<HttpResponse<Service>> {
-  //   try {
-  //     return await this.deleteServiceUseCase.execute(id, user);
-  //   } catch (error) {
-  //     this.errorHandler.handleError(error, 'deactivating');
-  //   }
-  // }
-
   /**
    * Desactiva múltiples servicios
    * @param deleteServicesDto - DTO con los IDs de los servicios a desactivar
@@ -163,30 +148,6 @@ export class ServiceService {
       this.errorHandler.handleError(error, 'deactivating');
     }
   }
-  //
-  // /**
-  //  * Reactiva un servicio previamente desactivado.
-  //  * @param {string} id - ID del servicio a reactivar.
-  //  * @param {UserData} user - Datos del usuario que realiza la reactivación.
-  //  * @returns {Promise<HttpResponse<Service>>} - Respuesta HTTP con el servicio reactivado.
-  //  */
-  // async reactivate(id: string, user: UserData): Promise<HttpResponse<Service>> {
-  //   try {
-  //     return await this.reactivateServiceUseCase.execute(id, user);
-  //   } catch (error) {
-  //     if (error instanceof BadRequestException) {
-  //       this.logger.warn(`Error reactivating Service: ${error.message}`);
-  //       throw error;
-  //     } else {
-  //       this.logger.error(
-  //         `Error reactivating Service: ${error.message}`,
-  //         error.stack,
-  //       );
-  //       handleException(error, 'Error reactivating Service');
-  //     }
-  //   }
-  // }
-
   /**
    * Reactiva múltiples servicios
    * @param ids - Lista de IDs de los servicios a reactivar

@@ -1,9 +1,6 @@
 import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { handleException } from '@login/login/utils';
 
-/**
- * Define tipos de acciones que pueden generar errores
- */
 export type ServiceAction =
   | 'creating'
   | 'updating'
@@ -14,9 +11,6 @@ export type ServiceAction =
   | 'activating'
   | 'processing';
 
-/**
- * Interface para mensajes de error de cada entidad
- */
 export interface ErrorMessages {
   notFound: string;
   alreadyExists: string;
@@ -28,9 +22,6 @@ export interface ErrorMessages {
   [key: string]: string;
 }
 
-/**
- * Manejador base de errores que puede ser utilizado por cualquier entidad
- */
 export class BaseErrorHandler {
   constructor(
     private readonly logger: Logger,
@@ -46,7 +37,8 @@ export class BaseErrorHandler {
       error instanceof NotFoundException
     ) {
       this.logger.warn(`${logMessage}: ${error.message}`);
-      throw new BadRequestException(this.getSpanishMessage(error.message));
+      const message = this.getDefaultOrCustomMessage(error.message);
+      throw new BadRequestException(message);
     }
 
     this.logger.error(`${logMessage}: ${error.message}`, error.stack);
@@ -56,9 +48,13 @@ export class BaseErrorHandler {
   handleValidationError(error: Error, context: string): never {
     const logMessage = `Validation error in ${this.entityName}`;
 
-    if (error instanceof BadRequestException) {
+    if (
+      error instanceof BadRequestException ||
+      error instanceof NotFoundException
+    ) {
       this.logger.warn(`${logMessage}: ${error.message}`);
-      throw new BadRequestException(this.getSpanishMessage(error.message));
+      const message = this.getDefaultOrCustomMessage(error.message);
+      throw new BadRequestException(message);
     }
 
     this.logger.error(`${logMessage}: ${error.message}`, error.stack);
@@ -73,7 +69,8 @@ export class BaseErrorHandler {
       error instanceof NotFoundException
     ) {
       this.logger.warn(`${logMessage}: ${error.message}`);
-      throw new BadRequestException(this.getSpanishMessage(error.message));
+      const message = this.getDefaultOrCustomMessage(error.message);
+      throw new BadRequestException(message);
     }
 
     this.logger.error(`${logMessage}: ${error.message}`, error.stack);
@@ -81,6 +78,13 @@ export class BaseErrorHandler {
       error,
       `Error al procesar múltiples ${this.getEntityNameInSpanish()}`,
     );
+  }
+
+  private getDefaultOrCustomMessage(message: string): string {
+    if (message === 'Bad Request' || message === 'Not Found') {
+      return this.errorMessages.invalidData;
+    }
+    return this.getSpanishMessage(message);
   }
 
   private getSpanishMessage(originalMessage: string): string {
@@ -95,7 +99,7 @@ export class BaseErrorHandler {
     if (originalMessage.includes('already active'))
       return this.errorMessages.alreadyActive;
     if (originalMessage.includes('in use')) return this.errorMessages.inUse;
-    return 'Error al procesar la solicitud';
+    return originalMessage;
   }
 
   private getSpanishErrorMessage(action: ServiceAction): string {
@@ -150,11 +154,22 @@ export const branchErrorMessages: ErrorMessages = {
   invalidOperation: 'Operación inválida para la sucursal',
 };
 
+export const appointmentTypeErrorMessages: ErrorMessages = {
+  notFound: 'Tipo de cita no encontrado',
+  alreadyExists: 'El tipo de cita ya existe',
+  invalidData: 'Datos del tipo de cita inválidos',
+  notActive: 'El tipo de cita no está activo',
+  alreadyActive: 'El tipo de cita ya está activo',
+  inUse: 'El tipo de cita está en uso y no puede ser eliminado',
+  invalidOperation: 'Operación inválida para el tipo de cita',
+};
+
 // Registro de todos los mensajes de error por entidad
 export const entityErrorMessages = {
   service: serviceErrorMessages,
   serviceType: serviceTypeErrorMessages,
   branch: branchErrorMessages,
+  appointmentType: appointmentTypeErrorMessages,
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
   // 2. Agregar aquí con una clave apropiada
