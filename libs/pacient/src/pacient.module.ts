@@ -1,31 +1,20 @@
 import { Module } from '@nestjs/common';
 import { PacientService } from './services/pacient.service';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
-import { BranchController } from './controllers/branch.controller';
+import { PacientController } from './controllers/pacient.controller';
+import { PacientRepository } from './repositories/pacient.repository';
+import { CreatePacientUseCase } from './use-cases/create-pacient.use-case';
+import { UpdatePacientUseCase } from './use-cases/update-pacient.use-case';
 
 @Module({
-  controllers: [BranchController],
+  controllers: [PacientController],
   imports: [AuditModule],
-  providers: [PacientService],
-  exports: [PacientService],
+  providers: [
+    PacientService,
+    PacientRepository,
+    CreatePacientUseCase,
+    UpdatePacientUseCase,
+  ],
+  exports: [PacientModule],
 })
 export class PacientModule {}
-
-/////////////////////
-
-import { BranchRepository } from './repositories/branch.repository';
-
-import { CreateBranchUseCase } from './use-cases/create-branch.use-case';
-import { UpdateBranchUseCase } from './use-cases/update-branch.use-case';
-import { BranchService } from './services/branch.service';
-
-@Module({
-  providers: [
-    BranchService,
-    BranchRepository,
-    CreateBranchUseCase,
-    UpdateBranchUseCase,
-  ],
-  exports: [BranchService],
-})
-export class BranchModule {}

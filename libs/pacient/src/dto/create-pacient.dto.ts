@@ -3,26 +3,14 @@ import {
   IsString,
   IsOptional,
   IsNotEmpty,
-  IsUUID,
-  /*  IsDate, */
   IsBoolean,
   IsEmail,
-  IsInt,
-  /*   Length, */
   MaxLength,
   IsDateString,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreatePacienteDto {
-  @ApiProperty({
-    description: 'Identificador único del paciente',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: true,
-  })
-  @IsUUID()
-  id: string;
-
   @ApiProperty({
     description: 'Nombre completo del paciente',
     example: 'Juan Pérez',
@@ -62,7 +50,7 @@ export class CreatePacienteDto {
     required: true,
   })
   @IsDateString()
-  cumpleaños: Date;
+  cumpleanos: Date;
 
   @ApiProperty({
     description: 'Sexo del paciente (M/F)',
@@ -235,9 +223,10 @@ export class CreatePacienteDto {
     example: 'COVID-19, Influenza',
     required: false,
   })
-  @IsInt()
-  @IsNotEmpty()
-  vacunas: number;
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  vacunas: string;
 
   @ApiProperty({
     description: 'Nombre y contacto del médico principal',

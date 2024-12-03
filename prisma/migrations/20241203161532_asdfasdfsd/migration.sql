@@ -1,135 +1,181 @@
-/*
-  Warnings:
+-- CreateEnum
+CREATE TYPE "AuditActionType" AS ENUM ('CREATE', 'UPDATE', 'DELETE');
 
-  - You are about to drop the `Branch` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Doctor` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Entry` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `History` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `MedicalAppointment` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `MedicalConsultation` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `MedicalPrescription` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Output` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Patient` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Payment` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Product` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `ProductType` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Sale` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Schedule` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `ScheduleDay` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Specialty` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Warehouse` table. If the table is not empty, all the data it contains will be lost.
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "phone" TEXT,
+    "isSuperAdmin" BOOLEAN NOT NULL DEFAULT false,
+    "lastLogin" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "mustChangePassword" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-*/
--- DropForeignKey
-ALTER TABLE "Doctor" DROP CONSTRAINT "Doctor_specialtyId_fkey";
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "Entry" DROP CONSTRAINT "Entry_productId_fkey";
+-- CreateTable
+CREATE TABLE "Rol" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "Entry" DROP CONSTRAINT "Entry_warehouseId_fkey";
+    CONSTRAINT "Rol_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "History" DROP CONSTRAINT "History_doctorId_fkey";
+-- CreateTable
+CREATE TABLE "UserRol" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "rolId" TEXT NOT NULL,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "History" DROP CONSTRAINT "History_patientId_fkey";
+    CONSTRAINT "UserRol_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "MedicalAppointment" DROP CONSTRAINT "MedicalAppointment_doctorId_fkey";
+-- CreateTable
+CREATE TABLE "Permission" (
+    "id" TEXT NOT NULL,
+    "cod" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "MedicalAppointment" DROP CONSTRAINT "MedicalAppointment_patientId_fkey";
+    CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "MedicalConsultation" DROP CONSTRAINT "MedicalConsultation_historyId_fkey";
+-- CreateTable
+CREATE TABLE "Module" (
+    "id" TEXT NOT NULL,
+    "cod" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "MedicalPrescription" DROP CONSTRAINT "MedicalPrescription_historyId_fkey";
+    CONSTRAINT "Module_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "Output" DROP CONSTRAINT "Output_productId_fkey";
+-- CreateTable
+CREATE TABLE "ModulePermissions" (
+    "id" TEXT NOT NULL,
+    "moduleId" TEXT NOT NULL,
+    "permissionId" TEXT NOT NULL,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "Output" DROP CONSTRAINT "Output_warehouseId_fkey";
+    CONSTRAINT "ModulePermissions_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "Payment" DROP CONSTRAINT "Payment_saleId_fkey";
+-- CreateTable
+CREATE TABLE "RolModulePermissions" (
+    "id" TEXT NOT NULL,
+    "rolId" TEXT NOT NULL,
+    "modulePermissionsId" TEXT NOT NULL,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "Product" DROP CONSTRAINT "Product_productTypeId_fkey";
+    CONSTRAINT "RolModulePermissions_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "Sale" DROP CONSTRAINT "Sale_patientId_fkey";
+-- CreateTable
+CREATE TABLE "Audit" (
+    "id" TEXT NOT NULL,
+    "entityId" TEXT NOT NULL,
+    "entityType" TEXT NOT NULL,
+    "action" "AuditActionType" NOT NULL,
+    "performedById" TEXT NOT NULL,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- DropForeignKey
-ALTER TABLE "ScheduleDay" DROP CONSTRAINT "ScheduleDay_doctorId_fkey";
+    CONSTRAINT "Audit_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "ScheduleDay" DROP CONSTRAINT "ScheduleDay_scheduleId_fkey";
+-- CreateTable
+CREATE TABLE "Client" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "rucDni" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
+    "province" TEXT NOT NULL,
+    "department" TEXT NOT NULL,
+    "phone" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropTable
-DROP TABLE "Branch";
-
--- DropTable
-DROP TABLE "Doctor";
-
--- DropTable
-DROP TABLE "Entry";
-
--- DropTable
-DROP TABLE "History";
-
--- DropTable
-DROP TABLE "MedicalAppointment";
-
--- DropTable
-DROP TABLE "MedicalConsultation";
-
--- DropTable
-DROP TABLE "MedicalPrescription";
-
--- DropTable
-DROP TABLE "Output";
-
--- DropTable
-DROP TABLE "Patient";
-
--- DropTable
-DROP TABLE "Payment";
-
--- DropTable
-DROP TABLE "Product";
-
--- DropTable
-DROP TABLE "ProductType";
-
--- DropTable
-DROP TABLE "Sale";
-
--- DropTable
-DROP TABLE "Schedule";
-
--- DropTable
-DROP TABLE "ScheduleDay";
-
--- DropTable
-DROP TABLE "Specialty";
-
--- DropTable
-DROP TABLE "Warehouse";
+    CONSTRAINT "Client_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Paciente" (
     "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "lastName" TEXT NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "apellido" TEXT,
     "dni" TEXT NOT NULL,
-    "birth" TEXT NOT NULL,
+    "cumpleanos" DATE NOT NULL,
+    "sexo" BOOLEAN NOT NULL,
+    "direccion" VARCHAR(255),
+    "telefono" VARCHAR(15),
+    "correo" VARCHAR(100),
+    "fechaRegistro" DATE NOT NULL,
+    "alergias" TEXT,
+    "medicamentosActuales" TEXT,
+    "contactoEmergencia" VARCHAR(100),
+    "telefonoEmergencia" VARCHAR(15),
+    "seguroMedico" VARCHAR(100),
+    "estadoCivil" VARCHAR(20),
+    "ocupacion" VARCHAR(100),
+    "lugarTrabajo" VARCHAR(255),
+    "tipoSangre" VARCHAR(3),
+    "antecedentesFamiliares" TEXT,
+    "habitosVida" TEXT,
+    "vacunas" INTEGER,
+    "medicoCabecera" VARCHAR(100),
+    "idioma" VARCHAR(50),
+    "autorizacionTratamiento" VARCHAR(255),
+    "observaciones" TEXT,
+    "fotografiaPaciente" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Paciente_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ServiceType" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ServiceType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Service" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "price" DOUBLE PRECISION NOT NULL,
+    "serviceTypeId" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -385,10 +431,67 @@ CREATE TABLE "Pago" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_isActive_key" ON "User"("email", "isActive");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Rol_id_key" ON "Rol"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Rol_name_isActive_key" ON "Rol"("name", "isActive");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserRol_id_key" ON "UserRol"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserRol_userId_rolId_key" ON "UserRol"("userId", "rolId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Permission_id_key" ON "Permission"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Permission_cod_name_key" ON "Permission"("cod", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Module_id_key" ON "Module"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Module_cod_name_key" ON "Module"("cod", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ModulePermissions_id_key" ON "ModulePermissions"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ModulePermissions_moduleId_permissionId_key" ON "ModulePermissions"("moduleId", "permissionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RolModulePermissions_id_key" ON "RolModulePermissions"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RolModulePermissions_rolId_modulePermissionsId_key" ON "RolModulePermissions"("rolId", "modulePermissionsId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Audit_id_key" ON "Audit"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Client_id_key" ON "Client"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Client_rucDni_key" ON "Client"("rucDni");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Paciente_id_key" ON "Paciente"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Paciente_dni_key" ON "Paciente"("dni");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ServiceType_id_key" ON "ServiceType"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Service_id_key" ON "Service"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Especialidad_id_key" ON "Especialidad"("id");
@@ -404,6 +507,30 @@ CREATE UNIQUE INDEX "Horario_id_key" ON "Horario"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Cronograma_id_key" ON "Cronograma"("id");
+
+-- AddForeignKey
+ALTER TABLE "UserRol" ADD CONSTRAINT "UserRol_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserRol" ADD CONSTRAINT "UserRol_rolId_fkey" FOREIGN KEY ("rolId") REFERENCES "Rol"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ModulePermissions" ADD CONSTRAINT "ModulePermissions_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "Module"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ModulePermissions" ADD CONSTRAINT "ModulePermissions_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RolModulePermissions" ADD CONSTRAINT "RolModulePermissions_rolId_fkey" FOREIGN KEY ("rolId") REFERENCES "Rol"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RolModulePermissions" ADD CONSTRAINT "RolModulePermissions_modulePermissionsId_fkey" FOREIGN KEY ("modulePermissionsId") REFERENCES "ModulePermissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Audit" ADD CONSTRAINT "Audit_performedById_fkey" FOREIGN KEY ("performedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Service" ADD CONSTRAINT "Service_serviceTypeId_fkey" FOREIGN KEY ("serviceTypeId") REFERENCES "ServiceType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Personal" ADD CONSTRAINT "Personal_especialidadId_fkey" FOREIGN KEY ("especialidadId") REFERENCES "Especialidad"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
