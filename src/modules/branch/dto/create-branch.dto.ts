@@ -1,6 +1,11 @@
 // create-branch.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+  IsPhoneNumber,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 /**
@@ -17,7 +22,7 @@ export class CreateBranchDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
+  @Transform(({ value }) => value.trim().toLowerCase())
   name: string;
 
   @ApiProperty({
@@ -37,6 +42,7 @@ export class CreateBranchDto {
   })
   @IsString()
   @IsOptional()
+  @IsPhoneNumber('PE')
   @Transform(({ value }) => value?.trim())
   phone?: string;
 }
