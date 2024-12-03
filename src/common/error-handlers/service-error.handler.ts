@@ -1,5 +1,10 @@
 import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { handleException } from '@login/login/utils';
+import { appointmentTypeErrorMessages } from 'src/modules/appointments/errors/errors-appointments';
+import { branchErrorMessages } from 'src/modules/branch/errors/errors-branch';
+import { serviceTypeErrorMessages } from 'src/modules/services/errors/errors-service-type';
+import { serviceErrorMessages } from 'src/modules/services/errors/errors-service';
+import { pacientErrorMessages } from '@pacient/pacient/errors/errors-pacient';
 
 export type ServiceAction =
   | 'creating'
@@ -123,46 +128,6 @@ export class BaseErrorHandler {
 }
 
 // Mensajes de error para cada entidad
-export const serviceErrorMessages: ErrorMessages = {
-  notFound: 'Servicio no encontrado',
-  alreadyExists: 'El servicio ya existe',
-  invalidData: 'Datos del servicio inválidos',
-  notActive: 'El servicio no está activo',
-  alreadyActive: 'El servicio ya está activo',
-  inUse: 'El servicio está en uso y no puede ser eliminado',
-  invalidOperation: 'Operación inválida para el servicio',
-};
-
-export const serviceTypeErrorMessages: ErrorMessages = {
-  notFound: 'Tipo de servicio no encontrado',
-  alreadyExists: 'El tipo de servicio ya existe',
-  invalidData: 'Datos del tipo de servicio inválidos',
-  notActive: 'El tipo de servicio no está activo',
-  alreadyActive: 'El tipo de servicio ya está activo',
-  inUse: 'El tipo de servicio está en uso y no puede ser eliminado',
-  invalidOperation: 'Operación inválida para el tipo de servicio',
-};
-
-// Mensajes de error para el módulo de sucursales
-export const branchErrorMessages: ErrorMessages = {
-  notFound: 'Sucursal no encontrada',
-  alreadyExists: 'La sucursal ya existe',
-  invalidData: 'Datos de la sucursal inválidos',
-  notActive: 'La sucursal no está activa',
-  alreadyActive: 'La sucursal ya está activa',
-  inUse: 'La sucursal está en uso y no puede ser eliminada',
-  invalidOperation: 'Operación inválida para la sucursal',
-};
-
-export const appointmentTypeErrorMessages: ErrorMessages = {
-  notFound: 'Tipo de cita no encontrado',
-  alreadyExists: 'El tipo de cita ya existe',
-  invalidData: 'Datos del tipo de cita inválidos',
-  notActive: 'El tipo de cita no está activo',
-  alreadyActive: 'El tipo de cita ya está activo',
-  inUse: 'El tipo de cita está en uso y no puede ser eliminado',
-  invalidOperation: 'Operación inválida para el tipo de cita',
-};
 
 // Registro de todos los mensajes de error por entidad
 export const entityErrorMessages = {
@@ -170,6 +135,8 @@ export const entityErrorMessages = {
   serviceType: serviceTypeErrorMessages,
   branch: branchErrorMessages,
   appointmentType: appointmentTypeErrorMessages,
+  paciente: pacientErrorMessages,
+
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
   // 2. Agregar aquí con una clave apropiada
