@@ -1,84 +1,33 @@
+// entities/calendar.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
+
+//Calendar
 
 export class Paciente {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
+  personalId: string;
+
+  @ApiProperty()
+  sucursalId: string;
+
+  @ApiProperty()
   nombre: string;
 
   @ApiProperty()
-  apellido?: string;
+  color?: string;
 
   @ApiProperty()
-  dni: string;
+  isDefault: boolean;
 
   @ApiProperty()
-  cumpleanos: Date;
+  isActive: boolean;
 
   @ApiProperty()
-  sexo: boolean;
+  createdAt: Date;
 
   @ApiProperty()
-  direccion?: string;
-
-  @ApiProperty()
-  telefono?: string;
-
-  @ApiProperty()
-  correo?: string;
-
-  @ApiProperty()
-  fechaRegistro: Date;
-
-  @ApiProperty()
-  alergias?: string;
-
-  @ApiProperty()
-  medicamentosActuales?: string;
-
-  @ApiProperty()
-  contactoEmergencia?: string;
-
-  @ApiProperty()
-  telefonoEmergencia?: string;
-
-  @ApiProperty()
-  seguroMedico?: string;
-
-  @ApiProperty()
-  estadoCivil?: string;
-
-  @ApiProperty()
-  ocupacion?: string;
-
-  @ApiProperty()
-  lugarTrabajo?: string;
-
-  @ApiProperty()
-  tipoSangre?: string;
-
-  @ApiProperty()
-  antecedentesFamiliares?: string;
-
-  @ApiProperty()
-  habitosVida?: string;
-
-  @ApiProperty()
-  vacunas?: string;
-
-  @ApiProperty()
-  medicoCabecera?: string;
-
-  @ApiProperty()
-  idioma?: string;
-
-  @ApiProperty()
-  autorizacionTratamiento?: string;
-
-  @ApiProperty()
-  observaciones?: string;
-
-  @ApiProperty()
-  fotografiaPaciente?: string;
+  updatedAt: Date;
 }
