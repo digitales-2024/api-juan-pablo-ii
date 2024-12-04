@@ -9,11 +9,13 @@ import { Paciente } from '../entities/pacient.entity';
 import { CreatePacienteDto } from '../dto/create-pacient.dto';
 import { UpdatePacientDto } from '../dto/update-pacient.dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { validateChanges } from '@prisma/prisma/utils';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreatePacientUseCase } from '../use-cases/create-pacient.use-case';
 import { UpdatePacientUseCase } from '../use-cases/update-pacient.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { pacientErrorMessages } from '../errors/errors-pacient';
+import { DeletePacientDto } from '../dto';
+import { DeletePacientsUseCase, ReactivatePacientUseCase } from '../use-cases';
 
 @Injectable()
 export class PacientService {
@@ -24,6 +26,8 @@ export class PacientService {
     private readonly pacientRepository: PacientRepository,
     private readonly createPacientUseCase: CreatePacientUseCase,
     private readonly updatePacientUseCase: UpdatePacientUseCase,
+    private readonly deletePacientsUseCase: DeletePacientsUseCase,
+    private readonly reactivatePacientUseCase: ReactivatePacientUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -140,5 +144,47 @@ export class PacientService {
     const existingPacients = await this.pacientRepository.findByDNI(dni);
     // Devuelve true si hay pacientes con el DNI proporcionado, false si no
     return existingPacients.length > 0;
+  }
+
+  /**
+   * Desactiva múltiples pacientes
+   * @param deletePacientDto - DTO con los IDs de los pacientes a desactivar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con los pacientes desactivados
+   * @throws {NotFoundException} Si algún paciente no existe
+   */
+  async deleteMany(
+    deletePacientDto: DeletePacientDto,
+    user: UserData,
+  ): Promise<HttpResponse<Paciente[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(deletePacientDto.ids, 'IDs de pacientes');
+
+      return await this.deletePacientsUseCase.execute(deletePacientDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deactivating');
+    }
+  }
+
+  /**
+   * Reactiva múltiples pacientes
+   * @param ids - Lista de IDs de los pacientes a reactivar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con los pacientes reactivados
+   * @throws {NotFoundException} Si algún paciente no existe
+   */
+  async reactivateMany(
+    ids: string[],
+    user: UserData,
+  ): Promise<HttpResponse<Paciente[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(ids, 'IDs de pacientes');
+
+      return await this.reactivatePacientUseCase.execute(ids, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'reactivating');
+    }
   }
 }
