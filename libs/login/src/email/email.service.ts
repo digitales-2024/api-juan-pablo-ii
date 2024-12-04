@@ -5,8 +5,8 @@ import { EventPayloads } from '@login/login/interfaces/event-types.interface';
 import { getFirstWord } from '@login/login/utils';
 
 const infoBusiness = {
-  business: 'Trazo',
-  url: 'https://trazo.com',
+  business: 'Juan Pablo II',
+  url: 'https://juanPabloII.com',
   phone: '+51 999 999 998',
   address: '1234 Street',
   contact: 'contacto@gmail.com',

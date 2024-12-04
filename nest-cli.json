@@ -99,6 +99,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/medical-consultation/tsconfig.lib.json"
       }
+    },
+    "pacient": {
+      "type": "library",
+      "root": "libs/pacient",
+      "entryFile": "index",
+      "sourceRoot": "libs/pacient/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/pacient/tsconfig.lib.json"
+      }
     }
   }
 }

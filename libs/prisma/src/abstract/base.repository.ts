@@ -97,7 +97,7 @@ export abstract class BaseRepository<T extends { id: string }> {
    * @param id - ID del registro a eliminar.
    * @throws {NotFoundException} Si el registro no se encuentra.
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<T> {
     const exists = await this.findById(id);
     if (!exists) {
       throw new NotFoundException(
@@ -105,12 +105,46 @@ export abstract class BaseRepository<T extends { id: string }> {
       );
     }
 
-    await this.prisma.measureQuery(`delete${String(this.modelName)}`, () =>
-      (this.prisma[this.modelName] as any).delete({
-        where: { id },
-      }),
+    return await this.prisma.measureQuery(
+      `delete${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).delete({
+          where: { id },
+        }),
     );
   }
+
+  /**
+   * Elimina múltiples registros por sus IDs.
+   * @param ids - Array de IDs de los registros a eliminar
+   * @returns Array con los registros eliminados
+   * @throws {NotFoundException} Si alguno de los registros no se encuentra
+   */
+  async deleteMany(ids: string[]): Promise<T[]> {
+    // Find existing records
+    const existingRecords = await this.findMany({
+      where: { id: { in: ids } },
+    });
+
+    // If no records found, end early
+    if (existingRecords.length === 0) {
+      return [];
+    }
+
+    // Get IDs of existing records
+    const existingIds = existingRecords.map((record) => record.id);
+
+    // Delete only existing records
+    await this.prisma.measureQuery(`deleteMany${String(this.modelName)}`, () =>
+      (this.prisma[this.modelName] as any).deleteMany({
+        where: { id: { in: existingIds } },
+      }),
+    );
+
+    // Return deleted records
+    return existingRecords;
+  }
+
   /**
    * Elimina lógicamente un registro por su id.
    * @param id - ID del registro a eliminar lógicamente.
@@ -134,6 +168,104 @@ export abstract class BaseRepository<T extends { id: string }> {
   }
 
   /**
+   * Elimina múltiples registros lógicamente
+   * @param ids - Array de IDs de los registros a desactivar
+   * @returns Array con los registros desactivados exitosamente
+   */
+  async softDeleteMany(ids: string[]): Promise<T[]> {
+    // Buscar registros que existen y están activos
+    const existingRecords = await this.findMany({
+      where: {
+        id: { in: ids },
+        isActive: true,
+      },
+    });
+
+    // Si no hay registros activos para procesar, termina
+    if (existingRecords.length === 0) {
+      return [];
+    }
+
+    // Obtiene solo los IDs de los registros activos
+    const activeIds = existingRecords.map((record) => record.id);
+
+    // Actualiza todos los registros activos encontrados
+    await this.prisma.measureQuery(
+      `softDeleteMany${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).updateMany({
+          where: { id: { in: activeIds } },
+          data: { isActive: false },
+        }),
+    );
+
+    // Retorna los registros que fueron desactivados
+    return existingRecords;
+  }
+
+  /**
+   * Reactiva un registro previamente desactivado.
+   * @param id - ID del registro a reactivar
+   * @returns El registro reactivado
+   * @throws {NotFoundException} Si el registro no se encuentra
+   */
+  async reactivate(id: string): Promise<T> {
+    const exists = await this.findOne({
+      where: { id, isActive: false },
+    });
+
+    if (!exists) {
+      throw new NotFoundException(
+        `${String(this.modelName)} with id ${id} not found or is already active`,
+      );
+    }
+
+    return this.prisma.measureQuery(`reactivate${String(this.modelName)}`, () =>
+      (this.prisma[this.modelName] as any).update({
+        where: { id },
+        data: { isActive: true },
+      }),
+    );
+  }
+
+  /**
+   * Reactiva múltiples registros previamente desactivados.
+   * @param ids - Array de IDs de los registros a reactivar
+   * @returns Array con los registros reactivados exitosamente
+   */
+  async reactivateMany(ids: string[]): Promise<T[]> {
+    // Buscar registros que existen y están inactivos
+    const existingRecords = await this.findMany({
+      where: {
+        id: { in: ids },
+        isActive: false,
+      },
+    });
+
+    // Si no hay registros inactivos para procesar, termina
+    if (existingRecords.length === 0) {
+      return [];
+    }
+
+    // Obtiene solo los IDs de los registros inactivos
+    const inactiveIds = existingRecords.map((record) => record.id);
+
+    // Reactiva todos los registros inactivos encontrados
+    await this.prisma.measureQuery(
+      `reactivateMany${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).updateMany({
+          where: { id: { in: inactiveIds } },
+          data: { isActive: true },
+        }),
+    );
+
+    // Obtiene y retorna los registros reactivados
+    return this.findMany({
+      where: { id: { in: inactiveIds } },
+    });
+  }
+  /**
    * Ejecuta una transacción con la base de datos.
    * @param operation - Función que contiene las operaciones a ejecutar dentro de la transacción.
    * @returns El resultado de la transacción.
@@ -151,19 +283,5 @@ export abstract class BaseRepository<T extends { id: string }> {
    */
   protected mapDtoToEntity<D>(dto: D): any {
     return dto;
-  }
-
-  /**
-   * Valida que una entidad con el id proporcionado exista.
-   * @param id - ID de la entidad a validar.
-   * @throws {NotFoundException} Si la entidad no se encuentra.
-   */
-  protected async validateExists(id: string): Promise<void> {
-    const exists = await this.findById(id);
-    if (!exists) {
-      throw new NotFoundException(
-        `${String(this.modelName)} with id ${id} not found`,
-      );
-    }
   }
 }
