@@ -179,7 +179,7 @@ model Paciente {
   tipoSangre              String? @db.VarChar(3)
   antecedentesFamiliares  String? @db.Text
   habitosVida             String? @db.Text
-  vacunas                 String?
+  vacunas                 Json?
   medicoCabecera          String? @db.VarChar(100)
   idioma                  String? @db.VarChar(50)
   autorizacionTratamiento String? @db.VarChar(255)

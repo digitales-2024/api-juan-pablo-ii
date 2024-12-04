@@ -7,6 +7,8 @@ import {
   IsEmail,
   MaxLength,
   IsDateString,
+  IsArray,
+  ArrayNotEmpty,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -220,12 +222,19 @@ export class CreatePacienteDto {
 
   @ApiProperty({
     description: 'Registro de vacunas recibidas',
-    example: 'COVID-19, Influenza',
+    example: [
+      {
+        'COVID-19': 1,
+        Influenza: 2,
+        'Hepatitis B': 3,
+        Sarampión: 1,
+      },
+    ],
     required: false,
   })
-  @IsString()
+  @IsArray()
   @IsOptional()
-  @Transform(({ value }) => value?.trim())
+  @ArrayNotEmpty()
   vacunas: string;
 
   @ApiProperty({

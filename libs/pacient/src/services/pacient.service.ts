@@ -32,17 +32,38 @@ export class PacientService {
     );
   }
 
+  /**
+   * Crea un nuevo paciente
+   * @param createPacienteDto - DTO con los datos para crear el paciente
+   * @param user - Datos del usuario que realiza la creación
+   * @returns Una promesa que resuelve con la respuesta HTTP que contiene el paciente creado
+   * @throws {BadRequestException} Si ya existe un paciente con el DNI proporcionado
+   * @throws {Error} Si ocurre un error al crear el paciente
+   */
   async create(
     createPacienteDto: CreatePacienteDto,
     user: UserData,
   ): Promise<HttpResponse<Paciente>> {
     try {
+      // Validar si el DNI ya existe
+      const dniExists = await this.validateDNIExists(createPacienteDto.dni);
+      if (dniExists) {
+        throw new BadRequestException('Ya existe un paciente con este DNI');
+      }
       return await this.createPacientUseCase.execute(createPacienteDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
     }
   }
 
+  /**
+   * Actualiza un paciente existente
+   * @param id - ID del paciente a actualizar
+   * @param updatePacientDto - DTO con los datos para actualizar el paciente
+   * @param user - Datos del usuario que realiza la actualización
+   * @returns Una promesa que resuelve con la respuesta HTTP que contiene el paciente actualizado
+   * @throws {Error} Si ocurre un error al actualizar el paciente
+   */
   async update(
     id: string,
     updatePacientDto: UpdatePacientDto,
@@ -69,6 +90,25 @@ export class PacientService {
     }
   }
 
+  /**
+   * Busca un paciente por su ID
+   * @param id - ID del paciente a buscar
+   * @returns El paciente encontrado
+   * @throws {NotFoundException} Si el paciente no existe
+   */
+  async findOne(id: string): Promise<Paciente> {
+    try {
+      return this.findById(id);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los pacientes
+   * @returns Una promesa que resuelve con una lista de todos los pacientes
+   * @throws {Error} Si ocurre un error al obtener los pacientes
+   */
   async findAll(): Promise<Paciente[]> {
     try {
       return this.pacientRepository.findMany();
@@ -77,11 +117,28 @@ export class PacientService {
     }
   }
 
+  /**
+   * Busca un paciente por su ID
+   * @param id - ID del paciente a buscar
+   * @returns Una promesa que resuelve con el paciente encontrado
+   * @throws {BadRequestException} Si el paciente no existe
+   */
   async findById(id: string): Promise<Paciente> {
     const paciente = await this.pacientRepository.findById(id);
     if (!paciente) {
       throw new BadRequestException('Paciente no encontrado');
     }
     return paciente;
+  }
+
+  /**
+   * Valida si un DNI ya está registrado
+   * @param dni - DNI a validar
+   * @returns true si el DNI ya está registrado, false si no
+   */
+  async validateDNIExists(dni: string): Promise<boolean> {
+    const existingPacients = await this.pacientRepository.findByDNI(dni);
+    // Devuelve true si hay pacientes con el DNI proporcionado, false si no
+    return existingPacients.length > 0;
   }
 }

@@ -284,4 +284,23 @@ export abstract class BaseRepository<T extends { id: string }> {
   protected mapDtoToEntity<D>(dto: D): any {
     return dto;
   }
+
+  // Añadir este método dentro de la clase BaseRepository
+
+  /**
+   * Busca registros por un campo específico y su valor
+   * @param field - Nombre del campo por el cual buscar
+   * @param value - Valor a buscar
+   * @returns Array con los registros que coinciden con la búsqueda
+   */
+  async findByField(field: keyof T, value: any): Promise<T[]> {
+    return this.prisma.measureQuery(`findBy${String(field)}`, () =>
+      (this.prisma[this.modelName] as any).findMany({
+        where: {
+          [field]: value,
+          // No incluimos isActive aquí para permitir búsquedas flexibles
+        },
+      }),
+    );
+  }
 }

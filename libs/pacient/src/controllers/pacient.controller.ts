@@ -8,6 +8,9 @@ import {
   ApiResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
+  ApiParam,
+  ApiOkResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { UserData } from '@login/login/interfaces';
 import { CreatePacienteDto } from '../dto/create-pacient.dto';
@@ -52,6 +55,37 @@ export class PacientController {
   }
 
   /**
+   * Obtiene un paciente por su ID
+   */
+  @ApiOperation({ summary: 'Obtener paciente por ID' })
+  @ApiParam({ name: 'id', description: 'ID del paciente' })
+  @ApiOkResponse({
+    description: 'Paciente encontrado',
+    type: Paciente,
+  })
+  @ApiNotFoundResponse({
+    description: 'Paciente no encontrado',
+  })
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Paciente> {
+    return this.pacientService.findOne(id);
+  }
+
+  /**
+   * Obtiene todos los pacientes
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los pacientes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los pacientes',
+    type: [Paciente],
+  })
+  findAll() {
+    return this.pacientService.findAll();
+  }
+
+  /**
    * Actualiza un paciente existente
    */
   @Patch(':id')
@@ -67,19 +101,5 @@ export class PacientController {
     @GetUser() user: UserData,
   ) {
     return this.pacientService.update(id, updatePacientDto, user);
-  }
-
-  /**
-   * Obtiene todos los pacientes
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los pacientes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todos los pacientes',
-    type: [Paciente],
-  })
-  findAll() {
-    return this.pacientService.findAll();
   }
 }
