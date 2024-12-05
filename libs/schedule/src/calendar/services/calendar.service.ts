@@ -21,6 +21,7 @@ import {
   ReactivateCalendarUseCase,
 } from '../use-cases';
 import { Calendar } from '../entities/pacient.entity';
+import { BranchRepository } from 'src/modules/branch/repositories/branch.repository';
 
 @Injectable()
 export class CalendarService {
@@ -33,6 +34,7 @@ export class CalendarService {
     private readonly updateCalendarUseCase: UpdateCalendarUseCase,
     private readonly deleteCalendarsUseCase: DeleteCalendarsUseCase,
     private readonly reactivateCalendarUseCase: ReactivateCalendarUseCase,
+    private readonly branchRepository: BranchRepository,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -54,6 +56,12 @@ export class CalendarService {
     user: UserData,
   ): Promise<HttpResponse<Calendar>> {
     try {
+      const branchExist = await this.branchRepository.findBranchById(
+        createCalendarDto.sucursalId,
+      );
+      if (!branchExist) {
+        throw new BadRequestException('No existe la sucursal');
+      }
       return await this.createCalendarUseCase.execute(createCalendarDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');

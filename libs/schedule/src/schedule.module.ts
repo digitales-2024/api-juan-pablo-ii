@@ -9,6 +9,7 @@ import {
 } from './calendar/use-cases';
 import { CalendarService } from './calendar/services/calendar.service';
 import { CalendarController } from './calendar/controllers/calendar.controller';
+import { BranchRepository } from 'src/modules/branch/repositories/branch.repository';
 
 @Module({
   controllers: [CalendarController],
@@ -20,6 +21,7 @@ import { CalendarController } from './calendar/controllers/calendar.controller';
     UpdateCalendarUseCase,
     DeleteCalendarsUseCase,
     ReactivateCalendarUseCase,
+    BranchRepository,
   ],
   exports: [ScheduleModule],
 })
