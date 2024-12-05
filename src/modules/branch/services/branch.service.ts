@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { BranchRepository } from '../repositories/branch.repository';
 import { Branch } from '../entities/branch.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
@@ -78,7 +73,7 @@ export class BranchService {
     user: UserData,
   ): Promise<HttpResponse<Branch>> {
     try {
-      const currentBranch = await this.findById(id);
+      const currentBranch = await this.branchRepository.findBranchById(id);
 
       if (!validateChanges(updateBranchDto, currentBranch)) {
         return {
@@ -134,7 +129,7 @@ export class BranchService {
    */
   async findOne(id: string): Promise<Branch> {
     try {
-      return this.findById(id);
+      return this.branchRepository.findBranchById(id);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -159,19 +154,5 @@ export class BranchService {
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
     }
-  }
-  /**
-   * Busca una Sucursal por su ID (método interno)
-   * @param id - ID del servicio a buscar
-   * @returns Sucursal no encontrado
-   * @throws {BadRequestException} Si la sucursal no existe
-   * @internal
-   */
-  async findById(id: string): Promise<Branch> {
-    const branch = await this.branchRepository.findById(id);
-    if (!branch) {
-      throw new BadRequestException(`Sucursal no encontrado`);
-    }
-    return branch;
   }
 }

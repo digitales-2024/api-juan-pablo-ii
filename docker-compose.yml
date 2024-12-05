@@ -1,6 +1,5 @@
 services:
   api-juan-pablo:
-    image: juan-pablo-api:dev
     container_name: api-juan-pablo
     build:
       target: dev

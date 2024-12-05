@@ -1,10 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { SpecializationService } from '../services/specialization.service';
-import { CreateSpecializationDto, UpdateSpecializationDto } from '../dto';
+import {
+  CreateSpecializationDto,
+  DeleteSpecializationDto,
+  UpdateSpecializationDto,
+} from '../dto';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -25,7 +39,12 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 export class SpecializationController {
   constructor(private readonly specializationService: SpecializationService) {}
 
+  /**
+   * Crea una nueva especialidad.
+   * @param createSpecializationDto - Datos para crear la especialidad.
+   */
   @Post()
+  @ApiOperation({ summary: 'Crear una nueva especialidad' })
   @ApiCreatedResponse({
     description: 'Especialidad creada exitosamente',
     type: Specialization,
@@ -41,6 +60,7 @@ export class SpecializationController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Obtener todas las especialidades' })
   @ApiOkResponse({
     description: 'Lista de todas las especialidades',
     type: [Specialization],
@@ -50,6 +70,7 @@ export class SpecializationController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obtener especialidad por ID' })
   @ApiOkResponse({
     description: 'Especialidad encontrada',
     type: Specialization,
@@ -59,6 +80,7 @@ export class SpecializationController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Eliminar múltiples especialidades' })
   @ApiOkResponse({
     description: 'Especialidad actualizada exitosamente',
     type: Specialization,
@@ -69,5 +91,46 @@ export class SpecializationController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Specialization>> {
     return this.specializationService.update(id, updateSpecializationDto, user);
+  }
+  /**
+   * Elimina múltiples especialidades
+   */
+  @Delete('remove/all')
+  @ApiOperation({ summary: 'Eliminar múltiples especialidades' })
+  @ApiResponse({
+    status: 200,
+    description: 'Especialidades eliminadas exitosamente',
+    type: [Specialization],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o especialidades no existen',
+  })
+  deleteMany(
+    @Body() deleteSpecializationDto: DeleteSpecializationDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Specialization[]>> {
+    return this.specializationService.deleteMany(deleteSpecializationDto, user);
+  }
+
+  /**
+   * Reactiva múltiples sucursales
+   */
+  @Patch('reactivate/all')
+  @ApiOperation({ summary: 'Reactivar múltiples sucursales' })
+  @ApiOkResponse({
+    description: 'Sucursales reactivadas exitosamente',
+    type: [Specialization],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o sucursales no existen',
+  })
+  reactivateAll(
+    @Body() DeleteSpecializationDto: DeleteSpecializationDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Specialization[]>> {
+    return this.specializationService.reactivateMany(
+      DeleteSpecializationDto.ids,
+      user,
+    );
   }
 }

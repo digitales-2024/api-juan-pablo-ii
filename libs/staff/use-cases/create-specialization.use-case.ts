@@ -44,6 +44,7 @@ export class CreateSpecializationUseCase {
         const especialidad = await this.especialidadRepository.create({
           name: createSpecializationDto.name,
           description: createSpecializationDto.description,
+          isActive: true,
         });
 
         // Registrar auditoría
