@@ -12,7 +12,7 @@ export class PacientRepository extends BaseRepository<Paciente> {
    * @param dni - DNI a buscar
    * @returns Array de pacientes que coinciden con el DNI
    */
-  async findByDNI(dni: string): Promise<Paciente[]> {
+  async findPatientByDNI(dni: string): Promise<Paciente[]> {
     return this.findByField('dni', dni);
   }
 }
