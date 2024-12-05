@@ -165,7 +165,7 @@ export class SpecializationService {
   ): Promise<HttpResponse<Specialization[]>> {
     try {
       // Validar el array de IDs
-      validateArray(ids, 'IDs de sucursales');
+      validateArray(ids, 'IDs de especialidades');
 
       return await this.reactiveSpecializationUseCase.execute(ids, user);
     } catch (error) {

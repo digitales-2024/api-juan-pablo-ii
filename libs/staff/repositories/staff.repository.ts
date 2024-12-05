@@ -62,4 +62,13 @@ export class StaffRepository extends BaseRepository<Staff> {
       },
     });
   }
+
+  /**
+   * Busca pacientes por DNI
+   * @param dni - DNI a buscar
+   * @returns Array de personal que coinciden con el DNI
+   */
+  async findStaffByDNI(dni: string): Promise<Staff[]> {
+    return this.findByField('dni', dni);
+  }
 }

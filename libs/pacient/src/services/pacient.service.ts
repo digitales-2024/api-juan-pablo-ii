@@ -141,7 +141,7 @@ export class PacientService {
    * @returns true si el DNI ya está registrado, false si no
    */
   async validateDNIExists(dni: string): Promise<boolean> {
-    const existingPacients = await this.pacientRepository.findByDNI(dni);
+    const existingPacients = await this.pacientRepository.findPatientByDNI(dni);
     // Devuelve true si hay pacientes con el DNI proporcionado, false si no
     return existingPacients.length > 0;
   }

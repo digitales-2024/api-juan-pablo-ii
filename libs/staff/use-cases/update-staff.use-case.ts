@@ -4,15 +4,15 @@ import { Injectable, HttpStatus, BadRequestException } from '@nestjs/common';
 import { AuditActionType } from '@prisma/client';
 import { StaffRepository } from '../repositories/staff.repository';
 import { Staff } from '../entities/staff.entity';
-import { CreateStaffDto } from '../dto';
+import { UpdateStaffDto } from '../dto';
 import { SpecializationRepository } from '../repositories/specialization.repository';
 
 @Injectable()
-export class CreateStaffUseCase {
+export class UpdateStaffUseCase {
   constructor(
     private readonly staffRepository: StaffRepository,
-    private readonly auditService: AuditService,
     private readonly specializationRepository: SpecializationRepository,
+    private readonly auditService: AuditService,
   ) {}
 
   private async validateDNIExists(dni: string): Promise<boolean> {
@@ -22,37 +22,30 @@ export class CreateStaffUseCase {
   }
 
   async execute(
-    createStaffDto: CreateStaffDto,
+    id: string,
+    updateStaffDto: UpdateStaffDto,
     user: UserData,
   ): Promise<HttpResponse<Staff>> {
     const especialidad = await this.specializationRepository.findById(
-      createStaffDto.especialidadId,
+      updateStaffDto.especialidadId,
     );
     if (!especialidad) {
       throw new BadRequestException('La especialidad no existe');
     }
 
-    const dniExists = await this.validateDNIExists(createStaffDto.dni);
+    const dniExists = await this.validateDNIExists(updateStaffDto.dni);
     if (dniExists) {
       throw new BadRequestException('Ya existe personal con este DNI');
     }
 
-    const newPersonal = await this.staffRepository.transaction(async () => {
-      const personal = await this.staffRepository.createPersonal({
-        name: createStaffDto.name,
-        lastName: createStaffDto.lastName,
-        dni: createStaffDto.dni,
-        birth: createStaffDto.birth,
-        email: createStaffDto.email,
-        phone: createStaffDto.phone,
-        userId: createStaffDto.userId,
-        especialidadId: createStaffDto.especialidadId,
-      });
+    const updatedPersonal = await this.staffRepository.transaction(async () => {
+      const personal = await this.staffRepository.update(id, updateStaffDto);
 
+      // Registrar auditoría
       await this.auditService.create({
         entityId: personal.id,
         entityType: 'personal',
-        action: AuditActionType.CREATE,
+        action: AuditActionType.UPDATE,
         performedById: user.id,
         createdAt: new Date(),
       });
@@ -61,9 +54,9 @@ export class CreateStaffUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
-      message: 'Personal médico creado exitosamente',
-      data: newPersonal,
+      statusCode: HttpStatus.OK,
+      message: 'Personal médico actualizado exitosamente',
+      data: updatedPersonal,
     };
   }
 }

@@ -5,14 +5,18 @@ import {
   Logger,
 } from '@nestjs/common';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { validateChanges } from '@prisma/prisma/utils';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { Staff } from '../entities/staff.entity';
 import { personalErrorMessages } from '../errors/erros-staff';
 import { StaffRepository } from '../repositories/staff.repository';
-import { CreateStaffUseCase, UpdateStaffUseCase } from '../use-cases';
-import { CreateStaffDto, UpdateStaffDto } from '../dto';
-import { SpecializationRepository } from '../repositories/specialization.repository';
+import {
+  CreateStaffUseCase,
+  DeleteStaffUseCase,
+  ReactivateStaffUseCase,
+  UpdateStaffUseCase,
+} from '../use-cases';
+import { CreateStaffDto, DeleteStaffDto, UpdateStaffDto } from '../dto';
 
 /**
  * Servicio que implementa la lógica de negocio para personal médico.
@@ -26,9 +30,10 @@ export class StaffService {
 
   constructor(
     private readonly staffRepository: StaffRepository,
-    private readonly specializationRepository: SpecializationRepository,
     private readonly createStaffUseCase: CreateStaffUseCase,
     private readonly updateStaffUseCase: UpdateStaffUseCase,
+    private readonly deleteStaffUseCase: DeleteStaffUseCase,
+    private readonly reactiveStaffUseCase: ReactivateStaffUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -108,6 +113,48 @@ export class StaffService {
       return this.findById(id);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Elimina múltiples especialidades
+   * @param deleteStaffDto - DTO con los IDs de las especialidades a eliminar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con las especialidades eliminadas
+   * @throws {NotFoundException} Si alguna especialidad no existe
+   */
+  async deleteMany(
+    deleteStaffDto: DeleteStaffDto,
+    user: UserData,
+  ): Promise<HttpResponse<Staff[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(deleteStaffDto.ids, 'IDs de personal');
+
+      return await this.deleteStaffUseCase.execute(deleteStaffDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deleting');
+    }
+  }
+
+  /**
+   * Reactiva múltiples sucursales
+   * @param ids - Lista de IDs de las sucursales a reactivar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con las sucursales reactivadas
+   * @throws {NotFoundException} Si alguna sucursal no existe
+   */
+  async reactivateMany(
+    ids: string[],
+    user: UserData,
+  ): Promise<HttpResponse<Staff[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(ids, 'IDs de personal');
+
+      return await this.reactiveStaffUseCase.execute(ids, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'reactivating');
     }
   }
 
