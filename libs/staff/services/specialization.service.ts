@@ -13,6 +13,7 @@ import {
   CreateSpecializationUseCase,
   UpdateSpecializationUseCase,
   DeleteSpecializationUseCase,
+  ReactivateSpecializationUseCase,
 } from '../use-cases';
 import {
   CreateSpecializationDto,
@@ -37,6 +38,7 @@ export class SpecializationService {
     private readonly createSpecializationUseCase: CreateSpecializationUseCase,
     private readonly updateSpecializationUseCase: UpdateSpecializationUseCase,
     private readonly deleteSpecializationUseCase: DeleteSpecializationUseCase,
+    private readonly reactiveSpecializationUseCase: ReactivateSpecializationUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -147,6 +149,27 @@ export class SpecializationService {
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'deleting');
+    }
+  }
+
+  /**
+   * Reactiva múltiples sucursales
+   * @param ids - Lista de IDs de las sucursales a reactivar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con las sucursales reactivadas
+   * @throws {NotFoundException} Si alguna sucursal no existe
+   */
+  async reactivateMany(
+    ids: string[],
+    user: UserData,
+  ): Promise<HttpResponse<Specialization[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(ids, 'IDs de sucursales');
+
+      return await this.reactiveSpecializationUseCase.execute(ids, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'reactivating');
     }
   }
 

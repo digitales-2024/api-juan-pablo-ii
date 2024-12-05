@@ -39,7 +39,12 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 export class SpecializationController {
   constructor(private readonly specializationService: SpecializationService) {}
 
+  /**
+   * Crea una nueva especialidad.
+   * @param createSpecializationDto - Datos para crear la especialidad.
+   */
   @Post()
+  @ApiOperation({ summary: 'Crear una nueva especialidad' })
   @ApiCreatedResponse({
     description: 'Especialidad creada exitosamente',
     type: Specialization,
@@ -55,6 +60,7 @@ export class SpecializationController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Obtener todas las especialidades' })
   @ApiOkResponse({
     description: 'Lista de todas las especialidades',
     type: [Specialization],
@@ -64,6 +70,7 @@ export class SpecializationController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obtener especialidad por ID' })
   @ApiOkResponse({
     description: 'Especialidad encontrada',
     type: Specialization,
@@ -73,6 +80,7 @@ export class SpecializationController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Eliminar múltiples especialidades' })
   @ApiOkResponse({
     description: 'Especialidad actualizada exitosamente',
     type: Specialization,
@@ -102,5 +110,27 @@ export class SpecializationController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Specialization[]>> {
     return this.specializationService.deleteMany(deleteSpecializationDto, user);
+  }
+
+  /**
+   * Reactiva múltiples sucursales
+   */
+  @Patch('reactivate/all')
+  @ApiOperation({ summary: 'Reactivar múltiples sucursales' })
+  @ApiOkResponse({
+    description: 'Sucursales reactivadas exitosamente',
+    type: [Specialization],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o sucursales no existen',
+  })
+  reactivateAll(
+    @Body() DeleteSpecializationDto: DeleteSpecializationDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Specialization[]>> {
+    return this.specializationService.reactivateMany(
+      DeleteSpecializationDto.ids,
+      user,
+    );
   }
 }

@@ -7,6 +7,7 @@ import {
   CreateSpecializationUseCase,
   CreateStaffUseCase,
   DeleteSpecializationUseCase,
+  ReactivateSpecializationUseCase,
   UpdateSpecializationUseCase,
   UpdateStaffUseCase,
 } from './use-cases';
@@ -32,6 +33,7 @@ import { StaffController } from './controllers/staff.controller';
     CreateSpecializationUseCase,
     UpdateSpecializationUseCase,
     DeleteSpecializationUseCase,
+    ReactivateSpecializationUseCase,
 
     // Repositories
     // Use Cases
