@@ -8,6 +8,7 @@ import { ServiceModule } from './modules/services/service.module';
 import { BranchModule } from './modules/branch/branch.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { PacientModule } from '@pacient/pacient/pacient.module';
+import { ScheduleModule } from '@schedule/schedule/schedule.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PacientModule } from '@pacient/pacient/pacient.module';
     BranchModule,
     AppointmentsModule,
     PacientModule,
+    ScheduleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

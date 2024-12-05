@@ -4,7 +4,7 @@ import { IsString, IsOptional, IsBoolean, IsUUID } from 'class-validator';
 
 // CreateCalendarDto
 
-export class CreatePacienteDto {
+export class CreateCalendarDto {
   @ApiProperty({
     description: 'ID del personal asociado al calendario',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -41,5 +41,5 @@ export class CreatePacienteDto {
   })
   @IsBoolean()
   @IsOptional()
-  isDefault?: boolean;
+  isDefault: boolean;
 }

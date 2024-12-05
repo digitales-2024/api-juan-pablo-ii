@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 //Calendar
 
-export class Paciente {
+export class Calendar {
   @ApiProperty()
   id: string;
 
@@ -21,13 +21,4 @@ export class Paciente {
 
   @ApiProperty()
   isDefault: boolean;
-
-  @ApiProperty()
-  isActive: boolean;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
 }
