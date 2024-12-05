@@ -1,10 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { StaffService } from '../services/staff.service';
-import { CreateStaffDto, UpdateStaffDto } from '../dto';
+import { CreateStaffDto, DeleteStaffDto, UpdateStaffDto } from '../dto';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -26,6 +36,7 @@ export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Crear nuevo personal' })
   @ApiCreatedResponse({
     description: 'Personal médico creado exitosamente',
     type: Staff,
@@ -41,6 +52,7 @@ export class StaffController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Obtener Personal' })
   @ApiOkResponse({
     description: 'Lista de todo el personal médico',
     type: [Staff],
@@ -50,6 +62,7 @@ export class StaffController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obtener personal por ID' })
   @ApiOkResponse({
     description: 'Personal médico encontrado',
     type: Staff,
@@ -59,6 +72,7 @@ export class StaffController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar personal existente' })
   @ApiOkResponse({
     description: 'Personal médico actualizado exitosamente',
     type: Staff,
@@ -69,5 +83,44 @@ export class StaffController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Staff>> {
     return this.staffService.update(id, updateStaffDto, user);
+  }
+
+  /**
+   * Elimina múltiple Personal
+   */
+  @Delete('remove/all')
+  @ApiOperation({ summary: 'Actualizar personal existente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Personal eliminado exitosamente',
+    type: [Staff],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o personal no existentes',
+  })
+  deleteMany(
+    @Body() deleteStaffDto: DeleteStaffDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Staff[]>> {
+    return this.staffService.deleteMany(deleteStaffDto, user);
+  }
+
+  /**
+   * Reactiva múltiple Personal
+   */
+  @Patch('reactivate/all')
+  @ApiOperation({ summary: 'Reactivar múltiple personal' })
+  @ApiOkResponse({
+    description: 'Personal reactivado exitosamente',
+    type: [Staff],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o personal no existentes',
+  })
+  reactivateAll(
+    @Body() deleteStaffDto: DeleteStaffDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Staff[]>> {
+    return this.staffService.reactivateMany(deleteStaffDto.ids, user);
   }
 }
