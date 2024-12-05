@@ -116,13 +116,13 @@ export class SpecializationController {
    * Reactiva múltiples sucursales
    */
   @Patch('reactivate/all')
-  @ApiOperation({ summary: 'Reactivar múltiples sucursales' })
+  @ApiOperation({ summary: 'Reactivar múltiples especialidades' })
   @ApiOkResponse({
-    description: 'Sucursales reactivadas exitosamente',
+    description: 'Especialidades reactivadas exitosamente',
     type: [Specialization],
   })
   @ApiBadRequestResponse({
-    description: 'IDs inválidos o sucursales no existen',
+    description: 'IDs inválidos o especialidades no existen',
   })
   reactivateAll(
     @Body() DeleteSpecializationDto: DeleteSpecializationDto,

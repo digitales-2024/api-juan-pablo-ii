@@ -17,14 +17,14 @@ export class ReactivateSpecializationUseCase {
     user: UserData,
   ): Promise<HttpResponse<Specialization[]>> {
     // Reactivar las sucursales y registrar auditoría
-    const reactivatedBranches = await this.specializationRepository.transaction(
-      async () => {
-        const branches =
+    const reactivatedSpecialization =
+      await this.specializationRepository.transaction(async () => {
+        const specialization =
           await this.specializationRepository.reactivateMany(ids);
 
         // Registrar auditoría para cada sucursal reactivada
         await Promise.all(
-          branches.map((branch) =>
+          specialization.map((branch) =>
             this.auditService.create({
               entityId: branch.id,
               entityType: 'branch',
@@ -35,14 +35,13 @@ export class ReactivateSpecializationUseCase {
           ),
         );
 
-        return branches;
-      },
-    );
+        return specialization;
+      });
 
     return {
       statusCode: HttpStatus.OK,
       message: 'Especializaciones reactivadas exitosamente',
-      data: reactivatedBranches,
+      data: reactivatedSpecialization,
     };
   }
 }
