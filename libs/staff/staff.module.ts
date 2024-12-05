@@ -6,6 +6,7 @@ import { SpecializationRepository } from './repositories/specialization.reposito
 import {
   CreateSpecializationUseCase,
   CreateStaffUseCase,
+  DeleteSpecializationUseCase,
   UpdateSpecializationUseCase,
   UpdateStaffUseCase,
 } from './use-cases';
@@ -30,6 +31,7 @@ import { StaffController } from './controllers/staff.controller';
     SpecializationRepository,
     CreateSpecializationUseCase,
     UpdateSpecializationUseCase,
+    DeleteSpecializationUseCase,
 
     // Repositories
     // Use Cases

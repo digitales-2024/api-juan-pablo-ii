@@ -5,15 +5,20 @@ import {
   Logger,
 } from '@nestjs/common';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { validateChanges } from '@prisma/prisma/utils';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 
 import { especialidadErrorMessages } from '../errors/erros-staff';
 import {
   CreateSpecializationUseCase,
   UpdateSpecializationUseCase,
+  DeleteSpecializationUseCase,
 } from '../use-cases';
-import { CreateSpecializationDto, UpdateSpecializationDto } from '../dto';
+import {
+  CreateSpecializationDto,
+  DeleteSpecializationDto,
+  UpdateSpecializationDto,
+} from '../dto';
 import { Specialization } from '../entities/staff.entity';
 import { SpecializationRepository } from '../repositories/specialization.repository';
 
@@ -31,6 +36,7 @@ export class SpecializationService {
     private readonly specializationRepository: SpecializationRepository,
     private readonly createSpecializationUseCase: CreateSpecializationUseCase,
     private readonly updateSpecializationUseCase: UpdateSpecializationUseCase,
+    private readonly deleteSpecializationUseCase: DeleteSpecializationUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -117,6 +123,30 @@ export class SpecializationService {
       return this.findById(id);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Elimina múltiples especialidades
+   * @param deleteSpecializationDto - DTO con los IDs de las especialidades a eliminar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con las especialidades eliminadas
+   * @throws {NotFoundException} Si alguna especialidad no existe
+   */
+  async deleteMany(
+    deleteSpecializationDto: DeleteSpecializationDto,
+    user: UserData,
+  ): Promise<HttpResponse<Specialization[]>> {
+    try {
+      // Validar el array de IDs
+      validateArray(deleteSpecializationDto.ids, 'IDs de especialidades');
+
+      return await this.deleteSpecializationUseCase.execute(
+        deleteSpecializationDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deleting');
     }
   }
 

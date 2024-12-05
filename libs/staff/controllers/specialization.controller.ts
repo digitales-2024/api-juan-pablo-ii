@@ -1,10 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { SpecializationService } from '../services/specialization.service';
-import { CreateSpecializationDto, UpdateSpecializationDto } from '../dto';
+import {
+  CreateSpecializationDto,
+  DeleteSpecializationDto,
+  UpdateSpecializationDto,
+} from '../dto';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -69,5 +83,24 @@ export class SpecializationController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Specialization>> {
     return this.specializationService.update(id, updateSpecializationDto, user);
+  }
+  /**
+   * Elimina múltiples especialidades
+   */
+  @Delete('remove/all')
+  @ApiOperation({ summary: 'Eliminar múltiples especialidades' })
+  @ApiResponse({
+    status: 200,
+    description: 'Especialidades eliminadas exitosamente',
+    type: [Specialization],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o especialidades no existen',
+  })
+  deleteMany(
+    @Body() deleteSpecializationDto: DeleteSpecializationDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Specialization[]>> {
+    return this.specializationService.deleteMany(deleteSpecializationDto, user);
   }
 }

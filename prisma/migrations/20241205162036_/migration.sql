@@ -139,7 +139,7 @@ CREATE TABLE "Paciente" (
     "tipoSangre" VARCHAR(3),
     "antecedentesFamiliares" TEXT,
     "habitosVida" TEXT,
-    "vacunas" JSONB,
+    "vacunas" TEXT,
     "medicoCabecera" VARCHAR(100),
     "idioma" VARCHAR(50),
     "autorizacionTratamiento" VARCHAR(255),
@@ -183,6 +183,7 @@ CREATE TABLE "Especialidad" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -205,54 +206,28 @@ CREATE TABLE "Personal" (
 );
 
 -- CreateTable
-CREATE TABLE "Calendario" (
+CREATE TABLE "Horario" (
     "id" TEXT NOT NULL,
+    "day" TEXT NOT NULL,
+    "startHour" TEXT NOT NULL,
+    "endHour" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Horario_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Cronograma" (
+    "id" TEXT NOT NULL,
+    "day" TEXT NOT NULL,
     "personalId" TEXT NOT NULL,
-    "sucursalId" TEXT NOT NULL,
-    "nombre" TEXT NOT NULL,
-    "color" TEXT,
-    "isDefault" BOOLEAN NOT NULL DEFAULT false,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "horarioId" TEXT NOT NULL,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Calendario_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Evento" (
-    "id" TEXT NOT NULL,
-    "calendarioId" TEXT NOT NULL,
-    "titulo" TEXT NOT NULL,
-    "descripcion" TEXT,
-    "fechaInicio" TEXT NOT NULL,
-    "fechaFin" TEXT NOT NULL,
-    "todoElDia" BOOLEAN NOT NULL DEFAULT false,
-    "tipo" TEXT NOT NULL,
-    "color" TEXT,
-    "esPermiso" BOOLEAN NOT NULL DEFAULT false,
-    "tipoPermiso" TEXT,
-    "estadoPermiso" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Evento_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Recurrencia" (
-    "id" TEXT NOT NULL,
-    "calendarioId" TEXT NOT NULL,
-    "frecuencia" TEXT NOT NULL,
-    "intervalo" INTEGER NOT NULL,
-    "fechaInicio" TIMESTAMP(3) NOT NULL,
-    "fechaFin" TIMESTAMP(3),
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Recurrencia_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Cronograma_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -528,6 +503,12 @@ CREATE UNIQUE INDEX "Personal_id_key" ON "Personal"("id");
 -- CreateIndex
 CREATE UNIQUE INDEX "Personal_dni_key" ON "Personal"("dni");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Horario_id_key" ON "Horario"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Cronograma_id_key" ON "Cronograma"("id");
+
 -- AddForeignKey
 ALTER TABLE "UserRol" ADD CONSTRAINT "UserRol_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -559,13 +540,10 @@ ALTER TABLE "Personal" ADD CONSTRAINT "Personal_especialidadId_fkey" FOREIGN KEY
 ALTER TABLE "Personal" ADD CONSTRAINT "Personal_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Calendario" ADD CONSTRAINT "Calendario_personalId_fkey" FOREIGN KEY ("personalId") REFERENCES "Personal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Cronograma" ADD CONSTRAINT "Cronograma_personalId_fkey" FOREIGN KEY ("personalId") REFERENCES "Personal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Evento" ADD CONSTRAINT "Evento_calendarioId_fkey" FOREIGN KEY ("calendarioId") REFERENCES "Calendario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Recurrencia" ADD CONSTRAINT "Recurrencia_calendarioId_fkey" FOREIGN KEY ("calendarioId") REFERENCES "Calendario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Cronograma" ADD CONSTRAINT "Cronograma_horarioId_fkey" FOREIGN KEY ("horarioId") REFERENCES "Horario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Producto" ADD CONSTRAINT "Producto_tipoProductoId_fkey" FOREIGN KEY ("tipoProductoId") REFERENCES "TipoProducto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
