@@ -5,6 +5,7 @@ import { branchErrorMessages } from 'src/modules/branch/errors/errors-branch';
 import { serviceTypeErrorMessages } from 'src/modules/services/errors/errors-service-type';
 import { serviceErrorMessages } from 'src/modules/services/errors/errors-service';
 import { pacientErrorMessages } from '@pacient/pacient/errors/errors-pacient';
+import { calendarErrorMessages } from '@schedule/schedule/calendar/errors/errors-calendar';
 
 export type ServiceAction =
   | 'creating'
@@ -136,6 +137,7 @@ export const entityErrorMessages = {
   branch: branchErrorMessages,
   appointmentType: appointmentTypeErrorMessages,
   paciente: pacientErrorMessages,
+  calendar: calendarErrorMessages,
 
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
