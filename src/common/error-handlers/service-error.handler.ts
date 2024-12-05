@@ -6,6 +6,8 @@ import { serviceTypeErrorMessages } from 'src/modules/services/errors/errors-ser
 import { serviceErrorMessages } from 'src/modules/services/errors/errors-service';
 import { pacientErrorMessages } from '@pacient/pacient/errors/errors-pacient';
 import { calendarErrorMessages } from '@schedule/schedule/calendar/errors/errors-calendar';
+import { eventErrorMessages } from '@schedule/schedule/event/errors/errors-event';
+import { recurrenceErrorMessages } from '@schedule/schedule/recurrence/errors/errors-recurrence';
 
 export type ServiceAction =
   | 'creating'
@@ -138,7 +140,8 @@ export const entityErrorMessages = {
   appointmentType: appointmentTypeErrorMessages,
   paciente: pacientErrorMessages,
   calendar: calendarErrorMessages,
-
+  event: eventErrorMessages,
+  recurrence: recurrenceErrorMessages,
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
   // 2. Agregar aquí con una clave apropiada

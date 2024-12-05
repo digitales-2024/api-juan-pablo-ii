@@ -1,3 +1,3 @@
-export * from './create-pacient.dto';
-export * from './update-pacient.dto';
-export * from './delete-pacient.dto';
+export * from './create-recurrence.dto';
+export * from './update-recurrence.dto';
+export * from './delete-recurrence.dto';
