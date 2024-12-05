@@ -27,8 +27,6 @@ model User {
   // Relación con UserRol
   userRols UserRol[] @relation("UserId")
 
-  personal Personal[] // Relación con personal
-
   @@unique([email, isActive])
 }
 
@@ -243,12 +241,14 @@ model Personal {
   especialidadId String // Clave foránea a especialidad
   especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
 
-  userId String // Clave foránea a user
-  User   User   @relation(fields: [userId], references: [id])
+  userId String? // Clave foránea a user
 
+  isActive Boolean @default(true)
   name     String
+  email    String
+  phone    String?
   lastName String
-  dni      String @unique
+  dni      String  @unique
   birth    String
 
   calendario Calendario[] // Relación con Calendario
