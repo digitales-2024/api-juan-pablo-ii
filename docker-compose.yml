@@ -1,0 +1,47 @@
+services:
+  api-juan-pablo:
+    image: juan-pablo-api:dev
+    container_name: api-juan-pablo
+    build:
+      target: dev
+      context: .
+    restart: unless-stopped
+    ports:
+      - '${PORT:-5555}:${PORT:-5000}'
+      - '9229:9229'
+    volumes:
+      - ./src:/app/src
+      - ./libs:/app/libs
+    depends_on:
+      db-juan-pablo:
+        condition: service_started
+    environment:
+      - NODE_ENV=development
+      - PORT=${PORT}
+      - DATABASE_URL=postgresql://root:root@db-juan-pablo:5432/juanpabloii?schema=public
+      - WEB_URL=http://localhost:3000
+      - JWT_SECRET=G4t17o
+      - JWT_EXPIRES_IN=1h
+      - JWT_REFRESH_SECRET=R3fr35h
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - COOKIE_EXPIRES_IN=3600000
+      - COOKIE_REFRESH_EXPIRES_IN=604800000
+      - CHANGE_SUNAT=https://www.sunat.gob.pe/a/txt/tipoCambio.txt
+    command: sh -c "npx prisma migrate deploy && npm run start:dev"
+  db-juan-pablo:
+    image: postgres:latest
+    container_name: db-juan-pablo
+    restart: unless-stopped
+    shm_size: 128mb
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=juanpabloii
+    ports:
+      - '5454:5432'
+
+networks:
+  default:
+    driver: bridge
