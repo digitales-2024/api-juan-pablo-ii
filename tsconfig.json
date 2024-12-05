@@ -90,6 +90,12 @@
       ],
       "@pacient/pacient/*": [
         "libs/pacient/src/*"
+      ],
+      "@schedule/schedule": [
+        "libs/schedule/src"
+      ],
+      "@schedule/schedule/*": [
+        "libs/schedule/src/*"
       ]
     }
   }

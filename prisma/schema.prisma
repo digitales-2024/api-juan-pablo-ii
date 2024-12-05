@@ -27,8 +27,6 @@ model User {
   // Relación con UserRol
   userRols UserRol[] @relation("UserId")
 
-  personal Personal[] // Relación con personal
-
   @@unique([email, isActive])
 }
 
@@ -179,7 +177,7 @@ model Paciente {
   tipoSangre              String? @db.VarChar(3)
   antecedentesFamiliares  String? @db.Text
   habitosVida             String? @db.Text
-  vacunas                 String?
+  vacunas                 Json?
   medicoCabecera          String? @db.VarChar(100)
   idioma                  String? @db.VarChar(50)
   autorizacionTratamiento String? @db.VarChar(255)
@@ -229,6 +227,7 @@ model Especialidad {
   id          String  @id @unique @default(uuid())
   name        String
   description String?
+  isActive    Boolean @default(true)
 
   personal Personal[] // Relación con Personal
 
@@ -243,15 +242,17 @@ model Personal {
   especialidadId String // Clave foránea a especialidad
   especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
 
-  userId String // Clave foránea a user
-  User   User   @relation(fields: [userId], references: [id])
+  userId String? // Clave foránea a user
 
+  isActive Boolean @default(true)
   name     String
+  email    String
+  phone    String?
   lastName String
-  dni      String @unique
+  dni      String  @unique
   birth    String
 
-  cronograma Cronograma[] // Relación con Cronograma
+  calendario Calendario[] // Relación con Calendario
 
   HistoriaMedica HistoriaMedica[] // Relación con Cronograma
 
@@ -261,29 +262,58 @@ model Personal {
   updatedAt DateTime @updatedAt
 }
 
-//tabla horario
-model Horario {
-  id        String  @id @unique @default(uuid())
-  day       String
-  startHour String
-  endHour   String
-  isActive  Boolean @default(true)
+model Calendario {
+  id         String   @id @default(uuid())
+  personalId String
+  personal   Personal @relation(fields: [personalId], references: [id])
+  sucursalId String
+  nombre     String // Nombre descriptivo del calendario (ej: "Horario Normal", "Horario Verano")
+  color      String? // Color para identificar visualmente el calendario
+  isDefault  Boolean  @default(false) // Indica si es el calendario principal del empleado
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt
 
-  cronograma Cronograma[] // Relación con Cronograma
+  eventos     Evento[] // Eventos asociados al calendario
+  recurrencia Recurrencia[] // Reglas de recurrencia
+}
 
+model Evento {
+  id           String     @id @default(uuid())
+  calendarioId String
+  calendario   Calendario @relation(fields: [calendarioId], references: [id])
+  titulo       String // Título del evento (ej: "Ingreso", "Almuerzo", "Salida")
+  descripcion  String? // Descripción opcional del evento
+  fechaInicio  String // Fecha y hora de inicio del evento
+  fechaFin     String // Fecha y hora de fin del evento
+  todoElDia    Boolean    @default(false) // Indica si el evento dura todo el día
+  tipo         String // INGRESO, SALIDA, ALMUERZO, DESCANSO, PERMISO
+  color        String? // Color específico para este evento
+
+  // Campos específicos para permisos
+  esPermiso     Boolean @default(false)
+  tipoPermiso   String? // MEDICO, PERSONAL, VACACIONES, etc.
+  estadoPermiso String? // PENDIENTE, APROBADO, RECHAZADO
+
+  // Campos de control
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
-//tabla cronograma
-model Cronograma {
-  id         String   @id @unique @default(uuid())
-  day        String
-  personalId String
-  personal   Personal @relation(fields: [personalId], references: [id])
-  horarioId  String
-  horario    Horario  @relation(fields: [horarioId], references: [id])
+model Recurrencia {
+  id           String     @id @default(uuid())
+  calendarioId String
+  calendario   Calendario @relation(fields: [calendarioId], references: [id])
 
+  // Reglas de recurrencia
+  frecuencia  String // DIARIA, SEMANAL, MENSUAL, ANUAL
+  intervalo   Int // Cada cuántas unidades de frecuencia se repite 1
+  fechaInicio DateTime // Cuándo comienza la recurrencia
+  fechaFin    DateTime? // Cuándo termina la recurrencia (opcional)
+
+  // Campos de control
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }

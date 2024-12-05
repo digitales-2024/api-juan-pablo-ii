@@ -2,6 +2,15 @@ FROM node:22-alpine3.20 AS base
 ENV DIR=/app
 WORKDIR $DIR
 
+FROM base AS dev
+ENV NODE_ENV=development
+COPY package*.json ./
+COPY prisma ./prisma/
+RUN npm ci
+COPY . .
+RUN npx prisma generate
+CMD ["npm", "run", "start:dev"]
+
 FROM base AS build
 RUN apk update && apk add --no-cache dumb-init=1.2.5-r3
 COPY package*.json ./
@@ -17,7 +26,7 @@ RUN npx prisma generate
 RUN npm run tailwind:build || true
 # Construir la aplicación
 RUN npm run build && \
-    npm prune --production
+  npm prune --production
 
 FROM base AS production
 ENV NODE_ENV=production
@@ -29,7 +38,7 @@ COPY --from=build $DIR/dist ./dist
 COPY --from=build $DIR/prisma ./prisma
 COPY docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh && \
-    chown node:node docker-entrypoint.sh
+  chown node:node docker-entrypoint.sh
 USER $USER
 EXPOSE $PORT
 ENTRYPOINT ["./docker-entrypoint.sh"]

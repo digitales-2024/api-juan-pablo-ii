@@ -1,5 +1,13 @@
 // pacient.controller.ts
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PacientService } from '../services/pacient.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
@@ -8,11 +16,15 @@ import {
   ApiResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
+  ApiParam,
+  ApiOkResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { UserData } from '@login/login/interfaces';
+import { HttpResponse, UserData } from '@login/login/interfaces';
 import { CreatePacienteDto } from '../dto/create-pacient.dto';
 import { UpdatePacientDto } from '../dto/update-pacient.dto';
 import { Paciente } from '../entities/pacient.entity';
+import { DeletePacientDto } from '../dto';
 
 /**
  * Controlador REST para gestionar pacientes.
@@ -47,8 +59,39 @@ export class PacientController {
   create(
     @Body() createPacienteDto: CreatePacienteDto,
     @GetUser() user: UserData,
-  ) {
+  ): Promise<HttpResponse<Paciente>> {
     return this.pacientService.create(createPacienteDto, user);
+  }
+
+  /**
+   * Obtiene un paciente por su ID
+   */
+  @ApiOperation({ summary: 'Obtener paciente por ID' })
+  @ApiParam({ name: 'id', description: 'ID   paciente' })
+  @ApiOkResponse({
+    description: 'Paciente encontrado',
+    type: Paciente,
+  })
+  @ApiNotFoundResponse({
+    description: 'Paciente no encontrado',
+  })
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Paciente> {
+    return this.pacientService.findOne(id);
+  }
+
+  /**
+   * Obtiene todos los pacientes
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los pacientes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los pacientes',
+    type: [Paciente],
+  })
+  findAll(): Promise<Paciente[]> {
+    return this.pacientService.findAll();
   }
 
   /**
@@ -65,21 +108,46 @@ export class PacientController {
     @Param('id') id: string,
     @Body() updatePacientDto: UpdatePacientDto,
     @GetUser() user: UserData,
-  ) {
+  ): Promise<HttpResponse<Paciente>> {
     return this.pacientService.update(id, updatePacientDto, user);
   }
 
   /**
-   * Obtiene todos los pacientes
+   * Desactiva múltiples pacientes
    */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los pacientes' })
+  @Delete('remove/all')
+  @ApiOperation({ summary: 'Desactivar múltiples pacientes' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de todos los pacientes',
+    description: 'Pacientes desactivados exitosamente',
     type: [Paciente],
   })
-  findAll() {
-    return this.pacientService.findAll();
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o pacientes no existen',
+  })
+  deleteMany(
+    @Body() deletePacientDto: DeletePacientDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Paciente[]>> {
+    return this.pacientService.deleteMany(deletePacientDto, user);
+  }
+
+  /**
+   * Reactiva múltiples pacientes
+   */
+  @Patch('reactivate/all')
+  @ApiOperation({ summary: 'Reactivar múltiples pacientes' })
+  @ApiOkResponse({
+    description: 'Pacientes reactivados exitosamente',
+    type: [Paciente],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o pacientes no existen',
+  })
+  reactivateAll(
+    @Body() deletePacientDto: DeletePacientDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Paciente[]>> {
+    return this.pacientService.reactivateMany(deletePacientDto.ids, user);
   }
 }

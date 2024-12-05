@@ -59,3 +59,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 static/tailwind-output.css
 
 config.local.json
+
+# Docker
+
+/data

@@ -3,8 +3,12 @@ import { PacientService } from './services/pacient.service';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { PacientController } from './controllers/pacient.controller';
 import { PacientRepository } from './repositories/pacient.repository';
-import { CreatePacientUseCase } from './use-cases/create-pacient.use-case';
-import { UpdatePacientUseCase } from './use-cases/update-pacient.use-case';
+import {
+  CreatePacientUseCase,
+  UpdatePacientUseCase,
+  DeletePacientsUseCase,
+  ReactivatePacientUseCase,
+} from './use-cases';
 
 @Module({
   controllers: [PacientController],
@@ -14,6 +18,8 @@ import { UpdatePacientUseCase } from './use-cases/update-pacient.use-case';
     PacientRepository,
     CreatePacientUseCase,
     UpdatePacientUseCase,
+    DeletePacientsUseCase,
+    ReactivatePacientUseCase,
   ],
   exports: [PacientModule],
 })
