@@ -27,7 +27,7 @@ import { Event } from '../entities/event.entity';
  * Controlador REST para gestionar eventos.
  * Expone endpoints para operaciones CRUD sobre eventos.
  */
-@ApiTags('Evento')
+@ApiTags('Event')
 @ApiBadRequestResponse({
   description:
     'Bad Request - Error en la validación de datos o solicitud incorrecta',

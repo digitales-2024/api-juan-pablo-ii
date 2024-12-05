@@ -31,7 +31,7 @@ import { Calendar } from '../entities/pacient.entity';
  * Controlador REST para gestionar calendarios.
  * Expone endpoints para operaciones CRUD sobre calendarios.
  */
-@ApiTags('Calendario')
+@ApiTags('Calendar')
 @ApiBadRequestResponse({
   description:
     'Bad Request - Error en la validación de datos o solicitud incorrecta',

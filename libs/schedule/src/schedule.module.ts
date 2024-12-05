@@ -19,9 +19,18 @@ import {
   ReactivateEventUseCase,
   UpdateEventUseCase,
 } from './event/use-cases';
+import { RecurrenceService } from './recurrence/services/recurrence.service';
+import { RecurrenceRepository } from './recurrence/repositories/recurrence.repository';
+import {
+  CreateRecurrenceUseCase,
+  DeleteRecurrencesUseCase,
+  ReactivateRecurrenceUseCase,
+  UpdateRecurrenceUseCase,
+} from './recurrence/use-cases';
+import { RecurrenceController } from './recurrence/controllers/recurrence.controller';
 
 @Module({
-  controllers: [CalendarController, EventController],
+  controllers: [CalendarController, EventController, RecurrenceController],
   imports: [AuditModule],
   providers: [
     //calendario
@@ -40,6 +49,13 @@ import {
     UpdateEventUseCase,
     DeleteEventsUseCase,
     ReactivateEventUseCase,
+    //recurrencias
+    RecurrenceService,
+    RecurrenceRepository,
+    CreateRecurrenceUseCase,
+    UpdateRecurrenceUseCase,
+    DeleteRecurrencesUseCase,
+    ReactivateRecurrenceUseCase,
   ],
   exports: [ScheduleModule],
 })
