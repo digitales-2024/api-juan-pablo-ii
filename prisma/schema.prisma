@@ -190,7 +190,6 @@ model Paciente {
   updatedAt      DateTime         @updatedAt
   HistoriaMedica HistoriaMedica[]
   ConsultaMedica ConsultaMedica[]
-  RecetaMedica   RecetaMedica[]
 }
 
 //tabla tipo de servicio
@@ -253,8 +252,6 @@ model Personal {
   birth    String
 
   calendario Calendario[] // Relación con Calendario
-
-  HistoriaMedica HistoriaMedica[] // Relación con Cronograma
 
   CitaMedica CitaMedica[] // Relación con CitaMedica
 
@@ -425,30 +422,63 @@ model Salida {
 
 //tabla historias
 model HistoriaMedica {
-  id          String   @id @default(uuid())
-  pacienteId  String
-  paciente    Paciente @relation(fields: [pacienteId], references: [id])
-  personalId  String
-  personal    Personal @relation(fields: [personalId], references: [id])
-  date        DateTime
-  description String
+  id             String   @id @default(uuid())
+  pacienteId     String
+  paciente       Paciente @relation(fields: [pacienteId], references: [id])
+  historiaMedica Json
+  date           DateTime
+  description    String?
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt
+  UpdateHistoria UpdateHistoria[]
+}
+
+//tabla actualizacion ala historia
+model UpdateHistoria {
+  id               String         @id @default(uuid())
+  consultaMedicaId String
+  personalId       String
+  sucursalId       String
+  historiaMedicaId String
+  historiaMedica   HistoriaMedica @relation(fields: [historiaMedicaId], references: [id])
+  receta           Boolean        @default(false)
+  recetaMedicaId   String?
+  fecha            DateTime
+  updateHistoria   Json
+  description      String?
+  descansoMedico   Boolean        @default(false)
+  descripDescanso  String?
+
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt
+  RecetaMedica RecetaMedica[]
 }
 
 //tabla recetas medicas
 model RecetaMedica {
-  id         String   @id @default(uuid())
-  //relacion con paciente
-  pacienteId String
-  Paciente   Paciente @relation(fields: [pacienteId], references: [id])
+  // Campos de identificación
+  id String @id @default(uuid()) // ID único de la receta
 
-  description String
+  // Relaciones y referencias
+  updateHistoriaId String // ID de la actualización de historia médica
+  UpdateHistoria   UpdateHistoria @relation(fields: [updateHistoriaId], references: [id])
+  sucursalId       String // ID de la sucursal donde se emite
+  personalId       String // ID del personal médico que emite
+  pacienteId       String // ID del paciente
 
-  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime      @updatedAt
-  OrdenCompra OrdenCompra[]
+  // Datos principales
+  fechaRegistro DateTime // Fecha de emisión de la receta
+  receta        Json // Detalle de medicamentos y dosificación
+  description   String? // Descripción o notas adicionales (opcional)
+  ordenCompraId String? // Referencia a orden de compra (opcional)
+
+  // Campos de auditoría
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 }
 
 //tabla sucursal
@@ -533,14 +563,10 @@ model ProcedimientoMedico {
 
 //tabla venta
 model OrdenCompra {
-  id String @id @default(uuid())
-
-  //relacion consulta medica
+  id               String         @id @default(uuid())
   consultaMedicaId String
   ConsultaMedica   ConsultaMedica @relation(fields: [consultaMedicaId], references: [id])
-  //relacion orden de compra si el paciente dese comprar los medicamentos
-  recetaMedicaId   String
-  RecetaMedica     RecetaMedica   @relation(fields: [recetaMedicaId], references: [id])
+  recetaMedicaId   String?
   //relacion con cliente si no es un paciente y desea comprar productos
   clientId         String
   Client           Client         @relation(fields: [clientId], references: [id])
