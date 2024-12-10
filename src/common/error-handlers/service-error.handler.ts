@@ -6,6 +6,8 @@ import { serviceTypeErrorMessages } from 'src/modules/services/errors/errors-ser
 import { serviceErrorMessages } from 'src/modules/services/errors/errors-service';
 import { pacientErrorMessages } from '@pacient/pacient/pacient/errors/errors-pacient';
 import { calendarErrorMessages } from '@schedule/schedule/calendar/errors/errors-calendar';
+import { eventErrorMessages } from '@schedule/schedule/event/errors/errors-event';
+import { recurrenceErrorMessages } from '@schedule/schedule/recurrence/errors/errors-recurrence';
 import { recipeErrorMessages } from '@pacient/pacient/recipe/errors/errors-recipe';
 import { upHistoryErrorMessages } from '@pacient/pacient/update-history/errors/errors-up-history';
 import { historyErrorMessages } from '@pacient/pacient/history/errors/errors-history';
@@ -141,6 +143,8 @@ export const entityErrorMessages = {
   appointmentType: appointmentTypeErrorMessages,
   paciente: pacientErrorMessages,
   calendar: calendarErrorMessages,
+  event: eventErrorMessages,
+  recurrence: recurrenceErrorMessages,
   recipe: recipeErrorMessages,
   updateHistory: upHistoryErrorMessages,
   history: historyErrorMessages,

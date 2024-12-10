@@ -1,7 +1,7 @@
 
 ```bash
 
-# esquema
+# esquema del cronograma
 
 model Calendario {
   id         String   @id @default(uuid())
