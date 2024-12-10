@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { PacientRepository } from '../repositories/pacient.repository';
+import { PacientRepository } from '../repositories/category.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Paciente } from '../entities/pacient.entity';
+import { Paciente } from '../entities/category.entity';
 import { AuditActionType } from '@prisma/client';
-import { DeletePacientDto } from '../dto/delete-pacient.dto';
+import { DeletePacientDto } from '../dto/delete-category.dto';
 
 @Injectable()
 export class DeletePacientsUseCase {

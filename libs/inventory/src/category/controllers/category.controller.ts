@@ -8,7 +8,7 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { PacientService } from '../services/pacient.service';
+import { PacientService } from '../services/category.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
@@ -21,9 +21,9 @@ import {
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { CreatePacienteDto } from '../dto/create-pacient.dto';
-import { UpdatePacientDto } from '../dto/update-pacient.dto';
-import { Paciente } from '../entities/pacient.entity';
+import { CreatePacienteDto } from '../dto/create-category.dto';
+import { UpdatePacientDto } from '../dto/update-category.dto';
+import { Paciente } from '../entities/category.entity';
 import { DeletePacientDto } from '../dto';
 
 /**

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UpdatePacientDto } from '../dto/update-pacient.dto';
-import { Paciente } from '../entities/pacient.entity';
-import { PacientRepository } from '../repositories/pacient.repository';
+import { UpdatePacientDto } from '../dto/update-category.dto';
+import { Paciente } from '../entities/category.entity';
+import { PacientRepository } from '../repositories/category.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
