@@ -9,9 +9,18 @@ import {
   ReactivateCategoryUseCase,
   UpdateCategoryUseCase,
 } from './category/use-cases';
+import { TypeProductController } from './type-product/controllers/type-product.controller';
+import { TypeProductService } from './type-product/services/type-product.service';
+import { TypeProductRepository } from './type-product/repositories/type-product.repository';
+import {
+  CreateTypeProductUseCase,
+  DeleteTypeProductsUseCase,
+  ReactivateTypeProductUseCase,
+  UpdateTypeProductUseCase,
+} from './type-product/use-cases';
 
 @Module({
-  controllers: [CategoryController],
+  controllers: [CategoryController, TypeProductController],
   imports: [AuditModule],
   providers: [
     // categoria
@@ -22,7 +31,12 @@ import {
     DeleteCategoriesUseCase,
     ReactivateCategoryUseCase,
     //tipo producto
-
+    TypeProductService,
+    TypeProductRepository,
+    CreateTypeProductUseCase,
+    UpdateTypeProductUseCase,
+    DeleteTypeProductsUseCase,
+    ReactivateTypeProductUseCase,
     //producto
   ],
   exports: [InventoryModule],

@@ -350,13 +350,13 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  nombre                    String
+  name                    String
   precio                    Float
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
   uso                       String? // Paciente, cliente, personal, etc.
   usoProducto               String? // Venta, uso interno, etc.
-  descripcion               String? // 
+  description               String? // 
   codigoProducto            String? // Código de barras o código único del producto
   descuento                 Float?  // Descuento aplicado, si aplica
   observaciones             String? // Observaciones adicionales

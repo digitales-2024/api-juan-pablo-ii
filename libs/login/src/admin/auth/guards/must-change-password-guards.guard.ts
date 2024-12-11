@@ -22,7 +22,7 @@ export class MustChangePasswordGuard implements CanActivate {
     try {
       const user = request.user;
       if (user.mustChangePassword) {
-        throw new BadRequestException('You must change your password');
+        throw new BadRequestException('Debes cambiar tu contraseña');
       }
       return true;
     } catch (error) {
