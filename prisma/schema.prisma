@@ -322,8 +322,8 @@ model Categoria {
   description String? // Descripción opcional que proporciona más detalles sobre la categoría
 
   isActive  Boolean    @default(true) // Campo para controlar si la categoría está activa o no
-  createdAt DateTime   @default(now()) @db.Timestamptz(6) 
-  updatedAt DateTime   @updatedAt 
+  createdAt DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime   @updatedAt
   Producto  Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a una categoría.
 }
 
@@ -350,15 +350,15 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  name                    String
-  precio                    Float
+  name                      String // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
+  precio                    Float  // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
   uso                       String? // Paciente, cliente, personal, etc.
   usoProducto               String? // Venta, uso interno, etc.
   description               String? // 
   codigoProducto            String? // Código de barras o código único del producto
-  descuento                 Float?  // Descuento aplicado, si aplica
+  descuento                 Float? // Descuento aplicado, si aplica
   observaciones             String? // Observaciones adicionales
   condicionesAlmacenamiento String? // Condiciones de almacenamiento (ej. "refrigerar")
   isActive                  Boolean @default(true)

@@ -18,9 +18,10 @@ import {
   ReactivateTypeProductUseCase,
   UpdateTypeProductUseCase,
 } from './type-product/use-cases';
+import { ProductController } from './product/controllers/product.controller';
 
 @Module({
-  controllers: [CategoryController, TypeProductController],
+  controllers: [CategoryController, TypeProductController, ProductController],
   imports: [AuditModule],
   providers: [
     // categoria
