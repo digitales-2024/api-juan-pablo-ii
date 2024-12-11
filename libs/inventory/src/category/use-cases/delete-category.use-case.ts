@@ -1,35 +1,35 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { PacientRepository } from '../repositories/category.repository';
-import { AuditService } from '@login/login/admin/audit/audit.service';
+import { CategoryRepository } from '../repositories/category.repository';
+import { Category } from '../entities/category.entity';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Paciente } from '../entities/category.entity';
+import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { DeletePacientDto } from '../dto/delete-category.dto';
+import { DeleteCategoryDto } from '../dto/delete-category.dto';
 
 @Injectable()
-export class DeletePacientsUseCase {
+export class DeleteCategoriesUseCase {
   constructor(
-    private readonly pacientRepository: PacientRepository,
+    private readonly categoryRepository: CategoryRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    deletePacientsDto: DeletePacientDto,
+    deleteCategoriesDto: DeleteCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
-    const deletedPacients = await this.pacientRepository.transaction(
+  ): Promise<HttpResponse<Category[]>> {
+    const deletedCategories = await this.categoryRepository.transaction(
       async () => {
-        // Realiza el soft delete y obtiene los pacientes actualizados
-        const pacient = await this.pacientRepository.softDeleteMany(
-          deletePacientsDto.ids,
+        // Realiza el soft delete y obtiene las categorías actualizadas
+        const categories = await this.categoryRepository.softDeleteMany(
+          deleteCategoriesDto.ids,
         );
 
-        // Registra la auditoría para cada paciente eliminado
+        // Registra la auditoría para cada categoría eliminada
         await Promise.all(
-          pacient.map((paciente) =>
+          categories.map((category) =>
             this.auditService.create({
-              entityId: paciente.id,
-              entityType: 'paciente',
+              entityId: category.id,
+              entityType: 'categoria',
               action: AuditActionType.DELETE,
               performedById: user.id,
               createdAt: new Date(),
@@ -37,14 +37,14 @@ export class DeletePacientsUseCase {
           ),
         );
 
-        return pacient;
+        return categories;
       },
     );
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Pacientes eliminados exitosamente',
-      data: deletedPacients,
+      message: 'Categorías eliminadas exitosamente',
+      data: deletedCategories,
     };
   }
 }

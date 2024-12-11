@@ -1,69 +1,45 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreatePacienteDto } from '../dto/create-category.dto';
-import { Paciente } from '../entities/category.entity';
-import { PacientRepository } from '../repositories/category.repository';
+import { CreateCategoryDto } from '../dto/create-category.dto';
+import { Category } from '../entities/category.entity';
+import { CategoryRepository } from '../repositories/category.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 
 @Injectable()
-export class CreatePacientUseCase {
+export class CreateCategoryUseCase {
   constructor(
-    private readonly pacientRepository: PacientRepository,
+    private readonly categoryRepository: CategoryRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    createPacientDto: CreatePacienteDto,
+    createCategoryDto: CreateCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
-    const newPacient = await this.pacientRepository.transaction(async () => {
-      // Create pacient
-      const pacient = await this.pacientRepository.create({
-        nombre: createPacientDto.nombre,
-        apellido: createPacientDto.apellido,
-        dni: createPacientDto.dni,
-        cumpleanos: createPacientDto.cumpleanos,
-        sexo: createPacientDto.sexo,
-        direccion: createPacientDto.direccion,
-        telefono: createPacientDto.telefono,
-        correo: createPacientDto.correo,
-        fechaRegistro: createPacientDto.fechaRegistro,
-        alergias: createPacientDto.alergias,
-        medicamentosActuales: createPacientDto.medicamentosActuales,
-        contactoEmergencia: createPacientDto.contactoEmergencia,
-        telefonoEmergencia: createPacientDto.telefonoEmergencia,
-        seguroMedico: createPacientDto.seguroMedico,
-        estadoCivil: createPacientDto.estadoCivil,
-        ocupacion: createPacientDto.ocupacion,
-        lugarTrabajo: createPacientDto.lugarTrabajo,
-        tipoSangre: createPacientDto.tipoSangre,
-        antecedentesFamiliares: createPacientDto.antecedentesFamiliares,
-        habitosVida: createPacientDto.habitosVida,
-        vacunas: createPacientDto.vacunas,
-        medicoCabecera: createPacientDto.medicoCabecera,
-        idioma: createPacientDto.idioma,
-        autorizacionTratamiento: createPacientDto.autorizacionTratamiento,
-        observaciones: createPacientDto.observaciones,
-        fotografiaPaciente: createPacientDto.fotografiaPaciente,
+  ): Promise<HttpResponse<Category>> {
+    const newCategory = await this.categoryRepository.transaction(async () => {
+      // Create category
+      const category = await this.categoryRepository.create({
+        name: createCategoryDto.name,
+        description: createCategoryDto.description,
       });
 
       // Register audit
       await this.auditService.create({
-        entityId: pacient.id,
-        entityType: 'paciente',
+        entityId: category.id,
+        entityType: 'categoria',
         action: AuditActionType.CREATE,
         performedById: user.id,
         createdAt: new Date(),
       });
 
-      return pacient;
+      return category;
     });
 
     return {
       statusCode: HttpStatus.CREATED,
-      message: 'Paciente creado exitosamente',
-      data: newPacient,
+      message: 'Categoría creada exitosamente',
+      data: newCategory,
     };
   }
 }

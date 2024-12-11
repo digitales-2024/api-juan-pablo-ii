@@ -1,32 +1,32 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { PacientRepository } from '../repositories/category.repository';
-import { AuditService } from '@login/login/admin/audit/audit.service';
+import { CategoryRepository } from '../repositories/category.repository';
+import { Category } from '../entities/category.entity';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Paciente } from '../entities/category.entity';
+import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 
 @Injectable()
-export class ReactivatePacientUseCase {
+export class ReactivateCategoryUseCase {
   constructor(
-    private readonly pacientRepository: PacientRepository,
+    private readonly categoryRepository: CategoryRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
-    // Reactivar los pacientes y registrar auditoría
-    const reactivatedPacients = await this.pacientRepository.transaction(
+  ): Promise<HttpResponse<Category[]>> {
+    // Reactivar las categorías y registrar auditoría
+    const reactivatedCategories = await this.categoryRepository.transaction(
       async () => {
-        const pacients = await this.pacientRepository.reactivateMany(ids);
+        const categories = await this.categoryRepository.reactivateMany(ids);
 
-        // Registrar auditoría para cada paciente reactivado
+        // Registrar auditoría para cada categoría reactivada
         await Promise.all(
-          pacients.map((Pacient) =>
+          categories.map((category) =>
             this.auditService.create({
-              entityId: Pacient.id,
-              entityType: 'Pacient',
+              entityId: category.id,
+              entityType: 'categoria',
               action: AuditActionType.UPDATE,
               performedById: user.id,
               createdAt: new Date(),
@@ -34,14 +34,14 @@ export class ReactivatePacientUseCase {
           ),
         );
 
-        return pacients;
+        return categories;
       },
     );
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Pacientes reactivados exitosamente',
-      data: reactivatedPacients,
+      message: 'Categorías reactivadas exitosamente',
+      data: reactivatedCategories,
     };
   }
 }

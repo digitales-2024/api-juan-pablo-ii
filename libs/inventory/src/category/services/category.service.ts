@@ -4,89 +4,88 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { PacientRepository } from '../repositories/category.repository';
-import { Paciente } from '../entities/category.entity';
-import { CreatePacienteDto } from '../dto/create-category.dto';
-import { UpdatePacientDto } from '../dto/update-category.dto';
+import { CategoryRepository } from '../repositories/category.repository';
+import { Category } from '../entities/category.entity';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
-import { CreatePacientUseCase } from '../use-cases/create-category.use-case';
-import { UpdatePacientUseCase } from '../use-cases/update-category.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
-import { pacientErrorMessages } from '../errors/errors-category';
-import { DeletePacientDto } from '../dto';
-import { DeletePacientsUseCase, ReactivatePacientUseCase } from '../use-cases';
+import { categoryErrorMessages } from '../errors/errors-category';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  DeleteCategoryDto,
+} from '../dto';
+import {
+  CreateCategoryUseCase,
+  UpdateCategoryUseCase,
+  DeleteCategoriesUseCase,
+  ReactivateCategoryUseCase,
+} from '../use-cases';
 
 @Injectable()
-export class PacientService {
-  private readonly logger = new Logger(PacientService.name);
+export class CategoryService {
+  private readonly logger = new Logger(CategoryService.name);
   private readonly errorHandler: BaseErrorHandler;
 
   constructor(
-    private readonly pacientRepository: PacientRepository,
-    private readonly createPacientUseCase: CreatePacientUseCase,
-    private readonly updatePacientUseCase: UpdatePacientUseCase,
-    private readonly deletePacientsUseCase: DeletePacientsUseCase,
-    private readonly reactivatePacientUseCase: ReactivatePacientUseCase,
+    private readonly categoryRepository: CategoryRepository,
+    private readonly createCategoryUseCase: CreateCategoryUseCase,
+    private readonly updateCategoryUseCase: UpdateCategoryUseCase,
+    private readonly deleteCategoriesUseCase: DeleteCategoriesUseCase,
+    private readonly reactivateCategoryUseCase: ReactivateCategoryUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
-      'Pacient',
-      pacientErrorMessages,
+      'Category',
+      categoryErrorMessages,
     );
   }
 
   /**
-   * Crea un nuevo paciente
-   * @param createPacienteDto - DTO con los datos para crear el paciente
+   * Crea una nueva categoría
+   * @param createCategoryDto - DTO con los datos para crear la categoría
    * @param user - Datos del usuario que realiza la creación
-   * @returns Una promesa que resuelve con la respuesta HTTP que contiene el paciente creado
-   * @throws {BadRequestException} Si ya existe un paciente con el DNI proporcionado
-   * @throws {Error} Si ocurre un error al crear el paciente
+   * @returns Una promesa que resuelve con la respuesta HTTP que contiene la categoría creada
+   * @throws {Error} Si ocurre un error al crear la categoría
    */
   async create(
-    createPacienteDto: CreatePacienteDto,
+    createCategoryDto: CreateCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
+  ): Promise<HttpResponse<Category>> {
     try {
-      // Validar si el DNI ya existe
-      const dniExists = await this.validateDNIExists(createPacienteDto.dni);
-      if (dniExists) {
-        throw new BadRequestException('Ya existe un paciente con este DNI');
-      }
-      return await this.createPacientUseCase.execute(createPacienteDto, user);
+      return await this.createCategoryUseCase.execute(createCategoryDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
     }
   }
 
   /**
-   * Actualiza un paciente existente
-   * @param id - ID del paciente a actualizar
-   * @param updatePacientDto - DTO con los datos para actualizar el paciente
+   * Actualiza una categoría existente
+   * @param id - ID de la categoría a actualizar
+   * @param updateCategoryDto - DTO con los datos para actualizar la categoría
    * @param user - Datos del usuario que realiza la actualización
-   * @returns Una promesa que resuelve con la respuesta HTTP que contiene el paciente actualizado
-   * @throws {Error} Si ocurre un error al actualizar el paciente
+   * @returns Una promesa que resuelve con la respuesta HTTP que contiene la categoría actualizada
+   * @throws {Error} Si ocurre un error al actualizar la categoría
    */
   async update(
     id: string,
-    updatePacientDto: UpdatePacientDto,
+    updateCategoryDto: UpdateCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
+  ): Promise<HttpResponse<Category>> {
     try {
-      const currentPacient = await this.findById(id);
+      const currentCategory = await this.findById(id);
 
-      if (!validateChanges(updatePacientDto, currentPacient)) {
+      if (!validateChanges(updateCategoryDto, currentCategory)) {
         return {
           statusCode: HttpStatus.OK,
-          message: 'No se detectaron cambios en el paciente',
-          data: currentPacient,
+          message: 'No se detectaron cambios en la categoría',
+          data: currentCategory,
         };
       }
 
-      return await this.updatePacientUseCase.execute(
+      return await this.updateCategoryUseCase.execute(
         id,
-        updatePacientDto,
+        updateCategoryDto,
         user,
       );
     } catch (error) {
@@ -95,12 +94,12 @@ export class PacientService {
   }
 
   /**
-   * Busca un paciente por su ID
-   * @param id - ID del paciente a buscar
-   * @returns El paciente encontrado
-   * @throws {NotFoundException} Si el paciente no existe
+   * Busca una categoría por su ID
+   * @param id - ID de la categoría a buscar
+   * @returns La categoría encontrada
+   * @throws {NotFoundException} Si la categoría no existe
    */
-  async findOne(id: string): Promise<Paciente> {
+  async findOne(id: string): Promise<Category> {
     try {
       return this.findById(id);
     } catch (error) {
@@ -109,80 +108,68 @@ export class PacientService {
   }
 
   /**
-   * Obtiene todos los pacientes
-   * @returns Una promesa que resuelve con una lista de todos los pacientes
-   * @throws {Error} Si ocurre un error al obtener los pacientes
+   * Obtiene todas las categorías
+   * @returns Una promesa que resuelve con una lista de todas las categorías
+   * @throws {Error} Si ocurre un error al obtener las categorías
    */
-  async findAll(): Promise<Paciente[]> {
+  async findAll(): Promise<Category[]> {
     try {
-      return this.pacientRepository.findMany();
+      return this.categoryRepository.findMany();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
   }
 
   /**
-   * Busca un paciente por su ID
-   * @param id - ID del paciente a buscar
-   * @returns Una promesa que resuelve con el paciente encontrado
-   * @throws {BadRequestException} Si el paciente no existe
+   * Busca una categoría por su ID
+   * @param id - ID de la categoría a buscar
+   * @returns Una promesa que resuelve con la categoría encontrada
+   * @throws {BadRequestException} Si la categoría no existe
    */
-  async findById(id: string): Promise<Paciente> {
-    const paciente = await this.pacientRepository.findById(id);
-    if (!paciente) {
-      throw new BadRequestException('Paciente no encontrado');
+  async findById(id: string): Promise<Category> {
+    const category = await this.categoryRepository.findById(id);
+    if (!category) {
+      throw new BadRequestException('Categoría no encontrada');
     }
-    return paciente;
+    return category;
   }
 
   /**
-   * Valida si un DNI ya está registrado
-   * @param dni - DNI a validar
-   * @returns true si el DNI ya está registrado, false si no
-   */
-  async validateDNIExists(dni: string): Promise<boolean> {
-    const existingPacients = await this.pacientRepository.findPatientByDNI(dni);
-    // Devuelve true si hay pacientes con el DNI proporcionado, false si no
-    return existingPacients.length > 0;
-  }
-
-  /**
-   * Desactiva múltiples pacientes
-   * @param deletePacientDto - DTO con los IDs de los pacientes a desactivar
+   * Desactiva múltiples categorías
+   * @param deleteCategoryDto - DTO con los IDs de las categorías a desactivar
    * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con los pacientes desactivados
-   * @throws {NotFoundException} Si algún paciente no existe
+   * @returns Respuesta HTTP con las categorías desactivadas
+   * @throws {NotFoundException} Si alguna categoría no existe
    */
   async deleteMany(
-    deletePacientDto: DeletePacientDto,
+    deleteCategoryDto: DeleteCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
+  ): Promise<HttpResponse<Category[]>> {
     try {
-      // Validar el array de IDs
-      validateArray(deletePacientDto.ids, 'IDs de pacientes');
-
-      return await this.deletePacientsUseCase.execute(deletePacientDto, user);
+      validateArray(deleteCategoryDto.ids, 'IDs de categorías');
+      return await this.deleteCategoriesUseCase.execute(
+        deleteCategoryDto,
+        user,
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'deactivating');
     }
   }
 
   /**
-   * Reactiva múltiples pacientes
-   * @param ids - Lista de IDs de los pacientes a reactivar
+   * Reactiva múltiples categorías
+   * @param ids - Lista de IDs de las categorías a reactivar
    * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con los pacientes reactivados
-   * @throws {NotFoundException} Si algún paciente no existe
+   * @returns Respuesta HTTP con las categorías reactivadas
+   * @throws {NotFoundException} Si alguna categoría no existe
    */
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
+  ): Promise<HttpResponse<Category[]>> {
     try {
-      // Validar el array de IDs
-      validateArray(ids, 'IDs de pacientes');
-
-      return await this.reactivatePacientUseCase.execute(ids, user);
+      validateArray(ids, 'IDs de categorías');
+      return await this.reactivateCategoryUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
     }

@@ -1,4 +1,3 @@
-// pacient.controller.ts
 import {
   Controller,
   Get,
@@ -8,7 +7,7 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { PacientService } from '../services/category.service';
+import { CategoryService } from '../services/category.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
@@ -21,16 +20,18 @@ import {
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { CreatePacienteDto } from '../dto/create-category.dto';
-import { UpdatePacientDto } from '../dto/update-category.dto';
-import { Paciente } from '../entities/category.entity';
-import { DeletePacientDto } from '../dto';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  DeleteCategoryDto,
+} from '../dto';
+import { Category } from '../entities/category.entity';
 
 /**
- * Controlador REST para gestionar pacientes.
- * Expone endpoints para operaciones CRUD sobre pacientes.
+ * Controlador REST para gestionar categorías.
+ * Expone endpoints para operaciones CRUD sobre categorías.
  */
-@ApiTags('Pacient')
+@ApiTags('Category')
 @ApiBadRequestResponse({
   description:
     'Bad Request - Error en la validación de datos o solicitud incorrecta',
@@ -38,116 +39,116 @@ import { DeletePacientDto } from '../dto';
 @ApiUnauthorizedResponse({
   description: 'Unauthorized - No autorizado para realizar esta operación',
 })
-@Controller({ path: 'paciente', version: '1' })
+@Controller({ path: 'category', version: '1' })
 @Auth()
-export class PacientController {
-  constructor(private readonly pacientService: PacientService) {}
+export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) {}
 
   /**
-   * Crea un nuevo paciente
+   * Crea una nueva categoría
    */
   @Post()
-  @ApiOperation({ summary: 'Crear nuevo paciente' })
+  @ApiOperation({ summary: 'Crear nueva categoría' })
   @ApiResponse({
     status: 201,
-    description: 'Paciente creado exitosamente',
-    type: Paciente,
+    description: 'Categoría creada exitosamente',
+    type: Category,
   })
   @ApiBadRequestResponse({
-    description: 'Datos de entrada inválidos o paciente ya existe',
+    description: 'Datos de entrada inválidos o categoría ya existe',
   })
   create(
-    @Body() createPacienteDto: CreatePacienteDto,
+    @Body() createCategoryDto: CreateCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
-    return this.pacientService.create(createPacienteDto, user);
+  ): Promise<HttpResponse<Category>> {
+    return this.categoryService.create(createCategoryDto, user);
   }
 
   /**
-   * Obtiene un paciente por su ID
+   * Obtiene una categoría por su ID
    */
-  @ApiOperation({ summary: 'Obtener paciente por ID' })
-  @ApiParam({ name: 'id', description: 'ID   paciente' })
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener categoría por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la categoría' })
   @ApiOkResponse({
-    description: 'Paciente encontrado',
-    type: Paciente,
+    description: 'Categoría encontrada',
+    type: Category,
   })
   @ApiNotFoundResponse({
-    description: 'Paciente no encontrado',
+    description: 'Categoría no encontrada',
   })
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<Paciente> {
-    return this.pacientService.findOne(id);
+  findOne(@Param('id') id: string): Promise<Category> {
+    return this.categoryService.findOne(id);
   }
 
   /**
-   * Obtiene todos los pacientes
+   * Obtiene todas las categorías
    */
   @Get()
-  @ApiOperation({ summary: 'Obtener todos los pacientes' })
+  @ApiOperation({ summary: 'Obtener todas las categorías' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de todos los pacientes',
-    type: [Paciente],
+    description: 'Lista de todas las categorías',
+    type: [Category],
   })
-  findAll(): Promise<Paciente[]> {
-    return this.pacientService.findAll();
+  findAll(): Promise<Category[]> {
+    return this.categoryService.findAll();
   }
 
   /**
-   * Actualiza un paciente existente
+   * Actualiza una categoría existente
    */
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar paciente existente' })
+  @ApiOperation({ summary: 'Actualizar categoría existente' })
   @ApiResponse({
     status: 200,
-    description: 'Paciente actualizado exitosamente',
-    type: Paciente,
+    description: 'Categoría actualizada exitosamente',
+    type: Category,
   })
   update(
     @Param('id') id: string,
-    @Body() updatePacientDto: UpdatePacientDto,
+    @Body() updateCategoryDto: UpdateCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
-    return this.pacientService.update(id, updatePacientDto, user);
+  ): Promise<HttpResponse<Category>> {
+    return this.categoryService.update(id, updateCategoryDto, user);
   }
 
   /**
-   * Desactiva múltiples pacientes
+   * Desactiva múltiples categorías
    */
   @Delete('remove/all')
-  @ApiOperation({ summary: 'Desactivar múltiples pacientes' })
+  @ApiOperation({ summary: 'Desactivar múltiples categorías' })
   @ApiResponse({
     status: 200,
-    description: 'Pacientes desactivados exitosamente',
-    type: [Paciente],
+    description: 'Categorías desactivadas exitosamente',
+    type: [Category],
   })
   @ApiBadRequestResponse({
-    description: 'IDs inválidos o pacientes no existen',
+    description: 'IDs inválidos o categorías no existen',
   })
   deleteMany(
-    @Body() deletePacientDto: DeletePacientDto,
+    @Body() deleteCategoryDto: DeleteCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
-    return this.pacientService.deleteMany(deletePacientDto, user);
+  ): Promise<HttpResponse<Category[]>> {
+    return this.categoryService.deleteMany(deleteCategoryDto, user);
   }
 
   /**
-   * Reactiva múltiples pacientes
+   * Reactiva múltiples categorías
    */
   @Patch('reactivate/all')
-  @ApiOperation({ summary: 'Reactivar múltiples pacientes' })
+  @ApiOperation({ summary: 'Reactivar múltiples categorías' })
   @ApiOkResponse({
-    description: 'Pacientes reactivados exitosamente',
-    type: [Paciente],
+    description: 'Categorías reactivadas exitosamente',
+    type: [Category],
   })
   @ApiBadRequestResponse({
-    description: 'IDs inválidos o pacientes no existen',
+    description: 'IDs inválidos o categorías no existen',
   })
   reactivateAll(
-    @Body() deletePacientDto: DeletePacientDto,
+    @Body() deleteCategoryDto: DeleteCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
-    return this.pacientService.reactivateMany(deletePacientDto.ids, user);
+  ): Promise<HttpResponse<Category[]>> {
+    return this.categoryService.reactivateMany(deleteCategoryDto.ids, user);
   }
 }
