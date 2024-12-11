@@ -53,6 +53,17 @@ export class CategoryService {
     user: UserData,
   ): Promise<HttpResponse<Category>> {
     try {
+      // Validar si existe un tipo de producto con el mismo nombre
+      const nameExists = await this.categoryRepository.findExistName(
+        createCategoryDto.name,
+      );
+
+      if (nameExists) {
+        throw new BadRequestException(
+          'Ya existe una categoría con este nombre',
+        );
+      }
+      // fin de la validación
       return await this.createCategoryUseCase.execute(createCategoryDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
@@ -82,6 +93,18 @@ export class CategoryService {
           data: currentCategory,
         };
       }
+      // Validar si existe otro tipo de producto con el mismo nombre
+      if (updateCategoryDto.name) {
+        const nameExists = await this.categoryRepository.findExistName(
+          updateCategoryDto.name,
+        );
+        if (nameExists && currentCategory.name !== updateCategoryDto.name) {
+          throw new BadRequestException(
+            'Ya existe una categoría con este nombre',
+          );
+        }
+      }
+      // fin de la validación
 
       return await this.updateCategoryUseCase.execute(
         id,

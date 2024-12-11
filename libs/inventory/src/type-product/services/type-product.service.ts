@@ -112,7 +112,7 @@ export class TypeProductService {
           );
         }
       }
-
+      // fin de la validación
       return await this.updateTypeProductUseCase.execute(
         id,
         updateTypeProductDto,
