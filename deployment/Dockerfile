@@ -31,6 +31,7 @@ RUN npm run build && \
 FROM base AS production
 ENV NODE_ENV=production
 ENV USER=node
+RUN apk add --no-cache netcat-openbsd
 COPY --from=build /usr/bin/dumb-init /usr/bin/dumb-init
 COPY --from=build $DIR/package*.json ./
 COPY --from=build $DIR/node_modules ./node_modules
