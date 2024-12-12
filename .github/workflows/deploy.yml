@@ -54,11 +54,6 @@ jobs:
           # Configurar nombre del repo para Docker
           echo "REPO_NAME=${BASE_NAME}" >> "${GITHUB_ENV}"
 
-          # Debug info
-          echo "SERVICE_NAME: $SERVICE_NAME"
-          echo "ENV_TAG: $ENV_TAG"
-          echo "REPO_NAME: $REPO_NAME"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -132,67 +127,50 @@ jobs:
             # Update the service without affecting others
             cd ${{ vars.SERVICE_HOME }}
 
-            # Verificar permisos y ownership del directorio
+            # Debug: Mostrar permisos
             echo "Checking permissions..."
             ls -la
-            
-            # Asegurarse de tener los permisos necesarios (usar sudo si es necesario)
-            if [ ! -w "docker-compose.__ENV_TAG__.yml" ]; then
-              echo "No write permission on docker-compose file, attempting to use sudo..."
-              
-              # Verificar si el archivo docker-compose existe
-              if [ ! -f "docker-compose.__ENV_TAG__.yml" ]; then
-                echo "Error: docker-compose.__ENV_TAG__.yml not found"
-                ls -la
-                pwd
-                exit 1
-              fi
 
-              # Hacer backup del archivo docker-compose usando sudo
-              sudo cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
-
-              # Actualizar la imagen usando un archivo temporal y sudo
-              sudo sed -i.tmp -r "s|image: __ESCAPED_IMAGE_NAME__:.+$|image: __ESCAPED_DOCKER_TAG__|" docker-compose.__ENV_TAG__.yml
-              
-              # Verificar la actualización
-              if ! sudo grep -A 2 "container_name: __SERVICE_NAME__" "docker-compose.__ENV_TAG__.yml" | grep -q "image: __ESCAPED_DOCKER_TAG__"; then
-                echo "Error: Image update failed"
-                sudo mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
-                exit 1
-              fi
-
-              # Limpiar archivos temporales
-              sudo rm -f "docker-compose.__ENV_TAG__.yml.tmp" "docker-compose.__ENV_TAG__.yml.bak"
-            else
-              # Si tenemos permisos, ejecutar sin sudo
-              cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
-              sed -i.tmp -r "s|image: __ESCAPED_IMAGE_NAME__:.+$|image: __ESCAPED_DOCKER_TAG__|" docker-compose.__ENV_TAG__.yml
-              
-              if ! grep -A 2 "container_name: __SERVICE_NAME__" "docker-compose.__ENV_TAG__.yml" | grep -q "image: __ESCAPED_DOCKER_TAG__"; then
-                echo "Error: Image update failed"
-                mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
-                exit 1
-              fi
-
-              rm -f "docker-compose.__ENV_TAG__.yml.tmp" "docker-compose.__ENV_TAG__.yml.bak"
+            # Verificar si el archivo existe
+            if [ ! -f "docker-compose.__ENV_TAG__.yml" ]; then
+              echo "Error: docker-compose.__ENV_TAG__.yml not found"
+              ls -la
+              pwd
+              exit 1
             fi
 
-            # Restart service with appropriate permissions
+            # Hacer backup del archivo
+            cp "docker-compose.__ENV_TAG__.yml" "docker-compose.__ENV_TAG__.yml.bak"
+
+            # Actualizar la imagen
+            sed -i.tmp -r "s|image: __ESCAPED_IMAGE_NAME__:.+$|image: __ESCAPED_DOCKER_TAG__|" docker-compose.__ENV_TAG__.yml
+
+            # Verificar la actualización
+            if ! grep -A 2 "container_name: __SERVICE_NAME__" "docker-compose.__ENV_TAG__.yml" | grep -q "image: __ESCAPED_DOCKER_TAG__"; then
+              echo "Error: Image update failed"
+              mv "docker-compose.__ENV_TAG__.yml.bak" "docker-compose.__ENV_TAG__.yml"
+              exit 1
+            fi
+
+            # Limpiar archivos temporales
+            rm -f "docker-compose.__ENV_TAG__.yml.tmp" "docker-compose.__ENV_TAG__.yml.bak"
+
+            # Restart service
             if command -v docker-compose &> /dev/null; then
-              sudo docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps __SERVICE_NAME__
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps __SERVICE_NAME__
             else
-              sudo docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps __SERVICE_NAME__
+              docker compose -f "docker-compose.__ENV_TAG__.yml" up -d --no-deps __SERVICE_NAME__
             fi
 
-            # Cleanup old images (necesita sudo para Docker)
-            sudo docker images -q --filter "dangling=true" | xargs -r sudo docker rmi
+            # Cleanup old images
+            docker images -q --filter "dangling=true" | xargs -r docker rmi
 
             # Debug: Verificar estado final
             echo "Service status:"
             if command -v docker-compose &> /dev/null; then
-              sudo docker-compose -f "docker-compose.__ENV_TAG__.yml" ps __SERVICE_NAME__
+              docker-compose -f "docker-compose.__ENV_TAG__.yml" ps __SERVICE_NAME__
             else
-              sudo docker compose -f "docker-compose.__ENV_TAG__.yml" ps __SERVICE_NAME__
+              docker compose -f "docker-compose.__ENV_TAG__.yml" ps __SERVICE_NAME__
             fi
           EOF
           )
@@ -204,9 +182,7 @@ jobs:
           REMOTE_SCRIPT="${REMOTE_SCRIPT//__SERVICE_NAME__/${{ env.SERVICE_NAME }}}"
           REMOTE_SCRIPT="${REMOTE_SCRIPT//__ESCAPED_IMAGE_NAME__/${{ env.ESCAPED_IMAGE_NAME }}}"
 
-          # Ejecutar en servidor remoto
           echo "$REMOTE_SCRIPT" | ssh deployment-target bash
-
   cleanup-dockerhub:
     needs: deploy
     runs-on: ubuntu-latest
