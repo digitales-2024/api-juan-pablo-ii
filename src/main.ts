@@ -31,7 +31,7 @@ async function bootstrap() {
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Juan Pablo API')
-      .setDescription('API for Juan Pablo')
+      .setDescription('API for Juan Pablo TEST')
       .setVersion('1.0')
       .build();
     const document = SwaggerModule.createDocument(app, config);
