@@ -9,12 +9,18 @@ export class ProductRepository extends BaseRepository<Product> {
   }
 
   /**
-   * Verifica si existe un producto con el nombre especificado
-   * @param name - Nombre a buscar
-   * @returns true si existe el producto, false si no existe
+   * Verifica si existe un registro en una tabla específica por un valor y campo
+   * @param field - Campo por el cual buscar (por ejemplo, 'name', 'id', etc.)
+   * @param value - Valor a buscar en el campo especificado
+   * @param table - Nombre de la tabla donde buscar (por ejemplo, 'Producto', 'Categoria', etc.)
+   * @returns true si existe el registro, false si no existe
    */
-  async findExistName(name: string): Promise<boolean> {
-    const result = await this.findByField('name', name);
+  async ValidateDataTable(
+    field: string,
+    value: any,
+    table: string,
+  ): Promise<boolean> {
+    const result = await this.findOneDataTable(field, value, table);
     return result.length > 0;
   }
 }

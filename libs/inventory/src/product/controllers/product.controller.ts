@@ -27,7 +27,7 @@ import { Product } from '../entities/product.entity';
  * Controlador REST para gestionar productos.
  * Expone endpoints para operaciones CRUD sobre productos.
  */
-@ApiTags('Producto')
+@ApiTags('Product')
 @ApiBadRequestResponse({
   description:
     'Bad Request - Error en la validación de datos o solicitud incorrecta',
@@ -35,7 +35,7 @@ import { Product } from '../entities/product.entity';
 @ApiUnauthorizedResponse({
   description: 'Unauthorized - No autorizado para realizar esta operación',
 })
-@Controller({ path: 'producto', version: '1' })
+@Controller({ path: 'product', version: '1' })
 @Auth()
 export class ProductController {
   constructor(private readonly productService: ProductService) {}

@@ -19,6 +19,14 @@ import {
   UpdateTypeProductUseCase,
 } from './type-product/use-cases';
 import { ProductController } from './product/controllers/product.controller';
+import { ProductService } from './product/services/product.service';
+import { ProductRepository } from './product/repositories/product.repository';
+import {
+  CreateProductUseCase,
+  DeleteProductsUseCase,
+  ReactivateProductUseCase,
+  UpdateProductUseCase,
+} from './product/use-cases';
 
 @Module({
   controllers: [CategoryController, TypeProductController, ProductController],
@@ -39,6 +47,12 @@ import { ProductController } from './product/controllers/product.controller';
     DeleteTypeProductsUseCase,
     ReactivateTypeProductUseCase,
     //producto
+    ProductService,
+    ProductRepository,
+    CreateProductUseCase,
+    UpdateProductUseCase,
+    DeleteProductsUseCase,
+    ReactivateProductUseCase,
   ],
   exports: [InventoryModule],
 })

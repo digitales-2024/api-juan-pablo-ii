@@ -16,6 +16,8 @@ import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handle
 import { productErrorMessages } from '../errors/errors-product';
 import { DeleteProductDto } from '../dto';
 import { DeleteProductsUseCase, ReactivateProductUseCase } from '../use-cases';
+import { CategoryService } from '@inventory/inventory/category/services/category.service';
+import { TypeProductService } from '@inventory/inventory/type-product/services/type-product.service';
 
 @Injectable()
 export class ProductService {
@@ -28,6 +30,8 @@ export class ProductService {
     private readonly updateProductUseCase: UpdateProductUseCase,
     private readonly deleteProductsUseCase: DeleteProductsUseCase,
     private readonly reactivateProductUseCase: ReactivateProductUseCase,
+    private readonly categoryService: CategoryService,
+    private readonly typeProductService: TypeProductService,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -49,15 +53,31 @@ export class ProductService {
     user: UserData,
   ): Promise<HttpResponse<Product>> {
     try {
-      // Validar si existe un producto con el mismo nombre
-      const nameExists = await this.productRepository.findExistName(
-        createProductDto.name,
-      );
-
-      if (nameExists) {
+      // Validación de nombre de producto
+      const nameExists = await this.findByName(createProductDto.name); // Buscar producto por nombre
+      if (nameExists && nameExists.length > 0) {
         throw new BadRequestException('Ya existe un producto con este nombre');
       }
 
+      // Validación de id de categoría
+      const categoriaExists = await this.categoryService.findById(
+        createProductDto.categoriaId,
+      );
+      if (!categoriaExists) {
+        throw new BadRequestException('La categoría especificada no existe');
+      }
+
+      // Validación de id de tipo de producto
+      const tipoProductoExists = await this.typeProductService.findById(
+        createProductDto.tipoProductoId,
+      );
+      if (!tipoProductoExists) {
+        throw new BadRequestException(
+          'El tipo de producto especificado no existe',
+        );
+      }
+
+      // Si todas las validaciones pasan, crea el producto
       return await this.createProductUseCase.execute(createProductDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
@@ -90,16 +110,12 @@ export class ProductService {
       }
 
       // Validar si existe otro producto con el mismo nombre
-      if (updateProductDto.name) {
-        const nameExists = await this.productRepository.findExistName(
-          updateProductDto.name,
-        );
-        if (nameExists && currentProduct.name !== updateProductDto.name) {
-          throw new BadRequestException(
-            'Ya existe un producto con este nombre',
-          );
-        }
+
+      const nameExists = await this.findByName(updateProductDto.name);
+      if (nameExists && nameExists.length > 0 && nameExists[0].id !== id) {
+        throw new BadRequestException('Ya existe un producto con este nombre');
       }
+      // fin de la validación
 
       return await this.updateProductUseCase.execute(
         id,
@@ -187,6 +203,26 @@ export class ProductService {
       return await this.reactivateProductUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
+    }
+  }
+
+  /**
+   * @param name El nombre de la categoría a buscar.
+   * @returns Una promesa que resuelve al resultado de la búsqueda, que podría ser una categoría o un conjunto de categorías.
+   * @throws {BadRequestException} Si ocurre un error durante la búsqueda o si no se encuentra una categoría por el nombre proporcionado.
+   */
+  async findByName(name: string): Promise<any> {
+    try {
+      // Realiza la búsqueda de la categoría utilizando el repositorio o el método correspondiente
+      return await this.productRepository.findByName(name);
+      // Si solo se encuentra una categoría, la retornamos
+    } catch (error) {
+      // Manejo de errores si ocurre algún problema durante la búsqueda
+      this.logger.error(
+        `Error al buscar el producto por nombre: ${name}`,
+        error.stack,
+      );
+      throw new BadRequestException('Error al buscar el producto por nombre');
     }
   }
 }

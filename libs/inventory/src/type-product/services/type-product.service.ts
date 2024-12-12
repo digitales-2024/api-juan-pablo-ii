@@ -54,17 +54,15 @@ export class TypeProductService {
     user: UserData,
   ): Promise<HttpResponse<TypeProduct>> {
     try {
-      // Validar si existe un tipo de producto con el mismo nombre
-      const nameExists = await this.typeProductRepository.findExistName(
-        createTypeProductDto.name,
-      );
-
-      if (nameExists) {
+      // Validación de nombre
+      const nameExists = await this.findByName(createTypeProductDto.name); // Valor a validar
+      // Si nameExists contiene algún valor
+      if (nameExists && nameExists.length > 0) {
         throw new BadRequestException(
           'Ya existe un tipo de producto con este nombre',
         );
       }
-      // fin de la validación
+      // Si no existe, continúa con el proceso de creación
       return await this.createTypeProductUseCase.execute(
         createTypeProductDto,
         user,
@@ -99,18 +97,11 @@ export class TypeProductService {
       }
 
       // Validar si existe otro tipo de producto con el mismo nombre
-      if (updateTypeProductDto.name) {
-        const nameExists = await this.typeProductRepository.findExistName(
-          updateTypeProductDto.name,
+      const nameExists = await this.findByName(updateTypeProductDto.name);
+      if (nameExists && nameExists.length > 0 && nameExists[0].id !== id) {
+        throw new BadRequestException(
+          'Ya existe un tipo de producto con este nombre',
         );
-        if (
-          nameExists &&
-          currentTypeProduct.name !== updateTypeProductDto.name
-        ) {
-          throw new BadRequestException(
-            'Ya existe un tipo de producto con este nombre',
-          );
-        }
       }
       // fin de la validación
       return await this.updateTypeProductUseCase.execute(
@@ -202,6 +193,26 @@ export class TypeProductService {
       return await this.reactivateTypeProductUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
+    }
+  }
+
+  /**
+   * @param name El nombre de la categoría a buscar.
+   * @returns Una promesa que resuelve al resultado de la búsqueda, que podría ser una categoría o un conjunto de categorías.
+   * @throws {BadRequestException} Si ocurre un error durante la búsqueda o si no se encuentra una categoría por el nombre proporcionado.
+   */
+  async findByName(name: string): Promise<any> {
+    try {
+      // Realiza la búsqueda de la categoría utilizando el repositorio o el método correspondiente
+      return await this.typeProductRepository.findByName(name);
+      // Si solo se encuentra una categoría, la retornamos
+    } catch (error) {
+      // Manejo de errores si ocurre algún problema durante la búsqueda
+      this.logger.error(
+        `Error al buscar la categoría por nombre: ${name}`,
+        error.stack,
+      );
+      throw new BadRequestException('Error al buscar la categoría por nombre');
     }
   }
 }
