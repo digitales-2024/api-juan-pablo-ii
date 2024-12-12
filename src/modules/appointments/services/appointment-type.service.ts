@@ -86,7 +86,7 @@ export class AppointmentTypeService {
       if (!validateChanges(updateAppointmentTypeDto, currentType)) {
         return {
           statusCode: HttpStatus.OK,
-          message: 'No se detectaron cambios en el tipo de cita',
+          message: 'No se detectaron cambios en tipo de cita',
           data: currentType,
         };
       }

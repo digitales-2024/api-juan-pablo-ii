@@ -108,6 +108,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/pacient/tsconfig.lib.json"
       }
+    },
+    "schedule": {
+      "type": "library",
+      "root": "libs/schedule",
+      "entryFile": "index",
+      "sourceRoot": "libs/schedule/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/schedule/tsconfig.lib.json"
+      }
     }
   }
 }
