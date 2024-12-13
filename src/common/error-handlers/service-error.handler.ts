@@ -11,6 +11,9 @@ import { recurrenceErrorMessages } from '@schedule/schedule/recurrence/errors/er
 import { recipeErrorMessages } from '@pacient/pacient/recipe/errors/errors-recipe';
 import { upHistoryErrorMessages } from '@pacient/pacient/update-history/errors/errors-up-history';
 import { historyErrorMessages } from '@pacient/pacient/history/errors/errors-history';
+import { categoryErrorMessages } from '@inventory/inventory/category/errors/errors-category';
+import { productErrorMessages } from '@inventory/inventory/product/errors/errors-product';
+import { typeProductErrorMessages } from '@inventory/inventory/type-product/errors/errors-type-product';
 
 export type ServiceAction =
   | 'creating'
@@ -148,6 +151,9 @@ export const entityErrorMessages = {
   recipe: recipeErrorMessages,
   updateHistory: upHistoryErrorMessages,
   history: historyErrorMessages,
+  category: categoryErrorMessages,
+  typeProduc: typeProductErrorMessages,
+  product: productErrorMessages,
 
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages

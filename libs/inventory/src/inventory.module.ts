@@ -1,24 +1,59 @@
 import { Module } from '@nestjs/common';
-import { InventoryService } from './inventory.service';
-import { CategoryModule } from './category/category.module';
-import { ProductsModule } from './products/products.module';
-import { ProductVariationModule } from './product-variation/product-variation.module';
-import { CloudflareModule } from './cloudflare/cloudflare.module';
-import { IncomingModule } from './incoming/incoming.module';
-import { OutgoingModule } from './outgoing/outgoing.module';
-import { StockModule } from './stock/stock.module';
+import { CategoryController } from './category/controllers/category.controller';
+import { AuditModule } from '@login/login/admin/audit/audit.module';
+import { CategoryService } from './category/services/category.service';
+import { CategoryRepository } from './category/repositories/category.repository';
+import {
+  CreateCategoryUseCase,
+  DeleteCategoriesUseCase,
+  ReactivateCategoryUseCase,
+  UpdateCategoryUseCase,
+} from './category/use-cases';
+import { TypeProductController } from './type-product/controllers/type-product.controller';
+import { TypeProductService } from './type-product/services/type-product.service';
+import { TypeProductRepository } from './type-product/repositories/type-product.repository';
+import {
+  CreateTypeProductUseCase,
+  DeleteTypeProductsUseCase,
+  ReactivateTypeProductUseCase,
+  UpdateTypeProductUseCase,
+} from './type-product/use-cases';
+import { ProductController } from './product/controllers/product.controller';
+import { ProductService } from './product/services/product.service';
+import { ProductRepository } from './product/repositories/product.repository';
+import {
+  CreateProductUseCase,
+  DeleteProductsUseCase,
+  ReactivateProductUseCase,
+  UpdateProductUseCase,
+} from './product/use-cases';
 
 @Module({
-  providers: [InventoryService],
-  exports: [InventoryService],
-  imports: [
-    CategoryModule,
-    ProductsModule,
-    ProductVariationModule,
-    CloudflareModule,
-    IncomingModule,
-    OutgoingModule,
-    StockModule,
+  controllers: [CategoryController, TypeProductController, ProductController],
+  imports: [AuditModule],
+  providers: [
+    // categoria
+    CategoryService,
+    CategoryRepository,
+    CreateCategoryUseCase,
+    UpdateCategoryUseCase,
+    DeleteCategoriesUseCase,
+    ReactivateCategoryUseCase,
+    //tipo producto
+    TypeProductService,
+    TypeProductRepository,
+    CreateTypeProductUseCase,
+    UpdateTypeProductUseCase,
+    DeleteTypeProductsUseCase,
+    ReactivateTypeProductUseCase,
+    //producto
+    ProductService,
+    ProductRepository,
+    CreateProductUseCase,
+    UpdateProductUseCase,
+    DeleteProductsUseCase,
+    ReactivateProductUseCase,
   ],
+  exports: [InventoryModule],
 })
 export class InventoryModule {}

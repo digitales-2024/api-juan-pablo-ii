@@ -37,13 +37,13 @@ export class RefreshTokenStrategy extends PassportStrategy(
     const user = await this.userService.findById(payload.id);
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Usuario no encontrado');
     }
 
     // 3. Verificar que el usuario está activo
     if (!user.isActive) {
       throw new UnauthorizedException(
-        'User is not active, talk to the administrator',
+        'El usuario no está activo, habla con el administrador',
       );
     }
 

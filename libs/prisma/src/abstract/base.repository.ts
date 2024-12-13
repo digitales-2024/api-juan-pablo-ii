@@ -11,10 +11,10 @@ import { PrismaTransaction, QueryParams, CreateDto, UpdateDto } from '../types';
  * @template T - Tipo de entidad que maneja el repositorio
  */
 @Injectable()
-export abstract class BaseRepository<T extends { id: string }> {
+export abstract class PrismaBaseRepository<T extends { id: string }> {
   constructor(
     protected readonly prisma: PrismaService,
-    private readonly modelName: keyof PrismaService,
+    protected readonly modelName: keyof PrismaService,
   ) {}
 
   /**
@@ -298,6 +298,73 @@ export abstract class BaseRepository<T extends { id: string }> {
       (this.prisma[this.modelName] as any).findMany({
         where: {
           [field]: value,
+          // No incluimos isActive aquí para permitir búsquedas flexibles
+        },
+      }),
+    );
+  }
+
+  /**
+   * Busca registros con relaciones específicas
+   * @param params - Parámetros de búsqueda incluyendo relaciones
+   */
+  async findManyWithRelations(params?: QueryParams): Promise<T[]> {
+    return this.prisma.measureQuery(
+      `findManyWithRelations${String(this.modelName)}`,
+      () => (this.prisma[this.modelName] as any).findMany(params),
+    );
+  }
+
+  /**
+   * Busca un registro con sus relaciones
+   * @param id - ID del registro a buscar
+   * @param include - Relaciones a incluir
+   */
+  async findOneWithRelations(
+    id: string,
+    include: Record<string, boolean>,
+  ): Promise<T | null> {
+    return this.prisma.measureQuery(
+      `findOneWithRelations${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).findUnique({
+          where: { id },
+          include,
+        }),
+    );
+  }
+
+  /**
+   * Busca registros en una tabla específica por un campo y su valor
+   * @param field - Nombre del campo por el cual buscar
+   * @param value - Valor a buscar
+   * @param table - Nombre de la tabla donde buscar
+   * @returns Array con los registros que coinciden con la búsqueda
+   */
+  async findOneDataTable(
+    field: string,
+    value: any,
+    table: string,
+  ): Promise<any[]> {
+    return this.prisma.measureQuery(`findBy${String(field)}In${table}`, () =>
+      this.prisma[table].findMany({
+        where: {
+          [field]: value,
+        },
+      }),
+    );
+  }
+
+  /**
+   * Busca registros por el campo 'name' y su valor
+   * @param name - Valor del nombre a buscar
+   * @returns Array con los registros que coinciden con el nombre
+   */
+  async findByName<T>(name: string): Promise<T[]> {
+    return this.prisma.measureQuery(`findByName`, () =>
+      (this.prisma[this.modelName] as any).findMany({
+        where: {
+          name: name,
           // No incluimos isActive aquí para permitir búsquedas flexibles
         },
       }),

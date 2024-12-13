@@ -6,7 +6,7 @@ FROM base AS dev
 ENV NODE_ENV=development
 COPY package*.json ./
 COPY prisma ./prisma/
-RUN npm ci
+RUN npm i
 COPY . .
 RUN npx prisma generate
 CMD ["npm", "run", "start:dev"]

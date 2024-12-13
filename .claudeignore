@@ -1,2 +1,5 @@
-node_modules
-data
+/data
+/node_modules
+/prisma
+/dist
+/test
