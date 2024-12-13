@@ -35,7 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user.isActive)
       throw new UnauthorizedException(
-        'User is not active, talk to the administrator',
+        'El usuario no está activo, habla con el administrador',
       );
 
     const { id, name, email, phone, isSuperAdmin, roles } = user;

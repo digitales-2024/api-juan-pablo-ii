@@ -333,4 +333,41 @@ export abstract class PrismaBaseRepository<T extends { id: string }> {
         }),
     );
   }
+
+  /**
+   * Busca registros en una tabla específica por un campo y su valor
+   * @param field - Nombre del campo por el cual buscar
+   * @param value - Valor a buscar
+   * @param table - Nombre de la tabla donde buscar
+   * @returns Array con los registros que coinciden con la búsqueda
+   */
+  async findOneDataTable(
+    field: string,
+    value: any,
+    table: string,
+  ): Promise<any[]> {
+    return this.prisma.measureQuery(`findBy${String(field)}In${table}`, () =>
+      this.prisma[table].findMany({
+        where: {
+          [field]: value,
+        },
+      }),
+    );
+  }
+
+  /**
+   * Busca registros por el campo 'name' y su valor
+   * @param name - Valor del nombre a buscar
+   * @returns Array con los registros que coinciden con el nombre
+   */
+  async findByName<T>(name: string): Promise<T[]> {
+    return this.prisma.measureQuery(`findByName`, () =>
+      (this.prisma[this.modelName] as any).findMany({
+        where: {
+          name: name,
+          // No incluimos isActive aquí para permitir búsquedas flexibles
+        },
+      }),
+    );
+  }
 }

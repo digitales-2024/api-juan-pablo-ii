@@ -38,22 +38,22 @@ export class AuthService {
       const userDB = await this.userService.findByEmail(email);
 
       if (!userDB) {
-        throw new NotFoundException('User not registered');
+        throw new NotFoundException('Usuario no registrado');
       }
 
       // Comparamos la contraseña ingresada con la contraseña encriptada
       if (!bcrypt.compareSync(password, userDB.password)) {
-        throw new UnauthorizedException('Password incorrect');
+        throw new UnauthorizedException('Contraseña incorrecta');
       }
 
       // Actualizamos el ultimo login del usuario
       await this.userService.updateLastLogin(userDB.id);
 
       // Indicar que el usuario debe cambiar la contraseña si es la primera vez que inicia sesión
-      if (userDB.mustChangePassword) {
-        throw new ForbiddenException('You must change your password');
+      /*  if (userDB.mustChangePassword) {
+        throw new ForbiddenException('Debes cambiar tu contraseña');
       }
-
+ */
       // Genera el token
       const token = this.getJwtToken({ id: userDB.id });
 
@@ -104,7 +104,7 @@ export class AuthService {
       });
     } catch (error) {
       this.logger.error(
-        `Error logging in for email: ${loginAuthDto.email}`,
+        `Error al iniciar sesión en el correo electrónico: ${loginAuthDto.email}`,
         error.stack,
       );
       if (
@@ -115,7 +115,7 @@ export class AuthService {
         throw error;
       }
 
-      handleException(error, 'Error logging in');
+      handleException(error, 'Error al iniciar sesión');
     }
   }
 
@@ -143,7 +143,7 @@ export class AuthService {
     });
 
     // Enviar una respuesta de éxito
-    res.status(200).json({ message: 'Logout successful' });
+    res.status(200).json({ message: 'Cierre de sesión exitoso' });
   }
 
   /**
@@ -167,17 +167,17 @@ export class AuthService {
       );
 
       if (!isPasswordMatching) {
-        throw new UnauthorizedException('Password current do not match');
+        throw new UnauthorizedException('La contraseña actual no coincide');
       }
 
       if (newPassword === password) {
         throw new ForbiddenException(
-          'The new password must be different from the current one',
+          'La nueva contraseña debe ser diferente a la actual',
         );
       }
 
       if (newPassword !== confirmPassword) {
-        throw new ForbiddenException('Passwords do not match');
+        throw new ForbiddenException('Las contraseñas no coinciden');
       }
 
       await this.userService.updatePasswordTemp(userDB.id, updatePasswordDto);
@@ -221,8 +221,8 @@ export class AuthService {
         roles: userDB.roles,
       });
     } catch (error) {
-      this.logger.error('Error updating password', error.stack);
-      handleException(error, 'Error updating password');
+      this.logger.error('Error al actualizar la contraseña', error.stack);
+      handleException(error, 'Error al actualizar la contraseña');
     }
   }
 

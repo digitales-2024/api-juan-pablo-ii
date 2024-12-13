@@ -12,6 +12,7 @@ import { StaffModule } from 'libs/staff/staff.module';
 import { ScheduleModule } from '@schedule/schedule/schedule.module';
 import { PayModule } from '@pay/pay/pay.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { InventoryModule } from '@inventory/inventory/inventory.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { BillingModule } from './modules/billing/billing.module';
     PacientModule,
     StaffModule,
     ScheduleModule,
+    InventoryModule,
     BillingModule,
   ],
   controllers: [AppController],

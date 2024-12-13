@@ -32,10 +32,10 @@ export class UserRolGuard implements CanActivate {
       if (user.rol === rol) return true;
     }
 
-    if (!user) throw new BadRequestException('User not found');
+    if (!user) throw new BadRequestException('Usuario no encontrado');
 
     throw new ForbiddenException(
-      'You do not have permission to access this resource',
+      'No tienes permiso para acceder a este recurso',
     );
   }
 }
