@@ -1,12 +1,6 @@
 // create-product.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsNotEmpty,
-  IsNumber,
-  IsUUID,
-} from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsNumber } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateProductDto {
@@ -15,7 +9,7 @@ export class CreateProductDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: true,
   })
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   categoriaId: string;
 
@@ -24,7 +18,7 @@ export class CreateProductDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: true,
   })
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   tipoProductoId: string;
 
