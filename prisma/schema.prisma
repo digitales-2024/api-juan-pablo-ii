@@ -351,7 +351,7 @@ model Producto {
 
   // Información básica del producto
   name                      String // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
-  precio                    Float  // Precio de venta del producto (sin descuentos)
+  precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
   uso                       String? // Paciente, cliente, personal, etc.
@@ -369,17 +369,32 @@ model Producto {
   updatedAt DateTime @updatedAt
 
   // Relación con el inventario (Almacen)
-  Almacen Almacen[] // Relación con Almacen (para el inventario)
+  Almacen    Almacen[] // Relación con Almacen (para el inventario)
+  Movimiento Movimiento[]
+}
+
+model TipoAlmacen {
+  id          String  @id @default(uuid())
+  name        String // Ejemplo: "Producto Terminado", "Materia Prima", etc.
+  description String? // Descripción opcional del tipo de almacén
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+
+  Almacen Almacen[] // Relación con la tabla Almacen
 }
 
 //tabla almacen
 model Almacen {
-  id         String   @id @default(uuid())
-  //relacion con producto
-  productoId String
-  Producto   Producto @relation(fields: [productoId], references: [id])
-  name       String
-  location   String?
+  id            String      @id @default(uuid())
+  productoId    String
+  Producto      Producto    @relation(fields: [productoId], references: [id])
+  name          String
+  location      String?
+  tipoAlmacenId String
+  TipoAlmacen   TipoAlmacen @relation(fields: [tipoAlmacenId], references: [id]) // Relación con TipoAlmacen
+
+  stock Int @default(0) // Stock disponible en este almacén
 
   ingreso Ingreso[] // Relación con Ingreso
   salida  Salida[] // Relación con Salida
@@ -390,38 +405,39 @@ model Almacen {
 
 //tabla tipo movimiento
 model TipoMovimiento {
-  id            String      @id @default(uuid())
-  //relacion con la tabla ondenCompra
+  id            String       @id @default(uuid())
   ordenCompraId String
-  OrdenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id])
-
-  name        String
-  description String?
-
-  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt  DateTime     @updatedAt
-  Movimiento Movimiento[]
+  OrdenCompra   OrdenCompra  @relation(fields: [ordenCompraId], references: [id])
+  name          String
+  description   String?
+  estado        Boolean      @default(false) // Estado que controla si el flujo se concreta o no (false = no afecta al stock)
+  isIngreso     Boolean // Booleano para identificar si es un "Ingreso" o "Salida"
+  tipoExterno   String? // Puede ser "Venta", "Compra", "Devolución", etc.
+  createdAt     DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt
+  Movimiento    Movimiento[]
 }
 
 // tabla movimientos
 model Movimiento {
-  id String @id @default(uuid())
+  id        String   @id @default(uuid())
+  ingresoId String?
+  Ingreso   Ingreso? @relation(fields: [ingresoId], references: [id])
 
-  //relacion con la tabla Ingreso
-  ingresoId String
-  Ingreso   Ingreso @relation(fields: [ingresoId], references: [id])
+  salidaId String?
+  Salida   Salida? @relation(fields: [salidaId], references: [id])
 
-  //relacion con la tabla Salida
-  salidaId String
-  Salida   Salida @relation(fields: [salidaId], references: [id])
+  productoId String
+  Producto   Producto @relation(fields: [productoId], references: [id])
+  quantity   Int // Cantidad de producto que se movió
+  date       DateTime @default(now()) @db.Timestamptz(6)
+  estado     Boolean  @default(false) // Estado para registrar si el movimiento ha sido procesado o no
 
-  quantity Int
-  date     DateTime @default(now()) @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 
-  createdAt        DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime        @updatedAt
-  TipoMovimiento   TipoMovimiento? @relation(fields: [tipoMovimientoId], references: [id])
-  tipoMovimientoId String?
+  TipoMovimientoId String?
+  TipoMovimiento   TipoMovimiento? @relation(fields: [TipoMovimientoId], references: [id])
 }
 
 //tabla ingresos
@@ -429,26 +445,27 @@ model Ingreso {
   id        String   @id @default(uuid())
   almacenId String
   almacen   Almacen  @relation(fields: [almacenId], references: [id])
-  quantity  Int
+  quantity  Int? // Cantidad total de productos ingresados
   date      DateTime @default(now()) @db.Timestamptz(6)
+  estado    Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 
-  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt  DateTime     @updatedAt
-  Movimiento Movimiento[]
+  Movimiento Movimiento[] // Relación con Movimiento
 }
 
 //tabla salidas
 model Salida {
-  id String @id @default(uuid())
-
+  id        String   @id @default(uuid())
   almacenId String
   almacen   Almacen  @relation(fields: [almacenId], references: [id])
-  quantity  Int
+  quantity  Int? // Cantidad de productos que se retiran
   date      DateTime @default(now()) @db.Timestamptz(6)
+  estado    Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 
-  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt  DateTime     @updatedAt
-  Movimiento Movimiento[]
+  Movimiento Movimiento[] // Relación con Movimiento
 }
 
 //tabla historias
