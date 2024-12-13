@@ -149,9 +149,9 @@ model Client {
   phone      String?
   isActive   Boolean @default(true)
 
-  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime      @updatedAt
-  OrdenCompra OrdenCompra[]
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+  // OrdenCompra OrdenCompra[]
 }
 
 // tabla pacientes que va a ser usuarios
@@ -359,10 +359,10 @@ model Almacen {
 
 //tabla tipo movimiento
 model TipoMovimiento {
-  id            String      @id @default(uuid())
+  id            String @id @default(uuid())
   //relacion con la tabla ondenCompra
   ordenCompraId String
-  OrdenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id])
+  OrdenCompra   Order  @relation(fields: [ordenCompraId], references: [id])
 
   name        String
   description String?
@@ -512,8 +512,8 @@ model ConsultaMedica {
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
-  CitaMedica  CitaMedica[] // Relación con CitaMedica
-  OrdenCompra OrdenCompra[] // Relación con OrdenCompra
+  CitaMedica CitaMedica[] // Relación con CitaMedica
+  // OrdenCompra OrdenCompra[] // Relación con OrdenCompra
 }
 
 //tabla tipo de citasMedicas
@@ -561,36 +561,32 @@ model ProcedimientoMedico {
   updatedAt DateTime @updatedAt
 }
 
-//tabla venta
-model OrdenCompra {
-  id               String         @id @default(uuid())
-  consultaMedicaId String
-  ConsultaMedica   ConsultaMedica @relation(fields: [consultaMedicaId], references: [id])
-  recetaMedicaId   String?
-  //relacion con cliente si no es un paciente y desea comprar productos
-  clientId         String
-  Client           Client         @relation(fields: [clientId], references: [id])
-
-  date        DateTime
+model Order {
+  id          String           @id @default(uuid())
+  type        String? // MEDICAL_PRESCRIPTION, MEDICAL_CONSULTATION, etc.
+  referenceId String? // ID of related prescription or consultation
+  status      String // PENDING, PAID, CANCELLED, etc.
+  details     Json // Specific details according to type
+  products    Json? // Array of products (optional)
+  services    Json? // Array of services (optional)
   total       Float
+  date        DateTime
   description String?
-
-  Pago Pago[] // Relación con Pago
-
-  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime         @updatedAt
-  TipoMovimiento TipoMovimiento[]
+  // Relations
+  payments    Payment[]        @relation("OrderPayments")
+  movements   TipoMovimiento[]
+  // Audit fields
+  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime         @updatedAt
 }
 
-//tabla pago
-model Pago {
-  id            String      @id @default(uuid())
-  ordenCompraId String
-  ordenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id])
-  date          DateTime
-  amount        Float
-  description   String?
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+model Payment {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation("OrderPayments", fields: [orderId], references: [id])
+  date        DateTime
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt
 }
