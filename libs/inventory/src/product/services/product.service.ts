@@ -95,9 +95,17 @@ export class ProductService {
         };
       }
 
-      // Validar si existe otro producto con el mismo nombre
-
-      // fin de la validación
+      // Validación de nombre de producto
+      const nameExists = await this.findByName(updateProductDto.name); // Buscar producto por nombre
+      if (nameExists) {
+        // Si retorna 'true', ya existe el producto
+        throw new BadRequestException('Ya existe un producto con este nombre');
+      }
+      // Validación de id de categoría
+      await this.categoryService.findById(updateProductDto.categoriaId);
+      // Validación de id de typoproducto
+      await this.typeProductService.findById(updateProductDto.tipoProductoId);
+      // Si todas las validaciones pasan, crea el producto
 
       return await this.updateProductUseCase.execute(
         id,
@@ -189,7 +197,7 @@ export class ProductService {
   }
 
   /**
-   * @param name El nombre de la categoría a buscar.
+   * @param name El nombre del producto.
    * @returns Una promesa que resuelve al resultado de la búsqueda, que podría ser una categoría o un conjunto de categorías.
    * @throws {BadRequestException} Si ocurre un error durante la búsqueda o si no se encuentra una categoría por el nombre proporcionado.
    */

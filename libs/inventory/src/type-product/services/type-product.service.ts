@@ -55,11 +55,11 @@ export class TypeProductService {
   ): Promise<HttpResponse<TypeProduct>> {
     try {
       // Validación de nombre
-      const nameExists = await this.findByName(createTypeProductDto.name); // Valor a validar
-      // Si nameExists contiene algún valor
-      if (nameExists && nameExists.length > 0) {
+      const nameExists = await this.findByName(createTypeProductDto.name);
+      if (nameExists) {
+        // Si retorna 'true', ya existe el producto
         throw new BadRequestException(
-          'Ya existe un tipo de producto con este nombre',
+          'Ya existe un tipo producto con este nombre',
         );
       }
       // Si no existe, continúa con el proceso de creación
@@ -97,10 +97,11 @@ export class TypeProductService {
       }
 
       // Validar si existe otro tipo de producto con el mismo nombre
-      const nameExists = await this.findByName(updateTypeProductDto.name);
-      if (nameExists && nameExists.length > 0 && nameExists[0].id !== id) {
+      const nameExists = await this.findByName(updateTypeProductDto.name); // Buscar producto por nombre
+      if (nameExists) {
+        // Si retorna 'true', ya existe la categoria
         throw new BadRequestException(
-          'Ya existe un tipo de producto con este nombre',
+          'Ya existe una categoria con este nombre',
         );
       }
       // fin de la validación
@@ -201,18 +202,10 @@ export class TypeProductService {
    * @returns Una promesa que resuelve al resultado de la búsqueda, que podría ser una categoría o un conjunto de categorías.
    * @throws {BadRequestException} Si ocurre un error durante la búsqueda o si no se encuentra una categoría por el nombre proporcionado.
    */
-  async findByName(name: string): Promise<any> {
-    try {
-      // Realiza la búsqueda de la categoría utilizando el repositorio o el método correspondiente
-      return await this.typeProductRepository.findByName(name);
-      // Si solo se encuentra una categoría, la retornamos
-    } catch (error) {
-      // Manejo de errores si ocurre algún problema durante la búsqueda
-      this.logger.error(
-        `Error al buscar la categoría por nombre: ${name}`,
-        error.stack,
-      );
-      throw new BadRequestException('Error al buscar la categoría por nombre');
-    }
+  async findByName(name: string): Promise<boolean> {
+    // Realiza la búsqueda del tipo de producto por nombre
+    const result = await this.typeProductRepository.findByName(name);
+    // Usa un ternario para verificar si el array está vacío y devuelve true o false
+    return result && result.length > 0 ? true : false;
   }
 }
