@@ -11,10 +11,10 @@ import { PrismaTransaction, QueryParams, CreateDto, UpdateDto } from '../types';
  * @template T - Tipo de entidad que maneja el repositorio
  */
 @Injectable()
-export abstract class BaseRepository<T extends { id: string }> {
+export abstract class PrismaBaseRepository<T extends { id: string }> {
   constructor(
     protected readonly prisma: PrismaService,
-    private readonly modelName: keyof PrismaService,
+    protected readonly modelName: keyof PrismaService,
   ) {}
 
   /**
@@ -301,6 +301,36 @@ export abstract class BaseRepository<T extends { id: string }> {
           // No incluimos isActive aquí para permitir búsquedas flexibles
         },
       }),
+    );
+  }
+
+  /**
+   * Busca registros con relaciones específicas
+   * @param params - Parámetros de búsqueda incluyendo relaciones
+   */
+  async findManyWithRelations(params?: QueryParams): Promise<T[]> {
+    return this.prisma.measureQuery(
+      `findManyWithRelations${String(this.modelName)}`,
+      () => (this.prisma[this.modelName] as any).findMany(params),
+    );
+  }
+
+  /**
+   * Busca un registro con sus relaciones
+   * @param id - ID del registro a buscar
+   * @param include - Relaciones a incluir
+   */
+  async findOneWithRelations(
+    id: string,
+    include: Record<string, boolean>,
+  ): Promise<T | null> {
+    return this.prisma.measureQuery(
+      `findOneWithRelations${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).findUnique({
+          where: { id },
+          include,
+        }),
     );
   }
 }
