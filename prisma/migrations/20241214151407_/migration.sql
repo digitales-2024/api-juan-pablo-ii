@@ -288,13 +288,13 @@ CREATE TABLE "Producto" (
     "id" TEXT NOT NULL,
     "categoriaId" TEXT NOT NULL,
     "tipoProductoId" TEXT NOT NULL,
-    "nombre" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "precio" DOUBLE PRECISION NOT NULL,
     "unidadMedida" TEXT,
     "proveedor" TEXT,
     "uso" TEXT,
     "usoProducto" TEXT,
-    "descripcion" TEXT,
+    "description" TEXT,
     "codigoProducto" TEXT,
     "descuento" DOUBLE PRECISION,
     "observaciones" TEXT,
@@ -308,11 +308,24 @@ CREATE TABLE "Producto" (
 );
 
 -- CreateTable
+CREATE TABLE "TipoAlmacen" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TipoAlmacen_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Almacen" (
     "id" TEXT NOT NULL,
     "productoId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "location" TEXT,
+    "tipoAlmacenId" TEXT NOT NULL,
+    "stock" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -323,8 +336,11 @@ CREATE TABLE "Almacen" (
 CREATE TABLE "TipoMovimiento" (
     "id" TEXT NOT NULL,
     "ordenCompraId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "name" TEXT,
     "description" TEXT,
+    "estado" BOOLEAN NOT NULL DEFAULT false,
+    "isIngreso" BOOLEAN NOT NULL,
+    "tipoExterno" TEXT,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -334,13 +350,15 @@ CREATE TABLE "TipoMovimiento" (
 -- CreateTable
 CREATE TABLE "Movimiento" (
     "id" TEXT NOT NULL,
-    "ingresoId" TEXT NOT NULL,
-    "salidaId" TEXT NOT NULL,
+    "ingresoId" TEXT,
+    "salidaId" TEXT,
+    "productoId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "estado" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "tipoMovimientoId" TEXT,
+    "TipoMovimientoId" TEXT,
 
     CONSTRAINT "Movimiento_pkey" PRIMARY KEY ("id")
 );
@@ -349,8 +367,9 @@ CREATE TABLE "Movimiento" (
 CREATE TABLE "Ingreso" (
     "id" TEXT NOT NULL,
     "almacenId" TEXT NOT NULL,
-    "quantity" INTEGER NOT NULL,
+    "quantity" INTEGER,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "estado" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -361,8 +380,9 @@ CREATE TABLE "Ingreso" (
 CREATE TABLE "Salida" (
     "id" TEXT NOT NULL,
     "almacenId" TEXT NOT NULL,
-    "quantity" INTEGER NOT NULL,
+    "quantity" INTEGER,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "estado" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -632,16 +652,22 @@ ALTER TABLE "Producto" ADD CONSTRAINT "Producto_tipoProductoId_fkey" FOREIGN KEY
 ALTER TABLE "Almacen" ADD CONSTRAINT "Almacen_productoId_fkey" FOREIGN KEY ("productoId") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Almacen" ADD CONSTRAINT "Almacen_tipoAlmacenId_fkey" FOREIGN KEY ("tipoAlmacenId") REFERENCES "TipoAlmacen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TipoMovimiento" ADD CONSTRAINT "TipoMovimiento_ordenCompraId_fkey" FOREIGN KEY ("ordenCompraId") REFERENCES "OrdenCompra"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_ingresoId_fkey" FOREIGN KEY ("ingresoId") REFERENCES "Ingreso"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_ingresoId_fkey" FOREIGN KEY ("ingresoId") REFERENCES "Ingreso"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_salidaId_fkey" FOREIGN KEY ("salidaId") REFERENCES "Salida"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_salidaId_fkey" FOREIGN KEY ("salidaId") REFERENCES "Salida"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_tipoMovimientoId_fkey" FOREIGN KEY ("tipoMovimientoId") REFERENCES "TipoMovimiento"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_productoId_fkey" FOREIGN KEY ("productoId") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_TipoMovimientoId_fkey" FOREIGN KEY ("TipoMovimientoId") REFERENCES "TipoMovimiento"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Ingreso" ADD CONSTRAINT "Ingreso_almacenId_fkey" FOREIGN KEY ("almacenId") REFERENCES "Almacen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
