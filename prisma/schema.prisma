@@ -408,8 +408,8 @@ model TipoMovimiento {
   id            String       @id @default(uuid())
   ordenCompraId String
   OrdenCompra   OrdenCompra  @relation(fields: [ordenCompraId], references: [id])
-  name          String
-  description   String?
+  name          String? // venta, compra, devolución, etc.
+  description   String? // Descripción opcional del tipo de movimiento
   estado        Boolean      @default(false) // Estado que controla si el flujo se concreta o no (false = no afecta al stock)
   isIngreso     Boolean // Booleano para identificar si es un "Ingreso" o "Salida"
   tipoExterno   String? // Puede ser "Venta", "Compra", "Devolución", etc.
