@@ -6,7 +6,7 @@ FROM base AS dev
 ENV NODE_ENV=development
 COPY package*.json ./
 COPY prisma ./prisma/
-RUN npm ci
+RUN npm i
 COPY . .
 RUN npx prisma generate
 CMD ["npm", "run", "start:dev"]
@@ -31,12 +31,13 @@ RUN npm run build && \
 FROM base AS production
 ENV NODE_ENV=production
 ENV USER=node
+RUN apk add --no-cache netcat-openbsd
 COPY --from=build /usr/bin/dumb-init /usr/bin/dumb-init
 COPY --from=build $DIR/package*.json ./
 COPY --from=build $DIR/node_modules ./node_modules
 COPY --from=build $DIR/dist ./dist
 COPY --from=build $DIR/prisma ./prisma
-COPY docker-entrypoint.sh .
+COPY deployment/docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh && \
   chown node:node docker-entrypoint.sh
 USER $USER
