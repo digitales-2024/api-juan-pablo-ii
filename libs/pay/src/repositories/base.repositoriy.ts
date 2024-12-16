@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaBaseRepository, PrismaService } from '@prisma/prisma';
+import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
 export abstract class PayBaseRepository<
   T extends { id: string },
-> extends PrismaBaseRepository<T> {
+> extends BaseRepository<T> {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly modelName: keyof PrismaService,

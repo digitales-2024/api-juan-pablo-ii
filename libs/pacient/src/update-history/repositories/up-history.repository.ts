@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { UpHistory } from '../entities/up-history.entity';
-import { PrismaBaseRepository, PrismaService } from '@prisma/prisma';
+import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
-export class UpHistoryRepository extends PrismaBaseRepository<UpHistory> {
+export class UpHistoryRepository extends BaseRepository<UpHistory> {
   constructor(prisma: PrismaService) {
     super(prisma, 'updateHistoria'); // Tabla del esquema de prisma
   }

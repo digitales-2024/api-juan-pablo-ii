@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Service } from '../entities/service.entity';
-import { PrismaBaseRepository, PrismaService } from '@prisma/prisma';
+import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 /**
  * Repositorio que extiende BaseRepository para la entidad Service.
@@ -10,7 +10,7 @@ import { PrismaBaseRepository, PrismaService } from '@prisma/prisma';
  */
 
 @Injectable()
-export class ServiceRepository extends PrismaBaseRepository<Service> {
+export class ServiceRepository extends BaseRepository<Service> {
   constructor(prisma: PrismaService) {
     super(prisma, 'service');
   }

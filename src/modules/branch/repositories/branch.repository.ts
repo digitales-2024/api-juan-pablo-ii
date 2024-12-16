@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaBaseRepository, PrismaService } from '@prisma/prisma';
 import { Branch } from '../entities/branch.entity';
+import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
-export class BranchRepository extends PrismaBaseRepository<Branch> {
+export class BranchRepository extends BaseRepository<Branch> {
   constructor(prisma: PrismaService) {
     super(prisma, 'sucursal'); // Matches the model name in schema.prisma
   }

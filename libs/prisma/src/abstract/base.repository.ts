@@ -11,7 +11,7 @@ import { PrismaTransaction, QueryParams, CreateDto, UpdateDto } from '../types';
  * @template T - Tipo de entidad que maneja el repositorio
  */
 @Injectable()
-export abstract class PrismaBaseRepository<T extends { id: string }> {
+export abstract class BaseRepository<T extends { id: string }> {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly modelName: keyof PrismaService,
