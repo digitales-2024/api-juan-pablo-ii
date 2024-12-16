@@ -507,31 +507,34 @@ CREATE TABLE "ProcedimientoMedico" (
 );
 
 -- CreateTable
-CREATE TABLE "OrdenCompra" (
+CREATE TABLE "Order" (
     "id" TEXT NOT NULL,
-    "consultaMedicaId" TEXT NOT NULL,
-    "recetaMedicaId" TEXT,
-    "clientId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
+    "type" TEXT,
+    "referenceId" TEXT,
+    "status" TEXT NOT NULL,
+    "details" JSONB NOT NULL,
+    "products" JSONB,
+    "services" JSONB,
     "total" DOUBLE PRECISION NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
     "description" TEXT,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "OrdenCompra_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Pago" (
+CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
-    "ordenCompraId" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
     "description" TEXT,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Pago_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -655,7 +658,7 @@ ALTER TABLE "Almacen" ADD CONSTRAINT "Almacen_productoId_fkey" FOREIGN KEY ("pro
 ALTER TABLE "Almacen" ADD CONSTRAINT "Almacen_tipoAlmacenId_fkey" FOREIGN KEY ("tipoAlmacenId") REFERENCES "TipoAlmacen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TipoMovimiento" ADD CONSTRAINT "TipoMovimiento_ordenCompraId_fkey" FOREIGN KEY ("ordenCompraId") REFERENCES "OrdenCompra"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TipoMovimiento" ADD CONSTRAINT "TipoMovimiento_ordenCompraId_fkey" FOREIGN KEY ("ordenCompraId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Movimiento" ADD CONSTRAINT "Movimiento_ingresoId_fkey" FOREIGN KEY ("ingresoId") REFERENCES "Ingreso"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -706,10 +709,4 @@ ALTER TABLE "CitaMedica" ADD CONSTRAINT "CitaMedica_consultaId_fkey" FOREIGN KEY
 ALTER TABLE "ProcedimientoMedico" ADD CONSTRAINT "ProcedimientoMedico_citaMedicaId_fkey" FOREIGN KEY ("citaMedicaId") REFERENCES "CitaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrdenCompra" ADD CONSTRAINT "OrdenCompra_consultaMedicaId_fkey" FOREIGN KEY ("consultaMedicaId") REFERENCES "ConsultaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "OrdenCompra" ADD CONSTRAINT "OrdenCompra_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Pago" ADD CONSTRAINT "Pago_ordenCompraId_fkey" FOREIGN KEY ("ordenCompraId") REFERENCES "OrdenCompra"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

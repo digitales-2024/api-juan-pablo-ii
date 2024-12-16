@@ -4,6 +4,7 @@ services:
     build:
       target: dev
       context: .
+      dockerfile: deployment/Dockerfile
     restart: unless-stopped
     ports:
       - '${PORT:-5555}:${PORT:-5000}'
@@ -16,17 +17,21 @@ services:
       db-juan-pablo:
         condition: service_started
     environment:
-      - NODE_ENV=development
-      - PORT=${PORT}
-      - DATABASE_URL=postgresql://root:root@db-juan-pablo:5432/juanpabloii?schema=public
-      - WEB_URL=http://localhost:3000
-      - JWT_SECRET=G4t17o
-      - JWT_EXPIRES_IN=1h
-      - JWT_REFRESH_SECRET=R3fr35h
-      - JWT_REFRESH_EXPIRES_IN=7d
-      - COOKIE_EXPIRES_IN=3600000
-      - COOKIE_REFRESH_EXPIRES_IN=604800000
-      - CHANGE_SUNAT=https://www.sunat.gob.pe/a/txt/tipoCambio.txt
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://root:root@db-juan-pablo:5432/juanpabloii?schema=public
+      WEB_URL: http://localhost:3000
+      JWT_SECRET: G4t17o
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_SECRET: R3fr35h
+      JWT_REFRESH_EXPIRES_IN: 7d
+      COOKIE_EXPIRES_IN: 3600000
+      COOKIE_REFRESH_EXPIRES_IN: 604800000
+      MAIL_HOST: sandbox.smtp.mailtrap.io
+      MAIL_PORT: 2525
+      MAIL_USER: 476cd91455c7cf
+      MAIL_PASS: 858a2e38f19d41
+      CHANGE_SUNAT: https://www.sunat.gob.pe/a/txt/tipoCambio.txt
     command: sh -c "npx prisma migrate dev && npm run start:dev"
   db-juan-pablo:
     image: postgres:latest
@@ -40,7 +45,7 @@ services:
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=juanpabloii
     ports:
-      - '5454:5432'
+      - 5454:5432
 
 networks:
   default:
