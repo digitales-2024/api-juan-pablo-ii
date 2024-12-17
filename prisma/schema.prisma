@@ -379,6 +379,7 @@ model TypeStorage {
   description String? // Descripción opcional del tipo de almacén
   branchId    String? // Clave foránea a Sucursal o local
   staffId     String? // Clave foránea a Personal empleado responsable del almacén
+  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
@@ -397,11 +398,11 @@ model Storage {
 
   stock Float @default(0) // Stock disponible en este almacén
 
-  Incoming Incoming[] // Relación con Ingreso
-  Outgoing Outgoing[] // Relación con Salida
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  Incoming  Incoming[] // Relación con Ingreso
+  Outgoing  Outgoing[] // Relación con Salida
+  isActive  Boolean    @default(true) // Campo para controlar si está activo o no
+  createdAt DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime   @updatedAt
 }
 
 //tabla tipo movimiento
@@ -415,6 +416,7 @@ model MovementType {
   state       Boolean    @default(false) // Estado que controla si el flujo se concreta o no (false = no afecta al stock)
   isIncoming  Boolean // Booleano para identificar si es un "Ingreso" o "Salida"
   tipoExterno String? // Puede ser "Venta", "Compra", "Devolución", etc.
+  isActive    Boolean    @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime   @updatedAt
   Movement    Movement[]
@@ -434,9 +436,9 @@ model Movement {
   quantity       Float // Cantidad de producto que se movió
   date           DateTime      @default(now()) @db.Timestamptz(6)
   state          Boolean       @default(false) // Estado para registrar si el movimiento ha sido procesado o no
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  isActive       Boolean       @default(true) // Campo para controlar si está activo o no
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt
 }
 
 //tabla ingresos 
@@ -449,6 +451,7 @@ model Incoming {
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
   referenceId String? // Referencia a un registro etc
+  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
@@ -465,6 +468,7 @@ model Outgoing {
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
   referenceId String? // Referencia a un registro etc
+  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 

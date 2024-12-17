@@ -27,9 +27,23 @@ import {
   ReactivateProductUseCase,
   UpdateProductUseCase,
 } from './product/use-cases';
+import { TypeStorageService } from './type-storage/services/type-storage.service';
+import { TypeStorageRepository } from './type-storage/repositories/type-storage.repository';
+import {
+  CreateTypeStorageUseCase,
+  DeleteTypeStorageUseCase,
+  ReactivateTypeStorageUseCase,
+  UpdateTypeStorageUseCase,
+} from './type-storage/use-cases';
+import { TypeStorageController } from './type-storage/controllers/type-storage.controller';
 
 @Module({
-  controllers: [CategoryController, TypeProductController, ProductController],
+  controllers: [
+    CategoryController,
+    TypeProductController,
+    ProductController,
+    TypeStorageController,
+  ],
   imports: [AuditModule],
   providers: [
     // categoria
@@ -53,6 +67,14 @@ import {
     UpdateProductUseCase,
     DeleteProductsUseCase,
     ReactivateProductUseCase,
+    //Tipo de almacen,
+    TypeStorageService,
+    TypeStorageRepository,
+    CreateTypeStorageUseCase,
+    UpdateTypeStorageUseCase,
+    DeleteTypeStorageUseCase,
+    ReactivateTypeStorageUseCase,
+    // Almacen
   ],
   exports: [InventoryModule],
 })

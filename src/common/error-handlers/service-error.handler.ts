@@ -14,6 +14,7 @@ import { historyErrorMessages } from '@pacient/pacient/history/errors/errors-his
 import { categoryErrorMessages } from '@inventory/inventory/category/errors/errors-category';
 import { productErrorMessages } from '@inventory/inventory/product/errors/errors-product';
 import { typeProductErrorMessages } from '@inventory/inventory/type-product/errors/errors-type-product';
+import { typeStorageErrorMessages } from '@inventory/inventory/type-storage/errors/errors-type-storage';
 
 export type ServiceAction =
   | 'creating'
@@ -154,7 +155,7 @@ export const entityErrorMessages = {
   category: categoryErrorMessages,
   typeProduc: typeProductErrorMessages,
   product: productErrorMessages,
-
+  typeStorage: typeStorageErrorMessages,
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
   // 2. Agregar aquí con una clave apropiada
