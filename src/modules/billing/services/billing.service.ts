@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ServiceBillingGenerator } from '../generators/service-billing.generator';
-import { CreateServiceBillingDto } from '../dto/create-service-billing.dto';
 import { UserData } from '@login/login/interfaces';
 import { OrderService } from '@pay/pay/services/order.service';
-import { CreateServiceBillingUseCase } from '../use-cases/create-service-billing.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
+import { MedicalConsultationGenerator } from '../generators/medical-consultation.generator';
+import { CreateMedicalConsultationOrderUseCase } from '../use-cases/create-medical-consultation-billing.use-case';
+import { CreateMedicalConsultationBillingDto } from '../dto/create-medical-consultation-billing.dto';
 
 @Injectable()
 export class BillingService {
@@ -12,13 +12,16 @@ export class BillingService {
 
   constructor(
     private readonly orderService: OrderService,
-    private readonly serviceBillingGenerator: ServiceBillingGenerator,
-    private readonly createServiceBillingUseCase: CreateServiceBillingUseCase,
+    private readonly medicalConsultationGenerator: MedicalConsultationGenerator,
+    private readonly createServiceBillingUseCase: CreateMedicalConsultationOrderUseCase,
   ) {
-    this.orderService.registerGenerator(this.serviceBillingGenerator);
+    this.orderService.registerGenerator(this.medicalConsultationGenerator);
   }
 
-  async createServiceBilling(dto: CreateServiceBillingDto, user: UserData) {
+  async createServiceBilling(
+    dto: CreateMedicalConsultationBillingDto,
+    user: UserData,
+  ) {
     try {
       await this.createServiceBillingUseCase.execute(dto, user);
     } catch (error) {
