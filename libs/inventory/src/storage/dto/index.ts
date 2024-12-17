@@ -1,3 +1,3 @@
-export * from './create-category.dto';
-export * from './update-category.dto';
-export * from './delete-category.dto';
+export * from './create-storage.dto';
+export * from './update-storage.dto';
+export * from './delete-storage.dto';

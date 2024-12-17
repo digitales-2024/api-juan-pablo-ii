@@ -36,6 +36,15 @@ import {
   UpdateTypeStorageUseCase,
 } from './type-storage/use-cases';
 import { TypeStorageController } from './type-storage/controllers/type-storage.controller';
+import { StorageController } from './storage/controllers/storage.controller';
+import { StorageService } from './storage/services/storage.service';
+import { StorageRepository } from './storage/repositories/storage.repository';
+import {
+  CreateStorageUseCase,
+  DeleteStorageUseCase,
+  ReactivateStorageUseCase,
+  UpdateStorageUseCase,
+} from './storage/use-cases';
 
 @Module({
   controllers: [
@@ -43,6 +52,7 @@ import { TypeStorageController } from './type-storage/controllers/type-storage.c
     TypeProductController,
     ProductController,
     TypeStorageController,
+    StorageController,
   ],
   imports: [AuditModule],
   providers: [
@@ -75,6 +85,12 @@ import { TypeStorageController } from './type-storage/controllers/type-storage.c
     DeleteTypeStorageUseCase,
     ReactivateTypeStorageUseCase,
     // Almacen
+    StorageService,
+    StorageRepository,
+    CreateStorageUseCase,
+    UpdateStorageUseCase,
+    DeleteStorageUseCase,
+    ReactivateStorageUseCase,
   ],
   exports: [InventoryModule],
 })
