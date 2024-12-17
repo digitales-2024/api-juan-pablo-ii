@@ -609,23 +609,46 @@ model ProcedimientoMedico {
   updatedAt DateTime @updatedAt
 }
 
+enum OrderType {
+  MEDICAL_PRESCRIPTION_ORDER
+  MEDICAL_CONSULTATION_ORDER
+  PRODUCT_SALE_ORDER
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
 model Order {
-  id          String           @id @default(uuid())
-  type        String? // MEDICAL_PRESCRIPTION, MEDICAL_CONSULTATION, etc.
-  referenceId String? // ID of related prescription or consultation
-  status      String // PENDING, PAID, CANCELLED, etc.
-  details     Json // Specific details according to type
-  products    Json? // Array of products (optional)
-  services    Json? // Array of services (optional)
-  total       Float
-  date        DateTime
-  description String?
+  id             String      @id @default(uuid())
+  code           String?
+  type           OrderType
+  movementTypeId String // FK para TipoMovimiento
+  referenceId    String? // ID of related prescription or consultation
+  sourceId       String? // ID de la entidad origen (paciente, etc)
+  targetId       String? // ID de la entidad destino (doctor, etc)
+  status         OrderStatus
+  currency       String // default 'PEN'
+  subtotal       Float
+  tax            Float
+  total          Float
+  date           DateTime
+  dueDate        DateTime?
+  notes          String?
+  metadata       Json? // Metadata adicional específica del tipo
+
   // Relations
-  payments    Payment[]        @relation("OrderPayments")
-  movements   TipoMovimiento[]
+  payments  Payment[]        @relation("OrderPayments")
+  movements TipoMovimiento[]
+
   // Audit fields
-  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime         @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 }
 
 model Payment {
@@ -635,6 +658,8 @@ model Payment {
   date        DateTime
   amount      Float
   description String?
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt
+
+  // Audit fields
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 }
