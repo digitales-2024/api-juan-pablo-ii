@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsString } from 'class-validator';
 
-export class DeleteTypeProductDto {
+export class DeleteTypeMovementDto {
   @ApiProperty({ type: [String] })
   @IsArray()
   @IsString({ each: true })

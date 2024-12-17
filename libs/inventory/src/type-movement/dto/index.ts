@@ -1,3 +1,3 @@
-export * from './create-type-product.dto';
-export * from './update-type-product.dto';
-export * from './delete-type-product.dto';
+export * from './create-type-movement.dto';
+export * from './update-type-movement.dto';
+export * from './delete-type-movement.dto';

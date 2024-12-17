@@ -45,6 +45,15 @@ import {
   ReactivateStorageUseCase,
   UpdateStorageUseCase,
 } from './storage/use-cases';
+import { TypeMovementController } from './type-movement/controllers/type-movement.controller';
+import { TypeMovementService } from './type-movement/services/type-movement.service';
+import { TypeMovementRepository } from './type-movement/repositories/type-movement.repository';
+import {
+  CreateTypeMovementUseCase,
+  DeleteTypeMovementUseCase,
+  ReactivateTypeMovementUseCase,
+  UpdateTypeMovementUseCase,
+} from './type-movement/use-cases';
 
 @Module({
   controllers: [
@@ -53,6 +62,7 @@ import {
     ProductController,
     TypeStorageController,
     StorageController,
+    TypeMovementController,
   ],
   imports: [AuditModule],
   providers: [
@@ -91,6 +101,13 @@ import {
     UpdateStorageUseCase,
     DeleteStorageUseCase,
     ReactivateStorageUseCase,
+    //tipo movimiento
+    TypeMovementService,
+    TypeMovementRepository,
+    CreateTypeMovementUseCase,
+    UpdateTypeMovementUseCase,
+    DeleteTypeMovementUseCase,
+    ReactivateTypeMovementUseCase,
   ],
   exports: [InventoryModule],
 })

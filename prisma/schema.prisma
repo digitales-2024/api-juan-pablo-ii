@@ -414,7 +414,7 @@ model MovementType {
   name        String? // venta, compra, devolución, etc.
   description String? // Descripción opcional del tipo de movimiento
   state       Boolean    @default(false) // Estado que controla si el flujo se concreta o no (false = no afecta al stock)
-  isIncoming  Boolean // Booleano para identificar si es un "Ingreso" o "Salida"
+  isIncoming  Boolean? // Booleano para identificar si es un "Ingreso" o "Salida"
   tipoExterno String? // Puede ser "Venta", "Compra", "Devolución", etc.
   isActive    Boolean    @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime   @default(now()) @db.Timestamptz(6)

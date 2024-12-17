@@ -27,7 +27,7 @@ import { Storage } from '../entities/storage.entity';
  * Controlador REST para gestionar almacenes.
  * Expone endpoints para operaciones CRUD sobre almacenes.
  */
-@ApiTags('Almacen')
+@ApiTags('Storage')
 @ApiBadRequestResponse({
   description:
     'Bad Request - Error en la validación de datos o solicitud incorrecta',
