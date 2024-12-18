@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 /**
  * Tipo para el contexto de transacción de Prisma.
@@ -13,6 +13,8 @@ export type PrismaTransaction = Omit<
  * Tipos de eventos de registro (logging) que pueden ocurrir en Prisma.
  */
 export type LogEventType = 'query' | 'info' | 'warn' | 'error';
+
+export type PayPrismaModels = Extract<Prisma.ModelName, 'orden' | 'pago'>;
 
 /**
  * Representa un evento de registro (log) de Prisma.

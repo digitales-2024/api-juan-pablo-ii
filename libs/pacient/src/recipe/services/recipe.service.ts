@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { RecipeRepository } from '../repositories/recipe.repository';
 import { Recipe } from '../entities/recipe.entity';
@@ -196,6 +197,18 @@ export class RecipeService {
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
       throw error;
+    }
+  }
+
+  async findByConsultaId(consultaId: string): Promise<Recipe> {
+    try {
+      const recipe = await this.recipeRepository.findById(consultaId);
+      if (!recipe) {
+        throw new NotFoundException('Receta no encontrada para esta consulta');
+      }
+      return recipe;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
     }
   }
 }

@@ -149,9 +149,9 @@ model Client {
   phone      String?
   isActive   Boolean @default(true)
 
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt
-  OrdenCompra Order[]
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+  // OrdenCompra OrdenCompra[]
 }
 
 // tabla pacientes que va a ser usuarios
@@ -567,8 +567,8 @@ model ConsultaMedica {
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
-  CitaMedica  CitaMedica[] // Relación con CitaMedica
-  OrdenCompra Order[] // Relación con OrdenCompra
+  CitaMedica CitaMedica[] // Relación con CitaMedica
+  // OrdenCompra OrdenCompra[] // Relación con OrdenCompra
 }
 
 //tabla tipo de citasMedicas
@@ -616,36 +616,68 @@ model ProcedimientoMedico {
   updatedAt DateTime @updatedAt
 }
 
-//tabla venta
-model Order {
-  id               String         @id @default(uuid())
-  consultaMedicaId String
-  ConsultaMedica   ConsultaMedica @relation(fields: [consultaMedicaId], references: [id])
-  recetaMedicaId   String?
-  //relacion con cliente si no es un paciente y desea comprar productos
-  clientId         String
-  Client           Client         @relation(fields: [clientId], references: [id])
-
-  date        DateTime
-  total       Float
-  description String?
-
-  Pago Pago[] // Relación con Pago
-
-  createdAt    DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime       @updatedAt
-  MovementType MovementType[]
+enum OrderType {
+  MEDICAL_PRESCRIPTION_ORDER
+  MEDICAL_CONSULTATION_ORDER
+  PRODUCT_SALE_ORDER
 }
 
-//tabla pago
-model Pago {
-  id            String   @id @default(uuid())
-  ordenCompraId String
-  ordenCompra   Order    @relation(fields: [ordenCompraId], references: [id])
-  date          DateTime
-  amount        Float
-  description   String?
+enum OrderStatus {
+  DRAFT
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
 
+model Order {
+  id             String      @id @default(uuid())
+  code           String?
+  type           OrderType
+  movementTypeId String // FK para TipoMovimiento
+  referenceId    String? // ID of related prescription or consultation
+  sourceId       String? // ID de la entidad origen (paciente, etc)
+  targetId       String? // ID de la entidad destino (doctor, etc)
+  status         OrderStatus
+  currency       String // default 'PEN'
+  subtotal       Float
+  tax            Float
+  total          Float
+  date           DateTime
+  dueDate        DateTime?
+  notes          String?
+  metadata       Json? // Metadata adicional específica del tipo
+  isActive       Boolean     @default(true)
+
+  // Relations
+  payments  Payment[]        @relation("OrderPayments")
+  movements MovementType[]
+
+  // Audit fields
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  orderId       String
+  order         Order         @relation("OrderPayments", fields: [orderId], references: [id])
+  date          DateTime
+  status        PaymentStatus
+  amount        Float
+  description   String?
+  referenceCode String?
+  isActive      Boolean       @default(true)
+
+  // Audit fields
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
 }

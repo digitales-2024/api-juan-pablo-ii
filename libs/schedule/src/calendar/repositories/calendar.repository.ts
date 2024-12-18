@@ -1,7 +1,7 @@
 // calendar.repository.ts
 import { Injectable } from '@nestjs/common';
-import { BaseRepository, PrismaService } from '@prisma/prisma';
 import { Calendar } from '../entities/pacient.entity';
+import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
 export class CalendarRepository extends BaseRepository<Calendar> {

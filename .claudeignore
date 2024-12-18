@@ -1,2 +1,13 @@
-node_modules
-data
+/data
+/node_modules
+/prisma
+/dist
+/test
+/libs/inventory
+/libs/medical-consultation
+/libs/working-hours
+/libs/doc-appointment
+/libs/medical-procedure
+/libs/pacient
+/libs/login
+/libs/schedule
