@@ -7,6 +7,8 @@ import { OrderType } from '@pay/pay/interfaces/order.types';
 import { CreateMedicalConsultationBillingDto } from '../dto/create-medical-consultation-billing.dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
+import { PaymentService } from '@pay/pay/services/payment.service';
+import { PaymentStatus } from '@pay/pay/interfaces/payment.types';
 
 @Injectable()
 export class CreateMedicalConsultationOrderUseCase {
@@ -14,6 +16,7 @@ export class CreateMedicalConsultationOrderUseCase {
     private readonly orderService: OrderService,
     private readonly orderRepository: OrderRepository,
     private readonly auditService: AuditService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   async execute(
@@ -32,6 +35,17 @@ export class CreateMedicalConsultationOrderUseCase {
           },
         );
 
+        await this.paymentService.create(
+          {
+            orderId: order.id,
+            amount: order.total,
+            status: PaymentStatus.PENDING,
+            date: new Date(),
+            description: `Pago pendiente para consulta médica ${order.code}`,
+            referenceCode: 'asda',
+          },
+          user,
+        );
         // Registrar la auditoría
         await this.auditService.create({
           entityId: order.id,

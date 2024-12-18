@@ -7,6 +7,8 @@ import { OrderType } from '@pay/pay/interfaces/order.types';
 import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
+import { PaymentStatus } from '@pay/pay/interfaces/payment.types';
+import { PaymentService } from '@pay/pay/services/payment.service';
 
 @Injectable()
 export class CreateMedicalPrescriptionOrderUseCase {
@@ -14,6 +16,7 @@ export class CreateMedicalPrescriptionOrderUseCase {
     private readonly orderService: OrderService,
     private readonly orderRepository: OrderRepository,
     private readonly auditService: AuditService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   async execute(
@@ -30,6 +33,18 @@ export class CreateMedicalPrescriptionOrderUseCase {
             ...createDto,
             type: OrderType.MEDICAL_PRESCRIPTION_ORDER,
           },
+        );
+
+        await this.paymentService.create(
+          {
+            orderId: order.id,
+            amount: order.total,
+            status: PaymentStatus.PENDING,
+            date: new Date(),
+            description: `Pago pendiente para receta médica ${order.code}`,
+            referenceCode: 'asda',
+          },
+          user,
         );
 
         // Registrar la auditoría

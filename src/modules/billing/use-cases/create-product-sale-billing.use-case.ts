@@ -7,6 +7,8 @@ import { OrderType } from '@pay/pay/interfaces/order.types';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
+import { PaymentService } from '@pay/pay/services/payment.service';
+import { PaymentStatus } from '@pay/pay/interfaces/payment.types';
 
 @Injectable()
 export class CreateProductSaleOrderUseCase {
@@ -14,6 +16,7 @@ export class CreateProductSaleOrderUseCase {
     private readonly orderService: OrderService,
     private readonly orderRepository: OrderRepository,
     private readonly auditService: AuditService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   async execute(
@@ -32,6 +35,17 @@ export class CreateProductSaleOrderUseCase {
           },
         );
 
+        await this.paymentService.create(
+          {
+            orderId: order.id,
+            amount: order.total,
+            status: PaymentStatus.PENDING,
+            date: new Date(),
+            description: `Pago pendiente para productos`,
+            referenceCode: 'asda',
+          },
+          user,
+        );
         // Registrar la auditoría
         await this.auditService.create({
           entityId: order.id,
