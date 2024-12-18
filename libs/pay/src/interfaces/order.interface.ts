@@ -26,20 +26,3 @@ export interface IOrderGenerator {
   calculateTotal(input: any): Promise<number>;
   calculateTax(subtotal: number): Promise<number>;
 }
-
-// DTOs base para crear órdenes
-export interface ICreateOrderBase {
-  movementTypeId: string;
-  currency?: string;
-  dueDate?: Date;
-  notes?: string;
-  metadata?: Record<string, any>;
-}
-
-// DTOs base para actualizar órdenes
-export interface IUpdateOrderBase {
-  status?: OrderStatus;
-  notes?: string;
-  dueDate?: Date;
-  metadata?: Record<string, any>;
-}
