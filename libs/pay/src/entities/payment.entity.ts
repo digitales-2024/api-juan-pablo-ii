@@ -5,6 +5,7 @@ export class Payment {
   date: Date;
   status: string;
   description?: string;
+  referenceCode?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -8,6 +8,7 @@ export class ProductRepository extends BaseRepository<Product> {
     super(prisma, 'producto'); // Tabla del esquema de prisma
   }
 
+  //funcion que no se esta usando por ahora
   /**
    * Verifica si existe un registro en una tabla específica por un valor y campo
    * @param field - Campo por el cual buscar (por ejemplo, 'name', 'id', etc.)
