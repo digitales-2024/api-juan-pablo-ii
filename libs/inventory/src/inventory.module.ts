@@ -72,6 +72,15 @@ import {
   ReactivateIncomingUseCase,
   UpdateIncomingUseCase,
 } from './incoming/use-cases';
+import { OutgoingController } from './outgoing/controllers/outgoing.controller';
+import { OutgoingService } from './outgoing/services/outgoing.service';
+import { OutgoingRepository } from './outgoing/repositories/outgoing.repository';
+import {
+  CreateOutgoingUseCase,
+  DeleteOutgoingUseCase,
+  ReactivateOutgoingUseCase,
+  UpdateOutgoingUseCase,
+} from './outgoing/use-cases';
 
 @Module({
   controllers: [
@@ -83,6 +92,7 @@ import {
     TypeMovementController,
     MovementController,
     IncomingController,
+    OutgoingController,
   ],
   imports: [AuditModule],
   providers: [
@@ -142,6 +152,13 @@ import {
     UpdateIncomingUseCase,
     DeleteIncomingUseCase,
     ReactivateIncomingUseCase,
+    //salidas
+    OutgoingService,
+    OutgoingRepository,
+    CreateOutgoingUseCase,
+    UpdateOutgoingUseCase,
+    DeleteOutgoingUseCase,
+    ReactivateOutgoingUseCase,
   ],
   exports: [InventoryModule],
 })
