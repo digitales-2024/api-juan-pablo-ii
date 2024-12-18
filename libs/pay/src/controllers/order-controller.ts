@@ -90,7 +90,7 @@ export class OrderController {
     @Body() updateOrderDto: UpdateOrderDto,
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Order>> {
-    return this.orderService.updateOrder(id, updateOrderDto, user);
+    return this.orderService.update(id, updateOrderDto, user);
   }
 
   @Delete('remove/all')
@@ -107,7 +107,7 @@ export class OrderController {
     @Body() deleteOrdersDto: DeleteOrdersDto,
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Order[]>> {
-    return this.orderService.deleteOrders(deleteOrdersDto, user);
+    return this.orderService.deleteMany(deleteOrdersDto, user);
   }
 
   @Patch('reactivate/all')
@@ -123,6 +123,6 @@ export class OrderController {
     @Body() deleteOrdersDto: DeleteOrdersDto,
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Order[]>> {
-    return this.orderService.reactivateOrders(deleteOrdersDto.ids, user);
+    return this.orderService.reactiveMany(deleteOrdersDto.ids, user);
   }
 }

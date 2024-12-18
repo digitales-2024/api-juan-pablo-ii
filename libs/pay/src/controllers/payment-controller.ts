@@ -53,7 +53,7 @@ export class PaymentController {
     @Body() createPaymentDto: CreatePaymentDto,
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Payment>> {
-    return this.paymentService.createPayment(createPaymentDto, user);
+    return this.paymentService.create(createPaymentDto, user);
   }
 
   @Get(':id')
@@ -95,7 +95,7 @@ export class PaymentController {
     @Body() updatePaymentDto: UpdatePaymentDto,
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Payment>> {
-    return this.paymentService.updatePayment(id, updatePaymentDto, user);
+    return this.paymentService.update(id, updatePaymentDto, user);
   }
 
   @Delete('remove/all')
@@ -112,7 +112,7 @@ export class PaymentController {
     @Body() deletePaymentsDto: DeletePaymentsDto,
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Payment[]>> {
-    return this.paymentService.deletePayments(deletePaymentsDto, user);
+    return this.paymentService.deleteMany(deletePaymentsDto, user);
   }
 
   @Patch('reactivate/all')
@@ -129,6 +129,6 @@ export class PaymentController {
     @Body() body: { ids: string[] },
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Payment[]>> {
-    return this.paymentService.reactivatePayments(body.ids, user);
+    return this.paymentService.reactiveMany(body.ids, user);
   }
 }

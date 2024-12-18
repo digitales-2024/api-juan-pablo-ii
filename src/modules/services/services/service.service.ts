@@ -107,7 +107,7 @@ export class ServiceService {
    * @returns El servicio encontrado
    * @throws {NotFoundException} Si el servicio no existe
    */
-  async findOne(id: string): Promise<Service> {
+  async findServiceById(id: string): Promise<Service> {
     try {
       return this.findById(id);
     } catch (error) {

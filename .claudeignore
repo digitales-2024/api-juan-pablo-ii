@@ -3,7 +3,6 @@
 /prisma
 /dist
 /test
-/libs/inventory
 /libs/medical-consultation
 /libs/working-hours
 /libs/doc-appointment
@@ -11,3 +10,6 @@
 /libs/pacient
 /libs/login
 /libs/schedule
+/libs/staff
+/src/modules/appointments
+/src/modules/services

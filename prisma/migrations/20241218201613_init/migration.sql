@@ -1,6 +1,15 @@
 -- CreateEnum
 CREATE TYPE "AuditActionType" AS ENUM ('CREATE', 'UPDATE', 'DELETE');
 
+-- CreateEnum
+CREATE TYPE "OrderType" AS ENUM ('MEDICAL_PRESCRIPTION_ORDER', 'MEDICAL_CONSULTATION_ORDER', 'PRODUCT_SALE_ORDER');
+
+-- CreateEnum
+CREATE TYPE "OrderStatus" AS ENUM ('DRAFT', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED', 'REFUNDED');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -314,6 +323,7 @@ CREATE TABLE "TypeStorage" (
     "description" TEXT,
     "branchId" TEXT,
     "staffId" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -328,6 +338,7 @@ CREATE TABLE "Storage" (
     "location" TEXT,
     "typeStorageId" TEXT NOT NULL,
     "stock" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -342,8 +353,9 @@ CREATE TABLE "MovementType" (
     "name" TEXT,
     "description" TEXT,
     "state" BOOLEAN NOT NULL DEFAULT false,
-    "isIncoming" BOOLEAN NOT NULL,
+    "isIncoming" BOOLEAN,
     "tipoExterno" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -360,6 +372,7 @@ CREATE TABLE "Movement" (
     "quantity" DOUBLE PRECISION NOT NULL,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "state" BOOLEAN NOT NULL DEFAULT false,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -375,6 +388,7 @@ CREATE TABLE "Incoming" (
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "state" BOOLEAN NOT NULL DEFAULT false,
     "referenceId" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -390,6 +404,7 @@ CREATE TABLE "Outgoing" (
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "state" BOOLEAN NOT NULL DEFAULT false,
     "referenceId" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -516,15 +531,22 @@ CREATE TABLE "ProcedimientoMedico" (
 -- CreateTable
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL,
-    "type" TEXT,
+    "code" TEXT,
+    "type" "OrderType" NOT NULL,
+    "movementTypeId" TEXT NOT NULL,
     "referenceId" TEXT,
-    "status" TEXT NOT NULL,
-    "details" JSONB NOT NULL,
-    "products" JSONB,
-    "services" JSONB,
+    "sourceId" TEXT,
+    "targetId" TEXT,
+    "status" "OrderStatus" NOT NULL,
+    "currency" TEXT NOT NULL,
+    "subtotal" DOUBLE PRECISION NOT NULL,
+    "tax" DOUBLE PRECISION NOT NULL,
     "total" DOUBLE PRECISION NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
-    "description" TEXT,
+    "dueDate" TIMESTAMP(3),
+    "notes" TEXT,
+    "metadata" JSONB,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -536,8 +558,11 @@ CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
+    "status" "PaymentStatus" NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
     "description" TEXT,
+    "referenceCode" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -665,11 +690,7 @@ ALTER TABLE "Storage" ADD CONSTRAINT "Storage_productoId_fkey" FOREIGN KEY ("pro
 ALTER TABLE "Storage" ADD CONSTRAINT "Storage_typeStorageId_fkey" FOREIGN KEY ("typeStorageId") REFERENCES "TypeStorage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-<<<<<<<< HEAD:prisma/migrations/20241217182941_/migration.sql
 ALTER TABLE "MovementType" ADD CONSTRAINT "MovementType_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-========
-ALTER TABLE "TipoMovimiento" ADD CONSTRAINT "TipoMovimiento_ordenCompraId_fkey" FOREIGN KEY ("ordenCompraId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
->>>>>>>> b52e7acb9c9503fa67d35a13fba948167062846b:prisma/migrations/20241216031738_init/migration.sql
 
 -- AddForeignKey
 ALTER TABLE "Movement" ADD CONSTRAINT "Movement_movementTypeId_fkey" FOREIGN KEY ("movementTypeId") REFERENCES "MovementType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -720,14 +741,4 @@ ALTER TABLE "CitaMedica" ADD CONSTRAINT "CitaMedica_consultaId_fkey" FOREIGN KEY
 ALTER TABLE "ProcedimientoMedico" ADD CONSTRAINT "ProcedimientoMedico_citaMedicaId_fkey" FOREIGN KEY ("citaMedicaId") REFERENCES "CitaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-<<<<<<<< HEAD:prisma/migrations/20241217182941_/migration.sql
-ALTER TABLE "Order" ADD CONSTRAINT "Order_consultaMedicaId_fkey" FOREIGN KEY ("consultaMedicaId") REFERENCES "ConsultaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Pago" ADD CONSTRAINT "Pago_ordenCompraId_fkey" FOREIGN KEY ("ordenCompraId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-========
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
->>>>>>>> b52e7acb9c9503fa67d35a13fba948167062846b:prisma/migrations/20241216031738_init/migration.sql
