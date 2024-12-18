@@ -1,5 +1,4 @@
 // src/modules/billing/dto/create-service-billing.dto.ts
-import { ICreateOrderBase } from '@pay/pay/interfaces';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsUUID,
@@ -11,7 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CreateMedicalConsultationBillingDto implements ICreateOrderBase {
+export class CreateMedicalConsultationBillingDto {
   @ApiProperty({ description: 'ID de la consulta médica' })
   @IsUUID()
   consultaId: string;
