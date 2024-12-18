@@ -10,12 +10,15 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { PacientModule } from '@pacient/pacient/pacient.module';
 import { StaffModule } from 'libs/staff/staff.module';
 import { ScheduleModule } from '@schedule/schedule/schedule.module';
+import { PayModule } from '@pay/pay/pay.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { InventoryModule } from '@inventory/inventory/inventory.module';
 
 @Module({
   imports: [
     LoginModule,
     PrismaModule,
+    PayModule,
     ClientsModule,
     ServiceModule,
     BranchModule,
@@ -24,6 +27,7 @@ import { InventoryModule } from '@inventory/inventory/inventory.module';
     StaffModule,
     ScheduleModule,
     InventoryModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

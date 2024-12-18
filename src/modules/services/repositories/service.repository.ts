@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { BaseRepository, PrismaService } from '@prisma/prisma';
 import { Service } from '../entities/service.entity';
+import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 /**
  * Repositorio que extiende BaseRepository para la entidad Service.

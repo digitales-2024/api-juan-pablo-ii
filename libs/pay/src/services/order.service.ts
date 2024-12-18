@@ -1,0 +1,230 @@
+// libs/pay/src/services/order.service.ts
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { OrderRepository } from '../repositories/order.repository';
+import { Order } from '../entities/order.entity';
+import { IOrderGenerator } from '../interfaces';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
+import { orderErrorMessages } from '../errors/errors-order';
+import { OrderStatus, OrderType } from '../interfaces/order.types';
+import { CreateOrderDto } from '../interfaces/dto/create-order.dto';
+import { HttpResponse, UserData } from '@login/login/interfaces';
+import { DeleteOrdersDto, UpdateOrderDto } from '../interfaces/dto';
+import {
+  UpdateOrderUseCase,
+  CreateOrderUseCase,
+  DeleteOrdersUseCase,
+  ReactivateOrdersUseCase,
+} from '../use-cases';
+
+@Injectable()
+export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+  private readonly generators: Map<string, IOrderGenerator> = new Map();
+  private readonly errorHandler: BaseErrorHandler;
+
+  constructor(
+    private readonly orderRepository: OrderRepository,
+    private readonly createOrderUseCase: CreateOrderUseCase,
+    private readonly updateOrderUseCase: UpdateOrderUseCase,
+    private readonly deleteOrdersUseCase: DeleteOrdersUseCase,
+    private readonly reactivateOrdersUseCase: ReactivateOrdersUseCase,
+  ) {
+    this.errorHandler = new BaseErrorHandler(
+      this.logger,
+      'Order',
+      orderErrorMessages,
+    );
+  }
+
+  /**
+   * Registra un generador de órdenes para un tipo específico
+   * @param generator - Generador de órdenes a registrar
+   * @throws {BadRequestException} Si el generador no tiene un tipo definido o ya existe un generador para ese tipo
+   */
+  registerGenerator(generator: IOrderGenerator) {
+    try {
+      if (!generator.type) {
+        throw new BadRequestException(
+          'El generador debe tener un tipo definido',
+        );
+      }
+      if (this.generators.has(generator.type)) {
+        throw new BadRequestException(
+          `Ya existe un generador registrado para el tipo: ${generator.type}`,
+        );
+      }
+      this.generators.set(generator.type, generator);
+      this.logger.log(`Generator registered for type: ${generator.type}`);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
+    }
+  }
+
+  /**
+   * Crea una orden utilizando un generador específico
+   * @param type - Tipo de orden a crear
+   * @param input - Datos de entrada para generar la orden
+   * @returns Una orden creada
+   * @throws {BadRequestException} Si no se encuentra un generador para el tipo especificado
+   */
+  async createOrder(type: string, input: any): Promise<Order> {
+    try {
+      const generator = this.generators.get(type);
+      if (!generator) {
+        throw new BadRequestException(
+          `No se encontró un generador para el tipo: ${type}`,
+        );
+      }
+
+      const orderData = await generator.generate(input);
+      const order = await this.orderRepository.create(orderData);
+
+      this.logger.log(`Order created successfully with ID: ${order.id}`);
+      return order;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'creating');
+    }
+  }
+
+  /**
+   * Crea una nueva orden
+   * @param createOrderDto - DTO con los datos de la orden a crear
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con la orden creada
+   * @throws {BadRequestException} Si hay un error en la creación de la orden
+   */
+  async create(
+    createOrderDto: CreateOrderDto,
+    user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    try {
+      return await this.createOrderUseCase.execute(createOrderDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'creating');
+    }
+  }
+
+  /**
+   * Actualiza una orden existente
+   * @param id - Identificador de la orden a actualizar
+   * @param updateData - Datos para actualizar la orden
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con la orden actualizada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+  async updateOrder(
+    id: string,
+    updateData: UpdateOrderDto,
+    user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    try {
+      const order = await this.findOrderById(id);
+      if (!order) {
+        throw new BadRequestException('Order not found');
+      }
+
+      return await this.updateOrderUseCase.execute(id, updateData, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
+   * Elimina múltiples órdenes
+   * @param deleteOrdersDto - DTO con los identificadores de las órdenes a eliminar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con las órdenes eliminadas
+   * @throws {BadRequestException} Si hay un error al eliminar las órdenes
+   */
+  async deleteOrders(
+    deleteOrdersDto: DeleteOrdersDto,
+    user: UserData,
+  ): Promise<HttpResponse<Order[]>> {
+    try {
+      return await this.deleteOrdersUseCase.execute(deleteOrdersDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deactivating');
+    }
+  }
+
+  /**
+   * Reactiva múltiples órdenes
+   * @param ids - Arreglo de identificadores de las órdenes a reactivar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con las órdenes reactivadas
+   * @throws {BadRequestException} Si hay un error al reactivar las órdenes
+   */
+  async reactivateOrders(
+    ids: string[],
+    user: UserData,
+  ): Promise<HttpResponse<Order[]>> {
+    try {
+      return await this.reactivateOrdersUseCase.execute(ids, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'reactivating');
+    }
+  }
+
+  /**
+   * Busca una orden por su identificador
+   * @param id - Identificador de la orden
+   * @returns La orden encontrada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+  async findOrderById(id: string): Promise<Order> {
+    try {
+      const order = await this.orderRepository.findById(id);
+      if (!order) {
+        throw new BadRequestException('Orden no encontrada');
+      }
+      return order;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todas las órdenes
+   * @returns Arreglo de órdenes
+   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   */
+  async findAll(): Promise<Order[]> {
+    try {
+      return await this.orderRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca órdenes por tipo
+   * @param type - Tipo de orden
+   * @returns Arreglo de órdenes del tipo especificado
+   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   */
+  async findByType(type: OrderType): Promise<Order[]> {
+    try {
+      return this.orderRepository.findMany({
+        where: { type, isActive: true },
+      });
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca órdenes por estado
+   * @param status - Estado de la orden
+   * @returns Arreglo de órdenes con el estado especificado
+   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   */
+  async findByStatus(status: OrderStatus): Promise<Order[]> {
+    try {
+      return this.orderRepository.findMany({
+        where: { status, isActive: true },
+      });
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { BaseRepository, PrismaService } from '@prisma/prisma';
 import { Recurrence } from '../entities/recurrence.entity';
+import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
 export class RecurrenceRepository extends BaseRepository<Recurrence> {
