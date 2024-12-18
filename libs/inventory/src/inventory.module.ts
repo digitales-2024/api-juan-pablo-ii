@@ -54,6 +54,24 @@ import {
   ReactivateTypeMovementUseCase,
   UpdateTypeMovementUseCase,
 } from './type-movement/use-cases';
+import { MovementController } from './movement/controllers/movement.controller';
+import { MovementService } from './movement/services/movement.service';
+import { MovementRepository } from './movement/repositories/movement.repository';
+import {
+  CreateMovementUseCase,
+  DeleteMovementUseCase,
+  ReactivateMovementUseCase,
+  UpdateMovementUseCase,
+} from './movement/use-cases';
+import { IncomingController } from './incoming/controllers/incoming.controller';
+import { IncomingService } from './incoming/services/incoming.service';
+import { IncomingRepository } from './incoming/repositories/incoming.repository';
+import {
+  CreateIncomingUseCase,
+  DeleteIncomingUseCase,
+  ReactivateIncomingUseCase,
+  UpdateIncomingUseCase,
+} from './incoming/use-cases';
 
 @Module({
   controllers: [
@@ -63,6 +81,8 @@ import {
     TypeStorageController,
     StorageController,
     TypeMovementController,
+    MovementController,
+    IncomingController,
   ],
   imports: [AuditModule],
   providers: [
@@ -108,6 +128,20 @@ import {
     UpdateTypeMovementUseCase,
     DeleteTypeMovementUseCase,
     ReactivateTypeMovementUseCase,
+    //movimiento
+    MovementService,
+    MovementRepository,
+    CreateMovementUseCase,
+    UpdateMovementUseCase,
+    DeleteMovementUseCase,
+    ReactivateMovementUseCase,
+    //ingresos
+    IncomingService,
+    IncomingRepository,
+    CreateIncomingUseCase,
+    UpdateIncomingUseCase,
+    DeleteIncomingUseCase,
+    ReactivateIncomingUseCase,
   ],
   exports: [InventoryModule],
 })

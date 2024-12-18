@@ -1,3 +1,3 @@
-export * from './create-pacient.dto';
-export * from './update-pacient.dto';
-export * from './delete-pacient.dto';
+export * from './create-category.dto';
+export * from './update-category.dto';
+export * from './delete-category.dto';
