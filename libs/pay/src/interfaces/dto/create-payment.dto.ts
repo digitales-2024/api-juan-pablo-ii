@@ -36,11 +36,7 @@ export class CreatePaymentDto {
     enum: PaymentStatus,
   })
   @IsEnum(PaymentStatus)
-  type: PaymentStatus;
-  @IsOptional()
-  @IsString()
-  status?: string = 'PENDING';
-
+  status: PaymentStatus;
   @ApiProperty({
     description: 'Fecha del pago',
     example: '2024-01-15T10:30:00Z',
