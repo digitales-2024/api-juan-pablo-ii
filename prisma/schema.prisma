@@ -644,14 +644,13 @@ model Order {
   subtotal       Float
   tax            Float
   total          Float
-  date           DateTime
-  dueDate        DateTime?
+  date           DateTime    @default(now()) @db.Timestamptz(6)
   notes          String?
   metadata       Json? // Metadata adicional específica del tipo
   isActive       Boolean     @default(true)
 
   // Relations
-  payments  Payment[]        @relation("OrderPayments")
+  payments  Payment[]      @relation("OrderPayments")
   movements MovementType[]
 
   // Audit fields
@@ -663,16 +662,24 @@ model Payment {
   id            String        @id @default(uuid())
   orderId       String
   order         Order         @relation("OrderPayments", fields: [orderId], references: [id])
-  date          DateTime
+  date          DateTime      @default(now()) @db.Timestamptz(6)
   status        PaymentStatus
   amount        Float
   description   String?
-  referenceCode String?
+  paymentMethod PaymentMethod // CASH, TRANSFER, YAPE
+  voucherNumber String? // Número de comprobante/operación
+  verifiedBy    String? // ID del usuario que verificó
+  verifiedAt    DateTime? // Cuándo se verificó
   isActive      Boolean       @default(true)
 
-  // Audit fields
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  YAPE
 }
 
 enum PaymentStatus {

@@ -5,15 +5,21 @@ import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handle
 import {
   CreatePaymentDto,
   DeletePaymentsDto,
+  ProcessPaymentDto,
+  RejectPaymentDto,
   UpdatePaymentDto,
+  VerifyPaymentDto,
 } from '../interfaces/dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { paymentErrorMessages } from '../errors/errors-payment';
 import {
   CreatePaymentUseCase,
   DeletePaymentsUseCase,
+  ProcessPaymentUseCase,
   ReactivatePaymentsUseCase,
+  RejectPaymentUseCase,
   UpdatePaymentUseCase,
+  VerifyPaymentUseCase,
 } from '../use-cases';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 
@@ -28,6 +34,9 @@ export class PaymentService {
     private readonly updatePaymentUseCase: UpdatePaymentUseCase,
     private readonly deletePaymentsUseCase: DeletePaymentsUseCase,
     private readonly reactivatePaymentsUseCase: ReactivatePaymentsUseCase,
+    private readonly processPaymentUseCase: ProcessPaymentUseCase,
+    private readonly verifyPaymentUseCase: VerifyPaymentUseCase,
+    private readonly rejectPaymentUseCase: RejectPaymentUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -152,4 +161,112 @@ export class PaymentService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
+
+  /**
+   * Procesa un pago pendiente
+   */
+  async processPayment(
+    id: string,
+    processPaymentDto: ProcessPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      return await this.processPaymentUseCase.execute(
+        id,
+        processPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
+    }
+  }
+  /**
+   * Verifica un pago procesado
+   */
+
+  /**
+   * Verifica un pago procesado
+   */
+  async verifyPayment(
+    id: string,
+    verifyPaymentDto: VerifyPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      return await this.verifyPaymentUseCase.execute(
+        id,
+        verifyPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'verifying');
+    }
+  }
+
+  /**
+   * Rechaza un pago en proceso
+   */
+  async rejectPayment(
+    id: string,
+    rejectPaymentDto: RejectPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      return await this.rejectPaymentUseCase.execute(
+        id,
+        rejectPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'rejecting');
+    }
+  }
+
+  /**
+   * Cancela un pago pendiente
+   */
+  async cancelPayment(
+    id: string,
+    cancelPaymentDto: CancelPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      const payment = await this.findPaymentById(id);
+      if (payment.status !== PaymentStatus.PENDING) {
+        throw new BadRequestException(
+          'Solo se pueden cancelar pagos pendientes',
+        );
+      }
+      return await this.cancelPaymentUseCase.execute(
+        id,
+        cancelPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'cancelling');
+    }
+  }
+
+  /**
+   * Lista todos los pagos pendientes
+   */
+  async findPendingPayments(): Promise<Payment[]> {
+    try {
+      return await this.paymentRepository.findByStatus(PaymentStatus.PENDING);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  // /**
+  //  * Obtiene estadísticas de pagos
+  //  */
+  // async getPaymentStatistics(): Promise<PaymentStatistics> {
+  //   try {
+  //     // Implementar lógica de estadísticas
+  //     return await this.paymentRepository.getStatistics();
+  //   } catch (error) {
+  //     this.errorHandler.handleError(error, 'getting');
+  //   }
+  // }
 }

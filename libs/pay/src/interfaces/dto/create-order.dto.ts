@@ -5,10 +5,8 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
-  IsDate,
   IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { OrderStatus, OrderType } from '../order.types';
 
 export class CreateOrderDto {
@@ -112,26 +110,6 @@ export class CreateOrderDto {
   @IsNotEmpty()
   @IsNumber()
   total: number;
-
-  @ApiProperty({
-    description: 'Fecha de la orden',
-    example: '2024-01-15T10:30:00Z',
-    required: true,
-  })
-  @IsNotEmpty()
-  @IsDate()
-  @Type(() => Date)
-  date: Date;
-
-  @ApiProperty({
-    description: 'Fecha de vencimiento (opcional)',
-    example: '2024-02-15T10:30:00Z',
-    required: false,
-  })
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  dueDate?: Date;
 
   @ApiProperty({
     description: 'Notas adicionales (opcional)',

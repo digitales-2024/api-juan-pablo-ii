@@ -23,7 +23,10 @@ import { Payment } from '../entities/payment.entity';
 import {
   CreatePaymentDto,
   DeletePaymentsDto,
+  ProcessPaymentDto,
+  RejectPaymentDto,
   UpdatePaymentDto,
+  VerifyPaymentDto,
 } from '../interfaces/dto';
 
 @ApiTags('Payment')
@@ -130,5 +133,84 @@ export class PaymentController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Payment[]>> {
     return this.paymentService.reactiveMany(body.ids, user);
+  }
+
+  // @Get('list')
+  // @ApiOperation({ summary: 'Get payments with filters and pagination' })
+  // @ApiQuery({ name: 'status', enum: PaymentStatus, required: false })
+  // @ApiQuery({ name: 'paymentMethod', enum: PaymentMethod, required: false })
+  // @ApiQuery({ name: 'orderId', required: false })
+  // @ApiQuery({ name: 'dateFrom', required: false })
+  // @ApiQuery({ name: 'dateTo', required: false })
+  // @ApiQuery({ name: 'page', required: false, type: Number })
+  // @ApiQuery({ name: 'limit', required: false, type: Number })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'List of payments with pagination',
+  // })
+  // async findAllWithFilters(
+  //   @Query() filters: PaymentFiltersDto,
+  // ): Promise<PaginatedPaymentsResponse> {
+  //   console.log('Received filters:', filters);
+  //   const result = this.paymentService.findAllWithFilters(filters);
+  //   console.log('Result:', result);
+  //   return result;
+  // }
+
+  @Post(':id/process')
+  @ApiOperation({ summary: 'Process a pending payment' })
+  @ApiParam({ name: 'id', description: 'Payment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment processed successfully',
+    type: Payment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid payment processing request',
+  })
+  async processPayment(
+    @Param('id') id: string,
+    @Body() processPaymentDto: ProcessPaymentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    return this.paymentService.processPayment(id, processPaymentDto, user);
+  }
+
+  @Post(':id/verify')
+  @ApiOperation({ summary: 'Verify a processing payment' })
+  @ApiParam({ name: 'id', description: 'Payment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment verified successfully',
+    type: Payment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid payment verification request',
+  })
+  async verifyPayment(
+    @Param('id') id: string,
+    @Body() verifyPaymentDto: VerifyPaymentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    return this.paymentService.verifyPayment(id, verifyPaymentDto, user);
+  }
+
+  @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject a processing payment' })
+  @ApiParam({ name: 'id', description: 'Payment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment rejected successfully',
+    type: Payment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid payment rejection request',
+  })
+  async rejectPayment(
+    @Param('id') id: string,
+    @Body() rejectPaymentDto: RejectPaymentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    return this.paymentService.rejectPayment(id, rejectPaymentDto, user);
   }
 }
