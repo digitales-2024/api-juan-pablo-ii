@@ -53,13 +53,13 @@ export class TypeStorageService {
   ): Promise<HttpResponse<TypeStorage>> {
     try {
       // Validar si existe un tipo de almacenamiento con el mismo nombre
-      const nameExists = await this.findByName(createTypeStorageDto.name);
+      /* const nameExists = await this.findByName(createTypeStorageDto.name);
 
       if (nameExists) {
         throw new BadRequestException(
           'Ya existe un tipo de almacenamiento con este nombre',
         );
-      }
+      } */
 
       return await this.createTypeStorageUseCase.execute(
         createTypeStorageDto,
