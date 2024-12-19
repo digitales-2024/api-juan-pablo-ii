@@ -4,11 +4,11 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsDate,
   IsEnum,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PaymentStatus } from '../payment.types';
+import { PaymentMethod, PaymentStatus } from '../payment.types';
 
 export class CreatePaymentDto {
   @ApiProperty({
@@ -21,27 +21,6 @@ export class CreatePaymentDto {
   orderId: string;
 
   @ApiProperty({
-    description: 'Monto del pago',
-    example: 100.5,
-    required: true,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  amount: number;
-
-  @ApiProperty({
-    description: 'Estado del pago',
-    example: PaymentStatus.PENDING,
-    required: false,
-    enum: PaymentStatus,
-  })
-  @IsEnum(PaymentStatus)
-  type: PaymentStatus;
-  @IsOptional()
-  @IsString()
-  status?: string = 'PENDING';
-
-  @ApiProperty({
     description: 'Fecha del pago',
     example: '2024-01-15T10:30:00Z',
     required: false,
@@ -49,7 +28,26 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  date?: Date = new Date();
+  date?: Date;
+
+  @ApiProperty({
+    description: 'Estado del pago',
+    example: PaymentStatus.PENDING,
+    required: false,
+    enum: PaymentStatus,
+  })
+  @IsOptional()
+  @IsEnum(PaymentStatus)
+  status?: PaymentStatus;
+
+  @ApiProperty({
+    description: 'Monto del pago',
+    example: 100.5,
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
 
   @ApiProperty({
     description: 'Descripción del pago',
@@ -61,11 +59,36 @@ export class CreatePaymentDto {
   description?: string;
 
   @ApiProperty({
-    description: 'Codigo de referencia del pago',
-    example: '1111-0000-1111',
+    description: 'Método de pago',
+    enum: PaymentMethod,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
+
+  @ApiProperty({
+    description: 'Número de comprobante',
     required: false,
   })
   @IsOptional()
   @IsString()
-  referenceCode?: string;
+  voucherNumber?: string;
+
+  @ApiProperty({
+    description: 'Verificado por',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  verifiedBy?: string;
+
+  @ApiProperty({
+    description: 'Fecha de verificación',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  verifiedAt?: Date;
 }

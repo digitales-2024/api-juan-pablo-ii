@@ -5,10 +5,8 @@ import {
   IsOptional,
   IsNumber,
   IsString,
-  IsDate,
   IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export class CreateMedicalConsultationBillingDto {
   @ApiProperty({ description: 'ID de la consulta médica' })
@@ -28,12 +26,6 @@ export class CreateMedicalConsultationBillingDto {
   @IsNumber()
   @IsOptional()
   total?: number;
-
-  @ApiProperty({ description: 'Fecha de vencimiento' })
-  @IsDate()
-  @IsOptional()
-  @Type(() => Date)
-  dueDate?: Date;
 
   @ApiProperty({ description: 'Notas adicionales' })
   @IsString()

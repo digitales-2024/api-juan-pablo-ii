@@ -1,20 +1,27 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { PaymentRepository } from '../repositories/payment.repository';
 import { Payment } from '../entities/payment.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import {
   CreatePaymentDto,
   DeletePaymentsDto,
+  ProcessPaymentDto,
+  RejectPaymentDto,
   UpdatePaymentDto,
+  VerifyPaymentDto,
 } from '../interfaces/dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { paymentErrorMessages } from '../errors/errors-payment';
 import {
   CreatePaymentUseCase,
   DeletePaymentsUseCase,
+  ProcessPaymentUseCase,
   ReactivatePaymentsUseCase,
+  RejectPaymentUseCase,
   UpdatePaymentUseCase,
+  VerifyPaymentUseCase,
 } from '../use-cases';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
 
 @Injectable()
 export class PaymentService {
@@ -27,6 +34,9 @@ export class PaymentService {
     private readonly updatePaymentUseCase: UpdatePaymentUseCase,
     private readonly deletePaymentsUseCase: DeletePaymentsUseCase,
     private readonly reactivatePaymentsUseCase: ReactivatePaymentsUseCase,
+    private readonly processPaymentUseCase: ProcessPaymentUseCase,
+    private readonly verifyPaymentUseCase: VerifyPaymentUseCase,
+    private readonly rejectPaymentUseCase: RejectPaymentUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -42,7 +52,7 @@ export class PaymentService {
    * @returns Respuesta HTTP con el pago creado
    * @throws {BadRequestException} Si hay un error en la creación del pago
    */
-  async createPayment(
+  async create(
     createPaymentDto: CreatePaymentDto,
     user: UserData,
   ): Promise<HttpResponse<Payment>> {
@@ -61,17 +71,21 @@ export class PaymentService {
    * @returns Respuesta HTTP con el pago actualizado
    * @throws {BadRequestException} Si el pago no se encuentra o hay un error en la actualización
    */
-  async updatePayment(
+  async update(
     id: string,
     updatePaymentDto: UpdatePaymentDto,
     user: UserData,
   ): Promise<HttpResponse<Payment>> {
     try {
-      const payment = await this.findPaymentById(id);
-      if (!payment) {
-        throw new BadRequestException('Pago no encontrado');
-      }
+      const currentPayment = await this.findPaymentById(id);
 
+      if (!validateChanges(updatePaymentDto, currentPayment)) {
+        return {
+          statusCode: HttpStatus.OK,
+          message: 'No se detectaron cambios en la sucursal',
+          data: currentPayment,
+        };
+      }
       return await this.updatePaymentUseCase.execute(
         id,
         updatePaymentDto,
@@ -90,16 +104,12 @@ export class PaymentService {
    * @returns Respuesta HTTP con el pago actualizado
    * @throws {BadRequestException} Si el pago no se encuentra o hay un error en la actualización
    */
-  async deletePayments(
+  async deleteMany(
     deletePaymentsDto: DeletePaymentsDto,
     user: UserData,
   ): Promise<HttpResponse<Payment[]>> {
     try {
-      // Validate the array of IDs
-      if (!deletePaymentsDto.ids || deletePaymentsDto.ids.length === 0) {
-        throw new BadRequestException('No se proporcionaron IDs de pagos');
-      }
-
+      validateArray(deletePaymentsDto.ids, 'IDs de pagos');
       return await this.deletePaymentsUseCase.execute(deletePaymentsDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'deactivating');
@@ -113,16 +123,12 @@ export class PaymentService {
    * @returns Respuesta HTTP con el resultado de la reactivación
    * @throws {BadRequestException} Si no se proporcionan IDs de pagos
    */
-  async reactivatePayments(
+  async reactiveMany(
     ids: string[],
     user: UserData,
   ): Promise<HttpResponse<Payment[]>> {
     try {
-      // Validate the array of IDs
-      if (!ids || ids.length === 0) {
-        throw new BadRequestException('No se proporcionaron IDs de pagos');
-      }
-
+      validateArray(ids, 'IDs de pagos');
       return await this.reactivatePaymentsUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
@@ -137,11 +143,7 @@ export class PaymentService {
    */
   async findPaymentById(id: string): Promise<Payment> {
     try {
-      const payment = await this.paymentRepository.findById(id);
-      if (!payment) {
-        throw new BadRequestException('Pago no encontrado');
-      }
-      return payment;
+      return this.paymentRepository.findById(id);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -159,4 +161,112 @@ export class PaymentService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
+
+  /**
+   * Procesa un pago pendiente
+   */
+  async processPayment(
+    id: string,
+    processPaymentDto: ProcessPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      return await this.processPaymentUseCase.execute(
+        id,
+        processPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
+    }
+  }
+  /**
+   * Verifica un pago procesado
+   */
+
+  /**
+   * Verifica un pago procesado
+   */
+  async verifyPayment(
+    id: string,
+    verifyPaymentDto: VerifyPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      return await this.verifyPaymentUseCase.execute(
+        id,
+        verifyPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'verifying');
+    }
+  }
+
+  /**
+   * Rechaza un pago en proceso
+   */
+  async rejectPayment(
+    id: string,
+    rejectPaymentDto: RejectPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      return await this.rejectPaymentUseCase.execute(
+        id,
+        rejectPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'rejecting');
+    }
+  }
+
+  /**
+   * Cancela un pago pendiente
+   */
+  async cancelPayment(
+    id: string,
+    cancelPaymentDto: CancelPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    try {
+      const payment = await this.findPaymentById(id);
+      if (payment.status !== PaymentStatus.PENDING) {
+        throw new BadRequestException(
+          'Solo se pueden cancelar pagos pendientes',
+        );
+      }
+      return await this.cancelPaymentUseCase.execute(
+        id,
+        cancelPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'cancelling');
+    }
+  }
+
+  /**
+   * Lista todos los pagos pendientes
+   */
+  async findPendingPayments(): Promise<Payment[]> {
+    try {
+      return await this.paymentRepository.findByStatus(PaymentStatus.PENDING);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  // /**
+  //  * Obtiene estadísticas de pagos
+  //  */
+  // async getPaymentStatistics(): Promise<PaymentStatistics> {
+  //   try {
+  //     // Implementar lógica de estadísticas
+  //     return await this.paymentRepository.getStatistics();
+  //   } catch (error) {
+  //     this.errorHandler.handleError(error, 'getting');
+  //   }
+  // }
 }

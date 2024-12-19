@@ -196,6 +196,8 @@ export class ProductService {
     }
   }
 
+  async findByArray() {}
+
   /**
    * @param name El nombre del producto.
    * @returns Una promesa que resuelve al resultado de la búsqueda, que podría ser una categoría o un conjunto de categorías.

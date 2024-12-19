@@ -165,6 +165,17 @@ import { StockService } from './stock/services/stock.service';
     //stock
     StockService,
   ],
-  exports: [InventoryModule],
+  exports: [
+    InventoryModule,
+    CategoryService,
+    TypeProductService,
+    ProductService,
+    TypeStorageService,
+    StorageService,
+    TypeMovementService,
+    MovementService,
+    IncomingService,
+    OutgoingService,
+  ],
 })
 export class InventoryModule {}

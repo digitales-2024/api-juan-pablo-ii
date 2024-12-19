@@ -1,5 +1,10 @@
 // libs/pay/src/services/order.service.ts
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  HttpStatus,
+} from '@nestjs/common';
 import { OrderRepository } from '../repositories/order.repository';
 import { Order } from '../entities/order.entity';
 import { IOrderGenerator } from '../interfaces';
@@ -15,6 +20,7 @@ import {
   DeleteOrdersUseCase,
   ReactivateOrdersUseCase,
 } from '../use-cases';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
 
 @Injectable()
 export class OrderService {
@@ -112,18 +118,23 @@ export class OrderService {
    * @returns Respuesta HTTP con la orden actualizada
    * @throws {BadRequestException} Si la orden no se encuentra
    */
-  async updateOrder(
+  async update(
     id: string,
-    updateData: UpdateOrderDto,
+    updateOrderDto: UpdateOrderDto,
     user: UserData,
   ): Promise<HttpResponse<Order>> {
     try {
-      const order = await this.findOrderById(id);
-      if (!order) {
-        throw new BadRequestException('Order not found');
+      const currentOrder = await this.findOrderById(id);
+
+      if (!validateChanges(updateOrderDto, currentOrder)) {
+        return {
+          statusCode: HttpStatus.OK,
+          message: 'No se detectaron cambios en la sucursal',
+          data: currentOrder,
+        };
       }
 
-      return await this.updateOrderUseCase.execute(id, updateData, user);
+      return await this.updateOrderUseCase.execute(id, updateOrderDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
     }
@@ -136,11 +147,12 @@ export class OrderService {
    * @returns Respuesta HTTP con las órdenes eliminadas
    * @throws {BadRequestException} Si hay un error al eliminar las órdenes
    */
-  async deleteOrders(
+  async deleteMany(
     deleteOrdersDto: DeleteOrdersDto,
     user: UserData,
   ): Promise<HttpResponse<Order[]>> {
     try {
+      validateArray(deleteOrdersDto.ids, 'IDs de ordenes');
       return await this.deleteOrdersUseCase.execute(deleteOrdersDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'deactivating');
@@ -154,11 +166,12 @@ export class OrderService {
    * @returns Respuesta HTTP con las órdenes reactivadas
    * @throws {BadRequestException} Si hay un error al reactivar las órdenes
    */
-  async reactivateOrders(
+  async reactiveMany(
     ids: string[],
     user: UserData,
   ): Promise<HttpResponse<Order[]>> {
     try {
+      validateArray(ids, 'IDs de ordenes');
       return await this.reactivateOrdersUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
@@ -173,11 +186,7 @@ export class OrderService {
    */
   async findOrderById(id: string): Promise<Order> {
     try {
-      const order = await this.orderRepository.findById(id);
-      if (!order) {
-        throw new BadRequestException('Orden no encontrada');
-      }
-      return order;
+      return await this.orderRepository.findById(id);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

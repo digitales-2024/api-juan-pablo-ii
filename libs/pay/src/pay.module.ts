@@ -8,9 +8,12 @@ import {
   CreateOrderUseCase,
   DeleteOrdersUseCase,
   DeletePaymentsUseCase,
+  ProcessPaymentUseCase,
   ReactivateOrdersUseCase,
   ReactivatePaymentsUseCase,
+  RejectPaymentUseCase,
   UpdateOrderUseCase,
+  VerifyPaymentUseCase,
 } from './use-cases';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { PaymentController } from './controllers/payment-controller';
@@ -33,6 +36,9 @@ import { UpdatePaymentUseCase } from './use-cases/update-payment.use-case';
     UpdatePaymentUseCase,
     DeletePaymentsUseCase,
     ReactivatePaymentsUseCase,
+    ProcessPaymentUseCase,
+    VerifyPaymentUseCase,
+    RejectPaymentUseCase,
   ],
   exports: [OrderService, PaymentService, OrderRepository, PaymentRepository],
 })

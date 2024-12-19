@@ -31,11 +31,8 @@ export class CreateOrderUseCase {
         subtotal: createOrderDto.subtotal,
         tax: createOrderDto.tax,
         total: createOrderDto.total,
-        date: createOrderDto.date,
-        dueDate: createOrderDto.dueDate,
         notes: createOrderDto.notes,
         metadata: createOrderDto.metadata,
-        isActive: true, // Assuming you want to set it as active by default
       });
 
       // Register audit
