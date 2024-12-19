@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsNumber,
   IsString,
-  IsDate,
   IsObject,
   IsArray,
   ValidateNested,
@@ -46,12 +45,6 @@ export class CreateProductSaleBillingDto {
   @IsNumber()
   @IsOptional()
   total?: number;
-
-  @ApiProperty({ description: 'Fecha de vencimiento' })
-  @IsDate()
-  @IsOptional()
-  @Type(() => Date)
-  dueDate?: Date;
 
   @ApiProperty({ description: 'Notas adicionales' })
   @IsString()

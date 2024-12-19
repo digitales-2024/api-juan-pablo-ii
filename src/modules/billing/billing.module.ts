@@ -9,9 +9,10 @@ import { CreateMedicalPrescriptionOrderUseCase } from './use-cases/create-medica
 import { MedicalPrescriptionGenerator } from './generators/medical-prescription.generator';
 import { ProductSaleGenerator } from './generators/product-sale-generator';
 import { CreateProductSaleOrderUseCase } from './use-cases/create-product-sale-billing.use-case';
+import { InventoryModule } from '@inventory/inventory/inventory.module';
 
 @Module({
-  imports: [PayModule, AuditModule],
+  imports: [PayModule, InventoryModule, AuditModule],
   controllers: [BillingController],
   providers: [
     MedicalConsultationGenerator,

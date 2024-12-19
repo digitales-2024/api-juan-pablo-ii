@@ -5,6 +5,7 @@ import { PaymentRepository } from '../repositories/payment.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { PaymentStatus } from '../interfaces/payment.types';
 
 @Injectable()
 export class CreatePaymentUseCase {
@@ -21,11 +22,14 @@ export class CreatePaymentUseCase {
       // Create payment
       const payment = await this.paymentRepository.create({
         orderId: createPaymentDto.orderId,
-        amount: createPaymentDto.amount,
-        status: createPaymentDto.status || 'PENDING',
         date: createPaymentDto.date || new Date(),
+        amount: createPaymentDto.amount,
+        status: createPaymentDto.status || PaymentStatus.PENDING,
         description: createPaymentDto.description,
-        referenceCode: createPaymentDto.referenceCode,
+        paymentMethod: createPaymentDto.paymentMethod,
+        voucherNumber: createPaymentDto.voucherNumber,
+        verifiedBy: createPaymentDto.verifiedBy,
+        verifiedAt: createPaymentDto.verifiedAt,
       });
 
       // Register audit

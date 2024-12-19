@@ -160,6 +160,17 @@ import {
     DeleteOutgoingUseCase,
     ReactivateOutgoingUseCase,
   ],
-  exports: [InventoryModule],
+  exports: [
+    InventoryModule,
+    CategoryService,
+    TypeProductService,
+    ProductService,
+    TypeStorageService,
+    StorageService,
+    TypeMovementService,
+    MovementService,
+    IncomingService,
+    OutgoingService,
+  ],
 })
 export class InventoryModule {}

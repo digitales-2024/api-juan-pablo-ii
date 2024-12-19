@@ -18,6 +18,9 @@ import { typeStorageErrorMessages } from '@inventory/inventory/type-storage/erro
 import { storageErrorMessages } from '@inventory/inventory/storage/errors/errors-storage';
 import { typeMovementErrorMessages } from '@inventory/inventory/type-movement/errors/errors-type-movement';
 import { movementErrorMessages } from '@inventory/inventory/movement/errors/errors-movement';
+import { paymentErrorMessages } from '@pay/pay/errors/errors-payment';
+import { orderErrorMessages } from '@pay/pay/errors/errors-order';
+import { billingErrorMessages } from 'src/modules/billing/errors/errors-billing';
 
 export type ServiceAction =
   | 'creating'
@@ -27,7 +30,9 @@ export type ServiceAction =
   | 'reactivating'
   | 'deactivating'
   | 'activating'
-  | 'processing';
+  | 'processing'
+  | 'verifying'
+  | 'rejecting';
 
 export interface ErrorMessages {
   notFound: string;
@@ -130,6 +135,8 @@ export class BaseErrorHandler {
       deactivating: 'desactivar',
       activating: 'activar',
       processing: 'procesar',
+      verifying: 'verificar',
+      rejecting: 'rechazar',
     };
 
     return `Error al ${actionMessages[action]} ${this.getEntityNameInSpanish()}`;
@@ -162,6 +169,9 @@ export const entityErrorMessages = {
   storage: storageErrorMessages,
   typeMovement: typeMovementErrorMessages,
   movement: movementErrorMessages,
+  payment: paymentErrorMessages,
+  order: orderErrorMessages,
+  billing: billingErrorMessages,
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
   // 2. Agregar aquí con una clave apropiada

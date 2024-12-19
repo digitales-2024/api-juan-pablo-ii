@@ -14,4 +14,6 @@ export const paymentErrorMessages: ErrorMessages = {
   paymentAlreadyProcessed: 'El pago ya ha sido procesado',
   invalidStatus: 'Estado de pago inválido',
   orderNotFound: 'La orden asociada al pago no existe',
+  verifying: 'El pago no puede ser verificado',
+  rejecting: 'El pago no puede ser rechazado',
 };

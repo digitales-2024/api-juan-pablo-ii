@@ -7,8 +7,12 @@ import { OrderType } from '@pay/pay/interfaces/order.types';
 import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
-import { PaymentStatus } from '@pay/pay/interfaces/payment.types';
+import {
+  PaymentMethod,
+  PaymentStatus,
+} from '@pay/pay/interfaces/payment.types';
 import { PaymentService } from '@pay/pay/services/payment.service';
+import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
 
 @Injectable()
 export class CreateMedicalPrescriptionOrderUseCase {
@@ -17,6 +21,7 @@ export class CreateMedicalPrescriptionOrderUseCase {
     private readonly orderRepository: OrderRepository,
     private readonly auditService: AuditService,
     private readonly paymentService: PaymentService,
+    private readonly typeMovementService: TypeMovementService,
   ) {}
 
   async execute(
@@ -35,14 +40,25 @@ export class CreateMedicalPrescriptionOrderUseCase {
           },
         );
 
+        await this.typeMovementService.create(
+          {
+            orderId: order.id,
+            name: OrderType.MEDICAL_PRESCRIPTION_ORDER,
+            description: `Movimiento para receta - ${order.code}`,
+            state: false,
+            isIncoming: true,
+          },
+          user,
+        );
+
         await this.paymentService.create(
           {
             orderId: order.id,
             amount: order.total,
             status: PaymentStatus.PENDING,
+            description: `Pago pendiente para receta médica - ${order.code}`,
             date: new Date(),
-            description: `Pago pendiente para receta médica ${order.code}`,
-            referenceCode: 'asda',
+            paymentMethod: PaymentMethod.CASH, // Or leave undefined
           },
           user,
         );

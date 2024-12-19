@@ -8,7 +8,11 @@ import { CreateMedicalConsultationBillingDto } from '../dto/create-medical-consu
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
 import { PaymentService } from '@pay/pay/services/payment.service';
-import { PaymentStatus } from '@pay/pay/interfaces/payment.types';
+import {
+  PaymentMethod,
+  PaymentStatus,
+} from '@pay/pay/interfaces/payment.types';
+import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
 
 @Injectable()
 export class CreateMedicalConsultationOrderUseCase {
@@ -17,6 +21,7 @@ export class CreateMedicalConsultationOrderUseCase {
     private readonly orderRepository: OrderRepository,
     private readonly auditService: AuditService,
     private readonly paymentService: PaymentService,
+    private readonly typeMovementService: TypeMovementService,
   ) {}
 
   async execute(
@@ -35,14 +40,25 @@ export class CreateMedicalConsultationOrderUseCase {
           },
         );
 
+        await this.typeMovementService.create(
+          {
+            orderId: order.id,
+            name: OrderType.MEDICAL_CONSULTATION_ORDER,
+            description: `Movimiento para consulta médica - ${order.code}`,
+            state: false,
+            isIncoming: false,
+          },
+          user,
+        );
+
         await this.paymentService.create(
           {
             orderId: order.id,
             amount: order.total,
             status: PaymentStatus.PENDING,
+            description: `Pago pendiente para consulta médica - ${order.code}`,
             date: new Date(),
-            description: `Pago pendiente para consulta médica ${order.code}`,
-            referenceCode: 'asda',
+            paymentMethod: PaymentMethod.CASH, // Or leave undefined
           },
           user,
         );

@@ -16,11 +16,6 @@ export class Order implements IOrder {
   tax: number;
   total: number;
   date: Date;
-  dueDate?: Date;
   notes?: string;
   metadata?: Record<string, any>;
-
-  // Audit fields
-  createdAt: Date;
-  updatedAt: Date;
 }
