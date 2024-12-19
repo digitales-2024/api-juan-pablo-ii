@@ -81,6 +81,8 @@ import {
   ReactivateOutgoingUseCase,
   UpdateOutgoingUseCase,
 } from './outgoing/use-cases';
+import { StockController } from './stock/controllers/stock.controller';
+import { StockService } from './stock/services/stock.service';
 
 @Module({
   controllers: [
@@ -93,6 +95,7 @@ import {
     MovementController,
     IncomingController,
     OutgoingController,
+    StockController,
   ],
   imports: [AuditModule],
   providers: [
@@ -159,6 +162,8 @@ import {
     UpdateOutgoingUseCase,
     DeleteOutgoingUseCase,
     ReactivateOutgoingUseCase,
+    //stock
+    StockService,
   ],
   exports: [
     InventoryModule,
