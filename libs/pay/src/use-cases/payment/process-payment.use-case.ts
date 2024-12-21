@@ -1,12 +1,12 @@
 import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
-import { PaymentRepository } from '../repositories/payment.repository';
-import { OrderRepository } from '../repositories/order.repository';
-import { Payment } from '../entities/payment.entity';
-import { ProcessPaymentDto } from '../interfaces/dto/process-payment.dto';
+import { PaymentRepository } from '../../repositories/payment.repository';
+import { Payment } from '../../entities/payment.entity';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { PaymentStatus, PaymentMethod } from '../interfaces/payment.types';
+import { PaymentStatus, PaymentMethod } from '../../interfaces/payment.types';
+import { OrderRepository } from '../../repositories/order.repository';
+import { ProcessPaymentDto } from '@pay/pay/interfaces/dto';
 
 @Injectable()
 export class ProcessPaymentUseCase {

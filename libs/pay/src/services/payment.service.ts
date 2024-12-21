@@ -1,27 +1,38 @@
-import { Injectable, Logger, HttpStatus } from '@nestjs/common';
-import { PaymentRepository } from '../repositories/payment.repository';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Payment } from '../entities/payment.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import {
+  CancelPaymentDto,
   CreatePaymentDto,
   DeletePaymentsDto,
   ProcessPaymentDto,
+  RefundPaymentDto,
   RejectPaymentDto,
   UpdatePaymentDto,
   VerifyPaymentDto,
 } from '../interfaces/dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { paymentErrorMessages } from '../errors/errors-payment';
+import { PaymentRepository } from '../repositories/payment.repository';
+import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import {
+  CancelPaymentUseCase,
   CreatePaymentUseCase,
   DeletePaymentsUseCase,
+  FindPaymentsByStatusUseCase,
   ProcessPaymentUseCase,
   ReactivatePaymentsUseCase,
+  RefundPaymentUseCase,
   RejectPaymentUseCase,
   UpdatePaymentUseCase,
   VerifyPaymentUseCase,
 } from '../use-cases';
-import { validateArray, validateChanges } from '@prisma/prisma/utils';
+import { PaymentStatus, PaymentType } from '../interfaces/payment.types';
 
 @Injectable()
 export class PaymentService {
@@ -37,6 +48,9 @@ export class PaymentService {
     private readonly processPaymentUseCase: ProcessPaymentUseCase,
     private readonly verifyPaymentUseCase: VerifyPaymentUseCase,
     private readonly rejectPaymentUseCase: RejectPaymentUseCase,
+    private readonly cancelPaymentUseCase: CancelPaymentUseCase,
+    private readonly findPaymentsByStatusUseCase: FindPaymentsByStatusUseCase,
+    private readonly refundPaymentUseCase: RefundPaymentUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -163,7 +177,12 @@ export class PaymentService {
   }
 
   /**
-   * Procesa un pago pendiente
+   * Procesa un pago
+   * @param id - Identificador del pago a procesar
+   * @param processPaymentDto - DTO con los datos para procesar el pago
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con el resultado del procesamiento
+   * @throws {BadRequestException} Si hay un error en el procesamiento del pago
    */
   async processPayment(
     id: string,
@@ -180,12 +199,14 @@ export class PaymentService {
       this.errorHandler.handleError(error, 'processing');
     }
   }
-  /**
-   * Verifica un pago procesado
-   */
 
   /**
-   * Verifica un pago procesado
+   * Verifica un pago
+   * @param id - Identificador del pago a verificar
+   * @param verifyPaymentDto - DTO con los datos para verificar el pago
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con el resultado de la verificación
+   * @throws {BadRequestException} Si hay un error en la verificación del pago
    */
   async verifyPayment(
     id: string,
@@ -204,7 +225,12 @@ export class PaymentService {
   }
 
   /**
-   * Rechaza un pago en proceso
+   * Rechaza un pago
+   * @param id - Identificador del pago a rechazar
+   * @param rejectPaymentDto - DTO con los datos para rechazar el pago
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con el resultado del rechazo
+   * @throws {BadRequestException} Si hay un error en el rechazo del pago
    */
   async rejectPayment(
     id: string,
@@ -223,7 +249,12 @@ export class PaymentService {
   }
 
   /**
-   * Cancela un pago pendiente
+   * Cancela un pago
+   * @param id - Identificador del pago a cancelar
+   * @param cancelPaymentDto - DTO con los datos para cancelar el pago
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con el resultado de la cancelación
+   * @throws {BadRequestException} Si el pago no está pendiente o hay un error en la cancelación
    */
   async cancelPayment(
     id: string,
@@ -248,25 +279,43 @@ export class PaymentService {
   }
 
   /**
-   * Lista todos los pagos pendientes
+   * Procesa un reembolso para un pago
+   * @param id - Identificador del pago a reembolsar
+   * @param refundPaymentDto - DTO con los datos del reembolso
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta HTTP con el resultado del reembolso
+   * @throws {BadRequestException} Si el pago no existe o no puede ser reembolsado
    */
-  async findPendingPayments(): Promise<Payment[]> {
+  async refundPayment(
+    id: string,
+    refundPaymentDto: RefundPaymentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Payment>> {
     try {
-      return await this.paymentRepository.findByStatus(PaymentStatus.PENDING);
+      return await this.refundPaymentUseCase.execute(
+        id,
+        refundPaymentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
+    }
+  }
+
+  async findPaymentsByStatusAndType(
+    status: PaymentStatus,
+    type?: PaymentType,
+  ): Promise<{
+    payments: Payment[];
+    typeStats: any;
+  }> {
+    try {
+      return await this.findPaymentsByStatusUseCase.execute({
+        status,
+        type,
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
   }
-
-  // /**
-  //  * Obtiene estadísticas de pagos
-  //  */
-  // async getPaymentStatistics(): Promise<PaymentStatistics> {
-  //   try {
-  //     // Implementar lógica de estadísticas
-  //     return await this.paymentRepository.getStatistics();
-  //   } catch (error) {
-  //     this.errorHandler.handleError(error, 'getting');
-  //   }
-  // }
 }

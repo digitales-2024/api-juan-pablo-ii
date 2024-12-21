@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { OrderRepository } from '../repositories/order.repository';
+import { OrderRepository } from '../../repositories/order.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Order } from '../entities/order.entity';
+import { Order } from '../../entities/order.entity';
 import { AuditActionType } from '@prisma/client';
-import { DeleteOrdersDto } from '../interfaces/dto/delete-order.dto';
+import { DeleteOrdersDto } from '../../interfaces/dto/delete-order.dto';
 
 @Injectable()
 export class DeleteOrdersUseCase {

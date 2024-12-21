@@ -1,7 +1,9 @@
-// libs/pay/src/entities/payment.entity.ts
-
 import { ApiProperty } from '@nestjs/swagger';
-import { PaymentStatus, PaymentMethod } from '../interfaces/payment.types';
+import {
+  PaymentStatus,
+  PaymentMethod,
+  PaymentType,
+} from '../interfaces/payment.types';
 
 export class Payment {
   @ApiProperty()
@@ -16,6 +18,9 @@ export class Payment {
   @ApiProperty({ enum: PaymentStatus })
   status: PaymentStatus;
 
+  @ApiProperty({ enum: PaymentType })
+  type: PaymentType;
+
   @ApiProperty()
   amount: number;
 
@@ -27,6 +32,9 @@ export class Payment {
 
   @ApiProperty({ required: false })
   voucherNumber?: string;
+
+  @ApiProperty({ required: false })
+  originalPaymentId?: string;
 
   @ApiProperty({ required: false })
   verifiedBy?: string;

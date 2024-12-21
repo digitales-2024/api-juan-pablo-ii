@@ -11,6 +11,7 @@ import { PaymentService } from '@pay/pay/services/payment.service';
 import {
   PaymentMethod,
   PaymentStatus,
+  PaymentType,
 } from '@pay/pay/interfaces/payment.types';
 import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
 
@@ -56,6 +57,7 @@ export class CreateMedicalConsultationOrderUseCase {
             orderId: order.id,
             amount: order.total,
             status: PaymentStatus.PENDING,
+            type: PaymentType.REGULAR, // Agregar el tipo
             description: `Pago pendiente para consulta médica - ${order.code}`,
             date: new Date(),
             paymentMethod: PaymentMethod.CASH, // Or leave undefined

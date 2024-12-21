@@ -12,4 +12,5 @@ export const orderErrorMessages: ErrorMessages = {
     'No se encontró un generador para el tipo de orden especificado',
   invalidOrderType: 'Tipo de orden inválido',
   invalidStatus: 'Estado de orden inválido',
+  submitting: 'La orden no puede ser procesada',
 };

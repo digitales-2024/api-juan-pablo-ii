@@ -10,6 +10,8 @@ import { MedicalPrescriptionGenerator } from './generators/medical-prescription.
 import { ProductSaleGenerator } from './generators/product-sale-generator';
 import { CreateProductSaleOrderUseCase } from './use-cases/create-product-sale-billing.use-case';
 import { InventoryModule } from '@inventory/inventory/inventory.module';
+import { ProductPurchaseGenerator } from './generators/product-purchase-generator';
+import { CreateProductPurchaseOrderUseCase } from './use-cases/create-product-purchase-billing.use-case';
 
 @Module({
   imports: [PayModule, InventoryModule, AuditModule],
@@ -18,10 +20,12 @@ import { InventoryModule } from '@inventory/inventory/inventory.module';
     MedicalConsultationGenerator,
     MedicalPrescriptionGenerator,
     ProductSaleGenerator,
+    ProductPurchaseGenerator,
     BillingService,
     CreateMedicalConsultationOrderUseCase,
     CreateMedicalPrescriptionOrderUseCase,
     CreateProductSaleOrderUseCase,
+    CreateProductPurchaseOrderUseCase,
   ],
 })
 export class BillingModule {}

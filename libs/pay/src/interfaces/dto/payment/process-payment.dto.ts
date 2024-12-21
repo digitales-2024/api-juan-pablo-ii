@@ -9,7 +9,7 @@ import {
   IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PaymentMethod } from '../payment.types';
+import { PaymentMethod } from '../../payment.types';
 
 export class ProcessPaymentDto {
   @ApiProperty({

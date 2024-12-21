@@ -8,6 +8,9 @@ CREATE TYPE "OrderType" AS ENUM ('MEDICAL_PRESCRIPTION_ORDER', 'MEDICAL_CONSULTA
 CREATE TYPE "OrderStatus" AS ENUM ('DRAFT', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED', 'REFUNDED');
 
 -- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'BANK_TRANSFER', 'YAPE');
+
+-- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED');
 
 -- CreateTable
@@ -533,7 +536,7 @@ CREATE TABLE "Order" (
     "id" TEXT NOT NULL,
     "code" TEXT,
     "type" "OrderType" NOT NULL,
-    "movementTypeId" TEXT NOT NULL,
+    "movementTypeId" TEXT,
     "referenceId" TEXT,
     "sourceId" TEXT,
     "targetId" TEXT,
@@ -542,8 +545,7 @@ CREATE TABLE "Order" (
     "subtotal" DOUBLE PRECISION NOT NULL,
     "tax" DOUBLE PRECISION NOT NULL,
     "total" DOUBLE PRECISION NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "dueDate" TIMESTAMP(3),
+    "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "notes" TEXT,
     "metadata" JSONB,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -557,11 +559,14 @@ CREATE TABLE "Order" (
 CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
+    "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" "PaymentStatus" NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
     "description" TEXT,
-    "referenceCode" TEXT,
+    "paymentMethod" "PaymentMethod" NOT NULL,
+    "voucherNumber" TEXT,
+    "verifiedBy" TEXT,
+    "verifiedAt" TIMESTAMP(3),
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

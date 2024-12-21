@@ -1,45 +1,61 @@
+// libs/pay/src/pay.module.ts
 import { Module } from '@nestjs/common';
+import { OrderController } from './controllers/order-controller';
+import { PaymentController } from './controllers/payment-controller';
 import { OrderService } from './services/order.service';
 import { PaymentService } from './services/payment.service';
 import { OrderRepository } from './repositories/order.repository';
 import { PaymentRepository } from './repositories/payment.repository';
-import { OrderController } from './controllers/order-controller';
+import { AuditModule } from '@login/login/admin/audit/audit.module';
 import {
   CreateOrderUseCase,
-  DeleteOrdersUseCase,
-  DeletePaymentsUseCase,
-  ProcessPaymentUseCase,
-  ReactivateOrdersUseCase,
-  ReactivatePaymentsUseCase,
-  RejectPaymentUseCase,
   UpdateOrderUseCase,
+  DeleteOrdersUseCase,
+  ReactivateOrdersUseCase,
+  FindOrdersByStatusUseCase,
+  CreatePaymentUseCase,
+  UpdatePaymentUseCase,
+  DeletePaymentsUseCase,
+  ReactivatePaymentsUseCase,
+  ProcessPaymentUseCase,
   VerifyPaymentUseCase,
+  RejectPaymentUseCase,
+  CancelPaymentUseCase,
+  FindPaymentsByStatusUseCase,
+  RefundPaymentUseCase,
+  SubmitDraftOrderUseCase,
 } from './use-cases';
-import { AuditModule } from '@login/login/admin/audit/audit.module';
-import { PaymentController } from './controllers/payment-controller';
-import { CreatePaymentUseCase } from './use-cases/create-payment.use-case';
-import { UpdatePaymentUseCase } from './use-cases/update-payment.use-case';
+
+const orderProviders = [
+  OrderService,
+  OrderRepository,
+  CreateOrderUseCase,
+  UpdateOrderUseCase,
+  DeleteOrdersUseCase,
+  ReactivateOrdersUseCase,
+  FindOrdersByStatusUseCase,
+  SubmitDraftOrderUseCase,
+];
+
+const paymentProviders = [
+  PaymentService,
+  PaymentRepository,
+  CreatePaymentUseCase,
+  UpdatePaymentUseCase,
+  DeletePaymentsUseCase,
+  ReactivatePaymentsUseCase,
+  ProcessPaymentUseCase,
+  VerifyPaymentUseCase,
+  RejectPaymentUseCase,
+  CancelPaymentUseCase,
+  FindPaymentsByStatusUseCase,
+  RefundPaymentUseCase,
+];
 
 @Module({
   imports: [AuditModule],
   controllers: [OrderController, PaymentController],
-  providers: [
-    OrderService,
-    PaymentService,
-    OrderRepository,
-    PaymentRepository,
-    CreateOrderUseCase,
-    UpdateOrderUseCase,
-    DeleteOrdersUseCase,
-    ReactivateOrdersUseCase,
-    CreatePaymentUseCase,
-    UpdatePaymentUseCase,
-    DeletePaymentsUseCase,
-    ReactivatePaymentsUseCase,
-    ProcessPaymentUseCase,
-    VerifyPaymentUseCase,
-    RejectPaymentUseCase,
-  ],
+  providers: [...orderProviders, ...paymentProviders],
   exports: [OrderService, PaymentService, OrderRepository, PaymentRepository],
 })
 export class PayModule {}

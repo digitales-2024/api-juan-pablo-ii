@@ -620,6 +620,7 @@ enum OrderType {
   MEDICAL_PRESCRIPTION_ORDER
   MEDICAL_CONSULTATION_ORDER
   PRODUCT_SALE_ORDER
+  PRODUCT_PURCHASE_ORDER
 }
 
 enum OrderStatus {
@@ -664,6 +665,7 @@ model Payment {
   order         Order         @relation("OrderPayments", fields: [orderId], references: [id])
   date          DateTime      @default(now()) @db.Timestamptz(6)
   status        PaymentStatus
+  type          PaymentType   @default(REGULAR)
   amount        Float
   description   String?
   paymentMethod PaymentMethod // CASH, TRANSFER, YAPE
@@ -687,4 +689,13 @@ enum PaymentStatus {
   PROCESSING
   COMPLETED
   CANCELLED
+  REFUNDED
+}
+
+enum PaymentType {
+  REGULAR
+  REFUND
+  PARTIAL
+  ADJUSTMENT
+  COMPENSATION
 }

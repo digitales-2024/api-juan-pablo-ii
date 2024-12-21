@@ -8,7 +8,7 @@ import {
   IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PaymentMethod, PaymentStatus } from '../payment.types';
+import { PaymentMethod, PaymentStatus, PaymentType } from '../../payment.types';
 
 export class CreatePaymentDto {
   @ApiProperty({
@@ -41,6 +41,15 @@ export class CreatePaymentDto {
   status?: PaymentStatus;
 
   @ApiProperty({
+    description: 'Tipo de pago',
+    example: PaymentType.REGULAR,
+    required: true,
+    enum: PaymentType,
+  })
+  @IsEnum(PaymentType)
+  type: PaymentType;
+
+  @ApiProperty({
     description: 'Monto del pago',
     example: 100.5,
     required: true,
@@ -51,7 +60,7 @@ export class CreatePaymentDto {
 
   @ApiProperty({
     description: 'Descripción del pago',
-    example: 'Pago de orden de consulta médica',
+    example: 'Pago de consulta médica',
     required: false,
   })
   @IsOptional()
@@ -76,19 +85,10 @@ export class CreatePaymentDto {
   voucherNumber?: string;
 
   @ApiProperty({
-    description: 'Verificado por',
+    description: 'ID del pago original (en caso de reembolso)',
     required: false,
   })
   @IsOptional()
   @IsString()
-  verifiedBy?: string;
-
-  @ApiProperty({
-    description: 'Fecha de verificación',
-    required: false,
-  })
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  verifiedAt?: Date;
+  originalPaymentId?: string;
 }

@@ -1,30 +1,21 @@
 // src/modules/billing/controllers/billing.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  ParseUUIDPipe,
-} from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import {
   ApiTags,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiOperation,
-  ApiParam,
-  ApiOkResponse,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { UserData } from '@login/login/interfaces';
-import { OrderType, OrderStatus } from '@pay/pay/interfaces/order.types';
 import { BillingService } from '../services/billing.service';
 import { CreateMedicalConsultationBillingDto } from '../dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { HttpResponse } from '@login/login/interfaces';
 import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
+import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
 
 @ApiTags('Billing')
 @ApiBadRequestResponse({
@@ -84,60 +75,16 @@ export class BillingController {
   ): Promise<HttpResponse<Order>> {
     return this.billingService.createProductSale(createDto, user);
   }
-
-  @Get(':type')
-  @ApiOperation({ summary: 'Get all orders by type' })
-  @ApiParam({
-    name: 'type',
-    enum: OrderType,
-    enumName: 'OrderType',
-  })
-  @ApiOkResponse({
-    description: 'Orders found successfully',
-    type: [Order],
-  })
-  async findAllByType(@Param('type') type: OrderType): Promise<Order[]> {
-    return this.billingService.findAllByType(type);
-  }
-
-  @Get(':type/:id')
-  @ApiOperation({ summary: 'Get order by type and ID' })
-  @ApiParam({
-    name: 'type',
-    enum: OrderType,
-    enumName: 'OrderType',
-  })
-  @ApiOkResponse({
-    description: 'Order found successfully',
+  @Post('product-purchase')
+  @ApiOperation({ summary: 'Create product purchase order' })
+  @ApiCreatedResponse({
+    description: 'Product purchase order created successfully',
     type: Order,
   })
-  async findOne(
-    @Param('type') type: OrderType,
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<Order> {
-    return this.billingService.findOne(type, id);
-  }
-
-  @Get(':type/status/:status')
-  @ApiOperation({ summary: 'Get orders by type and status' })
-  @ApiParam({
-    name: 'type',
-    enum: OrderType,
-    enumName: 'OrderType',
-  })
-  @ApiParam({
-    name: 'status',
-    enum: OrderStatus,
-    enumName: 'OrderStatus',
-  })
-  @ApiOkResponse({
-    description: 'Orders found successfully',
-    type: [Order],
-  })
-  async findByStatus(
-    @Param('type') type: OrderType,
-    @Param('status') status: OrderStatus,
-  ): Promise<Order[]> {
-    return this.billingService.findByStatus(type, status);
+  async createProductPurchaseOrder(
+    @Body() createDto: CreateProductPurchaseBillingDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    return this.billingService.createProductPurchase(createDto, user);
   }
 }

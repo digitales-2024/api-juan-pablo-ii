@@ -4,7 +4,7 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditActionType } from '@prisma/client';
 import { OrderService } from '@pay/pay/services/order.service';
 import { OrderType } from '@pay/pay/interfaces/order.types';
-import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
+import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
 import { PaymentService } from '@pay/pay/services/payment.service';
@@ -16,7 +16,7 @@ import {
 import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
 
 @Injectable()
-export class CreateProductSaleOrderUseCase {
+export class CreateProductPurchaseOrderUseCase {
   constructor(
     private readonly orderService: OrderService,
     private readonly orderRepository: OrderRepository,
@@ -26,44 +26,47 @@ export class CreateProductSaleOrderUseCase {
   ) {}
 
   async execute(
-    createDto: CreateProductSaleBillingDto,
+    createDto: CreateProductPurchaseBillingDto,
     user: UserData,
   ): Promise<HttpResponse<Order>> {
     try {
-      // Usar transacción para asegurar atomicidad entre la creación de la orden y la auditoría
+      // Usar transacción para asegurar atomicidad
       const newOrder = await this.orderRepository.transaction(async () => {
         // Crear la orden usando el servicio de la librería pay
         const order = await this.orderService.createOrder(
-          OrderType.PRODUCT_SALE_ORDER,
+          OrderType.PRODUCT_PURCHASE_ORDER,
           {
             ...createDto,
-            type: OrderType.PRODUCT_SALE_ORDER,
+            type: OrderType.PRODUCT_PURCHASE_ORDER,
           },
         );
 
+        // Crear el tipo de movimiento como entrada (isIncoming: true)
         await this.typeMovementService.create(
           {
             orderId: order.id,
-            name: OrderType.PRODUCT_SALE_ORDER,
-            description: `Movimiento para productos - ${order.code}`,
+            name: OrderType.PRODUCT_PURCHASE_ORDER,
+            description: `Movimiento de ingreso por compra - ${order.code}`,
             state: false,
-            isIncoming: true,
+            isIncoming: true, // Este es un movimiento de entrada al inventario
           },
           user,
         );
 
+        // Crear el pago pendiente asociado
         await this.paymentService.create(
           {
             orderId: order.id,
             amount: order.total,
             status: PaymentStatus.PENDING,
-            type: PaymentType.REGULAR, // Agregar el tipo
-            description: `Pago pendiente para productos - ${order.code}`,
+            type: PaymentType.REGULAR,
+            description: `Pago pendiente por compra de productos - ${order.code}`,
             date: new Date(),
-            paymentMethod: PaymentMethod.CASH, // Or leave undefined
+            paymentMethod: PaymentMethod.CASH,
           },
           user,
         );
+
         // Registrar la auditoría
         await this.auditService.create({
           entityId: order.id,
@@ -78,11 +81,10 @@ export class CreateProductSaleOrderUseCase {
 
       return {
         statusCode: HttpStatus.CREATED,
-        message: 'Product sale order created successfully',
+        message: 'Orden de compra creada exitosamente',
         data: newOrder,
       };
     } catch (error) {
-      // El error será manejado por el servicio
       throw error;
     }
   }
