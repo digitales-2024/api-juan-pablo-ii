@@ -16,7 +16,9 @@ export class StockController {
    * @throws {NotFoundException} Si el producto con el ID proporcionado no existe.
    */
   @Get('product/:id')
-  @ApiOperation({ summary: 'Obtener stock de un producto por ID' })
+  @ApiOperation({
+    summary: 'Obtener stock de un producto por ID de todos los alamacenes',
+  })
   @ApiParam({ name: 'id', description: 'ID del producto' })
   async getStockByProduct(@Param('id') id: string): Promise<StockDto> {
     return this.stockService.getStockByProduct(id);
@@ -31,7 +33,7 @@ export class StockController {
    * @throws {NotFoundException} Si el almacén con el ID proporcionado no existe.
    */
   @Get('storage/:id')
-  @ApiOperation({ summary: 'Obtener stock por almacén' })
+  @ApiOperation({ summary: 'Obtener stock por almacén por ID' })
   @ApiParam({ name: 'id', description: 'ID del almacén' })
   async getStockByStorage(@Param('id') id: string): Promise<StockDto[]> {
     return this.stockService.getStockByStorage(id);
@@ -48,5 +50,17 @@ export class StockController {
   @ApiOperation({ summary: 'Obtener stock de todos los almacenes' })
   async getStockForAllStorages(): Promise<StockDto[]> {
     return this.stockService.getStockForAllStorages();
+  }
+
+  // Endpoint para obtener un producto en un almacén específico
+  @Get('storage/:storageId/product/:productId')
+  @ApiOperation({ summary: 'Obtener stock por almacén y producto' })
+  @ApiParam({ name: 'storageId', description: 'ID del almacén' })
+  @ApiParam({ name: 'productId', description: 'ID del producto' })
+  async getStockByStorageProduct(
+    @Param('storageId') storageId: string,
+    @Param('productId') productId: string,
+  ): Promise<StockDto> {
+    return this.stockService.getStockByStorageProduct(storageId, productId);
   }
 }

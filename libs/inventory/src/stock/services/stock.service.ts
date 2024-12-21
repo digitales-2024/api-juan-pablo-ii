@@ -24,30 +24,7 @@ export class StockService {
     private readonly movementRepository: MovementRepository,
   ) {}
 
-  /**
-   * Calcula el stock total de un producto específico.
-   *
-   * @param productId - El identificador único del producto para el cual se desea calcular el stock.
-   *
-   * @returns Una promesa que resuelve a un objeto `StockDto` con el ID del producto y su stock total calculado.
-   *
-   * El cálculo del stock se realiza considerando los siguientes factores:
-   * - **Ingresos**: La cantidad total de productos ingresados al inventario.
-   * - **Salidas**: La cantidad total de productos retirados del inventario.
-   * - **Movimientos**: Los ajustes netos realizados en el inventario debido a traslados entre almacenes u otros factores.
-   *
-   * El stock total se calcula como:
-   * `stock total = ingresos - salidas + movimientos`
-   *
-   * @example
-   * ```typescript
-   * const stock = await stockService.getStockByProduct('12345');
-   * console.log(stock);
-   * // { productId: '12345', totalStock: 50 }
-   * ```
-   *
-   * @throws {Error} Puede lanzar un error si ocurre algún problema al consultar los repositorios asociados.
-   */
+  //funcion para obtener el stock de un producto en todos los almacenes
   async getStockByProduct(productId: string): Promise<StockDto> {
     const incomingData =
       await this.incomingRepository.getProductsTotalQuantityIncoming();
@@ -64,8 +41,9 @@ export class StockService {
 
     return { productId, totalStock };
   }
+  //fin funcion
 
-  //funcion para obtener el stock de un producto en un almacen especifico
+  //funcion para obtener el stock en un almacen especifico
 
   async getStockByStorage(storageId: string): Promise<StockDto[]> {
     // Agrupar productos por almacén y calcular stock
@@ -78,6 +56,7 @@ export class StockService {
       }),
     );
   }
+
   //fin funcion
 
   //funcion para obtener el stock de todos los almacenes
@@ -138,5 +117,31 @@ export class StockService {
 
     return updatedStockByStorage;
   }
+  //fin funcion
+
+  // Función pública para obtener el stock por un almacén específico y un producto específico
+  async getStockByStorageProduct(
+    storageId: string,
+    productId: string,
+  ): Promise<StockDto> {
+    try {
+      const stockByStorage =
+        await this.movementRepository.getStockByStorageIdProductId(
+          storageId,
+          productId,
+        );
+      console.log(JSON.stringify(stockByStorage, null, 2));
+      const updatedStockByStorage = this.updateStockInJson(stockByStorage);
+      console.log(JSON.stringify(updatedStockByStorage, null, 2));
+      return updatedStockByStorage;
+    } catch (error) {
+      this.logger.error(
+        `Error fetching stock for storage ${storageId} and product ${productId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
   //fin funcion
 }
