@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UpdatePaymentDto } from '../interfaces/dto';
-import { Payment } from '../entities/payment.entity';
-import { PaymentRepository } from '../repositories/payment.repository';
+import { UpdatePaymentDto } from '../../interfaces/dto';
+import { Payment } from '../../entities/payment.entity';
+import { PaymentRepository } from '../../repositories/payment.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';

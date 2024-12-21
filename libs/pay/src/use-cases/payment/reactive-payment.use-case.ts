@@ -1,36 +1,33 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { PaymentRepository } from '../repositories/payment.repository';
+import { PaymentRepository } from '../../repositories/payment.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Payment } from '../entities/payment.entity';
+import { Payment } from '../../entities/payment.entity';
 import { AuditActionType } from '@prisma/client';
-import { DeletePaymentsDto } from '../interfaces/dto';
 
 @Injectable()
-export class DeletePaymentsUseCase {
+export class ReactivatePaymentsUseCase {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    deletePaymentsDto: DeletePaymentsDto,
+    ids: string[],
     user: UserData,
   ): Promise<HttpResponse<Payment[]>> {
-    const deletedPayments = await this.paymentRepository.transaction(
+    // Reactivate payments and register audit
+    const reactivatedPayments = await this.paymentRepository.transaction(
       async () => {
-        // Perform soft delete and get updated payments
-        const payments = await this.paymentRepository.softDeleteMany(
-          deletePaymentsDto.ids,
-        );
+        const payments = await this.paymentRepository.reactivateMany(ids);
 
-        // Register audit for each deleted payment
+        // Register audit for each reactivated payment
         await Promise.all(
           payments.map((payment) =>
             this.auditService.create({
               entityId: payment.id,
               entityType: 'payment',
-              action: AuditActionType.DELETE,
+              action: AuditActionType.UPDATE,
               performedById: user.id,
               createdAt: new Date(),
             }),
@@ -43,8 +40,8 @@ export class DeletePaymentsUseCase {
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Pagos eliminados exitosamente',
-      data: deletedPayments,
+      message: 'Pagos reactivados exitosamente',
+      data: reactivatedPayments,
     };
   }
 }

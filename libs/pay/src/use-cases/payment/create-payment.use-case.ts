@@ -1,11 +1,11 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreatePaymentDto } from '../interfaces/dto';
-import { Payment } from '../entities/payment.entity';
-import { PaymentRepository } from '../repositories/payment.repository';
+import { CreatePaymentDto } from '../../interfaces/dto';
+import { Payment } from '../../entities/payment.entity';
+import { PaymentRepository } from '../../repositories/payment.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { PaymentStatus } from '../interfaces/payment.types';
+import { PaymentStatus } from '../../interfaces/payment.types';
 
 @Injectable()
 export class CreatePaymentUseCase {
@@ -28,8 +28,8 @@ export class CreatePaymentUseCase {
         description: createPaymentDto.description,
         paymentMethod: createPaymentDto.paymentMethod,
         voucherNumber: createPaymentDto.voucherNumber,
-        verifiedBy: createPaymentDto.verifiedBy,
-        verifiedAt: createPaymentDto.verifiedAt,
+        verifiedBy: user.name,
+        verifiedAt: new Date(),
       });
 
       // Register audit
