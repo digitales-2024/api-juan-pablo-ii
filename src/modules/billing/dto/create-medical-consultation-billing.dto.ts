@@ -14,7 +14,8 @@ export class CreateMedicalConsultationBillingDto {
   consultaId: string;
 
   @ApiProperty({ description: 'ID del tipo de movimiento' })
-  @IsUUID()
+  @IsString()
+  @IsOptional()
   movementTypeId: string;
 
   @ApiProperty({ description: 'Moneda (default: PEN)', default: 'PEN' })

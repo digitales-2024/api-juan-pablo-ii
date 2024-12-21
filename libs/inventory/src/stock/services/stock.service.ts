@@ -3,31 +3,74 @@ import { StockDto } from '../dto';
 import { IncomingRepository } from '@inventory/inventory/incoming/repositories/incoming.repository';
 import { OutgoingRepository } from '@inventory/inventory/outgoing/repositories/outgoing.repository';
 import { MovementRepository } from '@inventory/inventory/movement/repositories/movement.repository';
+import { StorageRepository } from '@inventory/inventory/storage/repositories/storage.repository';
+import { IncomingService } from '@inventory/inventory/incoming/services/incoming.service';
+import { OutgoingService } from '@inventory/inventory/outgoing/services/outgoing.service';
+import { MovementService } from '@inventory/inventory/movement/services/movement.service';
+import { StorageService } from '@inventory/inventory/storage/services/storage.service';
 
 @Injectable()
 export class StockService {
   private readonly logger = new Logger(StockService.name);
 
   constructor(
+    private readonly incomingService: IncomingService,
+    private readonly outgoingService: OutgoingService,
+    private readonly movementService: MovementService,
+    private readonly storageService: StorageService,
+    private readonly storageRepository: StorageRepository,
     private readonly incomingRepository: IncomingRepository,
     private readonly outgoingRepository: OutgoingRepository,
     private readonly movementRepository: MovementRepository,
   ) {}
 
+  /**
+   * Calcula el stock total de un producto específico.
+   *
+   * @param productId - El identificador único del producto para el cual se desea calcular el stock.
+   *
+   * @returns Una promesa que resuelve a un objeto `StockDto` con el ID del producto y su stock total calculado.
+   *
+   * El cálculo del stock se realiza considerando los siguientes factores:
+   * - **Ingresos**: La cantidad total de productos ingresados al inventario.
+   * - **Salidas**: La cantidad total de productos retirados del inventario.
+   * - **Movimientos**: Los ajustes netos realizados en el inventario debido a traslados entre almacenes u otros factores.
+   *
+   * El stock total se calcula como:
+   * `stock total = ingresos - salidas + movimientos`
+   *
+   * @example
+   * ```typescript
+   * const stock = await stockService.getStockByProduct('12345');
+   * console.log(stock);
+   * // { productId: '12345', totalStock: 50 }
+   * ```
+   *
+   * @throws {Error} Puede lanzar un error si ocurre algún problema al consultar los repositorios asociados.
+   */
   async getStockByProduct(productId: string): Promise<StockDto> {
-    const incoming = await this.incomingRepository.getTotalByProduct(productId);
-    const outgoing = await this.outgoingRepository.getTotalByProduct(productId);
-    const movements =
-      await this.movementRepository.getNetMovementByProduct(productId);
+    const incomingData =
+      await this.incomingRepository.getProductsTotalQuantityIncoming();
+    const outgoingData =
+      await this.outgoingRepository.getProductsTotalQuantityOutgoing();
+    //const movementData =
+    //await this.movementRepository.getProductsTotalQuantityMovement();
 
-    const totalStock = incoming - outgoing + movements;
+    const incoming = incomingData[productId]?.cantidad || 0;
+    const outgoing = outgoingData[productId]?.cantidad || 0;
+    //const movements = movementData[productId]?.cantidad || 0;
+
+    const totalStock = incoming + outgoing;
+
     return { productId, totalStock };
   }
+
+  //funcion para obtener el stock de un producto en un almacen especifico
 
   async getStockByStorage(storageId: string): Promise<StockDto[]> {
     // Agrupar productos por almacén y calcular stock
     const productsInStorage =
-      await this.incomingRepository.getProductsByStorage(storageId);
+      await this.storageRepository.getProductsByStorage(storageId);
     return Promise.all(
       productsInStorage.map(async (product) => {
         const stock = await this.getStockByProduct(product.id);
@@ -35,4 +78,65 @@ export class StockService {
       }),
     );
   }
+  //fin funcion
+
+  //funcion para obtener el stock de todos los almacenes
+  async getStockForAllStorages(): Promise<any> {
+    try {
+      const stockByStorage = await this.movementRepository.getStockByStorage();
+      console.log(stockByStorage);
+      const updatedStockByStorage = this.updateStockInJson(stockByStorage);
+      console.log(updatedStockByStorage);
+      return updatedStockByStorage;
+    } catch (error) {
+      this.logger.error('Error fetching stock for all storages', error);
+      throw error;
+    }
+  }
+
+  // Función privada para calcular el stock de cada producto
+  private calculateStock(
+    incoming: { [key: string]: { cantidad: number } },
+    outgoing: { [key: string]: { cantidad: number } },
+  ): { [key: string]: { cantidad: number } } {
+    const stock: { [key: string]: { cantidad: number } } = {};
+
+    // Combinar las cantidades de incoming y outgoing
+    this.mergeQuantities(stock, incoming);
+    this.mergeQuantities(stock, outgoing, true);
+
+    return stock;
+  }
+
+  // Función privada para combinar las cantidades de productos
+  private mergeQuantities(
+    stock: { [key: string]: { cantidad: number } },
+    quantities: { [key: string]: { cantidad: number } },
+    isOutgoing: boolean = false,
+  ) {
+    Object.keys(quantities).forEach((productId) => {
+      if (!stock[productId]) {
+        stock[productId] = { cantidad: 0 };
+      }
+      stock[productId].cantidad += isOutgoing
+        ? -Math.abs(quantities[productId].cantidad)
+        : quantities[productId].cantidad;
+    });
+  }
+
+  // Función privada para actualizar el JSON con el stock calculado
+  private updateStockInJson(stockByStorage: any): any {
+    const updatedStockByStorage = { ...stockByStorage };
+
+    Object.keys(updatedStockByStorage.almacenes).forEach((storageId) => {
+      const storage = updatedStockByStorage.almacenes[storageId];
+      const stock = this.calculateStock(storage.incoming, storage.outgoing);
+      storage.stock = stock;
+      delete storage.incoming;
+      delete storage.outgoing;
+    });
+
+    return updatedStockByStorage;
+  }
+  //fin funcion
 }

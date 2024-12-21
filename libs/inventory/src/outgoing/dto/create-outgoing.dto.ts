@@ -5,7 +5,7 @@ import {
   IsNotEmpty,
   IsBoolean,
   IsUUID,
-  IsDate,
+  IsDateString,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -44,7 +44,7 @@ export class CreateOutgoingDto {
     example: '2023-10-01T00:00:00.000Z',
     required: true,
   })
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
   date: Date;
 

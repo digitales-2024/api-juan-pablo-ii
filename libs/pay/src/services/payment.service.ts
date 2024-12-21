@@ -225,7 +225,7 @@ export class PaymentService {
   /**
    * Cancela un pago pendiente
    */
-  async cancelPayment(
+  /*   async cancelPayment(
     id: string,
     cancelPaymentDto: CancelPaymentDto,
     user: UserData,
@@ -245,18 +245,18 @@ export class PaymentService {
     } catch (error) {
       this.errorHandler.handleError(error, 'cancelling');
     }
-  }
+  } */
 
   /**
    * Lista todos los pagos pendientes
    */
-  async findPendingPayments(): Promise<Payment[]> {
+  /*  async findPendingPayments(): Promise<Payment[]> {
     try {
       return await this.paymentRepository.findByStatus(PaymentStatus.PENDING);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
-  }
+  } */
 
   // /**
   //  * Obtiene estadísticas de pagos
