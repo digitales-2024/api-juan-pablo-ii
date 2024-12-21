@@ -32,7 +32,9 @@ export type ServiceAction =
   | 'activating'
   | 'processing'
   | 'verifying'
-  | 'rejecting';
+  | 'rejecting'
+  | 'cancelling'
+  | 'submitting';
 
 export interface ErrorMessages {
   notFound: string;
@@ -137,6 +139,8 @@ export class BaseErrorHandler {
       processing: 'procesar',
       verifying: 'verificar',
       rejecting: 'rechazar',
+      cancelling: 'cancelar',
+      submitting: 'enviar',
     };
 
     return `Error al ${actionMessages[action]} ${this.getEntityNameInSpanish()}`;
