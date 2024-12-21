@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateOrderDto } from '../interfaces/dto/create-order.dto';
-import { Order } from '../entities/order.entity';
-import { OrderRepository } from '../repositories/order.repository';
+import { Order } from '../../entities/order.entity';
+import { OrderRepository } from '../../repositories/order.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { CreateOrderDto } from '@pay/pay/interfaces/dto';
 
 @Injectable()
 export class CreateOrderUseCase {
