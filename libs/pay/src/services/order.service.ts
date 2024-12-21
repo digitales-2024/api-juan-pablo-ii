@@ -11,14 +11,20 @@ import { IOrderGenerator } from '../interfaces';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { orderErrorMessages } from '../errors/errors-order';
 import { OrderStatus, OrderType } from '../interfaces/order.types';
-import { CreateOrderDto } from '../interfaces/dto/create-order.dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { DeleteOrdersDto, UpdateOrderDto } from '../interfaces/dto';
+import {
+  CreateOrderDto,
+  DeleteOrdersDto,
+  SubmitDraftOrderDto,
+  UpdateOrderDto,
+} from '../interfaces/dto';
 import {
   UpdateOrderUseCase,
   CreateOrderUseCase,
   DeleteOrdersUseCase,
   ReactivateOrdersUseCase,
+  FindOrdersByStatusUseCase,
+  SubmitDraftOrderUseCase,
 } from '../use-cases';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 
@@ -34,6 +40,8 @@ export class OrderService {
     private readonly updateOrderUseCase: UpdateOrderUseCase,
     private readonly deleteOrdersUseCase: DeleteOrdersUseCase,
     private readonly reactivateOrdersUseCase: ReactivateOrdersUseCase,
+    private readonly findOrderByStatusUseCase: FindOrdersByStatusUseCase,
+    private readonly submitDraftOrderUseCase: SubmitDraftOrderUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -234,6 +242,51 @@ export class OrderService {
       });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca ordenes por estado
+   * @param status - Estado de orden a buscar
+   * @returns Lista de ordenes que coinciden con el estado especificado
+   * @throws {BadRequestException} Si hay un error al obtener los pagos
+   */
+  async findOrderByStatus(status: OrderStatus): Promise<Order[]> {
+    try {
+      return await this.findOrderByStatusUseCase.execute(status);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca órdenes por tipo y estado
+   * @param type - Tipo de orden
+   * @param status - Estado de la orden
+   * @returns Arreglo de órdenes del tipo y estado especificados
+   * @throws {Error} Si hay un problema al obtener las órdenes
+   */
+  async findOrderByStatusType(
+    type: OrderType,
+    status: OrderStatus,
+  ): Promise<Order[]> {
+    try {
+      const orders = await this.findByStatus(status);
+      return orders.filter((order) => order.type === type);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async submitDraftOrder(
+    id: string,
+    submitDto: SubmitDraftOrderDto,
+    user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    try {
+      return await this.submitDraftOrderUseCase.execute(id, submitDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'submitting');
     }
   }
 }

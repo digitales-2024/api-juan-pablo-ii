@@ -20,8 +20,13 @@ import {
 } from '@nestjs/swagger';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Order } from '../entities/order.entity';
-import { DeleteOrdersDto, UpdateOrderDto } from '../interfaces/dto';
-import { CreateOrderDto } from '../interfaces/dto/create-order.dto';
+import {
+  CreateOrderDto,
+  DeleteOrdersDto,
+  SubmitDraftOrderDto,
+  UpdateOrderDto,
+} from '../interfaces/dto';
+import { OrderStatus, OrderType } from '../interfaces/order.types';
 
 @ApiTags('Order')
 @ApiBadRequestResponse({
@@ -124,5 +129,80 @@ export class OrderController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Order[]>> {
     return this.orderService.reactiveMany(deleteOrdersDto.ids, user);
+  }
+  @Post(':id/submit-draft')
+  @ApiOperation({ summary: 'Confirmar orden borrador y cambiar a pendiente' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden borrador',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden borrador confirmada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no está en estado borrador',
+  })
+  async submitDraftOrder(
+    @Param('id') id: string,
+    @Body() submitDto: SubmitDraftOrderDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    return this.orderService.submitDraftOrder(id, submitDto, user);
+  }
+  @Get('type/:type') // Cambiado de ':type' a 'type/:type'
+  @ApiOperation({ summary: 'Get all orders by type' })
+  @ApiParam({
+    name: 'type',
+    enum: OrderType,
+    enumName: 'OrderType',
+  })
+  @ApiOkResponse({
+    description: 'Orders found successfully',
+    type: [Order],
+  })
+  async findAllByType(@Param('type') type: OrderType): Promise<Order[]> {
+    return this.orderService.findByType(type);
+  }
+
+  @Get('status/:status')
+  @ApiOperation({ summary: 'Get payments by status' })
+  @ApiParam({
+    name: 'status',
+    enum: OrderStatus,
+    description: 'Payment status to filter by',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of payments with the specified status',
+    type: [Order],
+  })
+  async findByStatus(@Param('status') status: OrderStatus): Promise<Order[]> {
+    return this.orderService.findOrderByStatus(status);
+  }
+
+  @Get(':type/status/:status')
+  @ApiOperation({ summary: 'Get orders by type and status' })
+  @ApiParam({
+    name: 'type',
+    enum: OrderType,
+    enumName: 'OrderType',
+  })
+  @ApiParam({
+    name: 'status',
+    enum: OrderStatus,
+    enumName: 'OrderStatus',
+  })
+  @ApiOkResponse({
+    description: 'Orders found successfully',
+    type: [Order],
+  })
+  async findByStatusType(
+    @Param('type') type: OrderType,
+    @Param('status') status: OrderStatus,
+  ): Promise<Order[]> {
+    return this.orderService.findOrderByStatusType(type, status);
   }
 }

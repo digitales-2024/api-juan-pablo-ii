@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "PaymentType" AS ENUM ('REGULAR', 'REFUND', 'PARTIAL', 'ADJUSTMENT', 'COMPENSATION');
+
+-- AlterTable
+ALTER TABLE "Payment" ADD COLUMN     "type" "PaymentType" NOT NULL DEFAULT 'REGULAR';

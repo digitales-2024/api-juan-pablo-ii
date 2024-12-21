@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UpdateOrderDto } from '../interfaces/dto/update-order.dto';
-import { Order } from '../entities/order.entity';
-import { OrderRepository } from '../repositories/order.repository';
+import { UpdateOrderDto } from '../../interfaces/dto/update-order.dto';
+import { Order } from '../../entities/order.entity';
+import { OrderRepository } from '../../repositories/order.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';

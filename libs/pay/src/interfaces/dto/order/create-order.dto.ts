@@ -7,7 +7,7 @@ import {
   IsOptional,
   IsObject,
 } from 'class-validator';
-import { OrderStatus, OrderType } from '../order.types';
+import { OrderStatus, OrderType } from '../../order.types';
 
 export class CreateOrderDto {
   @ApiProperty({

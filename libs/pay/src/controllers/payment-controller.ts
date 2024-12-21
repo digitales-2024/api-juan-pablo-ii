@@ -2,10 +2,11 @@ import {
   Controller,
   Post,
   Body,
-  Patch,
-  Param,
-  Get,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { PaymentService } from '../services/payment.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -17,17 +18,21 @@ import {
   ApiUnauthorizedResponse,
   ApiOkResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Payment } from '../entities/payment.entity';
 import {
+  CancelPaymentDto,
   CreatePaymentDto,
   DeletePaymentsDto,
   ProcessPaymentDto,
+  RefundPaymentDto,
   RejectPaymentDto,
   UpdatePaymentDto,
   VerifyPaymentDto,
 } from '../interfaces/dto';
+import { PaymentStatus, PaymentType } from '../interfaces/payment.types';
 
 @ApiTags('Payment')
 @ApiBadRequestResponse({
@@ -134,29 +139,24 @@ export class PaymentController {
   ): Promise<HttpResponse<Payment[]>> {
     return this.paymentService.reactiveMany(body.ids, user);
   }
-
-  // @Get('list')
-  // @ApiOperation({ summary: 'Get payments with filters and pagination' })
-  // @ApiQuery({ name: 'status', enum: PaymentStatus, required: false })
-  // @ApiQuery({ name: 'paymentMethod', enum: PaymentMethod, required: false })
-  // @ApiQuery({ name: 'orderId', required: false })
-  // @ApiQuery({ name: 'dateFrom', required: false })
-  // @ApiQuery({ name: 'dateTo', required: false })
-  // @ApiQuery({ name: 'page', required: false, type: Number })
-  // @ApiQuery({ name: 'limit', required: false, type: Number })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'List of payments with pagination',
-  // })
-  // async findAllWithFilters(
-  //   @Query() filters: PaymentFiltersDto,
-  // ): Promise<PaginatedPaymentsResponse> {
-  //   console.log('Received filters:', filters);
-  //   const result = this.paymentService.findAllWithFilters(filters);
-  //   console.log('Result:', result);
-  //   return result;
-  // }
-
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel a pending payment' })
+  @ApiParam({ name: 'id', description: 'Payment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment cancelled successfully',
+    type: Payment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid payment cancellation request',
+  })
+  async cancelPayment(
+    @Param('id') id: string,
+    @Body() cancelPaymentDto: CancelPaymentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    return this.paymentService.cancelPayment(id, cancelPaymentDto, user);
+  }
   @Post(':id/process')
   @ApiOperation({ summary: 'Process a pending payment' })
   @ApiParam({ name: 'id', description: 'Payment ID' })
@@ -212,5 +212,74 @@ export class PaymentController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Payment>> {
     return this.paymentService.rejectPayment(id, rejectPaymentDto, user);
+  }
+  @Post(':id/refund')
+  @ApiOperation({ summary: 'Process refund for a payment' })
+  @ApiParam({ name: 'id', description: 'Payment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment refunded successfully',
+    type: Payment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid refund request or payment not eligible for refund',
+  })
+  async refundPayment(
+    @Param('id') id: string,
+    @Body() refundPaymentDto: RefundPaymentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Payment>> {
+    return this.paymentService.refundPayment(id, refundPaymentDto, user);
+  }
+
+  @Get('status/:status')
+  @ApiOperation({ summary: 'Get payments by status and type' })
+  @ApiParam({
+    name: 'status',
+    enum: PaymentStatus,
+    description: 'Payment status to filter by',
+  })
+  @ApiQuery({
+    name: 'type',
+    enum: PaymentType,
+    required: false,
+    description: 'Payment type to filter by',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of payments with statistics',
+    schema: {
+      properties: {
+        payments: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/Payment' },
+        },
+        stats: {
+          type: 'object',
+          properties: {
+            totalRegular: { type: 'number' },
+            totalRefunds: { type: 'number' },
+            totalDiscounts: { type: 'number' },
+            totalPartialPayments: { type: 'number' },
+            netAmount: { type: 'number' },
+            paymentCount: { type: 'number' },
+            refundCount: { type: 'number' },
+            discountCount: { type: 'number' },
+          },
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid status or payment type',
+  })
+  async findByStatusAndType(
+    @Param('status') status: PaymentStatus,
+    @Query('type') type?: PaymentType,
+  ): Promise<{
+    payments: Payment[];
+    typeStats: any;
+  }> {
+    return this.paymentService.findPaymentsByStatusAndType(status, type);
   }
 }
