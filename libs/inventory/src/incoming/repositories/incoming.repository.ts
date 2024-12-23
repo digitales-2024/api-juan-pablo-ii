@@ -8,40 +8,64 @@ export class IncomingRepository extends BaseRepository<Incoming> {
     super(prisma, 'incoming'); // Tabla del esquema de prisma
   }
 
-  async getTotalByProduct(productId: string): Promise<number> {
-    const total = await this.prisma.movement.aggregate({
-      _sum: {
-        quantity: true,
-      },
+  // Función pública para obtener los productos y sus cantidades para ingresos
+  async getProductsTotalQuantityIncoming(): Promise<{
+    [key: string]: { cantidad: number };
+  }> {
+    const movements = await this.fetchMovementsForIncoming();
+    const productQuantities = this.mapProductQuantities(movements);
+    return productQuantities;
+  }
+
+  // Función privada para obtener los movimientos relacionados con ingresos
+  private async fetchMovementsForIncoming() {
+    return await this.prisma.movement.findMany({
       where: {
-        productoId: productId,
-        incomingId: { not: null }, // Solo considerar movimientos vinculados a ingresos
+        incomingId: { not: null }, // Solo registros con incomingId no nulo
         state: true, // Solo registros confirmados
         isActive: true, // Solo registros activos
       },
+      select: {
+        productoId: true,
+        quantity: true,
+      },
     });
-
-    return total._sum.quantity || 0; // Retornar 0 si no hay resultados
   }
 
-  async getProductsByStorage(storageId: string): Promise<{ id: string }[]> {
-    const products = await this.prisma.incoming.findMany({
-      where: {
-        storageId,
-        isActive: true, // Considerar solo registros activos
-      },
-      select: {
-        Movement: {
-          select: { productoId: true },
-        },
-      },
+  // Función privada para mapear las cantidades por producto
+  private mapProductQuantities(
+    movements: Array<{ productoId: string; quantity: number }>,
+  ): { [key: string]: { cantidad: number } } {
+    const productQuantities: { [key: string]: { cantidad: number } } = {};
+
+    movements.forEach((movement) => {
+      this.initializeProductQuantity(productQuantities, movement.productoId);
+      this.updateProductQuantity(
+        productQuantities,
+        movement.productoId,
+        movement.quantity,
+      );
     });
 
-    // Extraer IDs únicos de los productos
-    return [
-      ...new Set(
-        products.flatMap((p) => p.Movement.map((m) => ({ id: m.productoId }))),
-      ),
-    ];
+    return productQuantities;
+  }
+
+  // Función privada para inicializar la cantidad de un producto
+  private initializeProductQuantity(
+    productQuantities: { [key: string]: { cantidad: number } },
+    productoId: string,
+  ) {
+    if (!productQuantities[productoId]) {
+      productQuantities[productoId] = { cantidad: 0 };
+    }
+  }
+
+  // Función privada para actualizar la cantidad de un producto
+  private updateProductQuantity(
+    productQuantities: { [key: string]: { cantidad: number } },
+    productoId: string,
+    quantity: number,
+  ) {
+    productQuantities[productoId].cantidad += quantity;
   }
 }

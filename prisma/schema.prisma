@@ -436,6 +436,7 @@ model Movement {
   quantity       Float // Cantidad de producto que se movió
   date           DateTime      @default(now()) @db.Timestamptz(6)
   state          Boolean       @default(false) // Estado para registrar si el movimiento ha sido procesado o no
+  referenceId    String? // Referencia a un registro etc
   isActive       Boolean       @default(true) // Campo para controlar si está activo o no
   createdAt      DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime      @updatedAt

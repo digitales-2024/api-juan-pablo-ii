@@ -5,7 +5,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsBoolean,
-  IsDate,
+  IsDateString,
 } from 'class-validator';
 
 export class CreateMovementDto {
@@ -59,7 +59,7 @@ export class CreateMovementDto {
     example: '2023-12-01T15:30:00Z',
     required: true,
   })
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
   date: Date;
 
