@@ -1,7 +1,13 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Payment } from '../entities/payment.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import {
+  CancelPaymentDto,
   CreatePaymentDto,
   DeletePaymentsDto,
   ProcessPaymentDto,
@@ -250,7 +256,7 @@ export class PaymentService {
    * @returns Respuesta HTTP con el resultado de la cancelación
    * @throws {BadRequestException} Si el pago no está pendiente o hay un error en la cancelación
    */
-  /*   async cancelPayment(
+  async cancelPayment(
     id: string,
     cancelPaymentDto: CancelPaymentDto,
     user: UserData,
@@ -270,7 +276,7 @@ export class PaymentService {
     } catch (error) {
       this.errorHandler.handleError(error, 'cancelling');
     }
-  } */
+  }
 
   /**
    * Procesa un reembolso para un pago
