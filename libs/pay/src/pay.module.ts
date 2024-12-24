@@ -24,6 +24,7 @@ import {
   FindPaymentsByStatusUseCase,
   RefundPaymentUseCase,
   SubmitDraftOrderUseCase,
+  CompleteOrderUseCase,
 } from './use-cases';
 
 const orderProviders = [
@@ -35,6 +36,7 @@ const orderProviders = [
   ReactivateOrdersUseCase,
   FindOrdersByStatusUseCase,
   SubmitDraftOrderUseCase,
+  CompleteOrderUseCase,
 ];
 
 const paymentProviders = [

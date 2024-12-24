@@ -176,6 +176,9 @@ import { StockService } from './stock/services/stock.service';
     MovementService,
     IncomingService,
     OutgoingService,
+    IncomingRepository,
+    OutgoingRepository,
+    MovementRepository,
   ],
 })
 export class InventoryModule {}

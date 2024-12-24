@@ -1,9 +1,9 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditActionType } from '@prisma/client';
 import { OrderService } from '@pay/pay/services/order.service';
-import { OrderType } from '@pay/pay/interfaces/order.types';
+import { OrderType, OrderStatus } from '@pay/pay/interfaces/order.types';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
@@ -14,6 +14,8 @@ import {
   PaymentType,
 } from '@pay/pay/interfaces/payment.types';
 import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
+import { StockService } from '@inventory/inventory/stock/services/stock.service';
+import { ProductSaleMetadata } from '../interfaces/metadata.interfaces';
 
 @Injectable()
 export class CreateProductSaleOrderUseCase {
@@ -23,67 +25,106 @@ export class CreateProductSaleOrderUseCase {
     private readonly auditService: AuditService,
     private readonly paymentService: PaymentService,
     private readonly typeMovementService: TypeMovementService,
+    private readonly stockService: StockService,
   ) {}
 
   async execute(
     createDto: CreateProductSaleBillingDto,
     user: UserData,
   ): Promise<HttpResponse<Order>> {
-    try {
-      // Usar transacción para asegurar atomicidad entre la creación de la orden y la auditoría
-      const newOrder = await this.orderRepository.transaction(async () => {
-        // Crear la orden usando el servicio de la librería pay
-        const order = await this.orderService.createOrder(
-          OrderType.PRODUCT_SALE_ORDER,
-          {
-            ...createDto,
-            type: OrderType.PRODUCT_SALE_ORDER,
-          },
-        );
+    return await this.orderRepository.transaction(async () => {
+      // Validate stock availability
+      await this.validateStock(createDto);
 
-        await this.typeMovementService.create(
-          {
-            orderId: order.id,
-            name: OrderType.PRODUCT_SALE_ORDER,
-            description: `Movimiento para productos - ${order.code}`,
-            state: false,
-            isIncoming: true,
-          },
-          user,
-        );
+      // Create movement type for sale
+      const movementType = await this.typeMovementService.create(
+        {
+          name: OrderType.PRODUCT_SALE_ORDER,
+          description: `Sale movement - ${new Date().toISOString()}`,
+          state: false,
+          isIncoming: false,
+        },
+        user,
+      );
 
-        await this.paymentService.create(
-          {
-            orderId: order.id,
-            amount: order.total,
-            status: PaymentStatus.PENDING,
-            type: PaymentType.REGULAR, // Agregar el tipo
-            description: `Pago pendiente para productos - ${order.code}`,
-            date: new Date(),
-            paymentMethod: PaymentMethod.CASH, // Or leave undefined
-          },
-          user,
-        );
-        // Registrar la auditoría
-        await this.auditService.create({
-          entityId: order.id,
-          entityType: 'order',
-          action: AuditActionType.CREATE,
-          performedById: user.id,
-          createdAt: new Date(),
-        });
+      // Prepare metadata
+      const metadata: ProductSaleMetadata = {
+        services: createDto.products.map((product) => ({
+          id: product.productId,
+          name: '', // Will be populated from product service
+          quantity: product.quantity,
+          subtotal: 0, // Will be calculated based on product price
+        })),
+        orderDetails: {
+          transactionType: 'SALE',
+          storageId: createDto.storageId,
+          branchId: createDto.branchId,
+          products: createDto.products.map((product) => ({
+            productId: product.productId,
+            quantity: product.quantity,
+          })),
+        },
+        inventory: {
+          location: createDto.storageLocation || '',
+          batch: createDto.batchNumber,
+        },
+      };
 
-        return order;
+      // Create the order
+      const order = await this.orderService.createOrder(
+        OrderType.PRODUCT_SALE_ORDER,
+        {
+          ...createDto,
+          type: OrderType.PRODUCT_SALE_ORDER,
+          movementTypeId: movementType.data.id,
+          status: OrderStatus.PENDING,
+          metadata,
+        },
+      );
+
+      // Create pending payment
+      await this.paymentService.create(
+        {
+          orderId: order.id,
+          amount: order.total,
+          status: PaymentStatus.PENDING,
+          type: PaymentType.REGULAR,
+          description: `Payment pending for sale - ${order.code}`,
+          date: new Date(),
+          paymentMethod: PaymentMethod.CASH,
+        },
+        user,
+      );
+
+      // Register audit
+      await this.auditService.create({
+        entityId: order.id,
+        entityType: 'order',
+        action: AuditActionType.CREATE,
+        performedById: user.id,
+        createdAt: new Date(),
       });
 
       return {
         statusCode: HttpStatus.CREATED,
         message: 'Product sale order created successfully',
-        data: newOrder,
+        data: order,
       };
-    } catch (error) {
-      // El error será manejado por el servicio
-      throw error;
+    });
+  }
+
+  private async validateStock(dto: CreateProductSaleBillingDto) {
+    for (const product of dto.products) {
+      const stock = await this.stockService.getStockByStorageProduct(
+        dto.storageId,
+        product.productId,
+      );
+
+      if (!stock || stock.totalStock < product.quantity) {
+        throw new BadRequestException(
+          `Insufficient stock for product ${product.productId}. Available: ${stock?.totalStock || 0}, Requested: ${product.quantity}`,
+        );
+      }
     }
   }
 }

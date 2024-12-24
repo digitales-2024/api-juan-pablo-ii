@@ -12,6 +12,8 @@ import { CreateProductSaleOrderUseCase } from './use-cases/create-product-sale-b
 import { InventoryModule } from '@inventory/inventory/inventory.module';
 import { ProductPurchaseGenerator } from './generators/product-purchase-generator';
 import { CreateProductPurchaseOrderUseCase } from './use-cases/create-product-purchase-billing.use-case';
+import { StockService } from '@inventory/inventory/stock/services/stock.service';
+import { StorageRepository } from '@inventory/inventory/storage/repositories/storage.repository';
 
 @Module({
   imports: [PayModule, InventoryModule, AuditModule],
@@ -21,7 +23,9 @@ import { CreateProductPurchaseOrderUseCase } from './use-cases/create-product-pu
     MedicalPrescriptionGenerator,
     ProductSaleGenerator,
     ProductPurchaseGenerator,
+    StorageRepository,
     BillingService,
+    StockService,
     CreateMedicalConsultationOrderUseCase,
     CreateMedicalPrescriptionOrderUseCase,
     CreateProductSaleOrderUseCase,
