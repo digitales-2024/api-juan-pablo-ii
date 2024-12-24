@@ -4,7 +4,7 @@ import { AuditService } from '@login/login/admin/audit/audit.service';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Order } from '../../entities/order.entity';
 import { AuditActionType } from '@prisma/client';
-import { DeleteOrdersDto } from '../../interfaces/dto/delete-order.dto';
+import { DeleteOrdersDto } from '@pay/pay/interfaces/dto';
 
 @Injectable()
 export class DeleteOrdersUseCase {
