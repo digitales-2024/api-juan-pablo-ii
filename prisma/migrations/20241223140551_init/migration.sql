@@ -339,7 +339,7 @@ CREATE TABLE "TypeStorage" (
 -- CreateTable
 CREATE TABLE "Storage" (
     "id" TEXT NOT NULL,
-    "productoId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "location" TEXT,
     "typeStorageId" TEXT NOT NULL,
@@ -374,7 +374,7 @@ CREATE TABLE "Movement" (
     "movementTypeId" TEXT,
     "incomingId" TEXT,
     "outgoingId" TEXT,
-    "productoId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
     "quantity" DOUBLE PRECISION NOT NULL,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "state" BOOLEAN NOT NULL DEFAULT false,
@@ -694,7 +694,7 @@ ALTER TABLE "Producto" ADD CONSTRAINT "Producto_categoriaId_fkey" FOREIGN KEY ("
 ALTER TABLE "Producto" ADD CONSTRAINT "Producto_tipoProductoId_fkey" FOREIGN KEY ("tipoProductoId") REFERENCES "TipoProducto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Storage" ADD CONSTRAINT "Storage_productoId_fkey" FOREIGN KEY ("productoId") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Storage" ADD CONSTRAINT "Storage_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Storage" ADD CONSTRAINT "Storage_typeStorageId_fkey" FOREIGN KEY ("typeStorageId") REFERENCES "TypeStorage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -712,7 +712,7 @@ ALTER TABLE "Movement" ADD CONSTRAINT "Movement_incomingId_fkey" FOREIGN KEY ("i
 ALTER TABLE "Movement" ADD CONSTRAINT "Movement_outgoingId_fkey" FOREIGN KEY ("outgoingId") REFERENCES "Outgoing"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Movement" ADD CONSTRAINT "Movement_productoId_fkey" FOREIGN KEY ("productoId") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Movement" ADD CONSTRAINT "Movement_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Incoming" ADD CONSTRAINT "Incoming_storageId_fkey" FOREIGN KEY ("storageId") REFERENCES "Storage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
