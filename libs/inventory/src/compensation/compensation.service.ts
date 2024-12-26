@@ -1,16 +1,16 @@
-import { OrderRepository } from '@pay/pay/repositories/order.repository';
+// import { OrderRepository } from '@pay/pay/repositories/order.repository';
 import { TypeMovementRepository } from '../type-movement/repositories/type-movement.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { Order } from '@pay/pay/entities/order.entity';
-import { OrderStatus } from '@pay/pay/interfaces/order.types';
-import { AuditActionType } from '@prisma/client';
+// import { OrderStatus } from '@pay/pay/interfaces/order.types';
+// import { AuditActionType } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CompensationService {
   constructor(
     private readonly typeMovementRepository: TypeMovementRepository,
-    private readonly orderRepository: OrderRepository,
+    // private readonly orderRepository: OrderRepository,
     private readonly auditRepository: AuditService,
   ) {}
 
@@ -20,18 +20,13 @@ export class CompensationService {
         state: false,
       });
 
-      await this.orderRepository.update(order.id, {
-        status: OrderStatus.REQUIRES_ATTENTION,
-        notes: `${order.notes || ''} | Error en creación de movimientos`,
-      });
-
-      await this.auditRepository.create({
-        entityId: order.id,
-        entityType: 'movement',
-        action: AuditActionType.UPDATE,
-        performedById: 'system',
-        createdAt: new Date(),
-      });
+      // await this.auditRepository.create({
+      //   entityId: order.id,
+      //   entityType: 'movementType',
+      //   action: AuditActionType.UPDATE,
+      //   performedById: 'system',
+      //   createdAt: new Date(),
+      // });
     });
   }
 }
