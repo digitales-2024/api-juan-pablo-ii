@@ -208,7 +208,7 @@ export class IncomingService {
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
         movementData.map(async (item) => {
-          const { productoId, quantity } = item;
+          const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
           const idMovement =
@@ -216,7 +216,7 @@ export class IncomingService {
               {
                 movementTypeId,
                 incomingId,
-                productoId,
+                productId,
                 quantity,
                 date,
                 state,
@@ -249,9 +249,9 @@ export class IncomingService {
   }
   private extractProductoIdQuantity(
     movement: Array<{ productId: string; quantity: number }>,
-  ): { productoId: string; quantity: number }[] {
+  ): { productId: string; quantity: number }[] {
     return movement.map((item) => ({
-      productoId: item.productId,
+      productId: item.productId,
       quantity: item.quantity,
     }));
   }
