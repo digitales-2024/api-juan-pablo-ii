@@ -29,6 +29,9 @@ export interface BaseOrderMetadata {
       amount: number;
       description?: string;
     }[];
+    subtotal;
+    tax;
+    total;
   };
   customFields?: Record<string, any>;
 }
