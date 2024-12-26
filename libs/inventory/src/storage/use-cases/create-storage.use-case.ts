@@ -20,7 +20,7 @@ export class CreateStorageUseCase {
     const newStorage = await this.storageRepository.transaction(async () => {
       // Create storage
       const storage = await this.storageRepository.create({
-        productoId: createStorageDto.productoId,
+        productId: createStorageDto.productId,
         name: createStorageDto.name,
         location: createStorageDto.location,
         typeStorageId: createStorageDto.typeStorageId,

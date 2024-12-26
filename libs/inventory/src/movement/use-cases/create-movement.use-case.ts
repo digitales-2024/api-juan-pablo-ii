@@ -23,7 +23,7 @@ export class CreateMovementUseCase {
         movementTypeId: createMovementDto.movementTypeId,
         incomingId: createMovementDto.incomingId,
         outgoingId: createMovementDto.outgoingId,
-        productoId: createMovementDto.productoId,
+        productId: createMovementDto.productId,
         quantity: createMovementDto.quantity,
         date: createMovementDto.date,
         state: createMovementDto.state,

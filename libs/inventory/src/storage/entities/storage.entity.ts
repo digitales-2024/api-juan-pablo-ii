@@ -5,7 +5,7 @@ export class Storage {
   id: string;
 
   @ApiProperty()
-  productoId: string;
+  productId: string;
 
   @ApiProperty()
   name: string;

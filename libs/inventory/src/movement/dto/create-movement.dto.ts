@@ -43,7 +43,7 @@ export class CreateMovementDto {
   })
   @IsString()
   @IsNotEmpty()
-  productoId: string;
+  productId: string;
 
   @ApiProperty({
     description: 'Cantidad de producto que se movió',

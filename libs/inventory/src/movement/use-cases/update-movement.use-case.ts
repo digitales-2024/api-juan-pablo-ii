@@ -25,7 +25,7 @@ export class UpdateMovementUseCase {
           movementTypeId: updateMovementDto.movementTypeId,
           incomingId: updateMovementDto.incomingId,
           outgoingId: updateMovementDto.outgoingId,
-          productoId: updateMovementDto.productoId,
+          productId: updateMovementDto.productId,
           quantity: updateMovementDto.quantity,
           state: updateMovementDto.state,
         });
