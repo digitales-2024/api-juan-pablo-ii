@@ -443,8 +443,8 @@ model Movement {
   Incoming       Incoming?     @relation(fields: [incomingId], references: [id])
   outgoingId     String?
   Outgoing       Outgoing?     @relation(fields: [outgoingId], references: [id])
-  productoId     String
-  Producto       Producto      @relation(fields: [productoId], references: [id])
+  productId      String
+  Producto       Producto      @relation(fields: [productId], references: [id])
   quantity       Float // Cantidad de producto que se movió
   date           DateTime      @default(now()) @db.Timestamptz(6)
   state          Boolean       @default(false) // Estado para registrar si el movimiento ha sido procesado o no
@@ -649,7 +649,7 @@ model Order {
   id             String      @id @default(uuid())
   code           String?
   type           OrderType
-  movementTypeId String? // FK para TipoMovimiento
+  movementTypeId String?
   referenceId    String? // ID of related prescription or consultation
   sourceId       String? // ID de la entidad origen (paciente, etc)
   targetId       String? // ID de la entidad destino (doctor, etc)

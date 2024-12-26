@@ -25,6 +25,7 @@ import {
   ReactivateOrdersUseCase,
   FindOrdersByStatusUseCase,
   SubmitDraftOrderUseCase,
+  CompleteOrderUseCase,
 } from '../use-cases';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 
@@ -42,6 +43,7 @@ export class OrderService {
     private readonly reactivateOrdersUseCase: ReactivateOrdersUseCase,
     private readonly findOrderByStatusUseCase: FindOrdersByStatusUseCase,
     private readonly submitDraftOrderUseCase: SubmitDraftOrderUseCase,
+    private readonly completeOrderUseCase: CompleteOrderUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -287,6 +289,16 @@ export class OrderService {
       return await this.submitDraftOrderUseCase.execute(id, submitDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'submitting');
+    }
+  }
+  async completeOrder(
+    id: string,
+    user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    try {
+      return await this.completeOrderUseCase.execute(id, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
     }
   }
 }

@@ -25,7 +25,7 @@ export class MovementRepository extends BaseRepository<Movement> {
         isActive: true, // Solo registros activos
       },
       select: {
-        productoId: true,
+        productId: true,
         quantity: true,
       },
     });
@@ -33,15 +33,15 @@ export class MovementRepository extends BaseRepository<Movement> {
 
   // Función privada para mapear las cantidades por producto
   private mapProductQuantities(
-    movements: Array<{ productoId: string; quantity: number }>,
+    movements: Array<{ productId: string; quantity: number }>,
   ): { [key: string]: { cantidad: number } } {
     const productQuantities: { [key: string]: { cantidad: number } } = {};
 
     movements.forEach((movement) => {
-      this.initializeProductQuantity(productQuantities, movement.productoId);
+      this.initializeProductQuantity(productQuantities, movement.productId);
       this.updateProductQuantity(
         productQuantities,
-        movement.productoId,
+        movement.productId,
         movement.quantity,
       );
     });
@@ -52,20 +52,20 @@ export class MovementRepository extends BaseRepository<Movement> {
   // Función privada para inicializar la cantidad de un producto
   private initializeProductQuantity(
     productQuantities: { [key: string]: { cantidad: number } },
-    productoId: string,
+    productId: string,
   ) {
-    if (!productQuantities[productoId]) {
-      productQuantities[productoId] = { cantidad: 0 };
+    if (!productQuantities[productId]) {
+      productQuantities[productId] = { cantidad: 0 };
     }
   }
 
   // Función privada para actualizar la cantidad de un producto
   private updateProductQuantity(
     productQuantities: { [key: string]: { cantidad: number } },
-    productoId: string,
+    productId: string,
     quantity: number,
   ) {
-    productQuantities[productoId].cantidad += quantity;
+    productQuantities[productId].cantidad += quantity;
   }
  */
   //fin funcion para obtener los movimientos netos de un producto
@@ -124,11 +124,11 @@ export class MovementRepository extends BaseRepository<Movement> {
       where: {
         incomingId: { in: incomings.map((incoming) => incoming.id) },
         state: true,
-        ...(productId ? { productoId: productId } : {}),
+        ...(productId ? { productId: productId } : {}),
         isActive: true,
       },
       select: {
-        productoId: true,
+        productId: true,
         quantity: true,
       },
     });
@@ -155,12 +155,12 @@ export class MovementRepository extends BaseRepository<Movement> {
     const movements = await this.prisma.movement.findMany({
       where: {
         outgoingId: { in: outgoings.map((outgoing) => outgoing.id) },
-        ...(productId ? { productoId: productId } : {}),
+        ...(productId ? { productId: productId } : {}),
         state: true,
         isActive: true,
       },
       select: {
-        productoId: true,
+        productId: true,
         quantity: true,
       },
     });
@@ -168,9 +168,9 @@ export class MovementRepository extends BaseRepository<Movement> {
     const productQuantities = this.mapProductQuantities(movements);
 
     // Convertir las cantidades a negativas
-    Object.keys(productQuantities).forEach((productoId) => {
-      productQuantities[productoId].cantidad = -Math.abs(
-        productQuantities[productoId].cantidad,
+    Object.keys(productQuantities).forEach((productId) => {
+      productQuantities[productId].cantidad = -Math.abs(
+        productQuantities[productId].cantidad,
       );
     });
 
@@ -179,15 +179,15 @@ export class MovementRepository extends BaseRepository<Movement> {
 
   // Función privada para mapear las cantidades por producto
   private mapProductQuantities(
-    movements: Array<{ productoId: string; quantity: number }>,
+    movements: Array<{ productId: string; quantity: number }>,
   ): { [key: string]: { cantidad: number } } {
     const productQuantities: { [key: string]: { cantidad: number } } = {};
 
     movements.forEach((movement) => {
-      this.initializeProductQuantity(productQuantities, movement.productoId);
+      this.initializeProductQuantity(productQuantities, movement.productId);
       this.updateProductQuantity(
         productQuantities,
-        movement.productoId,
+        movement.productId,
         movement.quantity,
       );
     });
@@ -198,20 +198,20 @@ export class MovementRepository extends BaseRepository<Movement> {
   // Función privada para inicializar la cantidad de un producto
   private initializeProductQuantity(
     productQuantities: { [key: string]: { cantidad: number } },
-    productoId: string,
+    productId: string,
   ) {
-    if (!productQuantities[productoId]) {
-      productQuantities[productoId] = { cantidad: 0 };
+    if (!productQuantities[productId]) {
+      productQuantities[productId] = { cantidad: 0 };
     }
   }
 
   // Función privada para actualizar la cantidad de un producto
   private updateProductQuantity(
     productQuantities: { [key: string]: { cantidad: number } },
-    productoId: string,
+    productId: string,
     quantity: number,
   ) {
-    productQuantities[productoId].cantidad += quantity;
+    productQuantities[productId].cantidad += quantity;
   }
 
   // Función privada para obtener los datos de TypeStorage

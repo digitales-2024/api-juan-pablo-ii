@@ -14,7 +14,7 @@ export class Movement {
   outgoingId?: string;
 
   @ApiProperty()
-  productoId: string;
+  productId: string;
 
   @ApiProperty()
   quantity: number;

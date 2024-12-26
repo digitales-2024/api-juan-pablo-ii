@@ -5,6 +5,7 @@ export enum OrderStatus {
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
   REFUNDED = 'REFUNDED',
+  REQUIRES_ATTENTION = 'REQUIRES_ATTENTION',
 }
 
 export enum OrderType {

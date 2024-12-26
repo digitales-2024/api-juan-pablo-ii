@@ -196,8 +196,6 @@ export class ProductService {
     }
   }
 
-  async findByArray() {}
-
   /**
    * @param name El nombre del producto.
    * @returns Una promesa que resuelve al resultado de la búsqueda, que podría ser una categoría o un conjunto de categorías.
@@ -208,5 +206,13 @@ export class ProductService {
     const result = await this.productRepository.findByName(name);
     // Usa un ternario para verificar si el array está vacío y devuelve true o false
     return result && result.length > 0 ? true : false;
+  }
+
+  async getProductPriceById(productId: string): Promise<number | null> {
+    try {
+      return this.productRepository.getProductPriceById(productId);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
   }
 }

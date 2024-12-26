@@ -48,7 +48,7 @@ export class StorageRepository extends BaseRepository<Storage> {
    * La función realiza una consulta en la tabla `incoming` de la base de datos utilizando Prisma, considerando los siguientes criterios:
    * - Filtra los registros asociados al almacén especificado por `storageId`.
    * - Considera solo registros marcados como activos (`isActive: true`).
-   * - Selecciona los movimientos (`Movement`) relacionados para obtener los identificadores de los productos (`productoId`).
+   * - Selecciona los movimientos (`Movement`) relacionados para obtener los identificadores de los productos (`productId`).
    * - Elimina duplicados para devolver solo los identificadores únicos de los productos.
    *
    * @throws {Error} Si ocurre algún problema con la consulta a la base de datos.
@@ -61,7 +61,7 @@ export class StorageRepository extends BaseRepository<Storage> {
       },
       select: {
         Movement: {
-          select: { productoId: true },
+          select: { productId: true },
         },
       },
     });
@@ -69,8 +69,36 @@ export class StorageRepository extends BaseRepository<Storage> {
     // Extraer IDs únicos de los productos
     return [
       ...new Set(
-        products.flatMap((p) => p.Movement.map((m) => ({ id: m.productoId }))),
+        products.flatMap((p) => p.Movement.map((m) => ({ id: m.productId }))),
       ),
     ];
+  }
+
+  /**
+   * Obtiene el stock de un producto específico en un almacén específico.
+   *
+   * @param storageId - El identificador único del almacén.
+   * @param productId - El identificador único del producto.
+   * @returns Una promesa que resuelve al stock del producto en el almacén.
+   *
+   * @example
+   * ```typescript
+   * const stock = await storageRepository.getStockByStorageAndProduct('12345', 'prod1');
+   * console.log(stock); // { stock: 100 }
+   * ```
+   *
+   * @throws {Error} Si ocurre algún problema con la consulta a la base de datos.
+   */
+  async getStockByStorageAndProduct(
+    storageId: string,
+    productId: string,
+  ): Promise<{ stock: number }> {
+    return this.prisma.storage.findUnique({
+      where: {
+        id: storageId,
+        productId: productId,
+      },
+      select: { stock: true },
+    });
   }
 }
