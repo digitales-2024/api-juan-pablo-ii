@@ -83,7 +83,7 @@ import {
 } from './outgoing/use-cases';
 import { StockController } from './stock/controllers/stock.controller';
 import { StockService } from './stock/services/stock.service';
-import { InventoryEventSubscriber } from './events/inventory-event.subscriber.';
+import { InventoryEventSubscriber } from './events/inventory-event.subscriber';
 import { CompensationService } from './compensation/compensation.service';
 
 @Module({
