@@ -83,6 +83,8 @@ import {
 } from './outgoing/use-cases';
 import { StockController } from './stock/controllers/stock.controller';
 import { StockService } from './stock/services/stock.service';
+import { InventoryEventSubscriber } from './events/inventory-event.subscriber';
+import { CompensationService } from './compensation/compensation.service';
 
 @Module({
   controllers: [
@@ -164,6 +166,9 @@ import { StockService } from './stock/services/stock.service';
     ReactivateOutgoingUseCase,
     //stock
     StockService,
+
+    InventoryEventSubscriber,
+    CompensationService,
   ],
   exports: [
     InventoryModule,
@@ -176,6 +181,9 @@ import { StockService } from './stock/services/stock.service';
     MovementService,
     IncomingService,
     OutgoingService,
+    IncomingRepository,
+    OutgoingRepository,
+    MovementRepository,
   ],
 })
 export class InventoryModule {}

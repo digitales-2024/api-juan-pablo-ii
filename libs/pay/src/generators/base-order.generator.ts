@@ -21,6 +21,7 @@ export abstract class BaseOrderGenerator implements IOrderGenerator {
       date: new Date(),
       status: OrderStatus.PENDING,
       currency: 'PEN', // Default moneda
+      metadata: {},
     };
   }
 

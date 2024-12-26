@@ -10,7 +10,7 @@ export class CreateStorageDto {
   })
   @IsString()
   @IsNotEmpty()
-  productoId: string;
+  productId: string;
 
   @ApiProperty({
     description: 'Nombre del almacén',

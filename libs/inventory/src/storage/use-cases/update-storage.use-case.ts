@@ -22,7 +22,7 @@ export class UpdateStorageUseCase {
       async () => {
         // Update storage
         const storage = await this.storageRepository.update(id, {
-          productoId: updateStorageDto.productoId,
+          productId: updateStorageDto.productId,
           name: updateStorageDto.name,
           location: updateStorageDto.location,
           typeStorageId: updateStorageDto.typeStorageId,

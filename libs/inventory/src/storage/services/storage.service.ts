@@ -193,4 +193,26 @@ export class StorageService {
     const result = await this.storageRepository.findByField('name', name);
     return result && result.length > 0 ? true : false;
   }
+
+  /**
+   * Obtiene el stock de un producto en un almacén específico
+   * @param storageId - ID del almacén
+   * @param productId - ID del producto
+   * @returns Una promesa que resuelve con el stock del producto en el almacén
+   * @throws {Error} Si ocurre un error al obtener el stock
+   */
+  async getStockByStorageAndProduct(
+    storageId: string,
+    productId: string,
+  ): Promise<number> {
+    try {
+      const stock = await this.storageRepository.getStockByStorageAndProduct(
+        storageId,
+        productId,
+      );
+      return stock.stock;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
 }
