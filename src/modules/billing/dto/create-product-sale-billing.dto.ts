@@ -8,8 +8,10 @@ import {
   IsArray,
   ValidateNested,
   Min,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaymentMethod } from '@pay/pay/interfaces/payment.types';
 
 export class ProductSaleItemDto {
   @ApiProperty({
@@ -95,6 +97,17 @@ export class CreateProductSaleBillingDto {
   @IsString()
   @IsOptional()
   currency?: string;
+
+  @ApiProperty({
+    description: 'Método de pago',
+    default: 'CASH',
+
+    enum: PaymentMethod,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
 
   @ApiProperty({
     description: 'Notas adicionales',

@@ -14,8 +14,8 @@ import {
   PaymentType,
 } from '@pay/pay/interfaces/payment.types';
 import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
-import { StockService } from '@inventory/inventory/stock/services/stock.service';
 import { ProductSaleMetadata } from '../interfaces/metadata.interfaces';
+import { StorageService } from '@inventory/inventory/storage/services/storage.service';
 
 @Injectable()
 export class CreateProductSaleOrderUseCase {
@@ -25,7 +25,7 @@ export class CreateProductSaleOrderUseCase {
     private readonly auditService: AuditService,
     private readonly paymentService: PaymentService,
     private readonly typeMovementService: TypeMovementService,
-    private readonly stockService: StockService,
+    private readonly storageService: StorageService,
   ) {}
 
   async execute(
@@ -43,6 +43,7 @@ export class CreateProductSaleOrderUseCase {
           description: `Sale movement - ${new Date().toISOString()}`,
           state: false,
           isIncoming: false,
+          tipoExterno: 'SALE',
         },
         user,
       );
@@ -70,28 +71,45 @@ export class CreateProductSaleOrderUseCase {
         },
       };
 
-      // Create the order
+      // Create the order without movementTypeId
       const order = await this.orderService.createOrder(
         OrderType.PRODUCT_SALE_ORDER,
         {
           ...createDto,
           type: OrderType.PRODUCT_SALE_ORDER,
-          movementTypeId: movementType.data.id,
           status: OrderStatus.PENDING,
           metadata,
+          sourceId: createDto.storageId,
+          currency: createDto.currency || 'PEN',
+          referenceId: createDto.referenceId || '',
         },
       );
 
-      // Create pending payment
+      // Update the movement type with the order ID
+      await this.typeMovementService.update(
+        movementType.data.id,
+        {
+          orderId: order.id,
+          description: `Sale movement for order ${order.code}`,
+        },
+        user,
+      );
+
+      // Update the order with movementTypeId
+      await this.orderRepository.update(order.id, {
+        movementTypeId: movementType.data.id,
+      });
+
+      // Create pending payment with the calculated total
       await this.paymentService.create(
         {
           orderId: order.id,
-          amount: order.total,
+          amount: order.total, // This total already includes tax
           status: PaymentStatus.PENDING,
           type: PaymentType.REGULAR,
           description: `Payment pending for sale - ${order.code}`,
           date: new Date(),
-          paymentMethod: PaymentMethod.CASH,
+          paymentMethod: createDto.paymentMethod ?? PaymentMethod.CASH,
         },
         user,
       );
@@ -115,14 +133,14 @@ export class CreateProductSaleOrderUseCase {
 
   private async validateStock(dto: CreateProductSaleBillingDto) {
     for (const product of dto.products) {
-      const stock = await this.stockService.getStockByStorageProduct(
+      const stock = await this.storageService.getStockByStorageAndProduct(
         dto.storageId,
         product.productId,
       );
 
-      if (!stock || stock.totalStock < product.quantity) {
+      if (!stock || stock < product.quantity) {
         throw new BadRequestException(
-          `Insufficient stock for product ${product.productId}. Available: ${stock?.totalStock || 0}, Requested: ${product.quantity}`,
+          `Insufficient stock for product ${product.productId}`,
         );
       }
     }

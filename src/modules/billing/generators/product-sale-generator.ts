@@ -1,7 +1,8 @@
 import { BaseOrderGenerator } from '@pay/pay/generators/base-order.generator';
 import { IOrder } from '@pay/pay/interfaces';
 import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Inject } from '@nestjs/common';
+import { ProductService } from '@inventory/inventory/product/services/product.service';
 import {
   CreateProductSaleBillingDto,
   ProductSaleItemDto,
@@ -16,22 +17,25 @@ import { ProductSaleMetadata } from '../interfaces/metadata.interfaces';
 export class ProductSaleGenerator extends BaseOrderGenerator {
   type = OrderType.PRODUCT_SALE_ORDER;
 
+  constructor(
+    @Inject(ProductService)
+    private readonly productService: ProductService,
+  ) {
+    super();
+  }
+
   async generate(input: CreateProductSaleBillingDto): Promise<IOrder> {
-    // Validar productos y stock (esta validación debería hacerse en el use case)
     await this.validateProducts(input.products);
 
-    // Calcular subtotal
-    const subtotal = await this.calculateTotal(input);
-    const { tax, total } = await this.calculateTotals(subtotal);
+    // Calcular subtotal y obtener detalles de productos
+    const { subtotal, productDetails } = await this.calculateProductTotals(
+      input.products,
+    );
+    const tax = subtotal * 0.18; // 18% IGV
+    const total = subtotal + tax;
 
-    // Preparar metadata para la orden
     const metadata: ProductSaleMetadata = {
-      services: input.products.map((product) => ({
-        id: product.productId,
-        name: '', // Se llenará desde el servicio de productos
-        quantity: product.quantity,
-        subtotal: 0, // Se calculará basado en el precio del producto
-      })),
+      services: productDetails, // Ahora incluye nombre y subtotal por producto
       orderDetails: {
         transactionType: 'SALE',
         storageId: input.storageId,
@@ -45,7 +49,11 @@ export class ProductSaleGenerator extends BaseOrderGenerator {
         location: input.storageLocation || '',
         batch: input.batchNumber,
       },
-      transactionDetails: {},
+      transactionDetails: {
+        subtotal,
+        tax,
+        total,
+      },
       customFields: input.metadata,
     };
 
@@ -107,8 +115,36 @@ export class ProductSaleGenerator extends BaseOrderGenerator {
       return input.metadata.totalAmount;
     }
 
-    // En un escenario real, esto requeriría un servicio de productos para obtener precios
-    // Por ahora, devolvemos 0 para que el use case maneje los detalles específicos
     return 0;
+  }
+
+  private async calculateProductTotals(products: ProductSaleItemDto[]) {
+    let subtotal = 0;
+    const productDetails = [];
+
+    for (const product of products) {
+      const price = await this.productService.getProductPriceById(
+        product.productId,
+      );
+      if (!price) {
+        throw new BadRequestException(
+          `No se pudo obtener el precio del producto ${product.productId}`,
+        );
+      }
+
+      const productSubtotal = price * product.quantity;
+      subtotal += productSubtotal;
+
+      const productInfo = await this.productService.findOne(product.productId);
+      productDetails.push({
+        id: product.productId,
+        name: productInfo.name,
+        quantity: product.quantity,
+        price,
+        subtotal: productSubtotal,
+      });
+    }
+
+    return { subtotal, productDetails };
   }
 }
