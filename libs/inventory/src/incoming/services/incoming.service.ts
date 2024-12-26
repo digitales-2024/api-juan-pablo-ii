@@ -16,6 +16,9 @@ import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handle
 import { incomingErrorMessages } from '../errors/errors-incoming';
 import { DeleteIncomingDto } from '../dto';
 import { DeleteIncomingUseCase, ReactivateIncomingUseCase } from '../use-cases';
+import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
+import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
+import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
 
 @Injectable()
 export class IncomingService {
@@ -28,6 +31,8 @@ export class IncomingService {
     private readonly updateIncomingUseCase: UpdateIncomingUseCase,
     private readonly deleteIncomingUseCase: DeleteIncomingUseCase,
     private readonly reactivateIncomingUseCase: ReactivateIncomingUseCase,
+    private readonly createTypeMovementUseCase: CreateTypeMovementUseCase,
+    private readonly createMovementUseCase: CreateMovementUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -165,5 +170,89 @@ export class IncomingService {
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
     }
+  }
+
+  //crear ingreso de productos al alamacen
+
+  async createIncoming(
+    createIncomingDtoStorage: CreateIncomingDtoStorage,
+    user: UserData,
+  ): Promise<HttpResponse<string>> {
+    try {
+      // Extraer los datos necesarios del DTO
+      const { movement, state, name, storageId, date } =
+        createIncomingDtoStorage;
+      const isIncoming = true;
+
+      console.log('idIncoming', storageId);
+      // Llamar a createIncomingUseCase y esperar el ID del registro del nuevo ingreso
+      const incomingId = await this.createIncomingUseCase.createIncomingStorage(
+        createIncomingDtoStorage,
+        user,
+      );
+
+      // Llamar a createTypeMovementUseCase y esperar el ID del nuevo tipo movimiento
+      const movementTypeId =
+        await this.createTypeMovementUseCase.createTypeMovementStorage(
+          {
+            name,
+            state,
+            isIncoming,
+          },
+          user,
+        );
+
+      // Extraer los datos de movement y usarlos en createMovementStorage
+      const movementData = await this.extractProductoIdQuantity(movement);
+
+      // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
+      await Promise.all(
+        movementData.map(async (item) => {
+          const { productoId, quantity } = item;
+
+          // Llamar a createMovementStorage
+          const idMovement =
+            await this.createMovementUseCase.createMovementStorage(
+              {
+                movementTypeId,
+                incomingId,
+                productoId,
+                quantity,
+                date,
+                state,
+              },
+              user,
+            );
+
+          console.log(`Movimiento creado con ID: ${idMovement}`);
+        }),
+      );
+      // registra ingreso al alamacen y al stock
+
+      return {
+        statusCode: HttpStatus.CREATED, // Código de estado HTTP 201
+        message: 'Ingreso creado exitosamente',
+        data: `${incomingId} -  ${movementTypeId}} `, // El ID del nuevo ingreso
+      };
+      //
+      //
+    } catch (error) {
+      this.errorHandler.handleError(error, 'creating');
+
+      // Retornar un objeto de error con un código de estado adecuado
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR, // o el código que consideres apropiado
+        message: 'Error al crear el ingreso',
+        data: null, // o puedes incluir más información sobre el error si es necesario
+      };
+    }
+  }
+  private extractProductoIdQuantity(
+    movement: Array<{ productId: string; quantity: number }>,
+  ): { productoId: string; quantity: number }[] {
+    return movement.map((item) => ({
+      productoId: item.productId,
+      quantity: item.quantity,
+    }));
   }
 }

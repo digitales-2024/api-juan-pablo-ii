@@ -5,9 +5,6 @@ export class Storage {
   id: string;
 
   @ApiProperty()
-  productoId: string;
-
-  @ApiProperty()
   name: string;
 
   @ApiProperty()
@@ -15,7 +12,4 @@ export class Storage {
 
   @ApiProperty()
   typeStorageId: string;
-
-  @ApiProperty()
-  stock: number;
 }

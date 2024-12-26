@@ -22,11 +22,9 @@ export class UpdateStorageUseCase {
       async () => {
         // Update storage
         const storage = await this.storageRepository.update(id, {
-          productoId: updateStorageDto.productoId,
           name: updateStorageDto.name,
           location: updateStorageDto.location,
           typeStorageId: updateStorageDto.typeStorageId,
-          stock: updateStorageDto.stock,
         });
 
         // Register audit

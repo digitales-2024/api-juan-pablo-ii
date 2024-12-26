@@ -144,4 +144,25 @@ export class StockService {
   }
 
   //fin funcion
+
+  //funfion para actualizar el stock con el estock actual esta funcion es delicada si no se tiene un control correcto de ingresos y salidas en fisico
+  /*   async updateStock(
+    productId: string,
+    stock: number,
+    storageId?: string,
+    
+  ): Promise<void> {
+    try {
+      const stock = await this.getStockByProduct(productId);
+      const updatedStock = stock.totalStock + quantity;
+      await this.storageService.updateStock(productId, updatedStock, storageId);
+    } catch (error) {
+      this.logger.error(
+        `Error updating stock for product ${productId} in storage ${storageId}`,
+        error,
+      );
+      throw error;
+    }
+  } */
+  //fin
 }

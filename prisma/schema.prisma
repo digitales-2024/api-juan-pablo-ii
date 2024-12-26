@@ -369,8 +369,8 @@ model Producto {
   updatedAt DateTime @updatedAt
 
   // Relación con el inventario (Almacen)
-  Storage  Storage[] // Relación con Almacen (para el inventario)
   Movement Movement[]
+  Stock    Stock[]
 }
 
 model TypeStorage {
@@ -389,20 +389,32 @@ model TypeStorage {
 //tabla almacen
 model Storage {
   id            String      @id @default(uuid())
-  productoId    String
-  Producto      Producto    @relation(fields: [productoId], references: [id])
   name          String // Nombre del almacén
   location      String? // Ubicación física del almacén
   typeStorageId String
   TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
+  Incoming      Incoming[] // Relación con Ingreso
+  Outgoing      Outgoing[] // Relación con Salida
+  isActive      Boolean     @default(true) // Campo para controlar si está activo o no
+  createdAt     DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt
+  Stock         Stock[]
+}
 
-  stock Float @default(0) // Stock disponible en este almacén
+model Stock {
+  id        String  @id @default(uuid())
+  storageId String // Relación con Storage
+  Storage   Storage @relation(fields: [storageId], references: [id])
 
-  Incoming  Incoming[] // Relación con Ingreso
-  Outgoing  Outgoing[] // Relación con Salida
-  isActive  Boolean    @default(true) // Campo para controlar si está activo o no
-  createdAt DateTime   @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime   @updatedAt
+  productoId String // Relación con Producto
+  Producto   Producto @relation(fields: [productoId], references: [id])
+
+  stock  Float    @default(0) // Cantidad del producto en el almacén
+  isActive  Boolean  @default(true) // Control de registros activos
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+
+  @@unique([storageId, productoId]) // Evitar duplicados de un producto en el mismo almacén
 }
 
 //tabla tipo movimiento
