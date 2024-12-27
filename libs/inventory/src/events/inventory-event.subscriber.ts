@@ -11,7 +11,7 @@ import {
   ProductSaleMetadata,
   ProductPurchaseMetadata,
 } from 'src/modules/billing/interfaces/metadata.interfaces';
-import { StorageService } from '../storage/services/storage.service';
+import { StockRepository } from '../stock/repositories/stock.repository';
 
 /**
  * Suscriptor de eventos para el manejo de inventario.
@@ -23,19 +23,10 @@ export class InventoryEventSubscriber {
   /** Logger para el registro de eventos y errores */
   private readonly logger = new Logger(InventoryEventSubscriber.name);
 
-  /**
-   * Constructor del suscriptor de eventos de inventario
-   * @param {MovementRepository} movementRepository - Repositorio para gestionar movimientos
-   * @param {TypeMovementRepository} typeMovementRepository - Repositorio para tipos de movimientos
-   * @param {StockService} stockService - Servicio para gestionar el stock
-   * @param {CompensationService} compensationService - Servicio para compensación de errores
-   * @param {IncomingRepository} incomingRepository - Repositorio para entradas
-   * @param {OutgoingRepository} outgoingRepository - Repositorio para salidas
-   */
   constructor(
     private readonly movementRepository: MovementRepository,
     private readonly typeMovementRepository: TypeMovementRepository,
-    private readonly storageService: StorageService,
+    private readonly stockRepository: StockRepository,
     private readonly compensationService: CompensationService,
     private readonly incomingRepository: IncomingRepository,
     private readonly outgoingRepository: OutgoingRepository,
@@ -64,6 +55,9 @@ export class InventoryEventSubscriber {
 
     try {
       const { order } = payload;
+
+      // aqui añádir logica para el caso de que la orden sea OrderType.MEDICAL_CONSULTATION_ORDER,
+      // debe de crear un evento de cita para el calendario
 
       if (!this.shouldProcessInventory(order)) {
         this.logger.log(
@@ -192,6 +186,8 @@ export class InventoryEventSubscriber {
       if (order.type === OrderType.PRODUCT_SALE_ORDER) {
         await this.validateStock(order, product);
       }
+
+      // aqui xd funcion para descontar stock
     }
   }
   /**
@@ -250,12 +246,13 @@ export class InventoryEventSubscriber {
         quantity: product.quantity,
       });
 
-      const stock = await this.storageService.getStockByStorageAndProduct(
-        storageId,
-        product.productId,
-      );
-
-      if (stock < 0) {
+      const stockActual =
+        await this.stockRepository.getStockByStorageAndProduct(
+          storageId,
+          product.productId,
+        );
+      this.logger.log('stockActual:', stockActual);
+      if (stockActual.stock < 0) {
         throw new Error(
           `Invalid stock movement: Negative stock for product ${product.productId} in storage ${storageId}`,
         );
