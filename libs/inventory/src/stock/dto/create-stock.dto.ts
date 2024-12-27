@@ -18,7 +18,7 @@ export class CreateStockDto {
   })
   @IsString()
   @IsNotEmpty()
-  productoId: string;
+  productId: string;
 
   @ApiProperty({
     description: 'Stock disponible en este almacén',
@@ -28,4 +28,13 @@ export class CreateStockDto {
   @IsNumber()
   @IsNotEmpty()
   stock: number;
+
+  @ApiProperty({
+    description: 'Stock disponible en este almacén',
+    example: 100.0,
+    required: true,
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  price: number;
 }

@@ -85,6 +85,9 @@ import { StockController } from './stock/controllers/stock.controller';
 import { StockService } from './stock/services/stock.service';
 import { InventoryEventSubscriber } from './events/inventory-event.subscriber';
 import { CompensationService } from './compensation/compensation.service';
+import { StockRepository } from './stock/repositories/stock.repository';
+import { UpdateStockUseCase } from './stock/use-cases/update-storage.use-case';
+import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
 
 @Module({
   controllers: [
@@ -166,6 +169,9 @@ import { CompensationService } from './compensation/compensation.service';
     ReactivateOutgoingUseCase,
     //stock
     StockService,
+    StockRepository,
+    UpdateStockUseCase,
+    CreateStockUseCase,
 
     InventoryEventSubscriber,
     CompensationService,
@@ -184,6 +190,10 @@ import { CompensationService } from './compensation/compensation.service';
     IncomingRepository,
     OutgoingRepository,
     MovementRepository,
+    StockService,
+    StockRepository,
+    UpdateStockUseCase,
+    CreateStockUseCase,
   ],
 })
 export class InventoryModule {}

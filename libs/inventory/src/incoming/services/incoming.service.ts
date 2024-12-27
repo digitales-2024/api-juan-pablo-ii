@@ -19,6 +19,7 @@ import { DeleteIncomingUseCase, ReactivateIncomingUseCase } from '../use-cases';
 import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
+import { StockService } from '@inventory/inventory/stock/services/stock.service';
 
 @Injectable()
 export class IncomingService {
@@ -33,6 +34,7 @@ export class IncomingService {
     private readonly reactivateIncomingUseCase: ReactivateIncomingUseCase,
     private readonly createTypeMovementUseCase: CreateTypeMovementUseCase,
     private readonly createMovementUseCase: CreateMovementUseCase,
+    private readonly stockService: StockService,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -227,8 +229,25 @@ export class IncomingService {
           console.log(`Movimiento creado con ID: ${idMovement}`);
         }),
       );
-      // registra ingreso al alamacen y al stock
+      //registra y sumar ingreso al alamacen y al stock
+      // Extraer los datos de movement y usarlos en createMovementStorage
+      const stockData = await this.extractProductoIdQuantity(movement);
+      // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
+      await Promise.all(
+        stockData.map(async (item) => {
+          const { productId, quantity } = item;
 
+          // Llamar a createMovementStorage
+          const idStock = await this.stockService.createOrUpdateStock(
+            storageId,
+            productId,
+            quantity,
+            user,
+          );
+
+          console.log(`Movimiento creado con ID: ${idStock}`);
+        }),
+      );
       return {
         statusCode: HttpStatus.CREATED, // Código de estado HTTP 201
         message: 'Ingreso creado exitosamente',

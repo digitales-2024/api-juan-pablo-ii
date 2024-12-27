@@ -8,8 +8,11 @@ export class Stock {
   storageId: string;
 
   @ApiProperty()
-  productoId: string;
+  productId: string;
 
   @ApiProperty()
   stock: number;
+
+  @ApiProperty()
+  price: number;
 }

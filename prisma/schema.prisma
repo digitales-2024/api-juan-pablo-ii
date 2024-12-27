@@ -406,15 +406,16 @@ model Stock {
   storageId String // Relación con Storage
   Storage   Storage @relation(fields: [storageId], references: [id])
 
-  productoId String // Relación con Producto
-  Producto   Producto @relation(fields: [productoId], references: [id])
+  productId String // Relación con Producto
+  Producto   Producto @relation(fields: [productId], references: [id])
 
   stock  Float    @default(0) // Cantidad del producto en el almacén
+  price  Float    @default(0) // Precio de venta del producto en el almacén
   isActive  Boolean  @default(true) // Control de registros activos
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 
-  @@unique([storageId, productoId]) // Evitar duplicados de un producto en el mismo almacén
+  @@unique([storageId, productId]) // Evitar duplicados de un producto en el mismo almacén
 }
 
 //tabla tipo movimiento

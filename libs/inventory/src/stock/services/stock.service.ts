@@ -1,139 +1,70 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { StockDto } from '../dto';
-import { IncomingRepository } from '@inventory/inventory/incoming/repositories/incoming.repository';
-import { OutgoingRepository } from '@inventory/inventory/outgoing/repositories/outgoing.repository';
-import { MovementRepository } from '@inventory/inventory/movement/repositories/movement.repository';
-import { StorageRepository } from '@inventory/inventory/storage/repositories/storage.repository';
-import { IncomingService } from '@inventory/inventory/incoming/services/incoming.service';
-import { OutgoingService } from '@inventory/inventory/outgoing/services/outgoing.service';
-import { MovementService } from '@inventory/inventory/movement/services/movement.service';
-import { StorageService } from '@inventory/inventory/storage/services/storage.service';
+
+import { StockRepository } from '../repositories/stock.repository';
+import { UpdateStockUseCase } from '../use-cases/update-storage.use-case';
+import { CreateStockUseCase } from '../use-cases/create-storage.use-case';
+import { UserData } from '@login/login/interfaces';
 
 @Injectable()
 export class StockService {
   private readonly logger = new Logger(StockService.name);
 
   constructor(
-    private readonly incomingService: IncomingService,
-    private readonly outgoingService: OutgoingService,
-    private readonly movementService: MovementService,
-    private readonly storageService: StorageService,
-    private readonly storageRepository: StorageRepository,
-    private readonly incomingRepository: IncomingRepository,
-    private readonly outgoingRepository: OutgoingRepository,
-    private readonly movementRepository: MovementRepository,
+    private readonly stockRepository: StockRepository,
+    private readonly updateStockUseCase: UpdateStockUseCase,
+    private readonly createStockUseCase: CreateStockUseCase,
   ) {}
 
-  //funcion para obtener el stock de un producto en todos los almacenes
-  async getStockByProduct(productId: string): Promise<StockDto> {
-    const incomingData =
-      await this.incomingRepository.getProductsTotalQuantityIncoming();
-    const outgoingData =
-      await this.outgoingRepository.getProductsTotalQuantityOutgoing();
-    //const movementData =
-    //await this.movementRepository.getProductsTotalQuantityMovement();
-
-    const incoming = incomingData[productId]?.cantidad || 0;
-    const outgoing = outgoingData[productId]?.cantidad || 0;
-    //const movements = movementData[productId]?.cantidad || 0;
-
-    const totalStock = incoming + outgoing;
-
-    return { productId, totalStock };
+  // Función para obtener el stock de un producto en todos los almacenes
+  async getStockByProduct(productId: string): Promise<StockDto[]> {
+    try {
+      const byStock = await this.stockRepository.getStockByIdStorageByIdProduct(
+        undefined,
+        productId,
+      );
+      return byStock;
+    } catch (error) {
+      this.logger.error(`Error fetching stock for product ${productId}`, error);
+      throw error;
+    }
   }
-  //fin funcion
 
-  //funcion para obtener el stock en un almacen especifico
-
+  // Función para obtener el stock de un almacén específico
   async getStockByStorage(storageId: string): Promise<StockDto[]> {
-    // Agrupar productos por almacén y calcular stock
-    const productsInStorage =
-      await this.storageRepository.getProductsByStorage(storageId);
-    return Promise.all(
-      productsInStorage.map(async (product) => {
-        const stock = await this.getStockByProduct(product.id);
-        return { ...stock, storageId };
-      }),
-    );
+    try {
+      const byStock =
+        await this.stockRepository.getStockByIdStorageByIdProduct(storageId);
+      return byStock;
+    } catch (error) {
+      this.logger.error(`Error fetching stock for storage ${storageId}`, error);
+      throw error;
+    }
   }
 
-  //fin funcion
-
-  //funcion para obtener el stock de todos los almacenes
+  // Función para obtener todos los stocks de todos los almacenes
   async getStockForAllStorages(): Promise<any> {
     try {
-      const stockByStorage = await this.movementRepository.getStockByStorage();
-      console.log(stockByStorage);
-      const updatedStockByStorage = this.updateStockInJson(stockByStorage);
-      console.log(updatedStockByStorage);
-      return updatedStockByStorage;
+      const byStock =
+        await this.stockRepository.getStockByIdStorageByIdProduct();
+      return byStock;
     } catch (error) {
       this.logger.error('Error fetching stock for all storages', error);
       throw error;
     }
   }
 
-  // Función privada para calcular el stock de cada producto
-  private calculateStock(
-    incoming: { [key: string]: { cantidad: number } },
-    outgoing: { [key: string]: { cantidad: number } },
-  ): { [key: string]: { cantidad: number } } {
-    const stock: { [key: string]: { cantidad: number } } = {};
-
-    // Combinar las cantidades de incoming y outgoing
-    this.mergeQuantities(stock, incoming);
-    this.mergeQuantities(stock, outgoing, true);
-
-    return stock;
-  }
-
-  // Función privada para combinar las cantidades de productos
-  private mergeQuantities(
-    stock: { [key: string]: { cantidad: number } },
-    quantities: { [key: string]: { cantidad: number } },
-    isOutgoing: boolean = false,
-  ) {
-    Object.keys(quantities).forEach((productId) => {
-      if (!stock[productId]) {
-        stock[productId] = { cantidad: 0 };
-      }
-      stock[productId].cantidad += isOutgoing
-        ? -Math.abs(quantities[productId].cantidad)
-        : quantities[productId].cantidad;
-    });
-  }
-
-  // Función privada para actualizar el JSON con el stock calculado
-  private updateStockInJson(stockByStorage: any): any {
-    const updatedStockByStorage = { ...stockByStorage };
-
-    Object.keys(updatedStockByStorage.almacenes).forEach((storageId) => {
-      const storage = updatedStockByStorage.almacenes[storageId];
-      const stock = this.calculateStock(storage.incoming, storage.outgoing);
-      storage.stock = stock;
-      delete storage.incoming;
-      delete storage.outgoing;
-    });
-
-    return updatedStockByStorage;
-  }
-  //fin funcion
-
-  // Función pública para obtener el stock por un almacén específico y un producto específico
+  // Función para obtener el stock de un almacén específico y de un producto específico
   async getStockByStorageProduct(
     storageId: string,
     productId: string,
   ): Promise<StockDto> {
     try {
-      const stockByStorage =
-        await this.movementRepository.getStockByStorageIdProductId(
-          storageId,
-          productId,
-        );
-      console.log(JSON.stringify(stockByStorage, null, 2));
-      const updatedStockByStorage = this.updateStockInJson(stockByStorage);
-      console.log(JSON.stringify(updatedStockByStorage, null, 2));
-      return updatedStockByStorage;
+      const byStock = await this.stockRepository.getStockByIdStorageByIdProduct(
+        storageId,
+        productId,
+      );
+      return byStock;
     } catch (error) {
       this.logger.error(
         `Error fetching stock for storage ${storageId} and product ${productId}`,
@@ -143,19 +74,65 @@ export class StockService {
     }
   }
 
-  //fin funcion
-
+  //no tocar
   //funfion para actualizar el stock con el estock actual esta funcion es delicada si no se tiene un control correcto de ingresos y salidas en fisico
-  /*   async updateStock(
+  async createOrUpdateStock(
+    storageId: string,
     productId: string,
-    stock: number,
-    storageId?: string,
-    
+    quantity: number,
+    user: UserData,
   ): Promise<void> {
     try {
-      const stock = await this.getStockByProduct(productId);
-      const updatedStock = stock.totalStock + quantity;
-      await this.storageService.updateStock(productId, updatedStock, storageId);
+      //ontener el stock actual
+      const stockActual =
+        await this.stockRepository.getStockByStorageAndProduct(
+          storageId,
+          productId,
+        );
+      //obtener el precio del producto por unidad
+      const priceProduct =
+        await this.stockRepository.getPriceProduct(productId);
+
+      if (!priceProduct) {
+        throw new Error(`Price not found for product ${productId}`);
+      }
+
+      const priceUnit = priceProduct.price;
+
+      if (stockActual) {
+        //obtener el id del stock
+        const stockId = await this.stockRepository.getByIdStock(
+          storageId,
+          productId,
+        );
+
+        const IdStock = stockId.id;
+        const newStock = stockActual.stock + quantity;
+        const totalPrice = priceUnit * newStock;
+
+        await this.updateStockUseCase.execute(
+          IdStock,
+          {
+            storageId,
+            productId,
+            stock: newStock,
+            price: totalPrice,
+          },
+          user,
+        );
+      } else {
+        const totalPrice = priceUnit * quantity;
+
+        await this.createStockUseCase.execute(
+          {
+            storageId,
+            productId,
+            stock: quantity,
+            price: totalPrice,
+          },
+          user,
+        );
+      }
     } catch (error) {
       this.logger.error(
         `Error updating stock for product ${productId} in storage ${storageId}`,
@@ -163,6 +140,6 @@ export class StockService {
       );
       throw error;
     }
-  } */
+  }
   //fin
 }
