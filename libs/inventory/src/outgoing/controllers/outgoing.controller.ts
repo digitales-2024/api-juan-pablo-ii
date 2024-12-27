@@ -26,6 +26,7 @@ import {
   DeleteOutgoingDto,
 } from '../dto';
 import { Outgoing } from '../entities/outgoing.entity';
+import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 
 /**
  * Controlador REST para gestionar salidas.
@@ -150,5 +151,25 @@ export class OutgoingController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Outgoing[]>> {
     return this.outgoingService.reactivateMany(deleteOutgoingDto.ids, user);
+  }
+
+  /**
+   * crear ingreso a almacen directo
+   */
+  @Post('create/outgoingStorage')
+  @ApiOperation({ summary: 'Crear nueva salida directa de alamacen' })
+  @ApiResponse({
+    status: 201,
+    description: 'Salida de almacen creada exitosamente',
+    type: Outgoing,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de salida inválidos o salida ya existe',
+  })
+  createOutgoing(
+    @Body() createOutgoingDtoStorage: CreateOutgoingDtoStorage,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<string>> {
+    return this.outgoingService.createOutgoing(createOutgoingDtoStorage, user);
   }
 }

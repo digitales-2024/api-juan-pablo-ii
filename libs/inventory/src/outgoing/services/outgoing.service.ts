@@ -16,6 +16,10 @@ import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handle
 import { outgoingErrorMessages } from '../errors/errors-outgoing';
 import { DeleteOutgoingDto } from '../dto';
 import { DeleteOutgoingUseCase, ReactivateOutgoingUseCase } from '../use-cases';
+import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
+import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
+import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
+import { StockService } from '@inventory/inventory/stock/services/stock.service';
 
 @Injectable()
 export class OutgoingService {
@@ -28,6 +32,9 @@ export class OutgoingService {
     private readonly updateOutgoingUseCase: UpdateOutgoingUseCase,
     private readonly deleteOutgoingUseCase: DeleteOutgoingUseCase,
     private readonly reactivateOutgoingUseCase: ReactivateOutgoingUseCase,
+    private readonly createTypeMovementUseCase: CreateTypeMovementUseCase,
+    private readonly createMovementUseCase: CreateMovementUseCase,
+    private readonly stockService: StockService,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -171,5 +178,106 @@ export class OutgoingService {
       this.errorHandler.handleError(error, 'reactivating');
       throw error;
     }
+  }
+
+  //crear ingreso de productos al alamacen
+
+  async createOutgoing(
+    createOutgoingDtoStorage: CreateOutgoingDtoStorage,
+    user: UserData,
+  ): Promise<HttpResponse<string>> {
+    try {
+      // Extraer los datos necesarios del DTO
+      const { movement, state, name, storageId, date } =
+        createOutgoingDtoStorage;
+      const isIncoming = false;
+
+      console.log('idIncoming', storageId);
+      // Llamar a createIncomingUseCase y esperar el ID del registro del nuevo ingreso
+      const outgoingId = await this.createOutgoingUseCase.createOugoingStorage(
+        createOutgoingDtoStorage,
+        user,
+      );
+
+      // Llamar a createTypeMovementUseCase y esperar el ID del nuevo tipo movimiento
+      const movementTypeId =
+        await this.createTypeMovementUseCase.createTypeMovementStorage(
+          {
+            name,
+            state,
+            isIncoming,
+          },
+          user,
+        );
+
+      // Extraer los datos de movement y usarlos en createMovementStorage
+      const movementData = await this.extractProductoIdQuantity(movement);
+
+      // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
+      await Promise.all(
+        movementData.map(async (item) => {
+          const { productId, quantity } = item;
+
+          // Llamar a createMovementStorage
+          const idMovement =
+            await this.createMovementUseCase.createMovementStorage(
+              {
+                movementTypeId,
+                outgoingId,
+                productId,
+                quantity,
+                date,
+                state,
+              },
+              user,
+            );
+
+          console.log(`Movimiento creado con ID: ${idMovement}`);
+        }),
+      );
+      //registra y sumar ingreso al alamacen y al stock
+      // Extraer los datos de movement y usarlos en createMovementStorage
+      const stockData = await this.extractProductoIdQuantity(movement);
+      // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
+      await Promise.all(
+        stockData.map(async (item) => {
+          const { productId, quantity } = item;
+
+          // Llamar a createMovementStorage
+          const idStock = await this.stockService.updateStockOutgoing(
+            storageId,
+            productId,
+            quantity,
+            user,
+          );
+
+          console.log(`Movimiento creado con ID: ${idStock}`);
+        }),
+      );
+      return {
+        statusCode: HttpStatus.CREATED, // Código de estado HTTP 201
+        message: 'Salida creada exitosamente',
+        data: `${outgoingId} -  ${movementTypeId}} `, // El ID del nuevo ingreso
+      };
+      //
+      //
+    } catch (error) {
+      this.errorHandler.handleError(error, 'creating');
+
+      // Retornar un objeto de error con un código de estado adecuado
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR, // o el código que consideres apropiado
+        message: 'Error al crear la salida',
+        data: null, // o puedes incluir más información sobre el error si es necesario
+      };
+    }
+  }
+  private extractProductoIdQuantity(
+    movement: Array<{ productId: string; quantity: number }>,
+  ): { productId: string; quantity: number }[] {
+    return movement.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+    }));
   }
 }

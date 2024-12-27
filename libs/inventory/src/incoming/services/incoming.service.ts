@@ -238,7 +238,7 @@ export class IncomingService {
           const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
-          const idStock = await this.stockService.createOrUpdateStock(
+          const idStock = await this.stockService.createOrUpdateStockIncoming(
             storageId,
             productId,
             quantity,
