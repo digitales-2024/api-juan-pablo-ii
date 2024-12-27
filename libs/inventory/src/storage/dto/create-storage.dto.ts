@@ -1,17 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateStorageDto {
-  @ApiProperty({
-    description: 'ID del producto',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  productId: string;
-
   @ApiProperty({
     description: 'Nombre del almacén',
     example: 'Almacén Central, Almacén 1, Alacen 2',
@@ -40,13 +31,4 @@ export class CreateStorageDto {
   @IsString()
   @IsNotEmpty()
   typeStorageId: string;
-
-  @ApiProperty({
-    description: 'Stock disponible en este almacén',
-    example: 100.0,
-    required: true,
-  })
-  @IsNumber()
-  @IsNotEmpty()
-  stock: number;
 }

@@ -93,7 +93,7 @@ export class StorageRepository extends BaseRepository<Storage> {
     storageId: string,
     productId: string,
   ): Promise<{ stock: number }> {
-    return this.prisma.storage.findUnique({
+    return this.prisma.stock.findUnique({
       where: {
         id: storageId,
         productId: productId,

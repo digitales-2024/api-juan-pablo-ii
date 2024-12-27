@@ -1,13 +1,18 @@
-// category.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 
-export class Category {
+export class Stock {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  name: string;
+  storageId: string;
 
   @ApiProperty()
-  description?: string;
+  productId: string;
+
+  @ApiProperty()
+  stock: number;
+
+  @ApiProperty()
+  price: number;
 }
