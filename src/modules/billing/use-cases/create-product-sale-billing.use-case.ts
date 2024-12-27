@@ -15,7 +15,7 @@ import {
 } from '@pay/pay/interfaces/payment.types';
 import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
 import { ProductSaleMetadata } from '../interfaces/metadata.interfaces';
-import { StorageService } from '@inventory/inventory/storage/services/storage.service';
+import { StockRepository } from '@inventory/inventory/stock/repositories/stock.repository';
 
 @Injectable()
 export class CreateProductSaleOrderUseCase {
@@ -25,7 +25,7 @@ export class CreateProductSaleOrderUseCase {
     private readonly auditService: AuditService,
     private readonly paymentService: PaymentService,
     private readonly typeMovementService: TypeMovementService,
-    private readonly storageService: StorageService,
+    private readonly stockRepository: StockRepository,
   ) {}
 
   async execute(
@@ -131,14 +131,14 @@ export class CreateProductSaleOrderUseCase {
     });
   }
 
-  private async validateStock(dto: CreateProductSaleBillingDto) {
+  async validateStock(dto: CreateProductSaleBillingDto) {
     for (const product of dto.products) {
-      const stock = await this.storageService.getStockByStorageAndProduct(
+      const stock = await this.stockRepository.getStockByStorageAndProduct(
         dto.storageId,
         product.productId,
       );
 
-      if (!stock || stock < product.quantity) {
+      if (!stock.stock || stock.stock < product.quantity) {
         throw new BadRequestException(
           `Insufficient stock for product ${product.productId}`,
         );
