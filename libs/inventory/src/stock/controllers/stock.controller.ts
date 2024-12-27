@@ -20,8 +20,21 @@ export class StockController {
     summary: 'Obtener stock de un producto por ID de todos los alamacenes',
   })
   @ApiParam({ name: 'id', description: 'ID del producto' })
-  async getStockByProduct(@Param('id') id: string): Promise<StockDto> {
+  async getStockByProduct(@Param('id') id: string): Promise<StockDto[]> {
     return this.stockService.getStockByProduct(id);
+  }
+
+  /**
+   * Endpoint para obtener el stock de todos los productos en todos los almacenes registrados.
+   *
+   * @returns Una promesa que resuelve a un arreglo de objetos `StockDto`,
+   * consolidando el stock de todos los productos en todos los almacenes.
+   * @throws {Error} Si ocurre algún problema al calcular el stock de los almacenes.
+   */
+  @Get('storages')
+  @ApiOperation({ summary: 'Obtener stock de todos los almacenes' })
+  async getStockForAllStorages(): Promise<StockDto[]> {
+    return this.stockService.getStockForAllStorages();
   }
 
   /**
@@ -39,20 +52,7 @@ export class StockController {
     return this.stockService.getStockByStorage(id);
   }
 
-  /**
-   * Endpoint para obtener el stock de todos los productos en todos los almacenes registrados.
-   *
-   * @returns Una promesa que resuelve a un arreglo de objetos `StockDto`,
-   * consolidando el stock de todos los productos en todos los almacenes.
-   * @throws {Error} Si ocurre algún problema al calcular el stock de los almacenes.
-   */
-  @Get('storages')
-  @ApiOperation({ summary: 'Obtener stock de todos los almacenes' })
-  async getStockForAllStorages(): Promise<StockDto[]> {
-    return this.stockService.getStockForAllStorages();
-  }
-
-  // Endpoint para obtener un producto en un almacén específico
+  // Endpoint para obtener el stock de producto en un almacén específico
   @Get('storage/:storageId/product/:productId')
   @ApiOperation({ summary: 'Obtener stock por almacén y producto' })
   @ApiParam({ name: 'storageId', description: 'ID del almacén' })

@@ -26,6 +26,7 @@ import {
   DeleteIncomingDto,
 } from '../dto';
 import { Incoming } from '../entities/incoming.entity';
+import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
 
 /**
  * Controlador REST para gestionar ingresos.
@@ -150,5 +151,25 @@ export class IncomingController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Incoming[]>> {
     return this.incomingService.reactivateMany(deleteIncomingDto.ids, user);
+  }
+
+  /**
+   * crear ingreso a almacen directo
+   */
+  @Post('create/incomingStorage')
+  @ApiOperation({ summary: 'Crear nuevo ingreso directo a alamacen' })
+  @ApiResponse({
+    status: 201,
+    description: 'Ingreso a almacen creado exitosamente',
+    type: Incoming,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o ingreso ya existe',
+  })
+  createIncoming(
+    @Body() createIncomingDtoStorage: CreateIncomingDtoStorage,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<string>> {
+    return this.incomingService.createIncoming(createIncomingDtoStorage, user);
   }
 }

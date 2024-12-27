@@ -69,6 +69,7 @@ export class CreateStaffDto {
 
   @ApiProperty({
     description: 'email',
+    example: 'personal1@correo.com',
     required: true,
   })
   @IsEmail()
@@ -78,6 +79,7 @@ export class CreateStaffDto {
 
   @ApiProperty({
     description: 'numero de telefono',
+    example: '123456789',
     required: false,
   })
   @IsOptional()
