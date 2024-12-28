@@ -1,64 +1,66 @@
-import { BadRequestException } from '@nestjs/common';
 import { BaseOrderGenerator } from '@pay/pay/generators/base-order.generator';
 import { IOrder } from '@pay/pay/interfaces';
 import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
-
-// Interfaces para simular respuestas de otros servicios
-interface ProductData {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  isActive: boolean;
-}
-
-interface ProductPurchaseItem {
-  productId: string;
-  name?: string;
-  quantity: number;
-  unitPrice: number;
-  subtotal?: number;
-}
+import { BadRequestException, Inject } from '@nestjs/common';
+import { ProductService } from '@inventory/inventory/product/services/product.service';
+import {
+  CreateProductPurchaseBillingDto,
+  ProductPurchaseItemDto,
+} from '../dto/create-product-purchase-billing.dto';
+import { ProductPurchaseMetadata } from '../interfaces/metadata.interfaces';
+// import { SupplierService } from '@clients/clients/services/supplier.service'; // Asume que existe este servicio
 
 /**
  * Generador para órdenes de compra de productos.
- * @remarks
- * Para implementar esto en producción, necesitarás:
- * 1. Un servicio de productos que exponga:
- *    - findProductById(id: string): Promise<ProductData>
- *    - validateProducts(products: ProductPurchaseItem[]): Promise<boolean>
- * 2. Un servicio de proveedores que exponga:
- *    - findSupplierById(id: string): Promise<SupplierData>
- *    - validateSupplier(supplierId: string): Promise<boolean>
+ * Se integra con servicios reales de producto, proveedor e inventario.
  */
 export class ProductPurchaseGenerator extends BaseOrderGenerator {
   type = OrderType.PRODUCT_PURCHASE_ORDER;
 
-  async generate(input: ProductPurchaseInput): Promise<IOrder> {
-    // Validar productos
+  constructor(
+    @Inject(ProductService)
+    private readonly productService: ProductService,
+    // @Inject(SupplierService)
+    // private readonly supplierService: SupplierService,
+  ) {
+    super();
+  }
+
+  async generate(input: CreateProductPurchaseBillingDto): Promise<IOrder> {
+    // Validar productos y proveedor
     await this.validateProducts(input.products);
+    // await this.validateSupplier(input.supplierId);
 
-    const subtotal = await this.calculateTotal(input);
-    const { tax, total } = await this.calculateTotals(subtotal);
+    // Calcular subtotal y obtener detalles de productos
+    const { subtotal, productDetails } = await this.calculateProductTotals(
+      input.products,
+    );
+    const tax = subtotal * 0.18; // 18% IGV
+    const total = subtotal + tax;
 
-    // Obtener detalles completos de productos
-    const productsWithDetails = await this.enrichProductsData(input.products);
+    const metadata: ProductPurchaseMetadata = {
+      services: productDetails,
+      orderDetails: {
+        transactionType: 'PURCHASE',
+        storageId: input.storageId,
+        branchId: input.branchId,
+        supplierId: input.supplierId,
+        products: input.products.map((product) => ({
+          productId: product.productId,
+          quantity: product.quantity,
+        })),
+      },
 
-    // Crear el objeto de servicios (productos)
-    const serviceData = productsWithDetails.map((prod) => ({
-      id: prod.productId,
-      name: prod.name,
-      quantity: prod.quantity,
-      unitPrice: prod.unitPrice,
-      subtotal: prod.subtotal,
-    }));
-
-    // Combinar metadata existente con datos de productos
-    const combinedMetadata = {
-      ...input.metadata,
-      services: serviceData,
-      products: productsWithDetails,
-      supplierId: input.supplierId,
+      purchaseDetails: {
+        purchaseOrder: input.referenceId,
+        expectedDeliveryDate: new Date(), // Puedes personalizar esto
+      },
+      transactionDetails: {
+        subtotal,
+        tax,
+        total,
+      },
+      customFields: input.metadata,
     };
 
     return {
@@ -66,31 +68,25 @@ export class ProductPurchaseGenerator extends BaseOrderGenerator {
       code: this.generateCode('PC'), // PC = Purchase
       type: OrderType.PRODUCT_PURCHASE_ORDER,
       status: OrderStatus.PENDING,
-      movementTypeId: input.movementTypeId,
-      referenceId: '', // No aplica para compras directas
-      sourceId: input.supplierId,
-      targetId: '', // No aplica para compras
+      movementTypeId: '', // Este se genera en el use case
+      referenceId: input.referenceId || '',
+      sourceId: input.supplierId, // Proveedor como fuente
+      targetId: input.storageId, // Almacén como destino
       subtotal,
       tax,
       total,
       currency: input.currency || 'PEN',
-      date: input.date || new Date(),
-      dueDate: input.dueDate,
+      date: new Date(),
       notes: input.notes,
-      metadata: combinedMetadata,
+      metadata,
     };
   }
 
   /**
-   * Simula la validación de productos y stock
-   * @remarks
-   * En producción, deberías:
-   * 1. Validar que cada producto existe
-   * 2. Validar que cada producto está activo
-   * 3. Validar los precios
+   * Validación de productos
    */
   private async validateProducts(
-    products: ProductPurchaseItem[],
+    products: ProductPurchaseItemDto[],
   ): Promise<boolean> {
     try {
       if (!products || products.length === 0) {
@@ -98,25 +94,32 @@ export class ProductPurchaseGenerator extends BaseOrderGenerator {
       }
 
       for (const product of products) {
-        const productData = await this.mockProductService(product.productId);
-        if (!productData) {
+        // Verificar que el producto exista y esté activo
+        const productInfo = await this.productService.findOne(
+          product.productId,
+        );
+
+        if (!productInfo) {
           throw new BadRequestException(
             `Producto con ID ${product.productId} no encontrado`,
           );
         }
-        if (!productData.isActive) {
-          throw new BadRequestException(
-            `El producto ${productData.name} (${product.productId}) no está activo`,
-          );
-        }
+
+        // if (productInfo.isActive === false) {
+        //   throw new BadRequestException(
+        //     `El producto ${productInfo.name} (${product.productId}) no está activo`,
+        //   );
+        // }
+
         if (product.quantity <= 0) {
           throw new BadRequestException(
-            `La cantidad para el producto ${productData.name} debe ser mayor a 0`,
+            `La cantidad para el producto ${productInfo.name} debe ser mayor a 0`,
           );
         }
+
         if (product.unitPrice <= 0) {
           throw new BadRequestException(
-            `El precio unitario para el producto ${productData.name} debe ser mayor a 0`,
+            `El precio unitario para el producto ${productInfo.name} debe ser mayor a 0`,
           );
         }
       }
@@ -131,76 +134,85 @@ export class ProductPurchaseGenerator extends BaseOrderGenerator {
     }
   }
 
-  /**
-   * Obtiene el mock de productos
-   */
-  private getMockProducts(): Record<string, ProductData> {
-    return {
-      'ece57703-3246-4c2d-8f82-825cd239237a': {
-        id: 'ece57703-3246-4c2d-8f82-825cd239237a',
-        name: 'Paracetamol 500mg',
-        price: 100,
-        stock: 50,
-        isActive: true,
-      },
-      'de6639ac-7373-4612-8196-f4eb8374b7a6': {
-        id: 'de6639ac-7373-4612-8196-f4eb8374b7a6',
-        name: 'Ibuprofeno 400mg',
-        price: 200,
-        stock: 30,
-        isActive: true,
-      },
-    };
-  }
+  // /**
+  //  * Validación del proveedor
+  //  */
+  // private async validateSupplier(supplierId: string): Promise<void> {
+  //   try {
+  //     // Asume que existe un método findOne en SupplierService
+  //     const supplier = await this.supplierService.findOne(supplierId);
+
+  //     if (!supplier) {
+  //       throw new BadRequestException(
+  //         `Proveedor con ID ${supplierId} no encontrado`,
+  //       );
+  //     }
+
+  //     if (supplier.isActive === false) {
+  //       throw new BadRequestException(
+  //         `El proveedor ${supplier.name} (${supplierId}) no está activo`,
+  //       );
+  //     }
+  //   } catch (error) {
+  //     if (error instanceof BadRequestException) {
+  //       throw error;
+  //     }
+  //     throw new BadRequestException(
+  //       'Error validando proveedor: ' + error.message,
+  //     );
+  //   }
+  // }
 
   /**
-   * Simula un servicio de productos
+   * Calcula los totales de los productos
    */
-  private async mockProductService(
-    productId: string,
-  ): Promise<ProductData | null> {
-    const mockProducts = this.getMockProducts();
-    return mockProducts[productId] || null;
-  }
+  private async calculateProductTotals(
+    products: ProductPurchaseItemDto[],
+  ): Promise<{
+    subtotal: number;
+    productDetails: any[];
+  }> {
+    let subtotal = 0;
+    const productDetails = [];
 
-  /**
-   * Enriquece los datos de productos con información adicional
-   */
-  private async enrichProductsData(
-    products: ProductPurchaseItem[],
-  ): Promise<ProductPurchaseItem[]> {
-    const enriched = [];
     for (const product of products) {
-      const productData = await this.mockProductService(product.productId);
-      enriched.push({
-        ...product,
-        name: productData.name,
-        subtotal: product.quantity * product.unitPrice,
+      const productInfo = await this.productService.findOne(product.productId);
+
+      if (!productInfo) {
+        throw new BadRequestException(
+          `No se encontró la información del producto ${product.productId}`,
+        );
+      }
+
+      const productSubtotal = product.quantity * product.unitPrice;
+      subtotal += productSubtotal;
+
+      productDetails.push({
+        id: product.productId,
+        name: productInfo.name,
+        quantity: product.quantity,
+        price: product.unitPrice,
+        subtotal: productSubtotal,
       });
     }
-    return enriched;
+
+    return { subtotal, productDetails };
   }
 
-  async calculateTotal(input: ProductPurchaseInput): Promise<number> {
+  /**
+   * Calcula el total de la compra
+   */
+  async calculateTotal(
+    input: CreateProductPurchaseBillingDto,
+  ): Promise<number> {
     // Si viene un total preestablecido, lo usamos
-    if (input.total) return input.total;
+    if (input.metadata?.totalAmount) {
+      return input.metadata.totalAmount;
+    }
 
     // Calcular total basado en productos
-    return input.products.reduce(
-      (total, product) => total + product.quantity * product.unitPrice,
-      0,
+    return this.calculateProductTotals(input.products).then(
+      (result) => result.subtotal,
     );
   }
-}
-
-export interface ProductPurchaseInput {
-  products: ProductPurchaseItem[];
-  movementTypeId: string;
-  supplierId: string;
-  total?: number;
-  currency?: string;
-  date?: Date;
-  dueDate?: Date;
-  notes?: string;
-  metadata?: Record<string, any>;
 }

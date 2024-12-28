@@ -10,11 +10,8 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaymentMethod } from '@pay/pay/interfaces/payment.types';
 
-/**
- * DTO para los items de una orden de compra
- * @class
- */
 export class ProductPurchaseItemDto {
   @ApiProperty({
     description: 'ID del producto a comprar',
@@ -25,8 +22,8 @@ export class ProductPurchaseItemDto {
   productId: string;
 
   @ApiProperty({
-    description: 'Cantidad de unidades a comprar del producto',
-    example: 100,
+    description: 'Cantidad a comprar',
+    example: 10,
     minimum: 1,
     required: true,
   })
@@ -35,8 +32,8 @@ export class ProductPurchaseItemDto {
   quantity: number;
 
   @ApiProperty({
-    description: 'Precio unitario de compra al proveedor',
-    example: 2.5,
+    description: 'Precio unitario del producto',
+    example: 100.5,
     minimum: 0,
     required: true,
   })
@@ -45,25 +42,15 @@ export class ProductPurchaseItemDto {
   unitPrice: number;
 }
 
-/**
- * DTO para la creación de órdenes de compra de productos
- * Incluye validaciones y documentación para Swagger
- * @class
- */
 export class CreateProductPurchaseBillingDto {
   @ApiProperty({
-    description: 'Lista de productos a comprar con sus cantidades y precios',
+    description: 'Lista de productos a comprar',
     type: [ProductPurchaseItemDto],
     example: [
       {
         productId: 'ece57703-3246-4c2d-8f82-825cd239237a',
-        quantity: 100,
-        unitPrice: 2.5,
-      },
-      {
-        productId: 'de6639ac-7373-4612-8196-f4eb8374b7a6',
-        quantity: 50,
-        unitPrice: 3.75,
+        quantity: 10,
+        unitPrice: 100.5,
       },
     ],
     required: true,
@@ -74,25 +61,60 @@ export class CreateProductPurchaseBillingDto {
   products: ProductPurchaseItemDto[];
 
   @ApiProperty({
-    description: 'ID del tipo de movimiento para la entrada de productos',
+    description: 'ID del almacén de destino',
     example: '550e8400-e29b-41d4-a716-446655440000',
     required: true,
   })
   @IsUUID()
-  movementTypeId: string;
+  storageId: string;
 
   @ApiProperty({
-    description: 'ID del proveedor que suministra los productos',
-    example: '7c0e8500-f29b-41d4-a716-446655440000',
+    description: 'ID del proveedor',
+    example: '123e4567-e89b-12d3-a456-426614174000',
     required: true,
   })
   @IsUUID()
   supplierId: string;
 
   @ApiProperty({
-    description: 'Moneda en la que se realiza la compra',
-    example: 'PEN',
+    description: 'ID de la sucursal',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: true,
+  })
+  @IsUUID()
+  branchId: string;
+
+  @ApiProperty({
+    description: 'Ubicación en almacén',
+    example: 'Estante A-123',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  storageLocation?: string;
+
+  @ApiProperty({
+    description: 'Número de lote o compra',
+    example: 'LOT-2024-001',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  batchNumber?: string;
+
+  @ApiProperty({
+    description: 'ID de referencia externa',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsUUID()
+  @IsOptional()
+  referenceId?: string;
+
+  @ApiProperty({
+    description: 'Moneda (default: PEN)',
     default: 'PEN',
+    example: 'PEN',
     required: false,
   })
   @IsString()
@@ -100,8 +122,17 @@ export class CreateProductPurchaseBillingDto {
   currency?: string;
 
   @ApiProperty({
-    description: 'Notas o comentarios adicionales sobre la orden de compra',
-    example: 'Compra mensual de medicamentos esenciales',
+    description: 'Método de pago',
+    default: 'CASH',
+    enum: PaymentMethod,
+    required: false,
+  })
+  @IsOptional()
+  paymentMethod?: PaymentMethod;
+
+  @ApiProperty({
+    description: 'Notas adicionales',
+    example: 'Compra de medicamentos de inventario',
     required: false,
   })
   @IsString()
@@ -109,13 +140,11 @@ export class CreateProductPurchaseBillingDto {
   notes?: string;
 
   @ApiProperty({
-    description: 'Metadata adicional para la orden de compra',
-    example: {
-      purchaseOrderNumber: 'PO-2024-001',
-      deliveryInstructions: 'Entregar en almacén principal',
-      contactPerson: 'Juan Pérez',
-    },
+    description: 'Metadata adicional',
     required: false,
+    example: {
+      customField: 'value',
+    },
   })
   @IsObject()
   @IsOptional()

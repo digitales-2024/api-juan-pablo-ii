@@ -1,17 +1,32 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
 import { CreateAppointmentDto } from './create-appointment.dto';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
-  @ApiProperty({
-    description: 'Estado de la cita',
-    example: 'CONFIRMADA',
-    enum: ['PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'COMPLETADA'],
-    required: false,
-  })
+  @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => value?.trim().toUpperCase())
-  estado?: string;
+  tipoCitaMedicaId?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  personalId?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  consultaId?: string;
+
+  @ApiProperty({ required: false })
+  @IsDateString()
+  @IsOptional()
+  date?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  description?: string;
 }
