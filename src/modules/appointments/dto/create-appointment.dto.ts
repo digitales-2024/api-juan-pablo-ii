@@ -1,37 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsDateString } from 'class-validator';
 import { Transform } from 'class-transformer';
-import {
-  IsString,
-  IsNotEmpty,
-  IsUUID,
-  IsOptional,
-  IsDateString,
-} from 'class-validator';
 
 export class CreateAppointmentDto {
   @ApiProperty({
-    description: 'ID del paciente',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'ID del tipo de cita médica',
+    example: '38371f66-63ca-4bb1-ac31-d2b165f6514d',
   })
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
-  pacienteId: string;
+  tipoCitaMedicaId: string;
 
   @ApiProperty({
     description: 'ID del personal médico',
-    example: '550e8400-e29b-41d4-a716-446655440001',
+    example: 'd424bee1-2574-439e-8db5-eaee510239e1',
   })
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   personalId: string;
 
   @ApiProperty({
-    description: 'ID del tipo de cita',
-    example: '550e8400-e29b-41d4-a716-446655440002',
+    description: 'ID de la consulta médica',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
-  tipoCitaId: string;
+  consultaId: string;
 
   @ApiProperty({
     description: 'Fecha y hora de la cita',
@@ -39,25 +33,14 @@ export class CreateAppointmentDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  fecha: Date;
+  date: string;
 
   @ApiProperty({
-    description: 'Motivo de la cita',
+    description: 'Descripción o motivo de la cita',
     example: 'Control mensual',
-    required: false,
   })
   @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  motivo?: string;
-
-  @ApiProperty({
-    description: 'Observaciones adicionales',
-    example: 'Paciente requiere ayuno previo',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  observaciones?: string;
+  @IsNotEmpty()
+  @Transform(({ value }) => value.trim())
+  description: string;
 }

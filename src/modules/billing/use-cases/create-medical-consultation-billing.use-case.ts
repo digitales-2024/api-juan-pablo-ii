@@ -41,17 +41,6 @@ export class CreateMedicalConsultationOrderUseCase {
           },
         );
 
-        // await this.typeMovementService.create(
-        //   {
-        //     orderId: order.id,
-        //     name: OrderType.MEDICAL_CONSULTATION_ORDER,
-        //     description: `Movimiento para consulta médica - ${order.code}`,
-        //     state: false,
-        //     isIncoming: false,
-        //   },
-        //   user,
-        // );
-
         await this.paymentService.create(
           {
             orderId: order.id,

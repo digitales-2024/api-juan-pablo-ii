@@ -1,10 +1,10 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
-import { AppointmentRepository } from '../repositories/appointment.repository';
-import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Appointment } from '../entities/appointment.entity';
-import { AuditActionType } from '@prisma/client';
+import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
 import { CreateAppointmentDto } from '../dto/create-appointment.dto';
+import { AppointmentRepository } from '../repositories/appointment.repository';
+import { HttpResponse, UserData } from '@login/login/interfaces';
+import { AuditService } from '@login/login/admin/audit/audit.service';
+import { AuditActionType } from '@prisma/client';
+import { Appointment } from '../entities/appointment.entity';
 
 @Injectable()
 export class CreateAppointmentUseCase {
@@ -17,34 +17,37 @@ export class CreateAppointmentUseCase {
     createAppointmentDto: CreateAppointmentDto,
     user: UserData,
   ): Promise<HttpResponse<Appointment>> {
-    // Verificar disponibilidad del horario
-    const existingAppointments = await this.appointmentRepository.findMany({
-      where: {
-        personalId: createAppointmentDto.personalId,
-        fecha: createAppointmentDto.fecha,
-        isActive: true,
-      },
-    });
-
-    if (existingAppointments.length > 0) {
-      throw new BadRequestException(
-        'El horario seleccionado no está disponible',
-      );
-    }
-
     const newAppointment = await this.appointmentRepository.transaction(
       async () => {
+        // Verificar si ya existe una cita para ese doctor en esa fecha y hora
+        const existingAppointments = await this.appointmentRepository.findMany({
+          where: {
+            personalId: createAppointmentDto.personalId,
+            date: new Date(createAppointmentDto.date),
+            isActive: true,
+          },
+        });
+
+        if (existingAppointments.length > 0) {
+          throw new BadRequestException(
+            'Ya existe una cita programada para este doctor en esta fecha y hora',
+          );
+        }
+
         // Crear la cita
         const appointment = await this.appointmentRepository.create({
-          ...createAppointmentDto,
-          estado: 'PENDIENTE',
+          tipoCitaMedicaId: createAppointmentDto.tipoCitaMedicaId,
+          personalId: createAppointmentDto.personalId,
+          consultaId: createAppointmentDto.consultaId,
+          date: new Date(createAppointmentDto.date),
+          description: createAppointmentDto.description,
           isActive: true,
         });
 
-        // Registrar auditoría
+        // Registrar la auditoría
         await this.auditService.create({
           entityId: appointment.id,
-          entityType: 'appointment',
+          entityType: 'citaMedica',
           action: AuditActionType.CREATE,
           performedById: user.id,
           createdAt: new Date(),

@@ -12,15 +12,13 @@ import {
   ProductPurchaseMetadata,
 } from 'src/modules/billing/interfaces/metadata.interfaces';
 import { StockRepository } from '../stock/repositories/stock.repository';
+import { StockService } from '../stock/services/stock.service';
+import { UserData } from '@login/login/interfaces';
+import { CreateIncomingDtoStorage } from '../incoming/dto/create-incomingStorage.dto';
+import { IncomingService } from '../incoming/services/incoming.service';
 
-/**
- * Suscriptor de eventos para el manejo de inventario.
- * Gestiona los movimientos de inventario cuando se completan las órdenes.
- * @class InventoryEventSubscriber
- */
 @Injectable()
 export class InventoryEventSubscriber {
-  /** Logger para el registro de eventos y errores */
   private readonly logger = new Logger(InventoryEventSubscriber.name);
 
   constructor(
@@ -29,16 +27,11 @@ export class InventoryEventSubscriber {
     private readonly stockRepository: StockRepository,
     private readonly compensationService: CompensationService,
     private readonly incomingRepository: IncomingRepository,
+    private readonly incomingService: IncomingService,
     private readonly outgoingRepository: OutgoingRepository,
+    private readonly stockService: StockService,
   ) {}
 
-  /**
-   * Maneja el evento de orden completada
-   * @param {Object} payload - Datos de la orden completada
-   * @param {Order} payload.order - Orden completada
-   * @param {Object} payload.metadata - Metadatos de la verificación del pago
-   * @throws {Error} Si ocurre un error durante el procesamiento
-   */
   @OnEvent('order.completed')
   async handleOrderCompleted(payload: {
     order: Order;
@@ -54,10 +47,8 @@ export class InventoryEventSubscriber {
     this.logger.log(`Payment verification metadata:`, payload.metadata);
 
     try {
-      const { order } = payload;
-
-      // aqui añádir logica para el caso de que la orden sea OrderType.MEDICAL_CONSULTATION_ORDER,
-      // debe de crear un evento de cita para el calendario
+      const { order, metadata } = payload;
+      const userId = metadata?.verifiedBy;
 
       if (!this.shouldProcessInventory(order)) {
         this.logger.log(
@@ -68,7 +59,7 @@ export class InventoryEventSubscriber {
       this.logger.log(
         `Starting inventory movement processing for order ${order.id}`,
       );
-      await this.processInventoryMovements(order);
+      await this.processInventoryMovements(order, userId);
       this.logger.log(
         `Successfully processed inventory movements for order ${order.id}`,
       );
@@ -84,12 +75,6 @@ export class InventoryEventSubscriber {
     }
   }
 
-  /**
-   * Determina si una orden debe procesar cambios en el inventario
-   * @param {Order} order - Orden a evaluar
-   * @returns {boolean} True si la orden requiere procesamiento de inventario
-   * @private
-   */
   private shouldProcessInventory(order: Order): boolean {
     return [
       OrderType.PRODUCT_SALE_ORDER,
@@ -97,13 +82,7 @@ export class InventoryEventSubscriber {
     ].includes(order.type as OrderType);
   }
 
-  /**
-   * Procesa los movimientos de inventario para una orden
-   * @param {Order} order - Orden a procesar
-   * @throws {Error} Si la orden no tiene tipo de movimiento o ID de almacén
-   * @private
-   */
-  private async processInventoryMovements(order: Order) {
+  private async processInventoryMovements(order: Order, userId: string) {
     if (!order.movementTypeId) {
       throw new Error(`Order ${order.id} has no movement type ID`);
     }
@@ -113,7 +92,6 @@ export class InventoryEventSubscriber {
       `Processing ${isIncoming ? 'incoming' : 'outgoing'} movement`,
     );
 
-    // Asegurar que el metadata sea un objeto
     let metadata: ProductSaleMetadata | ProductPurchaseMetadata;
     try {
       metadata =
@@ -126,7 +104,6 @@ export class InventoryEventSubscriber {
       );
     }
 
-    // Validar la estructura del metadata y extraer el storageId
     const storageId = metadata?.orderDetails?.storageId;
     this.logger.debug('Metadata structure:', JSON.stringify(metadata, null, 2));
     this.logger.debug('Storage ID found:', storageId);
@@ -144,10 +121,10 @@ export class InventoryEventSubscriber {
       state: true,
     });
 
-    // Crear el registro de entrada o salida
     this.logger.log(
       `Creating ${isIncoming ? 'incoming' : 'outgoing'} record for storage ${storageId}`,
     );
+
     const record = isIncoming
       ? await this.incomingRepository.create({
           name: `Purchase Order ${order.code}`,
@@ -166,38 +143,83 @@ export class InventoryEventSubscriber {
           referenceId: order.id,
         });
 
-    // Validar y procesar los productos
     const products = metadata?.orderDetails?.products;
     if (!Array.isArray(products) || products.length === 0) {
-      throw new Error(
-        `No valid products found in order ${order.id}. Products: ${JSON.stringify(products)}`,
+      throw new Error(`No valid products found in order ${order.id}`);
+    }
+
+    // Preparar userData
+    const userData: UserData = {
+      id: userId,
+      name: 'Super Admin',
+      email: 'admin@admin.com',
+      phone: '1234567890',
+      isSuperAdmin: true,
+      roles: [],
+    };
+
+    // Si es incoming, usar createIncoming además del flujo normal
+    if (isIncoming) {
+      this.logger.log(
+        'Processing additional incoming flow with createIncoming',
       );
+      const createIncomingDto: CreateIncomingDtoStorage = {
+        name: `Purchase Order ${order.code}`,
+        storageId: storageId,
+        date: new Date(),
+        state: true,
+        movement: products.map((product) => ({
+          productId: product.productId,
+          quantity: product.quantity,
+        })),
+      };
+
+      await this.incomingService.createIncoming(createIncomingDto, userData);
     }
 
-    for (const product of products) {
-      this.logger.debug('Processing product:', {
-        productId: product.productId,
-        quantity: product.quantity,
-        orderId: order.id,
-      });
+    await Promise.all(
+      products.map(async (product) => {
+        try {
+          this.logger.debug('Processing product:', {
+            productId: product.productId,
+            quantity: product.quantity,
+            orderId: order.id,
+            storageId,
+          });
 
-      await this.createMovement(order, product, isIncoming, record.id);
+          await this.createMovement(order, product, isIncoming, record.id);
 
-      if (order.type === OrderType.PRODUCT_SALE_ORDER) {
-        await this.validateStock(order, product);
-      }
+          if (!isIncoming) {
+            await this.stockService.updateStockOutgoing(
+              storageId,
+              product.productId,
+              product.quantity,
+              userData,
+            );
 
-      // aqui xd funcion para descontar stock
-    }
+            this.logger.log(
+              `Stock updated for product ${product.productId} - Quantity: ${product.quantity}`,
+            );
+          }
+
+          if (order.type === OrderType.PRODUCT_SALE_ORDER) {
+            await this.validateStock(order, product);
+          }
+        } catch (error) {
+          this.logger.error('Error processing product:', {
+            productId: product.productId,
+            error: error.message,
+          });
+          throw error;
+        }
+      }),
+    );
+
+    this.logger.log(
+      `Successfully processed all ${products.length} products for order ${order.id}`,
+    );
   }
-  /**
-   * Crea un nuevo movimiento en el inventario
-   * @param {Order} order - Orden relacionada al movimiento
-   * @param {Object} product - Producto involucrado en el movimiento
-   * @param {boolean} isIncoming - Indica si es un movimiento de entrada
-   * @param {string} recordId - ID del registro de entrada/salida
-   * @private
-   */
+
   private async createMovement(
     order: Order,
     product: { productId: string; quantity: number },
@@ -215,26 +237,16 @@ export class InventoryEventSubscriber {
     });
   }
 
-  /**
-   * Valida el stock después de un movimiento
-   * @param {Order} order - Orden relacionada
-   * @param {Object} product - Producto a validar
-   * @throws {Error} Si el stock resultante es negativo
-   * @private
-   */
   private async validateStock(
     order: Order,
     product: { productId: string; quantity: number },
   ) {
-    // Asegurar que el metadata sea un objeto
     let metadata: ProductSaleMetadata | ProductPurchaseMetadata;
     try {
       metadata =
         typeof order.metadata === 'string'
           ? JSON.parse(order.metadata)
           : order.metadata;
-
-      // Obtener el storageId del metadata
       const storageId = metadata?.orderDetails?.storageId;
       if (!storageId) {
         throw new Error(`Missing storageId in metadata for order ${order.id}`);

@@ -13,11 +13,11 @@ import { Appointment } from '../entities/appointment.entity';
 import { CreateAppointmentDto, UpdateAppointmentDto } from '../dto';
 import {
   CreateAppointmentUseCase,
+  DeleteAppointmentsUseCase,
+  ReactivateAppointmentsUseCase,
   UpdateAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
-import { DeleteAppointmentsUseCase } from '../use-cases/delete-appointments.use-case';
-import { ReactivateAppointmentsUseCase } from '../use-cases/reactive-appointments.use-case';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -45,10 +45,6 @@ export class AppointmentService {
 
   /**
    * Crea una nueva cita médica
-   * @param createAppointmentDto - DTO con los datos de la cita a crear
-   * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con la cita creada
-   * @throws {BadRequestException} Si el horario no está disponible
    */
   async create(
     createAppointmentDto: CreateAppointmentDto,
@@ -66,11 +62,6 @@ export class AppointmentService {
 
   /**
    * Actualiza una cita existente
-   * @param id - ID de la cita a actualizar
-   * @param updateAppointmentDto - DTO con los datos a actualizar
-   * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con la cita actualizada
-   * @throws {NotFoundException} Si la cita no existe
    */
   async update(
     id: string,
@@ -80,7 +71,14 @@ export class AppointmentService {
     try {
       const currentAppointment = await this.findById(id);
 
-      if (!validateChanges(updateAppointmentDto, currentAppointment)) {
+      const dtoToCompare = {
+        ...updateAppointmentDto,
+        ...(updateAppointmentDto.date && {
+          date: new Date(updateAppointmentDto.date),
+        }),
+      };
+
+      if (!validateChanges(dtoToCompare, currentAppointment)) {
         return {
           statusCode: HttpStatus.OK,
           message: 'No se detectaron cambios en la cita médica',
@@ -99,10 +97,7 @@ export class AppointmentService {
   }
 
   /**
-   * Obtiene todas las citas médicas, opcionalmente filtradas por rango de fechas
-   * @param startDate - Fecha inicial opcional para filtrar
-   * @param endDate - Fecha final opcional para filtrar
-   * @returns Lista de todas las citas médicas
+   * Obtiene todas las citas médicas
    */
   async findAll(startDate?: Date, endDate?: Date): Promise<Appointment[]> {
     try {
@@ -117,13 +112,10 @@ export class AppointmentService {
 
   /**
    * Busca una cita por su ID
-   * @param id - ID de la cita a buscar
-   * @returns La cita encontrada
-   * @throws {NotFoundException} Si la cita no existe
    */
   async findOne(id: string): Promise<Appointment> {
     try {
-      return this.findById(id);
+      return await this.findById(id);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -131,12 +123,10 @@ export class AppointmentService {
 
   /**
    * Busca citas por paciente
-   * @param pacienteId - ID del paciente
-   * @returns Lista de citas del paciente
    */
   async findByPatient(pacienteId: string): Promise<Appointment[]> {
     try {
-      return this.appointmentRepository.findByPatient(pacienteId);
+      return await this.appointmentRepository.findByPatient(pacienteId);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -144,12 +134,10 @@ export class AppointmentService {
 
   /**
    * Busca citas por personal médico
-   * @param personalId - ID del personal médico
-   * @returns Lista de citas del personal médico
    */
   async findByStaff(personalId: string): Promise<Appointment[]> {
     try {
-      return this.appointmentRepository.findByStaff(personalId);
+      return await this.appointmentRepository.findByStaff(personalId);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -157,10 +145,6 @@ export class AppointmentService {
 
   /**
    * Elimina múltiples citas
-   * @param deleteAppointmentsDto - DTO con los IDs de las citas a eliminar
-   * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con las citas eliminadas
-   * @throws {NotFoundException} Si alguna cita no existe
    */
   async deleteMany(
     deleteAppointmentsDto: DeleteAppointmentsDto,
@@ -179,10 +163,6 @@ export class AppointmentService {
 
   /**
    * Reactiva múltiples citas
-   * @param ids - Lista de IDs de las citas a reactivar
-   * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con las citas reactivadas
-   * @throws {NotFoundException} Si alguna cita no existe
    */
   async reactivateMany(
     ids: string[],
@@ -198,10 +178,6 @@ export class AppointmentService {
 
   /**
    * Busca una cita por su ID (método interno)
-   * @param id - ID de la cita a buscar
-   * @returns La cita encontrada
-   * @throws {BadRequestException} Si la cita no existe
-   * @internal
    */
   private async findById(id: string): Promise<Appointment> {
     const appointment = await this.appointmentRepository.findById(id);
