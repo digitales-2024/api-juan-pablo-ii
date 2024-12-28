@@ -87,14 +87,14 @@ export class StockRepository extends BaseRepository<Stock> {
         select: { id: true, name: true, location: true, typeStorageId: true },
       });
 
-      const stockByStorage = {};
+      const stockByStorage = [];
 
       for (const storage of allStorages) {
         const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
         const branch = await this.fetchBranch(typeStorage.branchId);
         const staff = await this.fetchStaff(typeStorage.staffId);
 
-        stockByStorage[storage.id] = {
+        stockByStorage.push({
           idStorage: storage.id,
           name: storage.name,
           location: storage.location,
@@ -102,7 +102,7 @@ export class StockRepository extends BaseRepository<Stock> {
           staff: staff.name,
           description: typeStorage.description,
           stock: await this.getStockByStorage(storage.id),
-        };
+        });
       }
 
       return { almacenes: stockByStorage };
@@ -115,14 +115,14 @@ export class StockRepository extends BaseRepository<Stock> {
         select: { id: true, name: true, location: true, typeStorageId: true },
       });
 
-      const stockByStorage = {};
+      const stockByStorage = [];
 
       for (const storage of allStorages) {
         const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
         const branch = await this.fetchBranch(typeStorage.branchId);
         const staff = await this.fetchStaff(typeStorage.staffId);
 
-        stockByStorage[storage.id] = {
+        stockByStorage.push({
           idStorage: storage.id,
           name: storage.name,
           location: storage.location,
@@ -130,7 +130,7 @@ export class StockRepository extends BaseRepository<Stock> {
           staff: staff.name,
           description: typeStorage.description,
           stock: await this.getStockByStorage(storage.id, productId),
-        };
+        });
       }
 
       return { almacenes: stockByStorage };
@@ -138,13 +138,13 @@ export class StockRepository extends BaseRepository<Stock> {
 
     // Obtener datos del almacén
     const storage = await this.fetchStorageById(storageId);
-    const stockByStorage = {};
+    const stockByStorage = [];
 
     const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
     const branch = await this.fetchBranch(typeStorage.branchId);
     const staff = await this.fetchStaff(typeStorage.staffId);
 
-    stockByStorage[storage.id] = {
+    stockByStorage.push({
       idStorage: storage.id,
       name: storage.name,
       location: storage.location,
@@ -152,7 +152,7 @@ export class StockRepository extends BaseRepository<Stock> {
       staff: staff.name,
       description: typeStorage.description,
       stock: await this.getStockByStorage(storageId, productId),
-    };
+    });
 
     return { almacenes: stockByStorage };
   }
@@ -212,16 +212,13 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Función privada para crear el JSON con la estructura especificada
   private createStockJson(productsWithDetails: any[]): any {
-    return productsWithDetails.reduce((acc, product) => {
-      acc[product.productId] = {
-        idProduct: product.productId,
-        name: product.name,
-        unit: product.unit,
-        price: product.price,
-        stock: product.stock,
-      };
-      return acc;
-    }, {});
+    return productsWithDetails.map((product) => ({
+      idProduct: product.productId,
+      name: product.name,
+      unit: product.unit,
+      price: product.price,
+      stock: product.stock,
+    }));
   }
 
   // Función privada para obtener un almacén por su ID
