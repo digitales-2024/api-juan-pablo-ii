@@ -13,6 +13,15 @@ export class CreateEventDto {
   calendarioId: string;
 
   @ApiProperty({
+    description: 'ID del cita al que pertenece el evento',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  appointmentId: string;
+
+  @ApiProperty({
     description: 'Título descriptivo del evento',
     example: 'Ingreso turno mañana',
     required: true,

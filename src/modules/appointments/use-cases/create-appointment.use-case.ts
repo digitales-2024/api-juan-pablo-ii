@@ -17,6 +17,7 @@ export class CreateAppointmentUseCase {
     createAppointmentDto: CreateAppointmentDto,
     user: UserData,
   ): Promise<HttpResponse<Appointment>> {
+    console.log('estoy en el use case aqui no es', createAppointmentDto);
     const newAppointment = await this.appointmentRepository.transaction(
       async () => {
         // Verificar si ya existe una cita para ese doctor en esa fecha y hora

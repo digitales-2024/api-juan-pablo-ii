@@ -9,6 +9,9 @@ export class Event {
   calendarioId: string;
 
   @ApiProperty()
+  appointmentId: string;
+
+  @ApiProperty()
   titulo: string;
 
   @ApiProperty()

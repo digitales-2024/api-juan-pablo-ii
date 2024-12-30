@@ -51,6 +51,7 @@ export class AppointmentService {
     user: UserData,
   ): Promise<HttpResponse<Appointment>> {
     try {
+      console.log('estoy en el service aqui no es', createAppointmentDto);
       return await this.createAppointmentUseCase.execute(
         createAppointmentDto,
         user,
