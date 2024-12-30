@@ -80,63 +80,80 @@ export class StockRepository extends BaseRepository<Stock> {
     storageId?: string,
     productId?: string,
   ): Promise<any> {
-    // Si no se proporciona storageId y productId, devolver todos los almacenes con sus productos
     if (!storageId && !productId) {
-      const allStorages = await this.prisma.storage.findMany({
-        where: { isActive: true },
-        select: { id: true, name: true, location: true, typeStorageId: true },
-      });
-
-      const stockByStorage = [];
-
-      for (const storage of allStorages) {
-        const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
-        const branch = await this.fetchBranch(typeStorage.branchId);
-        const staff = await this.fetchStaff(typeStorage.staffId);
-
-        stockByStorage.push({
-          idStorage: storage.id,
-          name: storage.name,
-          location: storage.location,
-          address: branch.address,
-          staff: staff.name,
-          description: typeStorage.description,
-          stock: await this.getStockByStorage(storage.id),
-        });
-      }
-
-      return { almacenes: stockByStorage };
+      return this.getAllStoragesWithProducts();
     }
 
-    // Si se proporciona solo productId, devolver todos los almacenes con ese producto
     if (!storageId && productId) {
-      const allStorages = await this.prisma.storage.findMany({
-        where: { isActive: true },
-        select: { id: true, name: true, location: true, typeStorageId: true },
-      });
-
-      const stockByStorage = [];
-
-      for (const storage of allStorages) {
-        const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
-        const branch = await this.fetchBranch(typeStorage.branchId);
-        const staff = await this.fetchStaff(typeStorage.staffId);
-
-        stockByStorage.push({
-          idStorage: storage.id,
-          name: storage.name,
-          location: storage.location,
-          address: branch.address,
-          staff: staff.name,
-          description: typeStorage.description,
-          stock: await this.getStockByStorage(storage.id, productId),
-        });
-      }
-
-      return { almacenes: stockByStorage };
+      return this.getAllStoragesWithSpecificProduct(productId);
     }
 
-    // Obtener datos del almacén
+    return this.getSpecificStorageWithProducts(storageId, productId);
+  }
+
+  // Función privada para obtener todos los almacenes con sus productos
+  private async getAllStoragesWithProducts(): Promise<any> {
+    const allStorages = await this.prisma.storage.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, location: true, typeStorageId: true },
+    });
+
+    const stockByStorage = [];
+
+    for (const storage of allStorages) {
+      const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
+      const branch = await this.fetchBranch(typeStorage.branchId);
+      const staff = await this.fetchStaff(typeStorage.staffId);
+
+      stockByStorage.push({
+        idStorage: storage.id,
+        name: storage.name,
+        location: storage.location,
+        address: branch.address,
+        staff: staff.name,
+        description: typeStorage.description,
+        stock: await this.getStockByStorage(storage.id),
+      });
+    }
+
+    return { almacenes: stockByStorage };
+  }
+
+  // Función privada para obtener todos los almacenes con un producto específico
+  private async getAllStoragesWithSpecificProduct(
+    productId: string,
+  ): Promise<any> {
+    const allStorages = await this.prisma.storage.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, location: true, typeStorageId: true },
+    });
+
+    const stockByStorage = [];
+
+    for (const storage of allStorages) {
+      const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
+      const branch = await this.fetchBranch(typeStorage.branchId);
+      const staff = await this.fetchStaff(typeStorage.staffId);
+
+      stockByStorage.push({
+        idStorage: storage.id,
+        name: storage.name,
+        location: storage.location,
+        address: branch.address,
+        staff: staff.name,
+        description: typeStorage.description,
+        stock: await this.getStockByStorage(storage.id, productId),
+      });
+    }
+
+    return { almacenes: stockByStorage };
+  }
+
+  // Función privada para obtener un almacén específico con sus productos
+  private async getSpecificStorageWithProducts(
+    storageId: string,
+    productId?: string,
+  ): Promise<any> {
     const storage = await this.fetchStorageById(storageId);
     const stockByStorage = [];
 
@@ -157,7 +174,7 @@ export class StockRepository extends BaseRepository<Stock> {
     return { almacenes: stockByStorage };
   }
 
-  // Función pública para obtener el stock de un producto en un almacén específico
+  // Función privada para obtener el stock de un producto en un almacén específico
   private async getStockByStorage(
     storageId?: string,
     productId?: string,
@@ -180,6 +197,7 @@ export class StockRepository extends BaseRepository<Stock> {
       select: {
         productId: true,
         stock: true,
+        price: true,
       },
     });
   }
@@ -205,6 +223,7 @@ export class StockRepository extends BaseRepository<Stock> {
           unit: productDetails.unidadMedida,
           price: productDetails.precio,
           stock: record.stock,
+          totalPrice: record.price,
         };
       }),
     );
@@ -218,6 +237,7 @@ export class StockRepository extends BaseRepository<Stock> {
       unit: product.unit,
       price: product.price,
       stock: product.stock,
+      totalPrice: product.totalPrice,
     }));
   }
 

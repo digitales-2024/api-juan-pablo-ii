@@ -288,14 +288,14 @@ model Evento {
   color        String? // Color específico para este evento
 
   // Campos específicos para permisos
-  esPermiso     Boolean @default(false)
+  esPermiso     Boolean  @default(false)
   tipoPermiso   String? // MEDICO, PERSONAL, VACACIONES, etc.
   estadoPermiso String? // PENDIENTE, APROBADO, RECHAZADO
-
+  appointmentId String?
   // Campos de control
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt
 }
 
 model Recurrencia {
