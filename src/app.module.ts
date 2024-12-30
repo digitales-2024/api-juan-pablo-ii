@@ -14,6 +14,7 @@ import { PayModule } from '@pay/pay/pay.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { InventoryModule } from '@inventory/inventory/inventory.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ConsultationModule } from 'libs/consultation/consultation.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ScheduleModule,
     InventoryModule,
     BillingModule,
+    ConsultationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -21,6 +21,7 @@ export class CreateEventUseCase {
       // Create event
       const event = await this.eventRepository.create({
         calendarioId: createEventDto.calendarioId,
+        appointmentId: createEventDto.appointmentId,
         titulo: createEventDto.titulo,
         descripcion: createEventDto.descripcion,
         fechaInicio: createEventDto.fechaInicio,

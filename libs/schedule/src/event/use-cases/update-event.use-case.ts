@@ -22,6 +22,7 @@ export class UpdateEventUseCase {
       // Update event
       const event = await this.eventRepository.update(id, {
         calendarioId: updateEventDto.calendarioId,
+        appointmentId: updateEventDto.appointmentId,
         titulo: updateEventDto.titulo,
         descripcion: updateEventDto.descripcion,
         fechaInicio: updateEventDto.fechaInicio,

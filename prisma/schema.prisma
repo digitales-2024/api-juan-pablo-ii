@@ -576,7 +576,7 @@ model ConsultaMedica {
   sucursalId String
   Sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
 
-  description String
+  description String?
   date        DateTime
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
