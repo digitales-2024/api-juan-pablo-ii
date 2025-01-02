@@ -36,23 +36,23 @@ confirmar_rama_y_usuario() {
     else
       echo "Selección no válida. Manteniéndose en la rama actual."
     fi
+  fi
 
-    # Confirmar usuario
-    usuario_actual=$(git config --global user.name)
-    correo_actual=$(git config --global user.email)
+  # Confirmar usuario
+  usuario_actual=$(git config --global user.name)
+  correo_actual=$(git config --global user.email)
 
-    echo "Usuario actual de Git: $usuario_actual"
-    echo "Correo actual de Git: $correo_actual"
+  echo "Usuario actual de Git: $usuario_actual"
+  echo "Correo actual de Git: $correo_actual"
 
-    read -p "¿Deseas cambiar el usuario? (s/n): " cambiar_usuario
-    if [[ "$cambiar_usuario" == "s" || "$cambiar_usuario" == "S" ]]; then
-      read -p "Ingrese el nuevo nombre de usuario de Git: " nuevo_usuario
-      read -p "Ingrese el nuevo correo de Git: " nuevo_correo
-      git config --global user.name "$nuevo_usuario"
-      git config --global user.email "$nuevo_correo"
-      echo "Usuario actualizado: $(git config --global user.name)"
-      echo "Correo actualizado: $(git config --global user.email)"
-    fi
+  read -p "¿Deseas cambiar el usuario? (s/n): " cambiar_usuario
+  if [[ "$cambiar_usuario" == "s" || "$cambiar_usuario" == "S" ]]; then
+    read -p "Ingrese el nuevo nombre de usuario de Git: " nuevo_usuario
+    read -p "Ingrese el nuevo correo de Git: " nuevo_correo
+    git config --global user.name "$nuevo_usuario"
+    git config --global user.email "$nuevo_correo"
+    echo "Usuario actualizado: $(git config --global user.name)"
+    echo "Correo actualizado: $(git config --global user.email)"
   fi
 }
 
@@ -151,6 +151,25 @@ commit_automatico() {
   fi
 }
 
+# Función para listar ramas y hacer push
+git_push() {
+  echo "---------------------------------------------------"
+  echo "Estás en la rama: $(git branch --show-current)"
+  ramas=($(git branch -a | sed 's/^[* ]*//'))
+  echo "Ramas disponibles para hacer push:"
+  for i in "${!ramas[@]}"; do
+    echo "$((i + 1))) ${ramas[$i]}"
+  done
+
+  read -p "Seleccione la rama a la que desea hacer push: " seleccion
+  if [[ "$seleccion" =~ ^[0-9]+$ ]] && [ "$seleccion" -le "${#ramas[@]}" ]; then
+    rama_seleccionada="${ramas[$((seleccion - 1))]}"
+    git push origin "${rama_seleccionada#remotes/origin/}"
+  else
+    echo "Selección no válida. Regresando al menú."
+  fi
+}
+
 # Acciones del proyecto
 acciones_proyecto() {
   echo "---------------------------------------------------"
@@ -172,8 +191,7 @@ acciones_proyecto() {
         manejar_pull_con_divergencia
         ;;
       2)
-        echo "Ejecutando git push..."
-        git push
+        git_push
         ;;
       3)
         git status
@@ -223,7 +241,7 @@ while true; do
       exit 0
       ;;
     *)
-      echo "Opción no válida. Intente de nuevo."
+      echo "Opción no válida."
       ;;
   esac
 done
