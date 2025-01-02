@@ -181,4 +181,12 @@ export class ServiceService {
     }
     return service;
   }
+
+  async findOneWithDetails(id: string): Promise<Service> {
+    try {
+      return await this.serviceRepository.findOneWithDetails(id);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
 }
