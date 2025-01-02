@@ -63,3 +63,4 @@ config.local.json
 # Docker
 
 /data
+commits.sh
