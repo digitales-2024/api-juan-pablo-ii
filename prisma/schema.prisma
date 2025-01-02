@@ -261,8 +261,8 @@ model Personal {
 
 model Calendario {
   id         String   @id @default(uuid())
-  personalId String
-  personal   Personal @relation(fields: [personalId], references: [id])
+  personalId String?
+  personal   Personal? @relation(fields: [personalId], references: [id])
   sucursalId String
   nombre     String // Nombre descriptivo del calendario (ej: "Horario Normal", "Horario Verano")
   color      String? // Color para identificar visualmente el calendario
