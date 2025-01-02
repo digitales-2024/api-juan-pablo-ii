@@ -81,46 +81,19 @@ manejar_pull_con_divergencia() {
   read -p "¿Deseas hacer un git pull en esta rama? (s/n): " continuar_pull
 
   if [[ "$continuar_pull" == "s" || "$continuar_pull" == "S" ]]; then
-    echo "Opciones para resolver divergencias:"
-    echo "1) git pull --rebase (Rebase)"
-    echo "2) git pull --no-rebase (Merge)"
-    echo "3) git pull --ff-only (normal)"
-    read -p "Selecciona una opción para continuar: " opcion_pull
+    echo "Selecciona la rama remota desde la cual deseas hacer pull:"
+    ramas_remotas=($(git branch -r | sed 's/^[* ]*//'))
+    for i in "${!ramas_remotas[@]}"; do
+      echo "$((i + 1))) ${ramas_remotas[$i]}"
+    done
 
-    case $opcion_pull in
-      1)
-        git config pull.rebase true
-        git pull
-        ;;
-      2)
-        git config pull.rebase false
-        git pull
-        ;;
-      3)
-        git config pull.ff only
-        git pull
-        ;;
-      *)
-        echo "Opción no válida. Regresando al menú."
-        ;;
-    esac
-  else
-    echo "Operación cancelada. Regresando al menú."
-  fi
-}
-
-# Deshacer el pull y volver a la versión local
-deshacer_pull() {
-  echo "---------------------------------------------------"
-  echo "¿Deseas deshacer los cambios traídos con el git pull?"
-  read -p "Esta acción restablecerá tu rama local al estado anterior al git pull. (s/n): " continuar_deshacer
-
-  if [[ "$continuar_deshacer" == "s" || "$continuar_deshacer" == "S" ]]; then
-    echo "Deshaciendo cambios..."
-    git reset --hard HEAD@{1}  # Esto regresa la rama al estado antes del pull
-    echo "Cambios deshechos. Volviendo a la versión local."
-  else
-    echo "Operación cancelada. Regresando al menú."
+    read -p "Seleccione el número de la rama remota: " seleccion_rama_remota
+    if [[ "$seleccion_rama_remota" =~ ^[0-9]+$ ]] && [ "$seleccion_rama_remota" -le "${#ramas_remotas[@]}" ]; then
+      rama_remota="${ramas_remotas[$((seleccion_rama_remota - 1))]}"
+      git pull origin "${rama_remota#remotes/origin/}"
+    else
+      echo "Selección no válida. Regresando al menú."
+    fi
   fi
 }
 
@@ -132,9 +105,19 @@ commit_especifico() {
   git commit -m "$mensaje_commit"
   read -p "¿Deseas hacer push de este commit? (s/n): " continuar_push
   if [[ "$continuar_push" == "s" || "$continuar_push" == "S" ]]; then
-    git push
-  else
-    echo "Commit realizado sin push."
+    echo "Ramas disponibles para hacer push:"
+    ramas_push=($(git branch -r | sed 's/^[* ]*//'))
+    for i in "${!ramas_push[@]}"; do
+      echo "$((i + 1))) ${ramas_push[$i]}"
+    done
+
+    read -p "Seleccione la rama remota a la cual hacer push: " seleccion_rama_push
+    if [[ "$seleccion_rama_push" =~ ^[0-9]+$ ]] && [ "$seleccion_rama_push" -le "${#ramas_push[@]}" ]; then
+      rama_push="${ramas_push[$((seleccion_rama_push - 1))]}"
+      git push origin "${rama_push#remotes/origin/}"
+    else
+      echo "Selección no válida. Regresando al menú."
+    fi
   fi
 }
 
@@ -145,9 +128,19 @@ commit_automatico() {
   git commit -m "Commit automático"
   read -p "¿Deseas hacer push de este commit? (s/n): " continuar_push
   if [[ "$continuar_push" == "s" || "$continuar_push" == "S" ]]; then
-    git push
-  else
-    echo "Commit automático realizado sin push."
+    echo "Ramas disponibles para hacer push:"
+    ramas_push=($(git branch -r | sed 's/^[* ]*//'))
+    for i in "${!ramas_push[@]}"; do
+      echo "$((i + 1))) ${ramas_push[$i]}"
+    done
+
+    read -p "Seleccione la rama remota a la cual hacer push: " seleccion_rama_push
+    if [[ "$seleccion_rama_push" =~ ^[0-9]+$ ]] && [ "$seleccion_rama_push" -le "${#ramas_push[@]}" ]; then
+      rama_push="${ramas_push[$((seleccion_rama_push - 1))]}"
+      git push origin "${rama_push#remotes/origin/}"
+    else
+      echo "Selección no válida. Regresando al menú."
+    fi
   fi
 }
 
