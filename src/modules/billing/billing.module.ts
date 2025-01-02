@@ -14,9 +14,19 @@ import { ProductPurchaseGenerator } from './generators/product-purchase-generato
 import { CreateProductPurchaseOrderUseCase } from './use-cases/create-product-purchase-billing.use-case';
 import { StockService } from '@inventory/inventory/stock/services/stock.service';
 import { StorageRepository } from '@inventory/inventory/storage/repositories/storage.repository';
+import { ServiceModule } from '../services/service.module';
+import { AppointmentsModule } from '../appointments/appointments.module';
+import { ConsultationModule } from 'libs/consultation/consultation.module';
 
 @Module({
-  imports: [PayModule, InventoryModule, AuditModule],
+  imports: [
+    PayModule,
+    InventoryModule,
+    AuditModule,
+    ServiceModule,
+    AppointmentsModule,
+    ConsultationModule,
+  ],
   controllers: [BillingController],
   providers: [
     MedicalConsultationGenerator,

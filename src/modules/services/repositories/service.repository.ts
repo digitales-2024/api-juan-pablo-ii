@@ -30,4 +30,15 @@ export class ServiceRepository extends BaseRepository<Service> {
       },
     });
   }
+
+  /**
+   * Busca un servicio por su ID incluyendo su tipo de servicio
+   * @param id - ID del servicio a buscar
+   * @returns Servicio con su tipo de servicio incluido
+   */
+  async findOneWithDetails(id: string): Promise<Service> {
+    return this.findOneWithRelations(id, {
+      serviceType: true,
+    });
+  }
 }
