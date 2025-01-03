@@ -93,7 +93,7 @@ export class IncomingService {
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
     }
-    
+
   }
 
   /**
@@ -176,7 +176,13 @@ export class IncomingService {
   }
 
   //crear ingreso de productos al alamacen
-
+/**
+ * Crea un nuevo ingreso de productos al almacén.
+ *
+ * @param createIncomingDtoStorage - DTO que contiene los datos necesarios para crear el ingreso.
+ * @param user - Datos del usuario que realiza la operación.
+ * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID del nuevo ingreso.
+ */
   async createIncoming(
     createIncomingDtoStorage: CreateIncomingDtoStorage,
     user: UserData,
@@ -267,6 +273,12 @@ export class IncomingService {
       };
     }
   }
+  /**
+ * Extrae los IDs de productos y sus cantidades de un array de movimientos.
+ *
+ * @param movement - Un array de objetos que contienen `productId` y `quantity`.
+ * @returns Un array de objetos con `productId` y `quantity`.
+ */
   private extractProductoIdQuantity(
     movement: Array<{ productId: string; quantity: number }>,
   ): { productId: string; quantity: number }[] {
