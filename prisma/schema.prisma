@@ -270,10 +270,9 @@ model Calendario {
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime @updatedAt
-
   eventos     Evento[] // Eventos asociados al calendario
   recurrencia Recurrencia[] // Reglas de recurrencia
-  
+
 }
 
 model Evento {
