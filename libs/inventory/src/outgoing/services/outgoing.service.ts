@@ -181,7 +181,13 @@ export class OutgoingService {
   }
 
   //crear ingreso de productos al alamacen
-
+/**
+ * Crea una nueva salida de productos del almacén.
+ *
+ * @param createOutgoingDtoStorage - DTO que contiene los datos necesarios para crear la salida.
+ * @param user - Datos del usuario que realiza la operación.
+ * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID de la nueva salida.
+ */
   async createOutgoing(
     createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     user: UserData,
@@ -272,6 +278,12 @@ export class OutgoingService {
       };
     }
   }
+  /**
+ * Extrae los IDs de productos y sus cantidades de un array de movimientos.
+ *
+ * @param movement - Un array de objetos que contienen `productId` y `quantity`.
+ * @returns Un array de objetos con `productId` y `quantity`.
+ */
   private extractProductoIdQuantity(
     movement: Array<{ productId: string; quantity: number }>,
   ): { productId: string; quantity: number }[] {
