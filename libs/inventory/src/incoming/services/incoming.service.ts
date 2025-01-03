@@ -93,6 +93,7 @@ export class IncomingService {
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
     }
+    
   }
 
   /**
