@@ -285,7 +285,6 @@ model Evento {
   todoElDia    Boolean    @default(false) // Indica si el evento dura todo el día
   tipo         String // INGRESO, SALIDA, ALMUERZO, DESCANSO, PERMISO
   color        String? // Color específico para este evento
-
   // Campos específicos para permisos
   esPermiso     Boolean  @default(false)
   tipoPermiso   String? // MEDICO, PERSONAL, VACACIONES, etc.
