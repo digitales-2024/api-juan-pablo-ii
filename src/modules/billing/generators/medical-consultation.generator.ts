@@ -1,56 +1,82 @@
 import { BaseOrderGenerator } from '@pay/pay/generators/base-order.generator';
 import { IOrder } from '@pay/pay/interfaces';
 import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
+import { BadRequestException, Inject } from '@nestjs/common';
+import { MedicalConsultationMetadata } from '../interfaces/metadata.interfaces';
+import { ConsultationService } from 'libs/consultation/services/consultation.service';
+import { ServiceService } from 'src/modules/services/services/service.service';
 
-// Interfaces para simular respuestas de otros servicios
-interface ConsultaData {
+export interface ConsultationData {
   id: string;
-  tipo: string;
-  doctorId: string;
-  pacienteId: string;
-  fecha: Date;
-  estado: string;
-  precio: number;
+  type: string;
+  patientId: string;
+  date: Date;
+  status: string;
+  price: number;
+  specialty?: string;
+  diagnosis?: string;
+  observations?: string;
 }
 
-/**
- * Generador para órdenes de facturación de consultas médicas.
- * @remarks
- * Para implementar esto en producción, necesitarás:
- * 1. Un servicio de consultas médicas que exponga:
- *    - findOne(id: string): Promise<ConsultaData>
- *    - findPrecioByTipo(tipo: string): Promise<number>
- * 2. Un servicio de doctores que exponga:
- *    - findOne(id: string): Promise<DoctorData>
- *    - validateDisponibilidad(doctorId: string, fecha: Date): Promise<boolean>
- * 3. Un servicio de pacientes que exponga:
- *    - findOne(id: string): Promise<PacienteData>
- *    - validateDeudas(pacienteId: string): Promise<boolean>
- */
+export interface MedicalConsultationInput {
+  consultationId: string;
+  movementTypeId: string;
+  branchId: string;
+  total?: number;
+  currency?: string;
+  date?: Date;
+  dueDate?: Date;
+  notes?: string;
+  metadata?: Record<string, any>;
+}
+
 export class MedicalConsultationGenerator extends BaseOrderGenerator {
   type = OrderType.MEDICAL_CONSULTATION_ORDER;
 
+  constructor(
+    @Inject(ConsultationService)
+    private readonly consultationService: ConsultationService,
+    @Inject(ServiceService)
+    private readonly serviceService: ServiceService,
+  ) {
+    super();
+  }
+
   async generate(input: MedicalConsultationInput): Promise<IOrder> {
-    const consulta = await this.mockConsultaService(input.consultaId);
-    const subtotal = await this.calculateTotal(input);
+    // Validar y obtener datos de la consulta
+    const consultation = await this.getConsultationData(input.consultationId);
+    if (!consultation) {
+      throw new BadRequestException('Consulta médica no encontrada');
+    }
+
+    // Calcular totales
+    const subtotal = input.total || consultation.price;
     const { tax, total } = await this.calculateTotals(subtotal);
 
-    // Crear el objeto de servicio
-    const serviceData = {
-      id: `service-${consulta.id}`,
-      name: consulta.tipo,
-      price: subtotal,
-    };
-
-    // Combinar metadata existente con datos del servicio
-    const combinedMetadata = {
-      ...input.metadata,
-      services: [serviceData],
-      tipoConsulta: consulta.tipo,
-      doctorId: consulta.doctorId,
-      pacienteId: consulta.pacienteId,
-      fechaConsulta: consulta.fecha,
-      estado: consulta.estado,
+    // Crear metadatos de la consulta
+    const metadata: MedicalConsultationMetadata = {
+      services: [
+        {
+          id: consultation.id,
+          name: `Consulta ${consultation.type}`,
+          quantity: 1,
+          subtotal: subtotal,
+        },
+      ],
+      orderDetails: {
+        transactionType: 'MEDICAL_CONSULTATION',
+        branchId: input.branchId,
+        doctorId: '',
+        patientId: consultation.patientId,
+        consultationDate: consultation.date,
+      },
+      medicalDetails: {
+        consultationType: consultation.type,
+        specialty: consultation.specialty,
+        diagnosis: consultation.diagnosis,
+        observations: consultation.observations,
+      },
+      customFields: input.metadata,
     };
 
     return {
@@ -59,9 +85,9 @@ export class MedicalConsultationGenerator extends BaseOrderGenerator {
       type: OrderType.MEDICAL_CONSULTATION_ORDER,
       status: OrderStatus.PENDING,
       movementTypeId: input.movementTypeId,
-      referenceId: input.consultaId,
-      sourceId: consulta.pacienteId,
-      targetId: consulta.doctorId,
+      referenceId: input.consultationId,
+      sourceId: consultation.patientId,
+      targetId: '',
       subtotal,
       tax,
       total,
@@ -69,28 +95,32 @@ export class MedicalConsultationGenerator extends BaseOrderGenerator {
       date: input.date || new Date(),
       dueDate: input.dueDate,
       notes: input.notes,
-      metadata: combinedMetadata,
+      metadata,
     };
   }
 
-  /**
-   * Simula un servicio de consultas médicas.
-   * @remarks
-   * En producción, esto debería ser reemplazado por un servicio real que:
-   * - Valide que la consulta existe
-   * - Valide que la consulta pertenece al paciente correcto
-   * - Valide que la consulta está en un estado válido para facturación
-   * - Obtenga el precio real de la consulta según tipo/doctor/especialidad
-   */
-  private async mockConsultaService(consultaId: string): Promise<ConsultaData> {
+  private async getConsultationData(
+    consultationId: string,
+  ): Promise<ConsultationData> {
+    // En un entorno real, esto debería obtener los datos de un servicio de consultas médicas
+    // Por ahora, simulamos datos de ejemplo
+
+    const consulta = await this.consultationService.findById(consultationId);
+
+    const servicio = await this.serviceService.findById(consulta.serviceId);
+
+    const precioServicio = servicio.price;
+
     return {
-      id: consultaId,
-      tipo: 'CONSULTA_GENERAL',
-      doctorId: 'doctor-123',
-      pacienteId: 'paciente-456',
-      fecha: new Date(),
-      estado: 'COMPLETADA',
-      precio: 100,
+      id: consulta.id,
+      type: 'CONSULTA_GENERAL',
+      patientId: consulta.pacienteId,
+      date: new Date(),
+      status: 'PROGRAMADA',
+      price: precioServicio,
+      specialty: 'Medicina General',
+      diagnosis: '',
+      observations: '',
     };
   }
 
@@ -98,19 +128,8 @@ export class MedicalConsultationGenerator extends BaseOrderGenerator {
     // Si viene un total preestablecido, lo usamos
     if (input.total) return input.total;
 
-    const consulta = await this.mockConsultaService(input.consultaId);
-    // Aquí iría la lógica real para obtener el precio de la consulta
-    return consulta.precio || 100;
+    const consultation = await this.getConsultationData(input.consultationId);
+    // En un entorno real, aquí obtendrías el precio real de la consulta
+    return consultation.price;
   }
-}
-
-export interface MedicalConsultationInput {
-  consultaId: string;
-  movementTypeId: string;
-  total?: number;
-  currency?: string;
-  date?: Date;
-  dueDate?: Date;
-  notes?: string;
-  metadata?: Record<string, any>;
 }
