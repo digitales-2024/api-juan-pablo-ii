@@ -294,6 +294,7 @@ model Evento {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt
+  
 }
 
 model Recurrencia {
