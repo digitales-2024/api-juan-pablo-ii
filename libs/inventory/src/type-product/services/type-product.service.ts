@@ -62,6 +62,7 @@ export class TypeProductService {
           'Ya existe un tipo producto con este nombre',
         );
       }
+      
       // Si no existe, continúa con el proceso de creación
       return await this.createTypeProductUseCase.execute(
         createTypeProductDto,

@@ -172,7 +172,6 @@ import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
     StockRepository,
     UpdateStockUseCase,
     CreateStockUseCase,
-
     InventoryEventSubscriber,
     CompensationService,
   ],

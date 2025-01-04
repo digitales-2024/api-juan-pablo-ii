@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=juanpablo
     ports:
-      - 5454:5432
+      - 5432:5432
   pgadmin4:
     image: elestio/pgadmin:latest
     container_name: pgadmin
