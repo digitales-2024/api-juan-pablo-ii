@@ -64,5 +64,3 @@ config.local.json
 
 /data
 commits.sh
-generate_commit.py
-

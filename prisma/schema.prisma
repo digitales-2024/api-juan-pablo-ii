@@ -199,10 +199,13 @@ model ServiceType {
   description String?
   isActive    Boolean @default(true)
 
-  services Service[] // Relación inversa con Service
+  // Nueva relación con Especialidad
+  especialidadId String
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  services  Service[] // Relación inversa con Service
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt
 }
 
 //tabla servicios
@@ -230,8 +233,9 @@ model Especialidad {
 
   personal Personal[] // Relación con Personal
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt
+  ServiceType ServiceType[]
 }
 
 //tabla medicos que van a ser usuarios
