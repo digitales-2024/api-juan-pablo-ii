@@ -322,7 +322,7 @@ export abstract class BaseRepository<T extends { id: string }> {
    */
   async findOneWithRelations(
     id: string,
-    include: Record<string, boolean>,
+    include?: Record<string, boolean>,
   ): Promise<T | null> {
     return this.prisma.measureQuery(
       `findOneWithRelations${String(this.modelName)}`,

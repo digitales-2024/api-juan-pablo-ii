@@ -1,0 +1,89 @@
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+  IsBoolean,
+  IsDateString,
+  IsObject,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
+
+export class CreateIncomingDtoStorage {
+  @ApiProperty({
+    description: 'Nombre del ingreso a almacen ',
+    example: 'Ingreso de regulacion , aumento de stock, etc.',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  name?: string;
+
+  @ApiProperty({
+    description: 'Descripción del ingreso',
+    example: 'Descripción opcional del ingreso a alamacen',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  description?: string;
+
+  @ApiProperty({
+    description: 'ID del almacén al que va ser ingresado',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  storageId: string;
+
+  @ApiProperty({
+    description: 'Fecha del ingreso',
+    example: '2023-10-01T00:00:00.000Z',
+    required: true,
+  })
+  @IsDateString()
+  @IsNotEmpty()
+  date: Date;
+
+  @ApiProperty({
+    description: 'Estado del ingreso',
+    example: true,
+    required: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  state: boolean;
+
+  @ApiProperty({
+    description: 'ID de referencia puede ser un traslado, compra, etc.',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  referenceId?: string;
+
+  @ApiProperty({
+    description: 'productos a ingresar al almacen y cantidad',
+    example: [
+      {
+        productId: '123e4567-e89b-12d3-a456-426614174000',
+        quantity: 5,
+      },
+      {
+        productId: '123e4567-e89b-12d3-a456-426614174001',
+        quantity: 10,
+      },
+    ],
+    required: true,
+  })
+  @IsObject({ each: true })
+  @IsNotEmpty()
+  movement: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+}

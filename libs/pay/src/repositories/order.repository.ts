@@ -8,16 +8,4 @@ export class OrderRepository extends PayBaseRepository<Order> {
   constructor(prisma: PrismaService) {
     super(prisma, 'order');
   }
-
-  async findByReference(type: string, referenceId: string): Promise<Order[]> {
-    return this.findMany({
-      where: {
-        type,
-        referenceId,
-      },
-      include: {
-        payments: true,
-      },
-    });
-  }
 }

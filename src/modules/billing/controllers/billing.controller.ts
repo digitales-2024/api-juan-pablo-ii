@@ -1,19 +1,22 @@
 // src/modules/billing/controllers/billing.controller.ts
-import { Body, Controller, Post } from '@nestjs/common';
-import { CreateServiceBillingUseCase } from '../use-cases/create-service-billing.use-case';
-import { CreateServiceBillingDto } from '../dto/create-service-billing.dto';
-import { UserData } from '@login/login/interfaces';
-import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import { Controller, Post, Body } from '@nestjs/common';
 import {
   ApiTags,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
+  ApiOperation,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
+import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import { UserData } from '@login/login/interfaces';
+import { BillingService } from '../services/billing.service';
+import { CreateMedicalConsultationBillingDto } from '../dto';
+import { Order } from '@pay/pay/entities/order.entity';
+import { HttpResponse } from '@login/login/interfaces';
+// import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
+import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
+import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
 
-/**
- * Controlador REST para gestionar sucursales.
- * Expone endpoints para operaciones CRUD sobre sucursales.
- */
 @ApiTags('Billing')
 @ApiBadRequestResponse({
   description:
@@ -22,18 +25,66 @@ import {
 @ApiUnauthorizedResponse({
   description: 'Unauthorized - No autorizado para realizar esta operación',
 })
-@Controller({ path: 'biling', version: '1' })
+@Controller({ path: 'billing', version: '1' })
+@ApiTags('Billing')
+@ApiBadRequestResponse({
+  description:
+    'Bad Request - Error en la validación de datos o solicitud incorrecta',
+})
+@ApiUnauthorizedResponse({
+  description: 'Unauthorized - No autorizado para realizar esta operación',
+})
 @Auth()
 export class BillingController {
-  constructor(
-    private readonly createServiceBillingUseCase: CreateServiceBillingUseCase,
-  ) {}
+  constructor(private readonly billingService: BillingService) {}
 
-  @Post('service-billing')
-  async createServiceBilling(
-    @Body() dto: CreateServiceBillingDto,
+  @Post('medical-consultation')
+  @ApiOperation({ summary: 'Create medical consultation order' })
+  @ApiCreatedResponse({
+    description: 'Medical consultation order created successfully',
+    type: Order,
+  })
+  async createMedicalConsultationOrder(
+    @Body() createDto: CreateMedicalConsultationBillingDto,
     @GetUser() user: UserData,
-  ) {
-    return this.createServiceBillingUseCase.execute(dto, user);
+  ): Promise<HttpResponse<Order>> {
+    return this.billingService.createMedicalConsultation(createDto, user);
+  }
+  // @Post('medical-prescription')
+  // @ApiOperation({ summary: 'Create medical prescription order' })
+  // @ApiCreatedResponse({
+  //   description: 'Medical prescription order created successfully',
+  //   type: Order,
+  // })
+  // async createMedicalPrescriptionOrder(
+  //   @Body() createDto: CreateMedicalPrescriptionBillingDto,
+  //   @GetUser() user: UserData,
+  // ): Promise<HttpResponse<Order>> {
+  //   return this.billingService.createMedicalPrescription(createDto, user);
+  // }
+
+  @Post('product-sale')
+  @ApiOperation({ summary: 'Create product sale order' })
+  @ApiCreatedResponse({
+    description: 'Product sale order created successfully',
+    type: Order,
+  })
+  async createProductSaleOrder(
+    @Body() createDto: CreateProductSaleBillingDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    return this.billingService.createProductSale(createDto, user);
+  }
+  @Post('product-purchase')
+  @ApiOperation({ summary: 'Create product purchase order' })
+  @ApiCreatedResponse({
+    description: 'Product purchase order created successfully',
+    type: Order,
+  })
+  async createProductPurchaseOrder(
+    @Body() createDto: CreateProductPurchaseBillingDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Order>> {
+    return this.billingService.createProductPurchase(createDto, user);
   }
 }

@@ -71,4 +71,17 @@ export class StaffRepository extends BaseRepository<Staff> {
   async findStaffByDNI(dni: string): Promise<Staff[]> {
     return this.findByField('dni', dni);
   }
+
+  // Necesitamos agregar este método para buscar personal por especialidad
+  async findByEspecialidad(especialidadId: string) {
+    return this.findMany({
+      where: {
+        especialidadId,
+        isActive: true,
+      },
+      include: {
+        especialidad: true,
+      },
+    });
+  }
 }

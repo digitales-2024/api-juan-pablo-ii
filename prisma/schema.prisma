@@ -199,10 +199,13 @@ model ServiceType {
   description String?
   isActive    Boolean @default(true)
 
-  services Service[] // Relación inversa con Service
+  // Nueva relación con Especialidad
+  especialidadId String
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  services  Service[] // Relación inversa con Service
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt
 }
 
 //tabla servicios
@@ -230,8 +233,9 @@ model Especialidad {
 
   personal Personal[] // Relación con Personal
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt
+  ServiceType ServiceType[]
 }
 
 //tabla medicos que van a ser usuarios
@@ -261,8 +265,8 @@ model Personal {
 
 model Calendario {
   id         String   @id @default(uuid())
-  personalId String
-  personal   Personal @relation(fields: [personalId], references: [id])
+  personalId String?
+  personal   Personal? @relation(fields: [personalId], references: [id])
   sucursalId String
   nombre     String // Nombre descriptivo del calendario (ej: "Horario Normal", "Horario Verano")
   color      String? // Color para identificar visualmente el calendario
@@ -270,7 +274,6 @@ model Calendario {
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime @updatedAt
-
   eventos     Evento[] // Eventos asociados al calendario
   recurrencia Recurrencia[] // Reglas de recurrencia
 }
@@ -286,16 +289,16 @@ model Evento {
   todoElDia    Boolean    @default(false) // Indica si el evento dura todo el día
   tipo         String // INGRESO, SALIDA, ALMUERZO, DESCANSO, PERMISO
   color        String? // Color específico para este evento
-
   // Campos específicos para permisos
-  esPermiso     Boolean @default(false)
+  esPermiso     Boolean  @default(false)
   tipoPermiso   String? // MEDICO, PERSONAL, VACACIONES, etc.
   estadoPermiso String? // PENDIENTE, APROBADO, RECHAZADO
-
+  appointmentId String?
   // Campos de control
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt
+  
 }
 
 model Recurrencia {
@@ -369,103 +372,124 @@ model Producto {
   updatedAt DateTime @updatedAt
 
   // Relación con el inventario (Almacen)
-  Almacen    Almacen[] // Relación con Almacen (para el inventario)
-  Movimiento Movimiento[]
+  Movement Movement[]
+  Stock    Stock[]
 }
 
-model TipoAlmacen {
-  id          String  @id @default(uuid())
+model TypeStorage {
+  id          String   @id @default(uuid())
   name        String // Ejemplo: "Producto Terminado", "Materia Prima", etc.
   description String? // Descripción opcional del tipo de almacén
+  branchId    String? // Clave foránea a Sucursal o local
+  staffId     String? // Clave foránea a Personal empleado responsable del almacén
+  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt
 
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
-
-  Almacen Almacen[] // Relación con la tabla Almacen
+  Storage Storage[] // Relación con la tabla Almacen
 }
 
 //tabla almacen
-model Almacen {
+model Storage {
   id            String      @id @default(uuid())
-  productoId    String
-  Producto      Producto    @relation(fields: [productoId], references: [id])
-  name          String
-  location      String?
-  tipoAlmacenId String
-  TipoAlmacen   TipoAlmacen @relation(fields: [tipoAlmacenId], references: [id]) // Relación con TipoAlmacen
+  name          String // Nombre del almacén
+  location      String? // Ubicación física del almacén
+  typeStorageId String
+  TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
+  Incoming      Incoming[] // Relación con Ingreso
+  Outgoing      Outgoing[] // Relación con Salida
+  isActive      Boolean     @default(true) // Campo para controlar si está activo o no
+  createdAt     DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt
+  Stock         Stock[]
+}
 
-  stock Int @default(0) // Stock disponible en este almacén
+model Stock {
+  id        String  @id @default(uuid())
+  storageId String // Relación con Storage
+  Storage   Storage @relation(fields: [storageId], references: [id])
 
-  ingreso Ingreso[] // Relación con Ingreso
-  salida  Salida[] // Relación con Salida
+  productId String // Relación con Producto
+  Producto  Producto @relation(fields: [productId], references: [id])
 
+  stock     Float    @default(0) // Cantidad del producto en el almacén
+  price     Float    @default(0) // Precio de venta del producto en el almacén
+  isActive  Boolean  @default(true) // Control de registros activos
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+
+  @@unique([storageId, productId]) // Evitar duplicados de un producto en el mismo almacén
 }
 
 //tabla tipo movimiento
-model TipoMovimiento {
-  id            String       @id @default(uuid())
-  ordenCompraId String
-  OrdenCompra   Order        @relation(fields: [ordenCompraId], references: [id])
-  name          String? // venta, compra, devolución, etc.
-  description   String? // Descripción opcional del tipo de movimiento
-  estado        Boolean      @default(false) // Estado que controla si el flujo se concreta o no (false = no afecta al stock)
-  isIngreso     Boolean // Booleano para identificar si es un "Ingreso" o "Salida"
-  tipoExterno   String? // Puede ser "Venta", "Compra", "Devolución", etc.
-  createdAt     DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime     @updatedAt
-  Movimiento    Movimiento[]
+model MovementType {
+  id          String     @id @default(uuid())
+  orderId     String?
+  Order       Order?     @relation(fields: [orderId], references: [id])
+  referenceId String? // Referencia a un registro etc
+  name        String? // venta, compra, devolución, etc.
+  description String? // Descripción opcional del tipo de movimiento
+  state       Boolean    @default(false) // Estado que controla si el flujo se concreta o no (false = no afecta al stock)
+  isIncoming  Boolean? // Booleano para identificar si es un "Ingreso" o "Salida"
+  tipoExterno String? // Puede ser "Venta", "Compra", "Devolución", etc.
+  isActive    Boolean    @default(true) // Campo para controlar si está activo o no
+  createdAt   DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime   @updatedAt
+  Movement    Movement[]
 }
 
 // tabla movimientos
-model Movimiento {
-  id        String   @id @default(uuid())
-  ingresoId String?
-  Ingreso   Ingreso? @relation(fields: [ingresoId], references: [id])
-
-  salidaId String?
-  Salida   Salida? @relation(fields: [salidaId], references: [id])
-
-  productoId String
-  Producto   Producto @relation(fields: [productoId], references: [id])
-  quantity   Int // Cantidad de producto que se movió
-  date       DateTime @default(now()) @db.Timestamptz(6)
-  estado     Boolean  @default(false) // Estado para registrar si el movimiento ha sido procesado o no
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
-
-  TipoMovimientoId String?
-  TipoMovimiento   TipoMovimiento? @relation(fields: [TipoMovimientoId], references: [id])
+model Movement {
+  id             String        @id @default(uuid())
+  movementTypeId String?
+  MovementType   MovementType? @relation(fields: [movementTypeId], references: [id])
+  incomingId     String?
+  Incoming       Incoming?     @relation(fields: [incomingId], references: [id])
+  outgoingId     String?
+  Outgoing       Outgoing?     @relation(fields: [outgoingId], references: [id])
+  productId      String
+  Producto       Producto      @relation(fields: [productId], references: [id])
+  quantity       Float // Cantidad de producto que se movió
+  date           DateTime      @default(now()) @db.Timestamptz(6)
+  state          Boolean       @default(false) // Estado para registrar si el movimiento ha sido procesado o no
+  referenceId    String? // Referencia a un registro etc
+  isActive       Boolean       @default(true) // Campo para controlar si está activo o no
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt
 }
 
-//tabla ingresos
-model Ingreso {
-  id        String   @id @default(uuid())
-  almacenId String
-  almacen   Almacen  @relation(fields: [almacenId], references: [id])
-  quantity  Int? // Cantidad total de productos ingresados
-  date      DateTime @default(now()) @db.Timestamptz(6)
-  estado    Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+//tabla ingresos 
+model Incoming {
+  id          String   @id @default(uuid())
+  name        String?
+  description String?
+  storageId   String
+  Storage     Storage  @relation(fields: [storageId], references: [id])
+  date        DateTime @default(now()) @db.Timestamptz(6)
+  state       Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
+  referenceId String? // Referencia a un registro etc
+  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt
 
-  Movimiento Movimiento[] // Relación con Movimiento
+  Movement Movement[] // Relación con Movimiento
 }
 
 //tabla salidas
-model Salida {
-  id        String   @id @default(uuid())
-  almacenId String
-  almacen   Almacen  @relation(fields: [almacenId], references: [id])
-  quantity  Int? // Cantidad de productos que se retiran
-  date      DateTime @default(now()) @db.Timestamptz(6)
-  estado    Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+model Outgoing {
+  id          String   @id @default(uuid())
+  name        String?
+  description String?
+  storageId   String
+  Storage     Storage  @relation(fields: [storageId], references: [id])
+  date        DateTime @default(now()) @db.Timestamptz(6)
+  state       Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
+  referenceId String? // Referencia a un registro etc
+  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt
 
-  Movimiento Movimiento[] // Relación con Movimiento
+  Movement Movement[] // Relación con Movimiento
 }
 
 //tabla historias
@@ -555,7 +579,7 @@ model ConsultaMedica {
   sucursalId String
   Sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
 
-  description String
+  description String?
   date        DateTime
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
@@ -591,6 +615,8 @@ model CitaMedica {
   date        DateTime
   description String
 
+  isActive Boolean @default(true)
+
   createdAt           DateTime              @default(now()) @db.Timestamptz(6)
   updatedAt           DateTime              @updatedAt
   ProcedimientoMedico ProcedimientoMedico[]
@@ -609,32 +635,86 @@ model ProcedimientoMedico {
   updatedAt DateTime @updatedAt
 }
 
+enum OrderType {
+  MEDICAL_PRESCRIPTION_ORDER
+  MEDICAL_CONSULTATION_ORDER
+  PRODUCT_SALE_ORDER
+  PRODUCT_PURCHASE_ORDER
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
 model Order {
-  id          String           @id @default(uuid())
-  type        String? // MEDICAL_PRESCRIPTION, MEDICAL_CONSULTATION, etc.
-  referenceId String? // ID of related prescription or consultation
-  status      String // PENDING, PAID, CANCELLED, etc.
-  details     Json // Specific details according to type
-  products    Json? // Array of products (optional)
-  services    Json? // Array of services (optional)
-  total       Float
-  date        DateTime
-  description String?
+  id             String      @id @default(uuid())
+  code           String?
+  type           OrderType
+  movementTypeId String?
+  referenceId    String? // ID of related prescription or consultation
+  sourceId       String? // ID de la entidad origen (paciente, etc)
+  targetId       String? // ID de la entidad destino (doctor, etc)
+  status         OrderStatus
+  currency       String // default 'PEN'
+  subtotal       Float
+  tax            Float
+  total          Float
+  date           DateTime    @default(now()) @db.Timestamptz(6)
+  notes          String?
+  metadata       Json? // Metadata adicional específica del tipo
+  isActive       Boolean     @default(true)
+
   // Relations
-  payments    Payment[]        @relation("OrderPayments")
-  movements   TipoMovimiento[]
+  payments  Payment[]      @relation("OrderPayments")
+  movements MovementType[]
+
   // Audit fields
-  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime         @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 }
 
 model Payment {
-  id          String   @id @default(uuid())
-  orderId     String
-  order       Order    @relation("OrderPayments", fields: [orderId], references: [id])
-  date        DateTime
-  amount      Float
-  description String?
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt
+  id            String        @id @default(uuid())
+  orderId       String
+  order         Order         @relation("OrderPayments", fields: [orderId], references: [id])
+  date          DateTime      @default(now()) @db.Timestamptz(6)
+  status        PaymentStatus
+  type          PaymentType   @default(REGULAR)
+  amount        Float
+  description   String?
+  paymentMethod PaymentMethod // CASH, TRANSFER, YAPE
+  voucherNumber String? // Número de comprobante/operación
+  verifiedBy    String? // ID del usuario que verificó
+  verifiedAt    DateTime? // Cuándo se verificó
+  isActive      Boolean       @default(true)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  YAPE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentType {
+  REGULAR
+  REFUND
+  PARTIAL
+  ADJUSTMENT
+  COMPENSATION
 }

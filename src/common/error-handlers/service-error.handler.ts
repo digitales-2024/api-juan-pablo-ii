@@ -14,6 +14,14 @@ import { historyErrorMessages } from '@pacient/pacient/history/errors/errors-his
 import { categoryErrorMessages } from '@inventory/inventory/category/errors/errors-category';
 import { productErrorMessages } from '@inventory/inventory/product/errors/errors-product';
 import { typeProductErrorMessages } from '@inventory/inventory/type-product/errors/errors-type-product';
+import { typeStorageErrorMessages } from '@inventory/inventory/type-storage/errors/errors-type-storage';
+import { storageErrorMessages } from '@inventory/inventory/storage/errors/errors-storage';
+import { typeMovementErrorMessages } from '@inventory/inventory/type-movement/errors/errors-type-movement';
+import { movementErrorMessages } from '@inventory/inventory/movement/errors/errors-movement';
+import { paymentErrorMessages } from '@pay/pay/errors/errors-payment';
+import { orderErrorMessages } from '@pay/pay/errors/errors-order';
+import { billingErrorMessages } from 'src/modules/billing/errors/errors-billing';
+import { consultationErrorMessages } from 'libs/consultation/errors/errors-consultation';
 
 export type ServiceAction =
   | 'creating'
@@ -23,7 +31,11 @@ export type ServiceAction =
   | 'reactivating'
   | 'deactivating'
   | 'activating'
-  | 'processing';
+  | 'processing'
+  | 'verifying'
+  | 'rejecting'
+  | 'cancelling'
+  | 'submitting';
 
 export interface ErrorMessages {
   notFound: string;
@@ -126,6 +138,10 @@ export class BaseErrorHandler {
       deactivating: 'desactivar',
       activating: 'activar',
       processing: 'procesar',
+      verifying: 'verificar',
+      rejecting: 'rechazar',
+      cancelling: 'cancelar',
+      submitting: 'enviar',
     };
 
     return `Error al ${actionMessages[action]} ${this.getEntityNameInSpanish()}`;
@@ -154,7 +170,14 @@ export const entityErrorMessages = {
   category: categoryErrorMessages,
   typeProduc: typeProductErrorMessages,
   product: productErrorMessages,
-
+  typeStorage: typeStorageErrorMessages,
+  storage: storageErrorMessages,
+  typeMovement: typeMovementErrorMessages,
+  movement: movementErrorMessages,
+  payment: paymentErrorMessages,
+  order: orderErrorMessages,
+  billing: billingErrorMessages,
+  consulting: consultationErrorMessages,
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
   // 2. Agregar aquí con una clave apropiada

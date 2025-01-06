@@ -13,9 +13,19 @@ import { ScheduleModule } from '@schedule/schedule/schedule.module';
 import { PayModule } from '@pay/pay/pay.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { InventoryModule } from '@inventory/inventory/inventory.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ConsultationModule } from 'libs/consultation/consultation.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot({
+      // optional configuration
+      wildcard: true,
+      delimiter: '.',
+      maxListeners: 10,
+      verboseMemoryLeak: true,
+      ignoreErrors: false,
+    }),
     LoginModule,
     PrismaModule,
     PayModule,
@@ -28,6 +38,7 @@ import { InventoryModule } from '@inventory/inventory/inventory.module';
     ScheduleModule,
     InventoryModule,
     BillingModule,
+    ConsultationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

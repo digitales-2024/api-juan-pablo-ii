@@ -1,16 +1,21 @@
-import { IOrder } from '../interfaces';
+// libs/pay/src/entities/order.entity.ts
+import { IOrder } from '../interfaces/order.interface';
+import { OrderStatus, OrderType } from '../interfaces/order.types';
 
 export class Order implements IOrder {
   id: string;
-  type: string;
+  code?: string;
+  type: OrderType;
+  movementTypeId: string;
   referenceId: string;
-  status: string;
-  details: any;
-  products?: any[];
-  services?: any[];
+  sourceId?: string;
+  targetId?: string;
+  status: OrderStatus;
+  currency: string;
+  subtotal: number;
+  tax: number;
   total: number;
   date: Date;
-  description?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  notes?: string;
+  metadata?: Record<string, any>;
 }

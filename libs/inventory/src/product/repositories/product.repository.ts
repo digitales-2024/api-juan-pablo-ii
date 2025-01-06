@@ -8,6 +8,7 @@ export class ProductRepository extends BaseRepository<Product> {
     super(prisma, 'producto'); // Tabla del esquema de prisma
   }
 
+  //funcion que no se esta usando por ahora
   /**
    * Verifica si existe un registro en una tabla específica por un valor y campo
    * @param field - Campo por el cual buscar (por ejemplo, 'name', 'id', etc.)
@@ -22,5 +23,17 @@ export class ProductRepository extends BaseRepository<Product> {
   ): Promise<boolean> {
     const result = await this.findOneDataTable(field, value, table);
     return result.length > 0;
+  }
+  /**
+   * Obtiene el precio de un producto por su ID
+   * @param productId - ID del producto
+   * @returns El precio del producto
+   */
+  async getProductPriceById(productId: string): Promise<number | null> {
+    const product = await this.prisma.producto.findUnique({
+      where: { id: productId },
+      select: { precio: true },
+    });
+    return product ? product.precio : null;
   }
 }
