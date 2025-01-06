@@ -1,4 +1,51 @@
+# Dependencias
 node_modules
-dist
+**/node_modules
+
+# Archivos de desarrollo
 .git
-.env
+.gitignore
+.env*
+*.md
+.eslintrc
+.prettierrc
+.vscode
+coverage
+
+# Archivos de build
+dist
+build
+.next
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache
+.npm
+.pnpm-store
+
+# Tests
+test
+tests
+__tests__
+*.spec.ts
+*.test.ts
+
+# Excluir todo y luego incluir lo necesario
+*
+
+# Incluir archivos necesarios
+!package.json
+!pnpm-lock.yaml
+!tsconfig*.json
+!nest-cli.json
+!src
+!libs
+!prisma
+!static
+!docker-entrypoint.sh
