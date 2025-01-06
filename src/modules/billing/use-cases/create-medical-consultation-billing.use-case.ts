@@ -38,16 +38,16 @@ export class CreateMedicalConsultationOrderUseCase {
   ): Promise<HttpResponse<Order>> {
     return await this.orderRepository.transaction(async () => {
       // Crear tipo de movimiento
-      const movementType = await this.typeMovementService.create(
-        {
-          name: OrderType.MEDICAL_CONSULTATION_ORDER,
-          description: `Medical consultation movement - ${new Date().toISOString()}`,
-          state: true,
-          isIncoming: false,
-          tipoExterno: 'CONSULTATION',
-        },
-        user,
-      );
+      // const movementType = await this.typeMovementService.create(
+      //   {
+      //     name: OrderType.MEDICAL_CONSULTATION_ORDER,
+      //     description: `Medical consultation movement - ${new Date().toISOString()}`,
+      //     state: true,
+      //     isIncoming: false,
+      //     tipoExterno: 'CONSULTATION',
+      //   },
+      //   user,
+      // );
 
       // Crear la orden - El generator se encargará de obtener y validar:
       // - Servicio y su precio
@@ -58,19 +58,19 @@ export class CreateMedicalConsultationOrderUseCase {
         {
           ...createDto,
           type: OrderType.MEDICAL_CONSULTATION_ORDER,
-          movementTypeId: movementType.data.id,
+          movementTypeId: '',
         },
       );
 
       // Actualizar el tipo de movimiento con el ID de la orden
-      await this.typeMovementService.update(
-        movementType.data.id,
-        {
-          orderId: order.id,
-          description: `Medical consultation movement for order ${order.code}`,
-        },
-        user,
-      );
+      // await this.typeMovementService.update(
+      //   movementType.data.id,
+      //   {
+      //     orderId: order.id,
+      //     description: `Medical consultation movement for order ${order.code}`,
+      //   },
+      //   user,
+      // );
 
       // Crear el pago pendiente
       await this.paymentService.create(

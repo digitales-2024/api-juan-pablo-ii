@@ -1,7 +1,7 @@
 import { BaseOrderGenerator } from '@pay/pay/generators/base-order.generator';
 import { IOrder } from '@pay/pay/interfaces';
 import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
-import { BadRequestException, Inject } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { MedicalConsultationMetadata } from '../interfaces/metadata.interfaces';
 import { ConsultationService } from 'libs/consultation/services/consultation.service';
 import { ServiceService } from 'src/modules/services/services/service.service';
@@ -45,10 +45,6 @@ export class MedicalConsultationGenerator extends BaseOrderGenerator {
   async generate(input: MedicalConsultationInput): Promise<IOrder> {
     // Validar y obtener datos de la consulta
     const consultation = await this.getConsultationData(input.consultationId);
-    if (!consultation) {
-      throw new BadRequestException('Consulta médica no encontrada');
-    }
-
     // Calcular totales
     const subtotal = input.total || consultation.price;
     const { tax, total } = await this.calculateTotals(subtotal);
