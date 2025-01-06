@@ -49,7 +49,7 @@ handle_migrations() {
 }
 
 main() {
-    wait_for_database
+    # wait_for_database
     handle_migrations
     
     echo "🚀 Iniciando aplicación..."
