@@ -265,8 +265,8 @@ model Personal {
 
 model Calendario {
   id         String   @id @default(uuid())
-  personalId String
-  personal   Personal @relation(fields: [personalId], references: [id])
+  personalId String?
+  personal   Personal? @relation(fields: [personalId], references: [id])
   sucursalId String
   nombre     String // Nombre descriptivo del calendario (ej: "Horario Normal", "Horario Verano")
   color      String? // Color para identificar visualmente el calendario
@@ -274,7 +274,6 @@ model Calendario {
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime @updatedAt
-
   eventos     Evento[] // Eventos asociados al calendario
   recurrencia Recurrencia[] // Reglas de recurrencia
 }
@@ -290,7 +289,6 @@ model Evento {
   todoElDia    Boolean    @default(false) // Indica si el evento dura todo el día
   tipo         String // INGRESO, SALIDA, ALMUERZO, DESCANSO, PERMISO
   color        String? // Color específico para este evento
-
   // Campos específicos para permisos
   esPermiso     Boolean  @default(false)
   tipoPermiso   String? // MEDICO, PERSONAL, VACACIONES, etc.
@@ -300,6 +298,7 @@ model Evento {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt
+  
 }
 
 model Recurrencia {
