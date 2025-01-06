@@ -5,11 +5,11 @@ services:
     restart: unless-stopped
     shm_size: 128mb
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - ../db-juan-pablo-ii/:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=juanpablo
+      - POSTGRES_DB=juanpabloii
     ports:
       - 5454:5432
   pgadmin4:
