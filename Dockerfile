@@ -3,6 +3,9 @@ FROM node:22-alpine3.21 AS base
 
 # Instalar pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
+# error en prisma con alpine
+# https://github.com/prisma/prisma/issues/25817#issuecomment-2530137579
+RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 
 ENV DIR=/app
 WORKDIR $DIR
