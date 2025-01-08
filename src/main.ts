@@ -8,9 +8,18 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // app.enableCors({
+  //   origin: process.env.WEB_URL,
+  //   credentials: true,
+  // });
+
   app.enableCors({
-    origin: process.env.WEB_URL,
-    credentials: true,
+    origin: [process.env.WEB_URL], // Array de orígenes permitidos
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true, // Importante para manejar cookies
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 3600,
   });
 
   app.use(cookieParser());
