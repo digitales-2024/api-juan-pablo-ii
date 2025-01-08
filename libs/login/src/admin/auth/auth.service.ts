@@ -38,34 +38,35 @@ export class AuthService {
       const userDB = await this.userService.findByEmail(email);
 
       if (!userDB) {
-        throw new NotFoundException('Usuario no registrado');
+        throw new NotFoundException('User not registered');
       }
 
       // Comparamos la contraseña ingresada con la contraseña encriptada
       if (!bcrypt.compareSync(password, userDB.password)) {
-        throw new UnauthorizedException('Contraseña incorrecta');
+        throw new UnauthorizedException('Password incorrect');
       }
 
       // Actualizamos el ultimo login del usuario
       await this.userService.updateLastLogin(userDB.id);
 
       // Indicar que el usuario debe cambiar la contraseña si es la primera vez que inicia sesión
-      /*  if (userDB.mustChangePassword) {
-        throw new ForbiddenException('Debes cambiar tu contraseña');
+      if (userDB.mustChangePassword) {
+        throw new ForbiddenException('You must change your password');
       }
- */
+
       // Genera el token
       const token = this.getJwtToken({ id: userDB.id });
 
       // Configura la cookie HttpOnly
       res.cookie('access_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
         domain: process.env.WEB_DOMAIN,
-
         expires: new Date(
           Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
         ),
@@ -73,11 +74,12 @@ export class AuthService {
 
       res.cookie('logged_in', true, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
+        domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
-        domain: process.env.WEB_DOMAIN,
-
         expires: new Date(
           Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
         ),
@@ -89,12 +91,13 @@ export class AuthService {
       // Configura la cookie HttpOnly para el refresh token
       res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
+        domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_REFRESH_EXPIRES_IN'), // Asegúrate de que esta configuración exista
-        domain: process.env.WEB_DOMAIN,
-
         expires: new Date(
           Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'),
         ),
@@ -110,7 +113,7 @@ export class AuthService {
       });
     } catch (error) {
       this.logger.error(
-        `Error al iniciar sesión en el correo electrónico: ${loginAuthDto.email}`,
+        `Error logging in for email: ${loginAuthDto.email}`,
         error.stack,
       );
       if (
@@ -121,7 +124,7 @@ export class AuthService {
         throw error;
       }
 
-      handleException(error, 'Error al iniciar sesión');
+      handleException(error, 'Error logging in');
     }
   }
 
@@ -133,23 +136,26 @@ export class AuthService {
     // Borra la cookie que contiene el token JWT
     res.cookie('access_token', '', {
       httpOnly: true,
+      domain: process.env.WEB_DOMAIN,
       expires: new Date(0), // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
     });
 
     // Borra la cookie que contiene el refresh token
     res.cookie('refresh_token', '', {
       httpOnly: true,
+      domain: process.env.WEB_DOMAIN,
       expires: new Date(0), // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
     });
 
     // Borra la cookie que indica que el usuario está logueado
     res.cookie('logged_in', '', {
       httpOnly: false,
+      domain: process.env.WEB_DOMAIN,
       expires: new Date(0), // Establece la fecha de expiración a una fecha pasada para eliminar la cookie
     });
 
     // Enviar una respuesta de éxito
-    res.status(200).json({ message: 'Cierre de sesión exitoso' });
+    res.status(200).json({ message: 'Logout successful' });
   }
 
   /**
@@ -173,17 +179,17 @@ export class AuthService {
       );
 
       if (!isPasswordMatching) {
-        throw new UnauthorizedException('La contraseña actual no coincide');
+        throw new UnauthorizedException('Password current do not match');
       }
 
       if (newPassword === password) {
         throw new ForbiddenException(
-          'La nueva contraseña debe ser diferente a la actual',
+          'The new password must be different from the current one',
         );
       }
 
       if (newPassword !== confirmPassword) {
-        throw new ForbiddenException('Las contraseñas no coinciden');
+        throw new ForbiddenException('Passwords do not match');
       }
 
       await this.userService.updatePasswordTemp(userDB.id, updatePasswordDto);
@@ -194,7 +200,10 @@ export class AuthService {
       // Configura la cookie HttpOnly
       res.cookie('access_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
+        domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
@@ -209,7 +218,10 @@ export class AuthService {
       // Configura la cookie HttpOnly
       res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
+        domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_REFRESH_EXPIRES_IN'),
@@ -227,8 +239,8 @@ export class AuthService {
         roles: userDB.roles,
       });
     } catch (error) {
-      this.logger.error('Error al actualizar la contraseña', error.stack);
-      handleException(error, 'Error al actualizar la contraseña');
+      this.logger.error('Error updating password', error.stack);
+      handleException(error, 'Error updating password');
     }
   }
 
@@ -308,7 +320,10 @@ export class AuthService {
 
       res.cookie('access_token', newAccessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
+        domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get<number>('COOKIE_EXPIRES_IN'), // tiempo corto para el access_token
@@ -321,7 +336,10 @@ export class AuthService {
 
       res.cookie('refresh_token', newRefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
+        domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get<number>('COOKIE_REFRESH_EXPIRES_IN'), // tiempo largo para el refresh_token
@@ -332,7 +350,10 @@ export class AuthService {
 
       res.cookie('logged_in', true, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
+        domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
         expires: new Date(
