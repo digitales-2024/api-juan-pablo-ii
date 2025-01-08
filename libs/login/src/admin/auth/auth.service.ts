@@ -60,7 +60,9 @@ export class AuthService {
       // Configura la cookie HttpOnly
       res.cookie('access_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
@@ -72,7 +74,9 @@ export class AuthService {
 
       res.cookie('logged_in', true, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
@@ -87,7 +91,9 @@ export class AuthService {
       // Configura la cookie HttpOnly para el refresh token
       res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
@@ -194,7 +200,9 @@ export class AuthService {
       // Configura la cookie HttpOnly
       res.cookie('access_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
@@ -210,7 +218,9 @@ export class AuthService {
       // Configura la cookie HttpOnly
       res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
@@ -310,7 +320,9 @@ export class AuthService {
 
       res.cookie('access_token', newAccessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
@@ -324,7 +336,9 @@ export class AuthService {
 
       res.cookie('refresh_token', newRefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         path: '/',
@@ -336,7 +350,9 @@ export class AuthService {
 
       res.cookie('logged_in', true, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'staging',
         domain: process.env.WEB_DOMAIN,
         sameSite: 'strict',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
