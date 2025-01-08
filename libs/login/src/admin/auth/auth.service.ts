@@ -64,6 +64,8 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
+        domain: process.env.WEB_DOMAIN,
+
         expires: new Date(
           Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
         ),
@@ -74,6 +76,8 @@ export class AuthService {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: this.configService.get('COOKIE_EXPIRES_IN'),
+        domain: process.env.WEB_DOMAIN,
+
         expires: new Date(
           Date.now() + this.configService.get('COOKIE_EXPIRES_IN'),
         ),
@@ -89,6 +93,8 @@ export class AuthService {
         sameSite: 'strict',
         path: '/',
         maxAge: this.configService.get('COOKIE_REFRESH_EXPIRES_IN'), // Asegúrate de que esta configuración exista
+        domain: process.env.WEB_DOMAIN,
+
         expires: new Date(
           Date.now() + this.configService.get('COOKIE_REFRESH_EXPIRES_IN'),
         ),
