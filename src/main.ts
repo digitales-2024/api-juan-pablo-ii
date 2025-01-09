@@ -8,51 +8,9 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configuración de CORS mejorada
-  const whitelist = [process.env.WEB_URL, 'http://localhost:3000'];
-
-  const corsOptions = {
-    origin: function (origin, callback) {
-      // Permitir solicitudes sin origen (como aplicaciones móviles o curl)
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      // Verificar si el origen está en la lista blanca
-      if (whitelist.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('No permitido por CORS'));
-      }
-    },
+  app.enableCors({
+    origin: process.env.WEB_URL,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Origin',
-      'X-Requested-With',
-      'Content-Type',
-      'Accept',
-      'Authorization',
-    ],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  };
-
-  app.enableCors(corsOptions);
-
-  // Middleware adicional para cabeceras CORS
-  app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (whitelist.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
-    }
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header(
-      'Access-Control-Allow-Headers',
-      'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-    );
-    next();
   });
 
   app.use(cookieParser());
@@ -104,13 +62,7 @@ async function bootstrap() {
     );
   }
 
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-
-  // Log de información útil
-  console.log(`Application is running on: ${await app.getUrl()}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Allowed origins: ${whitelist.join(', ')}`);
+  await app.listen(process.env.PORT ?? 3000);
 }
 
 bootstrap();
