@@ -3,13 +3,13 @@ services:
     image: postgres:latest
     container_name: db-juan-pablo
     restart: unless-stopped
-    shm_size: 128mb
+    shm_size: 256mb
     volumes:
-      - ../db-juan-pablo-ii/:/var/lib/postgresql/data
+      - ../db-juan-pablo/:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=juanpabloii
+      - POSTGRES_DB=juanpablo
     ports:
       - 5432:5432
   pgadmin4:

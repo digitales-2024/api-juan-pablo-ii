@@ -28,6 +28,7 @@ async function bootstrap() {
     }),
   );
 
+  // Configuración de Swagger basada en entorno
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Juan Pablo API')
@@ -63,4 +64,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
