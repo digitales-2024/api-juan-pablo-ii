@@ -9,6 +9,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserProfileResponseDto } from './users/dto/user-profile-reponse.dto';
 
 @ApiTags('Admin')
 @ApiUnauthorizedResponse({
@@ -22,10 +23,10 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @ApiOkResponse({ description: 'User profile' })
+  @ApiOkResponse({ description: 'User profile', type: UserProfileResponseDto })
   @Get('profile')
   @Version('1')
-  getProfile(@GetUser() user: UserData): UserData {
+  getProfile(@GetUser() user: UserData): UserProfileResponseDto {
     return this.adminService.getProfile(user);
   }
 
