@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, Head } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginAuthDto } from './dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
@@ -47,5 +47,17 @@ export class AuthController {
   @RefreshAuth()
   async refreshToken(@Req() req: Request, @Res() res: Response): Promise<void> {
     return this.authService.refreshToken(req, res);
+  }
+
+  @ApiCreatedResponse({ description: 'Verify token' })
+  @Get('verify')
+  async verify(@Req() req: Request, @Res() res: Response): Promise<void> {
+    return this.authService.verify(req, res);
+  }
+
+  @ApiCreatedResponse({ description: 'Quick token verification' })
+  @Head('verify')
+  async verifyQuick(@Req() req: Request, @Res() res: Response): Promise<void> {
+    return this.authService.verifyQuick(req, res);
   }
 }
