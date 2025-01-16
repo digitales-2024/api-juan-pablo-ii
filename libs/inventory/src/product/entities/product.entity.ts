@@ -8,8 +8,14 @@ export class Product {
   @ApiProperty()
   categoriaId: string;
 
+  // @ApiProperty()
+  // categoriaNombre?: string;
+
   @ApiProperty()
   tipoProductoId: string;
+
+  // @ApiProperty()
+  // tipoProductoNombre?: string;
 
   @ApiProperty()
   name: string;
