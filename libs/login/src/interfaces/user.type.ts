@@ -15,10 +15,7 @@ export type UserPayload = Pick<
   roles: Omit<Rol, 'description'>[];
 };
 
-export type UserData = Omit<
-  UserPayload,
-  'isActive' | 'mustChangePassword' | 'lastLogin'
->;
+export type UserData = Omit<UserPayload, 'isActive' | 'mustChangePassword'>;
 
 export type UserDataLogin = Pick<
   UserPayload,
