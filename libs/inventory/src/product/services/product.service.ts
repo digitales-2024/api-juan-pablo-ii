@@ -138,7 +138,20 @@ export class ProductService {
    */
   async findAll(): Promise<Product[]> {
     try {
-      return this.productRepository.findMany();
+      return this.productRepository.findMany({
+        include: {
+          categoria: {
+            select: {
+              name: true,
+            },
+          },
+          tipoProducto: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
