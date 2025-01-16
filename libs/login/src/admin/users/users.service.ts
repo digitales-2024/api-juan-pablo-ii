@@ -880,7 +880,6 @@ export class UsersService {
       email: userDB.email,
       phone: userDB.phone,
       isSuperAdmin: userDB.isSuperAdmin,
-      lastLogin: userDB.lastLogin,
       roles: userDB.roles,
     };
   }
