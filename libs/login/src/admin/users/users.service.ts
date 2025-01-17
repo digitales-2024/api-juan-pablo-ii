@@ -24,6 +24,8 @@ import { ValidRols } from '../auth/interfaces';
 import { AuditService } from '../audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteUsersDto } from './dto/delete-users.dto';
+import { UserResponseDto } from './dto/user-response.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UsersService {
@@ -357,9 +359,9 @@ export class UsersService {
    * @param user Usuario que elimina el usuario
    * @returns  Datos del usuario eliminado
    */
-  async remove(id: string, user: UserData): Promise<HttpResponse<UserData>> {
+  async remove(id: string, user: UserData): Promise<BaseApiResponse<null>> {
     try {
-      const userRemove = await this.prisma.$transaction(async (prisma) => {
+      const isDelete = await this.prisma.$transaction(async (prisma) => {
         // Verificar que el usuario exista
         const userDB = await this.findById(id);
         if (!userDB) {
@@ -404,7 +406,7 @@ export class UsersService {
         });
 
         // Eliminar todos los roles del usuario
-        await prisma.userRol.updateMany({
+        return await prisma.userRol.updateMany({
           where: {
             userId: id,
           },
@@ -412,21 +414,16 @@ export class UsersService {
             isActive: false,
           },
         });
-
-        return {
-          id: userDB.id,
-          name: userDB.name,
-          email: userDB.email,
-          phone: userDB.phone,
-          isSuperAdmin: userDB.isSuperAdmin,
-          roles: userDB.roles,
-        };
       });
 
+      if (!isDelete) {
+        throw new NotFoundException('User not found or inactive');
+      }
+
       return {
-        statusCode: HttpStatus.OK,
-        message: 'User deleted',
-        data: userRemove,
+        success: true,
+        message: 'Usuario eliminado correctamente',
+        data: null,
       };
     } catch (error) {
       this.logger.error(`Error deleting a user for id: ${id}`, error.stack);
@@ -573,31 +570,14 @@ export class UsersService {
    * @param user Usuario que reactiva el usuario
    * @returns Retorna un objeto con los datos del usuario reactivado
    */
-  async reactivate(
-    id: string,
-    user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  async reactivate(id: string, user: UserData): Promise<BaseApiResponse<null>> {
     try {
-      const userReactivate = await this.prisma.$transaction(async (prisma) => {
+      await this.prisma.$transaction(async (prisma) => {
         const userDB = await prisma.user.findUnique({
           where: { id },
           select: {
             id: true,
-            name: true,
-            email: true,
-            phone: true,
-            isSuperAdmin: true,
             isActive: true,
-            userRols: {
-              select: {
-                rol: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
           },
         });
 
@@ -634,26 +614,11 @@ export class UsersService {
           performedById: user.id,
           createdAt: new Date(),
         });
-
-        return {
-          id: userDB.id,
-          name: userDB.name,
-          email: userDB.email,
-          phone: userDB.phone,
-          isSuperAdmin: userDB.isSuperAdmin,
-          roles: userDB.userRols.map((rol) => {
-            return {
-              id: rol.rol.id,
-              name: rol.rol.name,
-            };
-          }),
-        };
       });
-
       return {
-        statusCode: HttpStatus.OK,
-        message: 'User reactivated',
-        data: userReactivate,
+        success: true,
+        message: 'Usuario reactivado correctamente',
+        data: null,
       };
     } catch (error) {
       this.logger.error(`Error reactivating a user for id: ${id}`, error.stack);
@@ -782,13 +747,13 @@ export class UsersService {
    * @param user Usuario que busca los usuarios
    * @returns Retorna un array con los datos de los usuarios
    */
-  async findAll(user: UserPayload): Promise<UserPayload[]> {
+  async findAll(user: UserPayload): Promise<UserResponseDto[]> {
     // Verificar que el usuario tenga permisos para listar usuarios
     const canListUsers = user.roles.some(
       (role) => role.name === ValidRols.SUPER_ADMIN,
     );
 
-    let usersDB: any[] = [];
+    let usersDB = [];
     if (!canListUsers) {
       usersDB = await this.prisma.user.findMany({
         where: {
@@ -856,12 +821,10 @@ export class UsersService {
         isActive: user.isActive,
         isSuperAdmin: user.isSuperAdmin,
         mustChangePassword: user.mustChangePassword,
-        roles: user.userRols.map((rol) => {
-          return {
-            id: rol.rol.id,
-            name: rol.rol.name,
-          };
-        }),
+        roles: user.userRols.map(({ rol }) => ({
+          id: rol.id,
+          name: rol.name,
+        })),
       };
     });
   }

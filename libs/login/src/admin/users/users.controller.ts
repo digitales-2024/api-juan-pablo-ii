@@ -24,6 +24,8 @@ import {
 } from '@nestjs/swagger';
 import { HttpResponse, UserData, UserPayload } from '@login/login/interfaces';
 import { DeleteUsersDto } from './dto/delete-users.dto';
+import { UserResponseDto } from './dto/user-response.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @ApiTags('Users')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -57,12 +59,12 @@ export class UsersController {
     return this.usersService.update(updateUserDto, id, user);
   }
 
-  @ApiOkResponse({ description: 'User deleted' })
+  @ApiOkResponse({ description: 'User deleted', type: BaseApiResponse<null> })
   @Delete(':id')
   remove(
     @Param('id') id: string,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  ): Promise<BaseApiResponse<null>> {
     return this.usersService.remove(id, user);
   }
 
@@ -81,18 +83,21 @@ export class UsersController {
     return this.usersService.reactivateAll(user, users);
   }
 
-  @ApiOkResponse({ description: 'User reactivated' })
+  @ApiOkResponse({
+    description: 'User reactivated',
+    type: BaseApiResponse<null>,
+  })
   @Patch('reactivate/:id')
   reactivate(
     @Param('id') id: string,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  ): Promise<BaseApiResponse<null>> {
     return this.usersService.reactivate(id, user);
   }
 
-  @ApiOkResponse({ description: 'Get all users' })
   @Get()
-  findAll(@GetUser() user: UserPayload): Promise<UserPayload[]> {
+  @ApiOkResponse({ description: 'Get all users', type: [UserResponseDto] })
+  findAll(@GetUser() user: UserPayload): Promise<UserResponseDto[]> {
     return this.usersService.findAll(user);
   }
 
