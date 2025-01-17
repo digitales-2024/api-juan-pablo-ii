@@ -24,6 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { HttpResponse, UserData, UserPayload } from '@login/login/interfaces';
 import { DeleteUsersDto } from './dto/delete-users.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @ApiTags('Users')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -90,9 +91,9 @@ export class UsersController {
     return this.usersService.reactivate(id, user);
   }
 
-  @ApiOkResponse({ description: 'Get all users' })
   @Get()
-  findAll(@GetUser() user: UserPayload): Promise<UserPayload[]> {
+  @ApiOkResponse({ description: 'Get all users', type: [UserResponseDto] })
+  findAll(@GetUser() user: UserPayload): Promise<UserResponseDto[]> {
     return this.usersService.findAll(user);
   }
 
