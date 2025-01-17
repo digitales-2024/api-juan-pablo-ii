@@ -21,8 +21,8 @@ export class UserResponseDto extends UserProfileResponseDto {
 
   @ApiProperty({
     description: 'Última vez que el usuario hizo login',
-    example: true,
-    type: Boolean,
+    example: '2021-01-01',
+    type: Date,
   })
   @IsString()
   lastLogin: Date;
