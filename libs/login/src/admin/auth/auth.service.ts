@@ -370,4 +370,95 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+
+  async verify(req: Request, res: Response): Promise<void> {
+    try {
+      const access_token = req.cookies.access_token;
+      const refresh_token = req.cookies.refresh_token;
+
+      if (!access_token) {
+        if (!refresh_token) {
+          throw new UnauthorizedException('No token provided');
+        }
+
+        // Si no hay access token pero hay refresh token, intentar refresh
+        return this.refreshToken(req, res);
+      }
+
+      try {
+        // Verificar el token
+        const payload = this.verifyToken(access_token);
+
+        // Verificar si el usuario existe y está activo
+        const userDB = await this.userService.findById(payload.id);
+
+        if (!userDB) {
+          throw new UnauthorizedException('Usuario no encontrado');
+        }
+
+        if (!userDB.isActive) {
+          throw new UnauthorizedException('Usuario inactivo');
+        }
+
+        // Devolver información del usuario
+        res.json({
+          id: userDB.id,
+          name: userDB.name,
+          email: userDB.email,
+          phone: userDB.phone,
+          isSuperAdmin: userDB.isSuperAdmin,
+          roles: userDB.roles,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        // Si el token no es válido o está expirado, intentar refresh
+        if (refresh_token) {
+          return this.refreshToken(req, res);
+        }
+
+        throw new UnauthorizedException('Invalid token');
+      }
+    } catch (error) {
+      this.logger.error('Error verificando token:', error.stack);
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
+      handleException(error, 'Error verificando token');
+    }
+  }
+
+  async verifyQuick(req: Request, res: Response): Promise<void> {
+    try {
+      const access_token = req.cookies.access_token;
+
+      if (!access_token) {
+        throw new UnauthorizedException('No token provided');
+      }
+
+      try {
+        const payload = this.verifyToken(access_token);
+        const userDB = await this.userService.findById(payload.id);
+
+        if (!userDB || !userDB.isActive) {
+          throw new UnauthorizedException('Invalid user');
+        }
+
+        res.sendStatus(200);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        throw new UnauthorizedException('Invalid token');
+      }
+    } catch (error) {
+      this.logger.error('Error en verificación rápida:', error.stack);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      handleException(error, 'Error en verificación rápida');
+    }
+  }
 }
