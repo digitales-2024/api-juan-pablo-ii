@@ -24,6 +24,7 @@ import { ValidRols } from '../auth/interfaces';
 import { AuditService } from '../audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteUsersDto } from './dto/delete-users.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -782,13 +783,13 @@ export class UsersService {
    * @param user Usuario que busca los usuarios
    * @returns Retorna un array con los datos de los usuarios
    */
-  async findAll(user: UserPayload): Promise<UserPayload[]> {
+  async findAll(user: UserPayload): Promise<UserResponseDto[]> {
     // Verificar que el usuario tenga permisos para listar usuarios
     const canListUsers = user.roles.some(
       (role) => role.name === ValidRols.SUPER_ADMIN,
     );
 
-    let usersDB: any[] = [];
+    let usersDB = [];
     if (!canListUsers) {
       usersDB = await this.prisma.user.findMany({
         where: {
@@ -856,12 +857,10 @@ export class UsersService {
         isActive: user.isActive,
         isSuperAdmin: user.isSuperAdmin,
         mustChangePassword: user.mustChangePassword,
-        roles: user.userRols.map((rol) => {
-          return {
-            id: rol.rol.id,
-            name: rol.rol.name,
-          };
-        }),
+        roles: user.userRols.map(({ rol }) => ({
+          id: rol.id,
+          name: rol.name,
+        })),
       };
     });
   }
