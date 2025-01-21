@@ -11,12 +11,7 @@ import { CreateUserDto, UpdateUserDto } from './dto';
 import { handleException } from '@login/login/utils';
 import { RolService } from '../rol/rol.service';
 import { generate } from 'generate-password';
-import {
-  HttpResponse,
-  Rol,
-  UserData,
-  UserPayload,
-} from '@login/login/interfaces';
+import { Rol, UserData, UserPayload } from '@login/login/interfaces';
 import { TypedEventEmitter } from '@login/login/event-emitter/typed-event-emitter.class';
 import { SendEmailDto } from './dto/send-email.dto';
 import { UpdatePasswordDto } from '../auth/dto/update-password.dto';
@@ -46,7 +41,7 @@ export class UsersService {
   async create(
     createUserDto: CreateUserDto,
     user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  ): Promise<BaseApiResponse<UserResponseDto>> {
     try {
       const newUser = await this.prisma.$transaction(async (prisma) => {
         const { roles, email, password, ...dataUser } = createUserDto;
@@ -54,14 +49,14 @@ export class UsersService {
         // Verificar que el rol exista y este activo
 
         if (!roles || roles.length === 0) {
-          throw new BadRequestException('Roles is required');
+          throw new BadRequestException('Se requieren roles');
         }
 
         for (const rol of roles) {
           const rolExist = await this.rolService.findById(rol);
 
           if (!rolExist) {
-            throw new BadRequestException('Rol not found or inactive');
+            throw new BadRequestException('Rol no encontrada o inactiva');
           }
 
           // Verificar que no se pueda crear un usuario con el rol superadmin
@@ -69,7 +64,7 @@ export class UsersService {
 
           if (rolIsSuperAdmin) {
             throw new BadRequestException(
-              'You cannot create a user with the superadmin role',
+              'No puedes crear una usuario con el rol de superadmin',
             );
           }
         }
@@ -78,7 +73,7 @@ export class UsersService {
         const existEmail = await this.checkEmailExist(email);
 
         if (existEmail) {
-          throw new BadRequestException('Email already exists');
+          throw new BadRequestException('El correo electrónico ya existe');
         }
 
         // Verificamos si el email ya existe y esta inactivo
@@ -88,7 +83,7 @@ export class UsersService {
           throw new BadRequestException({
             statusCode: HttpStatus.CONFLICT,
             message:
-              'Email already exists but inactive, contact the administrator to reactivate the account',
+              'El correo electrónico ya existe pero inactivo, comuníquese con el administrador para reactivar la cuentaeactivar la cuenta',
             data: {
               id: (await this.findByEmailInactive(email)).id,
             },
@@ -111,6 +106,9 @@ export class UsersService {
             email: true,
             phone: true,
             isSuperAdmin: true,
+            lastLogin: true,
+            isActive: true,
+            mustChangePassword: true,
           },
         });
 
@@ -126,7 +124,7 @@ export class UsersService {
         );
 
         if (emailResponse.every((response) => response !== true)) {
-          throw new BadRequestException('Failed to send email');
+          throw new BadRequestException('No se pudo enviar correo electrónico');
         }
 
         const userRoles: Omit<Rol, 'description'>[] = [];
@@ -169,8 +167,8 @@ export class UsersService {
       });
 
       return {
-        statusCode: HttpStatus.CREATED,
-        message: 'User created',
+        success: true,
+        message: 'Usuario creado correctamente',
         data: {
           id: newUser.id,
           name: newUser.name,
@@ -178,6 +176,9 @@ export class UsersService {
           phone: newUser.phone,
           isSuperAdmin: newUser.isSuperAdmin,
           roles: newUser.roles,
+          lastLogin: newUser.lastLogin,
+          isActive: newUser.isActive,
+          mustChangePassword: newUser.mustChangePassword,
         },
       };
     } catch (error) {
@@ -203,7 +204,7 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
     id: string,
     user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  ): Promise<BaseApiResponse<UserResponseDto>> {
     try {
       const userUpdate = await this.prisma.$transaction(async (prisma) => {
         const { roles, ...dataUser } = updateUserDto;
@@ -302,6 +303,9 @@ export class UsersService {
             email: true,
             phone: true,
             isSuperAdmin: true,
+            isActive: true,
+            mustChangePassword: true,
+            lastLogin: true,
             userRols: {
               select: {
                 rol: {
@@ -327,7 +331,7 @@ export class UsersService {
       });
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'User updated successfully',
         data: {
           id: userUpdate.id,
@@ -335,6 +339,9 @@ export class UsersService {
           email: userUpdate.email,
           phone: userUpdate.phone,
           isSuperAdmin: userUpdate.isSuperAdmin,
+          isActive: userUpdate.isActive,
+          lastLogin: userUpdate.lastLogin,
+          mustChangePassword: userUpdate.mustChangePassword,
           roles: userUpdate.userRols.map((rol) => ({
             id: rol.rol.id,
             name: rol.rol.name,
@@ -365,12 +372,12 @@ export class UsersService {
         // Verificar que el usuario exista
         const userDB = await this.findById(id);
         if (!userDB) {
-          throw new NotFoundException('User not found or inactive');
+          throw new NotFoundException('Usuario no encontrada o inactiva');
         }
 
         // No permitir que el usuario se elimine a sí mismo
         if (userDB.id === user.id) {
-          throw new BadRequestException('You cannot delete yourself');
+          throw new BadRequestException('No puedes eliminarte');
         }
 
         // Verificar si el usuario tiene algún rol de superadmin activo
@@ -386,7 +393,9 @@ export class UsersService {
         });
 
         if (superAdminRoles.length > 0) {
-          throw new BadRequestException('You cannot delete a superadmin user');
+          throw new BadRequestException(
+            'No puedes eliminar una usuario superadmin',
+          );
         }
 
         // Marcar el usuario como inactivo
@@ -417,7 +426,7 @@ export class UsersService {
       });
 
       if (!isDelete) {
-        throw new NotFoundException('User not found or inactive');
+        throw new NotFoundException('Usuario no encontrada o inactiva');
       }
 
       return {
@@ -440,7 +449,7 @@ export class UsersService {
   async deactivate(
     users: DeleteUsersDto,
     user: UserData,
-  ): Promise<Omit<HttpResponse, 'data'>> {
+  ): Promise<BaseApiResponse<null>> {
     try {
       await this.prisma.$transaction(async (prisma) => {
         // Buscar los usuarios en la base de datos
@@ -549,8 +558,9 @@ export class UsersService {
       });
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'Users deactivated successfully',
+        data: null,
       };
     } catch (error) {
       this.logger.error('Error deactivating users', error.stack);
@@ -635,7 +645,7 @@ export class UsersService {
   async reactivateAll(
     user: UserData,
     users: DeleteUsersDto,
-  ): Promise<Omit<HttpResponse, 'data'>> {
+  ): Promise<BaseApiResponse<null>> {
     try {
       await this.prisma.$transaction(async (prisma) => {
         // Buscar los usuarios en la base de datos
@@ -727,8 +737,9 @@ export class UsersService {
       });
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'Users reactivate successfully',
+        data: null,
       };
     } catch (error) {
       this.logger.error('Error reactivating users', error.stack);
@@ -834,7 +845,7 @@ export class UsersService {
    * @param id Id del usuario
    * @returns Retorna un objeto con los datos del usuario
    */
-  async findOne(id: string): Promise<UserData> {
+  async findOne(id: string): Promise<UserResponseDto> {
     const userDB = await this.findById(id);
 
     return {
@@ -843,6 +854,9 @@ export class UsersService {
       email: userDB.email,
       phone: userDB.phone,
       isSuperAdmin: userDB.isSuperAdmin,
+      lastLogin: userDB.lastLogin,
+      isActive: userDB.isActive,
+      mustChangePassword: userDB.mustChangePassword,
       roles: userDB.roles,
     };
   }
@@ -851,14 +865,20 @@ export class UsersService {
    * Genera una contraseña aleatoria
    * @returns Contraseña aleatoria
    */
-  generatePassword(): { password: string } {
+  async generatePassword(): Promise<BaseApiResponse<{ password: string }>> {
     const password = generate({
       length: 10,
       numbers: true,
+      symbols: true,
+      uppercase: true,
+      lowercase: true,
+      strict: true,
     });
 
     return {
-      password,
+      success: true,
+      message: 'Contraseña generada correctamente',
+      data: { password },
     };
   }
 
@@ -871,7 +891,7 @@ export class UsersService {
   async sendNewPassword(
     sendEmailDto: SendEmailDto,
     user: UserData,
-  ): Promise<HttpResponse<string>> {
+  ): Promise<BaseApiResponse<null>> {
     try {
       const { email, password } = sendEmailDto;
 
@@ -917,16 +937,16 @@ export class UsersService {
           },
         );
 
-        if (emailResponse.every((response) => response === true)) {
-          return {
-            statusCode: HttpStatus.OK,
-            message: `Email sent successfully`,
-            data: sendEmailDto.email,
-          };
-        } else {
+        if (emailResponse.every((response) => response !== true)) {
           throw new BadRequestException('Failed to send email');
         }
+        return {
+          success: true,
+          message: `Email sent successfully`,
+          data: null,
+        };
       });
+
       return send;
     } catch (error) {
       this.logger.error(
