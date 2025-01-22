@@ -1,10 +1,11 @@
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { UserData, HttpResponse } from '@login/login/interfaces';
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { UserData } from '@login/login/interfaces';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { AuditActionType } from '@prisma/client';
 import { CreateServiceTypeDto } from '../dto';
 import { ServiceTypeRepository } from '../repositories/service-type.repository';
 import { ServiceType } from '../entities/service.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateServiceTypeUseCase {
@@ -23,7 +24,7 @@ export class CreateServiceTypeUseCase {
   async execute(
     createServiceTypeDto: CreateServiceTypeDto,
     user: UserData,
-  ): Promise<HttpResponse<ServiceType>> {
+  ): Promise<BaseApiResponse<ServiceType>> {
     // Verificar que el tipo de servicio no existe
     const existingServiceType = await this.serviceTypeRepository.findOne({
       where: {
@@ -59,7 +60,7 @@ export class CreateServiceTypeUseCase {
     );
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'ServiceType created successfully',
       data: newServiceType,
     };
