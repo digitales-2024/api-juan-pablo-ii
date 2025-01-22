@@ -20,7 +20,7 @@ import {
   ApiParam,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Branch } from '../entities/branch.entity';
 import { CreateBranchDto, UpdateBranchDto, DeleteBranchesDto } from '../dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
@@ -107,7 +107,7 @@ export class BranchController {
     @Param('id') id: string,
     @Body() updateBranchDto: UpdateBranchDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Branch>> {
+  ): Promise<BaseApiResponse<Branch>> {
     return this.branchService.update(id, updateBranchDto, user);
   }
 
@@ -127,7 +127,7 @@ export class BranchController {
   deleteMany(
     @Body() deleteBranchesDto: DeleteBranchesDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Branch[]>> {
+  ): Promise<BaseApiResponse<Branch[]>> {
     return this.branchService.deleteMany(deleteBranchesDto, user);
   }
 
@@ -146,7 +146,7 @@ export class BranchController {
   reactivateAll(
     @Body() deleteBranchesDto: DeleteBranchesDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Branch[]>> {
+  ): Promise<BaseApiResponse<Branch[]>> {
     return this.branchService.reactivateMany(deleteBranchesDto.ids, user);
   }
 }
