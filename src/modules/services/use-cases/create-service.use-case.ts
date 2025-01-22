@@ -6,6 +6,7 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { ServiceTypeService } from '../services/service-type.service';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateServiceUseCase {
@@ -25,7 +26,7 @@ export class CreateServiceUseCase {
   async execute(
     createServiceDto: CreateServiceDto,
     user: UserData,
-  ): Promise<HttpResponse<Service>> {
+  ): Promise<BaseApiResponse<Service>> {
     // Verificar que existe el tipo de servicio
     await this.serviceTypeService.findById(createServiceDto.serviceTypeId);
 
@@ -52,7 +53,7 @@ export class CreateServiceUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Service created successfully',
       data: newService,
     };

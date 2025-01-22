@@ -1,11 +1,12 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ServiceRepository } from '../repositories/service.repository';
 import { ServiceTypeService } from '../services/service-type.service';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { UpdateServiceDto } from '../dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateServiceUseCase {
@@ -19,7 +20,7 @@ export class UpdateServiceUseCase {
     id: string,
     updateServiceDto: UpdateServiceDto,
     user: UserData,
-  ): Promise<HttpResponse<Service>> {
+  ): Promise<BaseApiResponse<Service>> {
     // Solo verificar el tipo de servicio si se proporciona en el DTO
     if (updateServiceDto.serviceTypeId) {
       await this.serviceTypeService.findById(updateServiceDto.serviceTypeId);
@@ -49,7 +50,7 @@ export class UpdateServiceUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Service updated successfully',
       data: updatedService,
     };
