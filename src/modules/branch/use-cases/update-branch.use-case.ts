@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateBranchDto } from '../dto/update-branch.dto';
 import { Branch } from '../entities/branch.entity';
 import { BranchRepository } from '../repositories/branch.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateBranchUseCase {
@@ -17,7 +18,7 @@ export class UpdateBranchUseCase {
     id: string,
     updateBranchDto: UpdateBranchDto,
     user: UserData,
-  ): Promise<HttpResponse<Branch>> {
+  ): Promise<BaseApiResponse<Branch>> {
     const updatedBranch = await this.branchRepository.transaction(async () => {
       // Update branch
       const branch = await this.branchRepository.update(id, {
@@ -39,7 +40,7 @@ export class UpdateBranchUseCase {
     });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Sucursal actualizada exitosamente',
       data: updatedBranch,
     };

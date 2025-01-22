@@ -23,6 +23,7 @@ import {
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Branch } from '../entities/branch.entity';
 import { CreateBranchDto, UpdateBranchDto, DeleteBranchesDto } from '../dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar sucursales.
@@ -57,7 +58,7 @@ export class BranchController {
   create(
     @Body() createBranchDto: CreateBranchDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Branch>> {
+  ): Promise<BaseApiResponse<Branch>> {
     return this.branchService.create(createBranchDto, user);
   }
 

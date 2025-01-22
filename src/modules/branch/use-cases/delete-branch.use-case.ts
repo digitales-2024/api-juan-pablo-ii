@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BranchRepository } from '../repositories/branch.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Branch } from '../entities/branch.entity';
 import { AuditActionType } from '@prisma/client';
 import { DeleteBranchesDto } from '../dto/delete-branch.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteBranchesUseCase {
@@ -16,7 +17,7 @@ export class DeleteBranchesUseCase {
   async execute(
     deleteBranchesDto: DeleteBranchesDto,
     user: UserData,
-  ): Promise<HttpResponse<Branch[]>> {
+  ): Promise<BaseApiResponse<Branch[]>> {
     const deletedBranches = await this.branchRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene las sucursales actualizadas
@@ -42,7 +43,8 @@ export class DeleteBranchesUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      // statusCode: HttpStatus.OK,
+      success: true,
       message: 'Sucursales eliminadas exitosamente',
       data: deletedBranches,
     };

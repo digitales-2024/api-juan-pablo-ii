@@ -1,8 +1,8 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BranchRepository } from '../repositories/branch.repository';
 import { Branch } from '../entities/branch.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateBranchDto, UpdateBranchDto, DeleteBranchesDto } from '../dto';
 import {
@@ -12,6 +12,7 @@ import {
   ReactivateBranchesUseCase,
 } from '../use-cases';
 import { branchErrorMessages } from '../errors/errors-branch';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para sucursales.
@@ -51,7 +52,7 @@ export class BranchService {
   async create(
     createBranchDto: CreateBranchDto,
     user: UserData,
-  ): Promise<HttpResponse<Branch>> {
+  ): Promise<BaseApiResponse<Branch>> {
     try {
       return await this.createBranchUseCase.execute(createBranchDto, user);
     } catch (error) {
@@ -71,13 +72,14 @@ export class BranchService {
     id: string,
     updateBranchDto: UpdateBranchDto,
     user: UserData,
-  ): Promise<HttpResponse<Branch>> {
+  ): Promise<BaseApiResponse<Branch>> {
     try {
       const currentBranch = await this.branchRepository.findBranchById(id);
 
       if (!validateChanges(updateBranchDto, currentBranch)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
+          // statusCode: HttpStatus.OK,
           message: 'No se detectaron cambios en la sucursal',
           data: currentBranch,
         };
@@ -110,7 +112,7 @@ export class BranchService {
   async deleteMany(
     deleteBranchesDto: DeleteBranchesDto,
     user: UserData,
-  ): Promise<HttpResponse<Branch[]>> {
+  ): Promise<BaseApiResponse<Branch[]>> {
     try {
       // Validar el array de IDs
       validateArray(deleteBranchesDto.ids, 'IDs de sucursales');
@@ -145,7 +147,7 @@ export class BranchService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Branch[]>> {
+  ): Promise<BaseApiResponse<Branch[]>> {
     try {
       // Validar el array de IDs
       validateArray(ids, 'IDs de sucursales');

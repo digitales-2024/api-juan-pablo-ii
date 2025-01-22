@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BranchRepository } from '../repositories/branch.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Branch } from '../entities/branch.entity';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateBranchesUseCase {
@@ -15,7 +16,7 @@ export class ReactivateBranchesUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Branch[]>> {
+  ): Promise<BaseApiResponse<Branch[]>> {
     // Reactivar las sucursales y registrar auditoría
     const reactivatedBranches = await this.branchRepository.transaction(
       async () => {
@@ -39,7 +40,7 @@ export class ReactivateBranchesUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Sucursales reactivadas exitosamente',
       data: reactivatedBranches,
     };

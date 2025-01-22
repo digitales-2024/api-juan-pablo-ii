@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateBranchDto } from '../dto/create-branch.dto';
 import { Branch } from '../entities/branch.entity';
 import { BranchRepository } from '../repositories/branch.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateBranchUseCase {
@@ -16,7 +17,7 @@ export class CreateBranchUseCase {
   async execute(
     createBranchDto: CreateBranchDto,
     user: UserData,
-  ): Promise<HttpResponse<Branch>> {
+  ): Promise<BaseApiResponse<Branch>> {
     const newBranch = await this.branchRepository.transaction(async () => {
       // Create branch
       const branch = await this.branchRepository.create({
@@ -39,7 +40,7 @@ export class CreateBranchUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Sucursal creada exitosamente',
       data: newBranch,
     };
