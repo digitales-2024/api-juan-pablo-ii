@@ -1,10 +1,11 @@
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { ServiceTypeRepository } from '../repositories/service-type.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { ServiceType } from '../entities/service.entity';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuditActionType } from '@prisma/client';
 import { UpdateServiceTypeDto } from '../dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateServiceTypeUseCase {
@@ -17,7 +18,7 @@ export class UpdateServiceTypeUseCase {
     id: string,
     updateServiceTypeDto: UpdateServiceTypeDto,
     user: UserData,
-  ): Promise<HttpResponse<ServiceType>> {
+  ): Promise<BaseApiResponse<ServiceType>> {
     // Actualizar el servicio y registrar auditoría
     const updatedServiceType = await this.serviceTypeRepository.transaction(
       async () => {
@@ -40,7 +41,7 @@ export class UpdateServiceTypeUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Service updated successfully',
       data: updatedServiceType,
     };

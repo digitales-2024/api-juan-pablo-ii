@@ -1,13 +1,12 @@
 import {
   BadRequestException,
-  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 
 import { ServiceTypeRepository } from '../repositories/service-type.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { ServiceType } from '../entities/service.entity';
 import { handleException } from '@login/login/utils';
 import { CreateServiceTypeUseCase } from '../use-cases/create-servicetype.use-case';
@@ -23,6 +22,7 @@ import {
   DeleteServiceTypesDto,
 } from '../dto';
 import { serviceTypeErrorMessages } from '../errors/errors-service-type';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para tipos de servicios médicos.
@@ -62,7 +62,7 @@ export class ServiceTypeService {
   async create(
     createServiceTypeDto: CreateServiceTypeDto,
     user: UserData,
-  ): Promise<HttpResponse<ServiceType>> {
+  ): Promise<BaseApiResponse<ServiceType>> {
     try {
       return await this.createServiceTypeUseCase.execute(
         createServiceTypeDto,
@@ -86,7 +86,7 @@ export class ServiceTypeService {
     id: string,
     updateServiceTypeDto: UpdateServiceTypeDto,
     user: UserData,
-  ): Promise<HttpResponse<ServiceType>> {
+  ): Promise<BaseApiResponse<ServiceType>> {
     try {
       // Obtener el tipo de servicio existente
       const currentServiceType = await this.findById(id);
@@ -95,7 +95,7 @@ export class ServiceTypeService {
       if (!validateChanges(updateServiceTypeDto, currentServiceType)) {
         this.logger.log('No significant changes, omitting update');
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'Service actualizado correctamente',
           data: currentServiceType,
         };
@@ -168,7 +168,7 @@ export class ServiceTypeService {
   async deleteMany(
     deleteServiceTypesDto: DeleteServiceTypesDto,
     user: UserData,
-  ): Promise<HttpResponse<ServiceType[]>> {
+  ): Promise<BaseApiResponse<ServiceType[]>> {
     try {
       // Validar el array de IDs
       validateArray(deleteServiceTypesDto.ids, 'IDs de servicios');
@@ -219,7 +219,7 @@ export class ServiceTypeService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<ServiceType[]>> {
+  ): Promise<BaseApiResponse<ServiceType[]>> {
     try {
       // Validar el array de IDs
       validateArray(ids, 'IDs de tipos de servicio');

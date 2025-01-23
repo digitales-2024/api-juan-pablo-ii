@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ServiceService } from '../services/service.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { Service } from '../entities/service.entity';
 import { CreateServiceDto, UpdateServiceDto, DeleteServicesDto } from '../dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar servicios médicos.
@@ -55,7 +56,7 @@ export class ServiceController {
   create(
     @Body() createServiceDto: CreateServiceDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Service>> {
+  ): Promise<BaseApiResponse<Service>> {
     return this.serviceService.create(createServiceDto, user);
   }
 
@@ -106,7 +107,7 @@ export class ServiceController {
     @Param('id') id: string,
     @Body() updateServiceDto: UpdateServiceDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Service>> {
+  ): Promise<BaseApiResponse<Service>> {
     return this.serviceService.update(id, updateServiceDto, user);
   }
 
@@ -144,7 +145,7 @@ export class ServiceController {
   reactivateAll(
     @Body() deleteServicesDto: DeleteServicesDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Service[]>> {
+  ): Promise<BaseApiResponse<Service[]>> {
     return this.serviceService.reactivateMany(deleteServicesDto.ids, user);
   }
 }

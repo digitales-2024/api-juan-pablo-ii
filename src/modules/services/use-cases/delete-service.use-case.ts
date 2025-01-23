@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ServiceRepository } from '../repositories/service.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
 import { AuditActionType } from '@prisma/client';
 import { DeleteServicesDto } from '../dto/delete-services.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteServiceUseCase {
@@ -19,7 +20,7 @@ export class DeleteServiceUseCase {
    * @param {UserData} user - Datos del usuario que realiza la eliminación.
    * @returns {Promise<HttpResponse<Service>>} - Respuesta HTTP con el servicio eliminado.
    */
-  async execute(id: string, user: UserData): Promise<HttpResponse<Service>> {
+  async execute(id: string, user: UserData): Promise<BaseApiResponse<Service>> {
     // Realizar la eliminación lógica (softdelete) del servicio
     const deletedService = await this.serviceRepository.transaction(
       async () => {
@@ -39,7 +40,7 @@ export class DeleteServiceUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Service deleted successfully',
       data: deletedService,
     };
@@ -56,7 +57,7 @@ export class DeleteServicesUseCase {
   async execute(
     deleteServicesDto: DeleteServicesDto,
     user: UserData,
-  ): Promise<HttpResponse<Service[]>> {
+  ): Promise<BaseApiResponse<Service[]>> {
     const deletedServices = await this.serviceRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene los servicios actualizados
@@ -82,7 +83,7 @@ export class DeleteServicesUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Services deleted successfully',
       data: deletedServices,
     };

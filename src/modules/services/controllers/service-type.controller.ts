@@ -20,12 +20,13 @@ import {
 } from '@nestjs/swagger';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { ServiceType } from '../entities/service.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateServiceTypeDto,
   UpdateServiceTypeDto,
   DeleteServiceTypesDto,
 } from '../dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar tipos de servicios médicos.
@@ -59,7 +60,7 @@ export class ServiceTypeController {
   create(
     @Body() createServiceTypeDto: CreateServiceTypeDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<ServiceType>> {
+  ): Promise<BaseApiResponse<ServiceType>> {
     return this.serviceTypeService.create(createServiceTypeDto, user);
   }
 
@@ -110,7 +111,7 @@ export class ServiceTypeController {
     @Param('id') id: string,
     @Body() updateServiceTypeDto: UpdateServiceTypeDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<ServiceType>> {
+  ): Promise<BaseApiResponse<ServiceType>> {
     return this.serviceTypeService.update(id, updateServiceTypeDto, user);
   }
 
@@ -148,7 +149,7 @@ export class ServiceTypeController {
   reactivateAll(
     @Body() deleteServiceTypesDto: DeleteServiceTypesDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<ServiceType[]>> {
+  ): Promise<BaseApiResponse<ServiceType[]>> {
     return this.serviceTypeService.reactivateMany(
       deleteServiceTypesDto.ids,
       user,
