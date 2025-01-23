@@ -200,8 +200,8 @@ model ServiceType {
   isActive    Boolean @default(true)
 
   // Nueva relación con Especialidad
-  especialidadId String
-  especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
+  especialidadId String?
+  especialidad   Especialidad? @relation(fields: [especialidadId], references: [id])
 
   services  Service[] // Relación inversa con Service
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
