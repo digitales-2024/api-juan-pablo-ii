@@ -24,6 +24,7 @@ export class CreateTypeProductUseCase {
         const typeProduct = await this.typeProductRepository.create({
           name: createTypeProductDto.name,
           description: createTypeProductDto.description,
+          isActive: true,
         });
 
         // Register audit
