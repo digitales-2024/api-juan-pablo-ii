@@ -5,7 +5,14 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma/prisma.service';
-import { rolSuperAdminSeed, superAdminSeed } from './data/superadmin.seed';
+import {
+  rolSuperAdminSeed,
+  superAdminSeed,
+  rolAdminSeed,
+  adminSeed,
+  doctorSeed,
+  rolDoctorSeed,
+} from './data/superadmin.seed';
 import { handleException } from '@login/login/utils';
 import * as bcrypt from 'bcrypt';
 import { HttpResponse, UserData } from '@login/login/interfaces';
@@ -154,6 +161,103 @@ export class SeedsService {
             userRols: {
               create: {
                 rolId: superadminRole.id,
+              },
+            },
+          },
+        });
+
+        // Crear rol admin si no existe
+        const adminRole = await prisma.rol.upsert({
+          where: {
+            name_isActive: { name: rolAdminSeed.name, isActive: true },
+          },
+          update: {},
+          create: rolAdminSeed,
+        });
+
+        // Crear nuevas entradas de permisos para el rol admin
+        const adminModulePermissionEntries = allModulePermissions.map(
+          (modulePermission) => ({
+            rolId: adminRole.id,
+            modulePermissionsId: modulePermission.id,
+          }),
+        );
+
+        // Asignar permisos del módulo al rol admin
+        await prisma.rolModulePermissions.createMany({
+          data: adminModulePermissionEntries,
+          skipDuplicates: true,
+        });
+
+        // Crear usuario admin y asignarle el rol si no existe
+        await prisma.user.upsert({
+          where: {
+            email_isActive: { email: adminSeed.email, isActive: true },
+          },
+          update: {},
+          create: {
+            ...adminSeed,
+            password: await bcrypt.hash(adminSeed.password, 10),
+            isSuperAdmin: false,
+            userRols: {
+              create: {
+                rolId: adminRole.id,
+              },
+            },
+          },
+        });
+
+        // Crear rol doctor si no existe
+        const doctorRole = await prisma.rol.upsert({
+          where: {
+            name_isActive: { name: rolDoctorSeed.name, isActive: true },
+          },
+          update: {},
+          create: rolDoctorSeed,
+        });
+
+        // Obtener solo los módulos relevantes para el doctor
+        const doctorModules = [
+          'CONSULTATIONS',
+          'APPOINTMENTS',
+          'PATIENTS',
+          'MEDICAL_RECORDS',
+          'PRESCRIPTIONS',
+        ];
+
+        // Filtrar los permisos de módulos para el doctor
+        const doctorModulePermissions = allModulePermissions.filter((mp) => {
+          const module = updatedModulesList.find((m) => m.id === mp.moduleId);
+          return doctorModules.includes(module?.cod);
+        });
+
+        // Crear entradas de permisos para el rol doctor
+        const doctorModulePermissionEntries = doctorModulePermissions.map(
+          (modulePermission) => ({
+            rolId: doctorRole.id,
+            modulePermissionsId: modulePermission.id,
+          }),
+        );
+
+        // Asignar permisos limitados al rol doctor
+        await prisma.rolModulePermissions.createMany({
+          data: doctorModulePermissionEntries,
+          skipDuplicates: true,
+        });
+
+        // Crear usuario doctor y asignarle el rol
+        await prisma.user.upsert({
+          where: {
+            email_isActive: { email: doctorSeed.email, isActive: true },
+          },
+          update: {},
+          create: {
+            ...doctorSeed,
+            password: await bcrypt.hash(doctorSeed.password, 10),
+            isSuperAdmin: false,
+            userRols: {
+              create: {
+                rolId: doctorRole.id,
               },
             },
           },

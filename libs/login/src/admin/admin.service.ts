@@ -3,6 +3,8 @@ import { UpdatePasswordDto } from './auth/dto/update-password.dto';
 import { PrismaService } from '@prisma/prisma';
 import * as bcrypt from 'bcrypt';
 import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserProfileResponseDto } from './users/dto/user-profile-reponse.dto';
+import { map } from 'rxjs';
 
 @Injectable()
 export class AdminService {
@@ -13,14 +15,17 @@ export class AdminService {
    * @param user Usuario logueado
    * @returns Data del usuario logueado
    */
-  getProfile(user: UserData): UserData {
+  getProfile(user: UserData): UserProfileResponseDto {
     return {
       id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
       isSuperAdmin: user.isSuperAdmin,
-      roles: user.roles,
+      roles: user.roles.map((role) => ({
+        id: role.id,
+        name: role.name,
+      })),
     };
   }
   /**

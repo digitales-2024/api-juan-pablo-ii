@@ -14,10 +14,7 @@ import {
 } from './use-cases/delete-service.use-case';
 import { CreateServiceTypeUseCase } from './use-cases/create-servicetype.use-case';
 import { UpdateServiceTypeUseCase } from './use-cases/update-servicetype.use-case';
-import {
-  DeleteServiceTypeUseCase,
-  DeleteServiceTypesUseCase,
-} from './use-cases/delete-servicetype.use-case';
+import { DeleteServiceTypesUseCase } from './use-cases/delete-servicetype.use-case';
 import { ReactivateServicesUseCase } from './use-cases/reactive-service.use-case';
 import { ReactivateServiceTypesUseCase } from './use-cases/reactive-servicetype.use-case';
 
@@ -39,7 +36,6 @@ import { ReactivateServiceTypesUseCase } from './use-cases/reactive-servicetype.
     DeleteServicesUseCase,
     CreateServiceTypeUseCase,
     UpdateServiceTypeUseCase,
-    DeleteServiceTypeUseCase,
     DeleteServiceTypesUseCase,
     ReactivateServicesUseCase,
     ReactivateServiceTypesUseCase,

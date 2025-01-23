@@ -16,14 +16,15 @@ import { UpdateUserDto } from './dto';
 import { SendEmailDto } from './dto/send-email.dto';
 import {
   ApiBadRequestResponse,
-  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData, UserPayload } from '@login/login/interfaces';
+import { UserData, UserPayload } from '@login/login/interfaces';
 import { DeleteUsersDto } from './dto/delete-users.dto';
+import { UserResponseDto } from './dto/user-response.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @ApiTags('Users')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -37,32 +38,58 @@ import { DeleteUsersDto } from './dto/delete-users.dto';
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(private readonly usersService: UsersService) {}
+  @ApiOkResponse({
+    description: 'Usuarios obtenidos correctamente',
+    type: [UserResponseDto],
+  })
+  @Get()
+  findAll(@GetUser() user: UserPayload): Promise<UserResponseDto[]> {
+    return this.usersService.findAll(user);
+  }
 
-  @ApiCreatedResponse({ description: 'User created' })
+  @ApiOkResponse({
+    description: 'Usuario obtenido correctamente',
+    type: [UserResponseDto],
+  })
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<UserResponseDto> {
+    return this.usersService.findOne(id);
+  }
+
+  @ApiOkResponse({
+    description: 'Usuario creado correctamente',
+    type: BaseApiResponse<UserResponseDto>,
+  })
   @Post()
   create(
     @Body() createUserDto: CreateUserDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  ): Promise<BaseApiResponse<UserResponseDto>> {
     return this.usersService.create(createUserDto, user);
   }
 
-  @ApiOkResponse({ description: 'User updated' })
+  @ApiOkResponse({
+    description: 'Usuario actualizado correctamente',
+    type: BaseApiResponse<UserResponseDto>,
+  })
   @Patch(':id')
   update(
     @Body() updateUserDto: UpdateUserDto,
     @Param('id') id: string,
     @GetUser() user: UserData,
-  ) {
+  ): Promise<BaseApiResponse<UserResponseDto>> {
     return this.usersService.update(updateUserDto, id, user);
   }
 
-  @ApiOkResponse({ description: 'User deleted' })
+  @ApiOkResponse({
+    description: 'Usuario eliminado correctamente',
+    type: BaseApiResponse<null>,
+  })
   @Delete(':id')
   remove(
     @Param('id') id: string,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  ): Promise<BaseApiResponse<null>> {
     return this.usersService.remove(id, user);
   }
 
@@ -71,7 +98,7 @@ export class UsersController {
   deactivate(
     @Body() users: DeleteUsersDto,
     @GetUser() user: UserData,
-  ): Promise<Omit<HttpResponse, 'data'>> {
+  ): Promise<BaseApiResponse<null>> {
     return this.usersService.deactivate(users, user);
   }
 
@@ -81,39 +108,36 @@ export class UsersController {
     return this.usersService.reactivateAll(user, users);
   }
 
-  @ApiOkResponse({ description: 'User reactivated' })
+  @ApiOkResponse({
+    description: 'User reactivated',
+    type: BaseApiResponse<null>,
+  })
   @Patch('reactivate/:id')
   reactivate(
     @Param('id') id: string,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UserData>> {
+  ): Promise<BaseApiResponse<null>> {
     return this.usersService.reactivate(id, user);
   }
 
-  @ApiOkResponse({ description: 'Get all users' })
-  @Get()
-  findAll(@GetUser() user: UserPayload): Promise<UserPayload[]> {
-    return this.usersService.findAll(user);
-  }
-
-  @ApiOkResponse({ description: 'Get user by id' })
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<UserData> {
-    return this.usersService.findOne(id);
-  }
-
-  @ApiOkResponse({ description: 'Get new password' })
+  @ApiOkResponse({
+    description: 'Contraseña generada correctamente',
+    type: BaseApiResponse<{ password: string }>,
+  })
   @Post('generate-password')
-  generatePassword(): { password: string } {
+  generatePassword(): Promise<BaseApiResponse<{ password: string }>> {
     return this.usersService.generatePassword();
   }
 
-  @ApiOkResponse({ description: 'Send new password' })
+  @ApiOkResponse({
+    description: 'Nueva contraseña enviada correctamente',
+    type: BaseApiResponse<null>,
+  })
   @Post('send-new-password')
   sendNewPassword(
     @Body() sendEmailDto: SendEmailDto,
     @GetUser() user: UserData,
-  ) {
+  ): Promise<BaseApiResponse<null>> {
     return this.usersService.sendNewPassword(sendEmailDto, user);
   }
 }

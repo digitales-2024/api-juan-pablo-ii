@@ -1,11 +1,6 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateServiceDto, DeleteServicesDto, UpdateServiceDto } from '../dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { ServiceRepository } from '../repositories/service.repository';
@@ -17,6 +12,7 @@ import {
   ReactivateServicesUseCase,
 } from '../use-cases';
 import { serviceErrorMessages } from '../errors/errors-service';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para servicios médicos.
@@ -57,7 +53,7 @@ export class ServiceService {
   async create(
     createServiceDto: CreateServiceDto,
     user: UserData,
-  ): Promise<HttpResponse<Service>> {
+  ): Promise<BaseApiResponse<Service>> {
     try {
       return await this.createServiceUseCase.execute(createServiceDto, user);
     } catch (error) {
@@ -77,7 +73,7 @@ export class ServiceService {
     id: string,
     updateServiceDto: UpdateServiceDto,
     user: UserData,
-  ): Promise<HttpResponse<Service>> {
+  ): Promise<BaseApiResponse<Service>> {
     try {
       // Obtener el servicio existente
       const currentService = await this.findById(id);
@@ -86,7 +82,7 @@ export class ServiceService {
       if (!validateChanges(updateServiceDto, currentService)) {
         this.logger.log('No significant changes, omitting update');
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'Service actualizado correctamente',
           data: currentService,
         };
@@ -136,7 +132,7 @@ export class ServiceService {
   async deleteMany(
     deleteServicesDto: DeleteServicesDto,
     user: UserData,
-  ): Promise<HttpResponse<Service[]>> {
+  ): Promise<BaseApiResponse<Service[]>> {
     try {
       // Validar el array de IDs
       validateArray(deleteServicesDto.ids, 'IDs de servicios');
@@ -156,7 +152,7 @@ export class ServiceService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Service[]>> {
+  ): Promise<BaseApiResponse<Service[]>> {
     try {
       // Validar el array de IDs
       validateArray(ids, 'IDs de servicios');

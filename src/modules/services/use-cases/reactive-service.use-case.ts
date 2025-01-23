@@ -1,44 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ServiceRepository } from '../repositories/service.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
 import { AuditActionType } from '@prisma/client';
-
-// @Injectable()
-// export class ReactivateServiceUseCase {
-//   constructor(
-//     private readonly serviceRepository: ServiceRepository,
-//     private readonly auditService: AuditService,
-//   ) {}
-//
-//   async execute(id: string, user: UserData): Promise<HttpResponse<Service>> {
-//     // Reactivar el servicio y registrar auditoría
-//     const reactivatedService = await this.serviceRepository.transaction(
-//       async () => {
-//         const service = await this.serviceRepository.reactivate(id);
-//
-//         // Registrar auditoría
-//         await this.auditService.create({
-//           entityId: service.id,
-//           entityType: 'service',
-//           action: AuditActionType.UPDATE,
-//           performedById: user.id,
-//           createdAt: new Date(),
-//         });
-//
-//         return service;
-//       },
-//     );
-//
-//     return {
-//       statusCode: HttpStatus.OK,
-//       message: 'Service reactivated successfully',
-//       data: reactivatedService,
-//     };
-//   }
-// }
-
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 @Injectable()
 export class ReactivateServicesUseCase {
   constructor(
@@ -49,7 +15,7 @@ export class ReactivateServicesUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Service[]>> {
+  ): Promise<BaseApiResponse<Service[]>> {
     // Reactivar los servicios y registrar auditoría
     const reactivatedServices = await this.serviceRepository.transaction(
       async () => {
@@ -73,7 +39,7 @@ export class ReactivateServicesUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Services reactivated successfully',
       data: reactivatedServices,
     };
