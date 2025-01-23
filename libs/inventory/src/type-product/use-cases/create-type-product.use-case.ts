@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateTypeProductDto } from '../dto/create-type-product.dto';
 import { TypeProduct } from '../entities/type-product.entity';
 import { TypeProductRepository } from '../repositories/type-product.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateTypeProductUseCase {
@@ -16,7 +17,7 @@ export class CreateTypeProductUseCase {
   async execute(
     createTypeProductDto: CreateTypeProductDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeProduct>> {
+  ): Promise<BaseApiResponse<TypeProduct>> {
     const newTypeProduct = await this.typeProductRepository.transaction(
       async () => {
         // Create type product
@@ -39,7 +40,7 @@ export class CreateTypeProductUseCase {
     );
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Tipo de producto creado exitosamente',
       data: newTypeProduct,
     };

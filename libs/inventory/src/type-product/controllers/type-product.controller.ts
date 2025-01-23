@@ -19,14 +19,18 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+
 import {
   CreateTypeProductDto,
   UpdateTypeProductDto,
   DeleteTypeProductDto,
 } from '../dto';
-import { TypeProduct } from '../entities/type-product.entity';
-
+import {
+  TypeProduct,
+  TypeProductResponse,
+} from '../entities/type-product.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { UserData } from '@login/login/interfaces';
 /**
  * Controlador REST para gestionar tipos de productos.
  * Expone endpoints para operaciones CRUD sobre tipos de productos.
@@ -52,7 +56,7 @@ export class TypeProductController {
   @ApiResponse({
     status: 201,
     description: 'Tipo de producto creado exitosamente',
-    type: TypeProduct,
+    type: BaseApiResponse<CreateTypeProductDto>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o tipo de producto ya existe',
@@ -60,7 +64,7 @@ export class TypeProductController {
   create(
     @Body() createTypeProductDto: CreateTypeProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeProduct>> {
+  ): Promise<BaseApiResponse<TypeProduct>> {
     return this.typeProductService.create(createTypeProductDto, user);
   }
 
@@ -89,9 +93,9 @@ export class TypeProductController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todos los tipos de productos',
-    type: [TypeProduct],
+    type: [TypeProductResponse],
   })
-  findAll(): Promise<TypeProduct[]> {
+  findAll(): Promise<TypeProductResponse[]> {
     return this.typeProductService.findAll();
   }
 
@@ -103,13 +107,13 @@ export class TypeProductController {
   @ApiResponse({
     status: 200,
     description: 'Tipo de producto actualizado exitosamente',
-    type: TypeProduct,
+    type: BaseApiResponse<UpdateTypeProductDto>,
   })
   update(
     @Param('id') id: string,
     @Body() updateTypeProductDto: UpdateTypeProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeProduct>> {
+  ): Promise<BaseApiResponse<TypeProduct>> {
     return this.typeProductService.update(id, updateTypeProductDto, user);
   }
 
@@ -121,7 +125,7 @@ export class TypeProductController {
   @ApiResponse({
     status: 200,
     description: 'Tipos de productos desactivados exitosamente',
-    type: [TypeProduct],
+    type: [BaseApiResponse<TypeProduct>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o tipos de productos no existen',
@@ -129,7 +133,7 @@ export class TypeProductController {
   deleteMany(
     @Body() deleteTypeProductDto: DeleteTypeProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeProduct[]>> {
+  ): Promise<BaseApiResponse<TypeProduct[]>> {
     return this.typeProductService.deleteMany(deleteTypeProductDto, user);
   }
 
@@ -140,7 +144,7 @@ export class TypeProductController {
   @ApiOperation({ summary: 'Reactivar múltiples tipos de productos' })
   @ApiOkResponse({
     description: 'Tipos de productos reactivados exitosamente',
-    type: [TypeProduct],
+    type: [BaseApiResponse<DeleteTypeProductDto>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o tipos de productos no existen',
@@ -148,7 +152,7 @@ export class TypeProductController {
   reactivateAll(
     @Body() deleteTypeProductDto: DeleteTypeProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeProduct[]>> {
+  ): Promise<BaseApiResponse<TypeProduct[]>> {
     return this.typeProductService.reactivateMany(
       deleteTypeProductDto.ids,
       user,

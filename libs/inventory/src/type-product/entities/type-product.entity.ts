@@ -11,3 +11,20 @@ export class TypeProduct {
   @ApiProperty()
   description?: string;
 }
+
+export class TypeProductResponse {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description?: string;
+
+  @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty()
+  createdAt: Date;
+}
