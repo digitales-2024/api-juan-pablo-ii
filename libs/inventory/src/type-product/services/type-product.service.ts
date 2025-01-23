@@ -1,12 +1,10 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { TypeProductRepository } from '../repositories/type-product.repository';
-import { TypeProduct } from '../entities/type-product.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import {
+  TypeProduct,
+  TypeProductResponse,
+} from '../entities/type-product.entity';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { typeProductErrorMessages } from '../errors/errors-type-product';
@@ -21,6 +19,7 @@ import {
   DeleteTypeProductsUseCase,
   ReactivateTypeProductUseCase,
 } from '../use-cases';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class TypeProductService {
@@ -52,7 +51,7 @@ export class TypeProductService {
   async create(
     createTypeProductDto: CreateTypeProductDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeProduct>> {
+  ): Promise<BaseApiResponse<TypeProduct>> {
     try {
       // Validación de nombre
       const nameExists = await this.findByName(createTypeProductDto.name);
@@ -62,7 +61,7 @@ export class TypeProductService {
           'Ya existe un tipo producto con este nombre',
         );
       }
-      
+
       // Si no existe, continúa con el proceso de creación
       return await this.createTypeProductUseCase.execute(
         createTypeProductDto,
@@ -85,13 +84,13 @@ export class TypeProductService {
     id: string,
     updateTypeProductDto: UpdateTypeProductDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeProduct>> {
+  ): Promise<BaseApiResponse<TypeProduct>> {
     try {
       const currentTypeProduct = await this.findById(id);
 
       if (!validateChanges(updateTypeProductDto, currentTypeProduct)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en el tipo de producto',
           data: currentTypeProduct,
         };
@@ -135,7 +134,7 @@ export class TypeProductService {
    * @returns Una promesa que resuelve con una lista de todos los tipos de productos
    * @throws {Error} Si ocurre un error al obtener los tipos de productos
    */
-  async findAll(): Promise<TypeProduct[]> {
+  async findAll(): Promise<TypeProductResponse[]> {
     try {
       return this.typeProductRepository.findMany();
     } catch (error) {
@@ -167,7 +166,7 @@ export class TypeProductService {
   async deleteMany(
     deleteTypeProductDto: DeleteTypeProductDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeProduct[]>> {
+  ): Promise<BaseApiResponse<TypeProduct[]>> {
     try {
       validateArray(deleteTypeProductDto.ids, 'IDs de tipos de productos');
       return await this.deleteTypeProductsUseCase.execute(
@@ -189,7 +188,7 @@ export class TypeProductService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<TypeProduct[]>> {
+  ): Promise<BaseApiResponse<TypeProduct[]>> {
     try {
       validateArray(ids, 'IDs de tipos de productos');
       return await this.reactivateTypeProductUseCase.execute(ids, user);
