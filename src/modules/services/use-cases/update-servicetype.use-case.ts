@@ -42,7 +42,7 @@ export class UpdateServiceTypeUseCase {
 
     return {
       success: true,
-      message: 'Service updated successfully',
+      message: 'Tipo de servicio actualizado correctamente',
       data: updatedServiceType,
     };
   }

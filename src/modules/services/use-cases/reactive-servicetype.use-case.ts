@@ -78,7 +78,7 @@ export class ReactivateServiceTypesUseCase {
 
     return {
       success: true,
-      message: 'Service types reactivados exitosamente',
+      message: 'Tipo de servicio reactivado exitosamente',
       data: reactivatedServiceTypes,
     };
   }

@@ -51,7 +51,7 @@ export class UpdateServiceUseCase {
 
     return {
       success: true,
-      message: 'Service updated successfully',
+      message: 'Servicio actualizado exitosamente',
       data: updatedService,
     };
   }
