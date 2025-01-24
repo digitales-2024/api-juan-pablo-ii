@@ -61,7 +61,7 @@ export class CreateServiceTypeUseCase {
 
     return {
       success: true,
-      message: 'ServiceType created successfully',
+      message: 'Tipo de servicio creado exitosamente',
       data: newServiceType,
     };
   }
