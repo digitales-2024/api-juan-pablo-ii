@@ -84,7 +84,7 @@ export class DeleteServicesUseCase {
 
     return {
       success: true,
-      message: 'Services deleted successfully',
+      message: 'Servicio desactivado exitosamente',
       data: deletedServices,
     };
   }
