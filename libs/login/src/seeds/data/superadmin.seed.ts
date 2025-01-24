@@ -22,6 +22,14 @@ export const doctorSeed = {
   mustChangePassword: false,
 };
 
+export const ceciliaAdminSeed = {
+  name: 'Cecilia Rodriguez',
+  email: 'juanpabloii@admin.com',
+  password: 'juanpabloii2024',
+  phone: '+51982570902',
+  mustChangePassword: false,
+};
+
 export const rolSuperAdminSeed = {
   name: 'SUPER_ADMIN',
   description: 'Super Administrador del Sistema',

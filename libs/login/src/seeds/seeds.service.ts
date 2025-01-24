@@ -10,6 +10,7 @@ import {
   superAdminSeed,
   rolAdminSeed,
   adminSeed,
+  ceciliaAdminSeed,
   doctorSeed,
   rolDoctorSeed,
 } from './data/superadmin.seed';
@@ -198,6 +199,24 @@ export class SeedsService {
           create: {
             ...adminSeed,
             password: await bcrypt.hash(adminSeed.password, 10),
+            isSuperAdmin: false,
+            userRols: {
+              create: {
+                rolId: adminRole.id,
+              },
+            },
+          },
+        });
+
+        // Crear usuario Cecilia admin y asignarle el rol admin
+        await prisma.user.upsert({
+          where: {
+            email_isActive: { email: ceciliaAdminSeed.email, isActive: true },
+          },
+          update: {},
+          create: {
+            ...ceciliaAdminSeed,
+            password: await bcrypt.hash(ceciliaAdminSeed.password, 10),
             isSuperAdmin: false,
             userRols: {
               create: {
