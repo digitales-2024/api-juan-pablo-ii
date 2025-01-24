@@ -40,7 +40,7 @@ export class ReactivateServicesUseCase {
 
     return {
       success: true,
-      message: 'Services reactivated successfully',
+      message: 'Servicio reactivado exitosamente',
       data: reactivatedServices,
     };
   }

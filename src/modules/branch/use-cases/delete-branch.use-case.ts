@@ -45,7 +45,7 @@ export class DeleteBranchesUseCase {
     return {
       // statusCode: HttpStatus.OK,
       success: true,
-      message: 'Sucursales eliminadas exitosamente',
+      message: 'Sucursales desactivadas exitosamente',
       data: deletedBranches,
     };
   }

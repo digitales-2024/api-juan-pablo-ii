@@ -1,8 +1,8 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateServiceDto } from '../dto/create-service.dto';
 import { Service } from '../entities/service.entity';
 import { ServiceRepository } from '../repositories/service.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { ServiceTypeService } from '../services/service-type.service';
@@ -54,7 +54,7 @@ export class CreateServiceUseCase {
 
     return {
       success: true,
-      message: 'Service created successfully',
+      message: 'Servicio creado exitosamente',
       data: newService,
     };
   }

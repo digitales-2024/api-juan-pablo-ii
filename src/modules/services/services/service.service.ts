@@ -83,7 +83,7 @@ export class ServiceService {
         this.logger.log('No significant changes, omitting update');
         return {
           success: true,
-          message: 'Service actualizado correctamente',
+          message: 'Servicio actualizado correctamente',
           data: currentService,
         };
       }

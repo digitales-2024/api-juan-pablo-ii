@@ -96,7 +96,7 @@ export class ServiceTypeService {
         this.logger.log('No significant changes, omitting update');
         return {
           success: true,
-          message: 'Service actualizado correctamente',
+          message: 'Tipo de servicio actualizado correctamente',
           data: currentServiceType,
         };
       }
