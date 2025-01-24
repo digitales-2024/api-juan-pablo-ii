@@ -80,7 +80,7 @@ export class BranchService {
         return {
           success: true,
           // statusCode: HttpStatus.OK,
-          message: 'No se detectaron cambios en la sucursal',
+          message: 'Sucursal actualizada exitosamente',
           data: currentBranch,
         };
       }
