@@ -255,68 +255,118 @@ model Personal {
   dni      String  @unique
   birth    String
 
-  calendario Calendario[] // Relación con Calendario
-
   CitaMedica CitaMedica[] // Relación con CitaMedica
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
 }
 
+////////////////////////////////////////
+// Enums básicos del sistema
+enum TipoCalendario {
+  PERSONAL
+  CITAS_MEDICAS
+  CONSULTAS_MEDICAS
+}
+
+enum TipoEvento {
+  CITA_MEDICA
+  CONTROL_MEDICO
+  INGRESO
+  SALIDA
+  ALMUERZO
+  DESCANSO
+  PERMISO
+}
+
+enum TipoPermiso {
+  MEDICO
+  PERSONAL
+  VACACIONES
+}
+
+enum EstadoPermiso {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+// Enums para recurrencia
+enum FrecuenciaRecurrencia {
+  DIARIA
+  SEMANAL
+  MENSUAL
+  ANUAL
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+// Modelos principales
 model Calendario {
-  id         String   @id @default(uuid())
-  personalId String?
-  personal   Personal? @relation(fields: [personalId], references: [id])
-  sucursalId String
-  nombre     String // Nombre descriptivo del calendario (ej: "Horario Normal", "Horario Verano")
-  color      String? // Color para identificar visualmente el calendario
-  isDefault  Boolean  @default(false) // Indica si es el calendario principal del empleado
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt  DateTime @updatedAt
-  eventos     Evento[] // Eventos asociados al calendario
-  recurrencia Recurrencia[] // Reglas de recurrencia
+  id               String         @id @default(uuid())
+  nombre           String
+  tipo             TipoCalendario
+  citaMedicaId     String?
+  consultaMedicaId String?
+  personalId       String?
+  sucursalId       String?
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt
+  eventos          Evento[]
 }
 
 model Evento {
-  id           String     @id @default(uuid())
-  calendarioId String
-  calendario   Calendario @relation(fields: [calendarioId], references: [id])
-  titulo       String // Título del evento (ej: "Ingreso", "Almuerzo", "Salida")
-  descripcion  String? // Descripción opcional del evento
-  fechaInicio  String // Fecha y hora de inicio del evento
-  fechaFin     String // Fecha y hora de fin del evento
-  todoElDia    Boolean    @default(false) // Indica si el evento dura todo el día
-  tipo         String // INGRESO, SALIDA, ALMUERZO, DESCANSO, PERMISO
-  color        String? // Color específico para este evento
-  // Campos específicos para permisos
-  esPermiso     Boolean  @default(false)
-  tipoPermiso   String? // MEDICO, PERSONAL, VACACIONES, etc.
-  estadoPermiso String? // PENDIENTE, APROBADO, RECHAZADO
-  appointmentId String?
-  // Campos de control
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime @updatedAt
-  
+  id            String         @id @default(uuid())
+  calendarioId  String
+  calendario    Calendario     @relation(fields: [calendarioId], references: [id])
+  tipo          TipoEvento
+  nombre        String
+  descripcion   String?
+  fechaInicio   DateTime
+  fechaFin      DateTime
+  color         String?
+  // Campos para permisos
+  tipoPermiso   TipoPermiso?
+  estadoPermiso EstadoPermiso?
+  // Campos para citas
+  duracion      Int?
+  pacienteId    String?
+  personalId    String?
+  // Control
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt
+  // Relación
+  // Relación con recurrencia
+  recurrenciaId String? // Relación opcional
+  recurrencia   Recurrencia?   @relation(fields: [recurrenciaId], references: [id])
 }
 
 model Recurrencia {
-  id           String     @id @default(uuid())
-  calendarioId String
-  calendario   Calendario @relation(fields: [calendarioId], references: [id])
+  id          String                @id @default(uuid())
+  frecuencia  FrecuenciaRecurrencia // Diaria, semanal, mensual, anual
+  intervalo   Int // Cada cuántos días, semanas, meses, años
+  diasSemana  DiaSemana[] // Días específicos (opcional)
+  excepciones DiaSemana[] // Fechas específicas para excluir
+  fechaInicio DateTime // Inicio de la recurrencia
+  fechaFin    DateTime? // Opcional: límite de la recurrencia
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime              @updatedAt
 
-  // Reglas de recurrencia
-  frecuencia  String // DIARIA, SEMANAL, MENSUAL, ANUAL
-  intervalo   Int // Cada cuántas unidades de frecuencia se repite 1
-  fechaInicio DateTime // Cuándo comienza la recurrencia
-  fechaFin    DateTime? // Cuándo termina la recurrencia (opcional)
-
-  // Campos de control
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
+  Evento Evento[]
 }
+
+//////////////////////////////////
 
 // Tabla Categoria
 model Categoria {
