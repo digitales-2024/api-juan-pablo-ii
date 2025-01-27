@@ -267,7 +267,7 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Función privada para obtener los datos de Personal
   private async fetchStaff(staffId: string) {
-    return await this.prisma.personal.findUnique({
+    return await this.prisma.staff.findUnique({
       where: { id: staffId },
       select: { name: true },
     });
