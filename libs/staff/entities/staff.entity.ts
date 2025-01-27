@@ -1,6 +1,6 @@
 export class Staff {
   id: string;
-  especialidadId: string;
+  staffTypeId: string;
   userId: string;
   name: string;
   email: string;
@@ -13,8 +13,8 @@ export class Staff {
   updatedAt: Date;
 }
 
-// especialidad.entity.ts
-export class Specialization {
+
+export class StaffType {
   id: string;
   name: string;
   description?: string;
