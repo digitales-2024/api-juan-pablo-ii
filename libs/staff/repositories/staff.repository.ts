@@ -11,7 +11,7 @@ import { BaseRepository, PrismaService } from '@prisma/prisma';
 @Injectable()
 export class StaffRepository extends BaseRepository<Staff> {
   constructor(prisma: PrismaService) {
-    super(prisma, 'personal');
+    super(prisma, 'staff');
   }
 
   async createPersonal(data: {
@@ -21,11 +21,11 @@ export class StaffRepository extends BaseRepository<Staff> {
     birth: string;
     email: string;
     phone?: string;
-    especialidadId: string;
+    staffTypeId: string;
     userId?: string;
   }): Promise<Staff> {
     return this.prisma.measureQuery(`createPersonal`, () =>
-      this.prisma.personal.create({
+      this.prisma.staff.create({
         data: {
           name: data.name,
           lastName: data.lastName,
@@ -34,14 +34,14 @@ export class StaffRepository extends BaseRepository<Staff> {
           email: data.email,
           phone: data.phone,
           userId: data.userId,
-          especialidad: {
+          staffType: {
             connect: {
-              id: data.especialidadId,
+              id: data.staffTypeId,
             },
           },
         },
         include: {
-          especialidad: true,
+          staffType: true,
         },
       }),
     );
@@ -51,14 +51,14 @@ export class StaffRepository extends BaseRepository<Staff> {
    * @param especialidadId - ID de la especialidad
    * @returns Lista de personal activo de la especialidad especificada
    */
-  async findActiveByEspecialidad(especialidadId: string): Promise<Staff[]> {
+  async findActiveByEspecialidad(staffTypeId: string): Promise<Staff[]> {
     return this.findMany({
       where: {
-        especialidadId,
+        staffTypeId,
         isActive: true,
       },
       include: {
-        especialidad: true,
+        staffType: true,
       },
     });
   }
@@ -72,15 +72,15 @@ export class StaffRepository extends BaseRepository<Staff> {
     return this.findByField('dni', dni);
   }
 
-  // Necesitamos agregar este método para buscar personal por especialidad
-  async findByEspecialidad(especialidadId: string) {
+  // Renombrar método para consistencia
+  async findByStaffType(staffTypeId: string) {
     return this.findMany({
       where: {
-        especialidadId,
+        staffTypeId,
         isActive: true,
       },
       include: {
-        especialidad: true,
+        staffType: true,
       },
     });
   }
