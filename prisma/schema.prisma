@@ -198,11 +198,6 @@ model ServiceType {
   name        String
   description String?
   isActive    Boolean @default(true)
-
-  // Nueva relación con Especialidad
-  especialidadId String?
-  especialidad   Especialidad? @relation(fields: [especialidadId], references: [id])
-
   services  Service[] // Relación inversa con Service
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt
@@ -224,26 +219,23 @@ model Service {
   updatedAt DateTime @updatedAt
 }
 
-//tabla especialidad
-model Especialidad {
+//tabla tipo de personal
+model StaffType {
   id          String  @id @unique @default(uuid())
   name        String
   description String?
   isActive    Boolean @default(true)
 
-  personal Personal[] // Relación con Personal
-
-  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime      @updatedAt
-  ServiceType ServiceType[]
+  staff     Staff[] // Relación con Staff
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 }
 
-//tabla medicos que van a ser usuarios
-model Personal {
+model Staff {
   id String @id @unique @default(uuid())
 
-  especialidadId String // Clave foránea a especialidad
-  especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
+  staffTypeId String    // Clave foránea a StaffType
+  staffType   StaffType @relation(fields: [staffTypeId], references: [id])
 
   userId String? // Clave foránea a user
 
@@ -265,8 +257,8 @@ model Personal {
 
 model Calendario {
   id         String   @id @default(uuid())
-  personalId String?
-  personal   Personal? @relation(fields: [personalId], references: [id])
+  staffId String?
+  personal   Staff? @relation(fields: [staffId], references: [id])
   sucursalId String
   nombre     String // Nombre descriptivo del calendario (ej: "Horario Normal", "Horario Verano")
   color      String? // Color para identificar visualmente el calendario
@@ -274,8 +266,8 @@ model Calendario {
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime @updatedAt
-  eventos     Evento[] // Eventos asociados al calendario
-  recurrencia Recurrencia[] // Reglas de recurrencia
+  eventos    Evento[]
+  recurrencia Recurrencia[]
 }
 
 model Evento {
@@ -606,8 +598,8 @@ model CitaMedica {
   tipoCitaMedicaId String
   TipoCitaMedica   TipoCitaMedica @relation(fields: [tipoCitaMedicaId], references: [id])
   //relacion con personal
-  personalId       String
-  personal         Personal       @relation(fields: [personalId], references: [id])
+  staffId       String
+  personal         Staff       @relation(fields: [staffId], references: [id])
   //relacion con consulta medica
   consultaId       String
   ConsultaMedica   ConsultaMedica @relation(fields: [consultaId], references: [id])
