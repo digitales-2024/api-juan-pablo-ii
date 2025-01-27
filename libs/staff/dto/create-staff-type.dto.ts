@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
-export class CreateSpecializationDto {
+export class CreateStaffTypeDto {
   @ApiProperty({
     description: 'Nombre de la especialidad',
     example: 'Cardiología',

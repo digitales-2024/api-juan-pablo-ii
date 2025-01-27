@@ -1,11 +1,17 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditActionType } from '@prisma/client';
 import { Staff } from '../entities/staff.entity';
 import { StaffRepository } from '../repositories/staff.repository';
 import { DeleteStaffDto } from '../dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
+/**
+ * Caso de uso para eliminar personal médico
+ * @class
+ * @description Maneja la lógica de negocio para eliminar personal médico (soft delete) y registrar auditoría
+ */
 @Injectable()
 export class DeleteStaffUseCase {
   constructor(
@@ -13,10 +19,16 @@ export class DeleteStaffUseCase {
     private readonly auditService: AuditService,
   ) {}
 
+  /**
+   * Ejecuta la eliminación lógica de personal médico
+   * @param deleteStaffDto - DTO con los IDs del personal a eliminar
+   * @param user - Datos del usuario que realiza la operación
+   * @returns Respuesta con el personal eliminado
+   */
   async execute(
     deleteStaffDto: DeleteStaffDto,
     user: UserData,
-  ): Promise<HttpResponse<Staff[]>> {
+  ): Promise<BaseApiResponse<Staff[]>> {
     const deletedStaffs = await this.staffRepository.transaction(async () => {
       // Realiza el soft delete y obtiene las especialidades actualizadas
       const staffs = await this.staffRepository.softDeleteMany(
@@ -25,10 +37,10 @@ export class DeleteStaffUseCase {
 
       // Registra la auditoría para cada especialidad eliminada
       await Promise.all(
-        staffs.map((specialization) =>
+        staffs.map((staff) =>
           this.auditService.create({
-            entityId: specialization.id,
-            entityType: 'especialidad',
+            entityId: staff.id,
+            entityType: 'staff',
             action: AuditActionType.DELETE,
             performedById: user.id,
             createdAt: new Date(),
@@ -40,7 +52,7 @@ export class DeleteStaffUseCase {
     });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Personal eliminado exitosamente',
       data: deletedStaffs,
     };

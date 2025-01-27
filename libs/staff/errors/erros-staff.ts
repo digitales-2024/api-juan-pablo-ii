@@ -1,22 +1,22 @@
 import { ErrorMessages } from 'src/common/error-handlers/service-error.handler';
 
-export const personalErrorMessages: ErrorMessages = {
-  notFound: 'Personal médico no encontrado',
-  alreadyExists: 'El personal médico ya existe',
-  invalidData: 'Datos del personal médico inválidos',
-  notActive: 'El personal médico no está activo',
-  alreadyActive: 'El personal médico ya está activo',
-  inUse: 'El personal médico está en uso y no puede ser eliminado',
-  invalidOperation: 'Operación inválida para el personal médico',
+export const staffErrorMessages: ErrorMessages = {
+  notFound: 'Personal no encontrado',
+  alreadyExists: 'El personal ya existe',
+  invalidData: 'Datos del personal inválidos',
+  notActive: 'El personal no está activo',
+  alreadyActive: 'El personal ya está activo',
+  inUse: 'El personal está en uso y no puede ser eliminado',
+  invalidOperation: 'Operación inválida para el personal',
 };
 
 // errors-especialidad.ts
-export const especialidadErrorMessages: ErrorMessages = {
-  notFound: 'Especialidad no encontrada',
-  alreadyExists: 'La especialidad ya existe',
-  invalidData: 'Datos de la especialidad inválidos',
-  notActive: 'La especialidad no está activa',
-  alreadyActive: 'La especialidad ya está activa',
-  inUse: 'La especialidad está en uso y no puede ser eliminada',
-  invalidOperation: 'Operación inválida para la especialidad',
+export const staffTypeErrorMessages: ErrorMessages = {
+  notFound: 'Tipo de personal no encontrado',
+  alreadyExists: 'El tipo de personal ya existe',
+  invalidData: 'Datos del tipo de personal inválidos',
+  notActive: 'El tipo de personal no está activo',
+  alreadyActive: 'El tipo de personal ya está activa',
+  inUse: 'El tipo de personal está en uso y no puede ser eliminado',
+  invalidOperation: 'Operación inválida para el tipo de personal',
 };
