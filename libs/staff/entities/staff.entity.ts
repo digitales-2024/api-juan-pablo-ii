@@ -10,7 +10,6 @@ export class Staff {
   @ApiProperty({ description: 'ID del usuario asociado', nullable: true })
   userId: string | null;
 
-  @ApiProperty({ description: 'Nombre del personal' })
   name: string;
 
   @ApiProperty({ description: 'Correo electrónico' })
@@ -54,12 +53,22 @@ export class Staff {
   };
 }
 
-
 export class StaffType {
+  @ApiProperty({ description: 'ID único del tipo de personal' })
   id: string;
+
+  @ApiProperty({ description: 'Nombre del tipo de personal' })
   name: string;
+
+  @ApiProperty({ description: 'Descripción del tipo de personal', required: false })
   description?: string;
+
+  @ApiProperty({ description: 'Estado activo/inactivo del tipo de personal' })
   isActive: boolean;
+
+  @ApiProperty({ description: 'Fecha de creación del registro' })
   createdAt: Date;
+
+  @ApiProperty({ description: 'Fecha de última actualización' })
   updatedAt: Date;
 }

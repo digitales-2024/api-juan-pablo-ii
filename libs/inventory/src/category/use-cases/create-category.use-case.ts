@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { Category } from '../entities/category.entity';
 import { CategoryRepository } from '../repositories/category.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateCategoryUseCase {
@@ -16,12 +17,13 @@ export class CreateCategoryUseCase {
   async execute(
     createCategoryDto: CreateCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Category>> {
+  ): Promise<BaseApiResponse<Category>> {
     const newCategory = await this.categoryRepository.transaction(async () => {
       // Create category
       const category = await this.categoryRepository.create({
         name: createCategoryDto.name,
         description: createCategoryDto.description,
+        isActive: true,
       });
 
       // Register audit
@@ -37,7 +39,7 @@ export class CreateCategoryUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Categoría creada exitosamente',
       data: newCategory,
     };
