@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CalendarRepository } from '../repositories/calendar.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteCalendarDto } from '../dto/delete-calendar.dto';
-import { Calendar } from '../entities/pacient.entity';
+import { Calendar } from '../entities/calendar.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteCalendarsUseCase {
@@ -16,7 +17,7 @@ export class DeleteCalendarsUseCase {
   async execute(
     deleteCalendarsDto: DeleteCalendarDto,
     user: UserData,
-  ): Promise<HttpResponse<Calendar[]>> {
+  ): Promise<BaseApiResponse<Calendar[]>> {
     const deletedCalendars = await this.calendarRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene los calendarios actualizados
@@ -42,7 +43,7 @@ export class DeleteCalendarsUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Calendarios eliminados exitosamente',
       data: deletedCalendars,
     };
