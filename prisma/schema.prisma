@@ -344,11 +344,11 @@ model Event {
 
 model Recurrence {
   id          String                @id @default(uuid())
-  frequency   RecurrenceFrequency   // Daily, weekly, monthly, annual
-  interval    Int                   // Every how many days, weeks, months, years
+  frequency   RecurrenceFrequency?   // Daily, weekly, monthly, annual
+  interval    Int?                   // Every how many days, weeks, months, years
   daysOfWeek  DayOfWeek[]           // Specific days (optional)
   exceptions  DayOfWeek[]           // Specific dates to exclude
-  startDate   DateTime              // Start of the recurrence
+  startDate   DateTime?              // Start of the recurrence
   endDate     DateTime?             // Optional: end of the recurrence
   isActive    Boolean               @default(true)
   createdAt   DateTime              @default(now()) @db.Timestamptz(6)
