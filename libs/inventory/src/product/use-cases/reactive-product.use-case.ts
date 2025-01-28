@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 import { Product } from '../entities/product.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateProductUseCase {
@@ -15,7 +16,7 @@ export class ReactivateProductUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Product[]>> {
+  ): Promise<BaseApiResponse<Product[]>> {
     // Reactivar los productos y registrar auditoría
     const reactivatedProducts = await this.productRepository.transaction(
       async () => {
@@ -39,7 +40,8 @@ export class ReactivateProductUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      // statusCode: HttpStatus.OK,
+      success: true,
       message: 'Productos reactivados exitosamente',
       data: reactivatedProducts,
     };
