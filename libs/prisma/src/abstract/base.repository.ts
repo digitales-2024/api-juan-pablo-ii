@@ -285,6 +285,14 @@ export abstract class BaseRepository<T extends { id: string }> {
     return dto;
   }
 
+  mapToEntity<E, F>(baseEntity: E): F {
+    return baseEntity as unknown as F;
+  }
+
+  mapManyToEntities<E, F>(baseEntities: E[]): F[] {
+    return baseEntities as unknown as F[];
+  }
+
   // Añadir este método dentro de la clase BaseRepository
 
   /**
@@ -322,14 +330,14 @@ export abstract class BaseRepository<T extends { id: string }> {
    */
   async findOneWithRelations(
     id: string,
-    include?: Record<string, boolean>,
+    params: QueryParams,
   ): Promise<T | null> {
     return this.prisma.measureQuery(
       `findOneWithRelations${String(this.modelName)}`,
       () =>
         (this.prisma[this.modelName] as any).findUnique({
+          ...params,
           where: { id },
-          include,
         }),
     );
   }
