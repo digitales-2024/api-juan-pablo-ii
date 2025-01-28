@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventRepository } from '../repositories/event.repository';
 import { Event } from '../entities/event.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateEventUseCase {
@@ -12,7 +13,10 @@ export class ReactivateEventUseCase {
     private readonly auditService: AuditService,
   ) {}
 
-  async execute(ids: string[], user: UserData): Promise<HttpResponse<Event[]>> {
+  async execute(
+    ids: string[],
+    user: UserData,
+  ): Promise<BaseApiResponse<Event[]>> {
     // Reactivar los eventos y registrar auditoría
     const reactivatedEvents = await this.eventRepository.transaction(
       async () => {
@@ -36,7 +40,7 @@ export class ReactivateEventUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Eventos reactivados exitosamente',
       data: reactivatedEvents,
     };
