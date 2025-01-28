@@ -1,47 +1,78 @@
-// dto/create-calendar.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsUUID } from 'class-validator';
-
-// CreateCalendarDto
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsUUID,
+  IsEnum,
+} from 'class-validator';
+import { CalendarType } from '../entities/calendar.entity';
+import { Transform } from 'class-transformer';
 
 export class CreateCalendarDto {
-  @ApiProperty({
-    description: 'ID del personal asociado al calendario',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsUUID()
-  @IsOptional()
-  personalId: string;
-
-  @ApiProperty({
-    description: 'ID de la sucursal asociada al calendario',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsUUID()
-  @IsOptional()
-  sucursalId: string;
-
   @ApiProperty({
     description: 'Nombre del calendario',
     example: 'Horario Normal',
   })
   @IsString()
-  nombre: string;
+  name: string;
 
   @ApiProperty({
-    description: 'Color del calendario',
-    example: '#FF0000',
+    description: 'Tipo de calendario',
+    example: 'PERSONAL, CITAS_MEDICAS o CONSULTAS_MEDICAS',
+  })
+  @ApiProperty({
+    description: 'Tipo de calendario',
+    example: 'PERSONAL',
+  })
+  @IsEnum(CalendarType, {
+    message:
+      "type must be either 'PERSONAL', 'CITAS_MEDICAS' or 'CONSULTAS_MEDICAS'",
+  })
+  @Transform(({ value }) => value.toUpperCase())
+  type: CalendarType;
+
+  @ApiProperty({
+    description: 'ID de la cita médica asociada al calendario',
+    example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })
-  @IsString()
+  @IsUUID()
   @IsOptional()
-  color?: string;
+  medicalAppointmentId?: string;
 
   @ApiProperty({
-    description: 'Indica si es el calendario predeterminado',
-    example: false,
+    description: 'ID de la consulta médica asociada al calendario',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsUUID()
+  @IsOptional()
+  medicalConsultationId?: string;
+
+  @ApiProperty({
+    description: 'ID del personal asociado al calendario',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsUUID()
+  @IsOptional()
+  staffId?: string;
+
+  @ApiProperty({
+    description: 'ID de la sucursal asociada al calendario',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsUUID()
+  @IsOptional()
+  branchId?: string;
+
+  @ApiProperty({
+    description: 'Indica si el calendario está activo',
+    example: true,
   })
   @IsBoolean()
   @IsOptional()
-  isDefault: boolean;
+  isActive: boolean;
 }
