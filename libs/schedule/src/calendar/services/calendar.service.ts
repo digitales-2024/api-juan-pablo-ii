@@ -1,16 +1,11 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CalendarRepository } from '../repositories/calendar.repository';
 import {
   CreateCalendarDto,
   UpdateCalendarDto,
   DeleteCalendarDto,
 } from '../dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { calendarErrorMessages } from '../errors/errors-calendar';
@@ -20,8 +15,9 @@ import {
   DeleteCalendarsUseCase,
   ReactivateCalendarUseCase,
 } from '../use-cases';
-import { Calendar } from '../entities/pacient.entity';
+import { Calendar } from '../entities/calendar.entity';
 import { BranchRepository } from 'src/modules/branch/repositories/branch.repository';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CalendarService {
@@ -54,10 +50,10 @@ export class CalendarService {
   async create(
     createCalendarDto: CreateCalendarDto,
     user: UserData,
-  ): Promise<HttpResponse<Calendar>> {
+  ): Promise<BaseApiResponse<Calendar>> {
     try {
       const branchExist = await this.branchRepository.findBranchById(
-        createCalendarDto.sucursalId,
+        createCalendarDto.branchId,
       );
       if (!branchExist) {
         throw new BadRequestException('No existe la sucursal');
@@ -80,13 +76,13 @@ export class CalendarService {
     id: string,
     updateCalendarDto: UpdateCalendarDto,
     user: UserData,
-  ): Promise<HttpResponse<Calendar>> {
+  ): Promise<BaseApiResponse<Calendar>> {
     try {
       const currentCalendar = await this.findById(id);
 
       if (!validateChanges(updateCalendarDto, currentCalendar)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en el calendario',
           data: currentCalendar,
         };
@@ -153,7 +149,7 @@ export class CalendarService {
   async deleteMany(
     deleteCalendarDto: DeleteCalendarDto,
     user: UserData,
-  ): Promise<HttpResponse<Calendar[]>> {
+  ): Promise<BaseApiResponse<Calendar[]>> {
     try {
       validateArray(deleteCalendarDto.ids, 'IDs de calendarios');
       return await this.deleteCalendarsUseCase.execute(deleteCalendarDto, user);
@@ -172,7 +168,7 @@ export class CalendarService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Calendar[]>> {
+  ): Promise<BaseApiResponse<Calendar[]>> {
     try {
       validateArray(ids, 'IDs de calendarios');
       return await this.reactivateCalendarUseCase.execute(ids, user);
