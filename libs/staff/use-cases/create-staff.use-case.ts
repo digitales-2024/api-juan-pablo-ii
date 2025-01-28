@@ -57,7 +57,7 @@ export class CreateStaffUseCase {
     }
 
     const newStaff = await this.staffRepository.transaction(async () => {
-      const staff = await this.staffRepository.createPersonal({
+      const staff = await this.staffRepository.createStaff({
         name: createStaffDto.name,
         lastName: createStaffDto.lastName,
         dni: createStaffDto.dni,
