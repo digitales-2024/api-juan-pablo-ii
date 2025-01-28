@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { Category } from '../entities/category.entity';
 import { CategoryRepository } from '../repositories/category.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateCategoryUseCase {
@@ -17,7 +18,7 @@ export class UpdateCategoryUseCase {
     id: string,
     updateCategoryDto: UpdateCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Category>> {
+  ): Promise<BaseApiResponse<Category>> {
     const updatedCategory = await this.categoryRepository.transaction(
       async () => {
         // Update category
@@ -40,7 +41,7 @@ export class UpdateCategoryUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Categoría actualizada exitosamente',
       data: updatedCategory,
     };

@@ -10,4 +10,27 @@ export class Category {
 
   @ApiProperty()
   description?: string;
+
+  @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty()
+  createdAt: Date;
 }
+
+// export class CategoryResponse {
+//   @ApiProperty()
+//   id: string;
+
+//   @ApiProperty()
+//   name: string;
+
+//   @ApiProperty()
+//   description?: string;
+
+//   @ApiProperty()
+//   isActive: boolean;
+
+//   @ApiProperty()
+//   createdAt: Date;
+// }
