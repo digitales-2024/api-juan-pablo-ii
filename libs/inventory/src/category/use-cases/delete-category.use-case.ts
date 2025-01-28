@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Category } from '../entities/category.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteCategoryDto } from '../dto/delete-category.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteCategoriesUseCase {
@@ -16,7 +17,7 @@ export class DeleteCategoriesUseCase {
   async execute(
     deleteCategoriesDto: DeleteCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Category[]>> {
+  ): Promise<BaseApiResponse<Category[]>> {
     const deletedCategories = await this.categoryRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene las categorías actualizadas
@@ -42,7 +43,7 @@ export class DeleteCategoriesUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Categorías eliminadas exitosamente',
       data: deletedCategories,
     };
