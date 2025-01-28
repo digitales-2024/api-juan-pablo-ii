@@ -1,33 +1,24 @@
-// dto/create-recurrence.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsString,
   IsOptional,
-  IsNotEmpty,
   IsNumber,
   IsDate,
+  IsEnum,
+  IsArray,
+  IsBoolean,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { RecurrenceFrequency, DayOfWeek } from '../entities/recurrence.entity';
 
 export class CreateRecurrenceDto {
-  @ApiProperty({
-    description: 'ID del calendario al que pertenece la recurrencia',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  calendarioId: string;
-
   @ApiProperty({
     description: 'Frecuencia de la recurrencia',
     example: 'DIARIA',
     required: true,
   })
-  @IsString()
-  @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
-  frecuencia: string;
+  @IsEnum(RecurrenceFrequency)
+  @IsOptional()
+  frequency: RecurrenceFrequency;
 
   @ApiProperty({
     description: 'Intervalo de repetición',
@@ -35,8 +26,28 @@ export class CreateRecurrenceDto {
     required: true,
   })
   @IsNumber()
-  @IsNotEmpty()
-  intervalo: number;
+  @IsOptional()
+  interval: number;
+
+  @ApiProperty({
+    description: 'Días específicos de la semana (opcional)',
+    example: ['LUNES', 'MIERCOLES', 'VIERNES'],
+    required: false,
+  })
+  @IsEnum(DayOfWeek, { each: true })
+  @IsArray()
+  @IsOptional()
+  daysOfWeek?: DayOfWeek[];
+
+  @ApiProperty({
+    description: 'Fechas específicas a excluir',
+    example: ['SABADO', 'DOMINGO'],
+    required: false,
+  })
+  @IsEnum(DayOfWeek, { each: true })
+  @IsArray()
+  @IsOptional()
+  exceptions?: DayOfWeek[];
 
   @ApiProperty({
     description: 'Fecha de inicio de la recurrencia',
@@ -44,9 +55,9 @@ export class CreateRecurrenceDto {
     required: true,
   })
   @IsDate()
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => new Date(value))
-  fechaInicio: Date;
+  startDate: Date;
 
   @ApiProperty({
     description: 'Fecha de fin de la recurrencia',
@@ -56,5 +67,13 @@ export class CreateRecurrenceDto {
   @IsDate()
   @IsOptional()
   @Transform(({ value }) => (value ? new Date(value) : undefined))
-  fechaFin?: Date;
+  endDate?: Date;
+
+  @ApiProperty({
+    description: 'Indica si la recurrencia está activa',
+    default: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
