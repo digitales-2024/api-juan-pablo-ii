@@ -33,6 +33,7 @@ export class CreateEventUseCase {
         duration: createEventDto.duration,
         patientId: createEventDto.patientId,
         staffId: createEventDto.staffId,
+        recurrenceId: createEventDto.recurrenceId,
         isActive: createEventDto.isActive,
       });
 

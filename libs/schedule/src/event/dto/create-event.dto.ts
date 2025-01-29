@@ -69,7 +69,7 @@ export class CreateEventDto {
     required: true,
   })
   @IsDate()
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => new Date(value))
   endDate: Date;
 
@@ -129,6 +129,15 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   staffId?: string;
+
+  @ApiProperty({
+    description: 'ID del personal asociado al evento',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  recurrenceId?: string;
 
   @ApiProperty({
     description: 'Indica si el evento está activo',

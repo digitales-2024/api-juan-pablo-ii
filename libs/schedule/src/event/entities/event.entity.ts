@@ -61,6 +61,7 @@ export enum EventType {
   ALMUERZO = 'ALMUERZO',
   DESCANSO = 'DESCANSO',
   PERMISO = 'PERMISO',
+  TURNO = 'TURNO',
 }
 
 export enum PermissionType {

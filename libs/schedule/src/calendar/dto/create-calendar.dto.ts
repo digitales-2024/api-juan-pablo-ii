@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsBoolean,
-  IsUUID,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
 import { CalendarType } from '../entities/calendar.entity';
 import { Transform } from 'class-transformer';
 
@@ -37,7 +31,6 @@ export class CreateCalendarDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })
-  @IsUUID()
   @IsOptional()
   medicalAppointmentId?: string;
 
@@ -46,7 +39,6 @@ export class CreateCalendarDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })
-  @IsUUID()
   @IsOptional()
   medicalConsultationId?: string;
 
@@ -55,7 +47,6 @@ export class CreateCalendarDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })
-  @IsUUID()
   @IsOptional()
   staffId?: string;
 
@@ -64,7 +55,6 @@ export class CreateCalendarDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })
-  @IsUUID()
   @IsOptional()
   branchId?: string;
 
