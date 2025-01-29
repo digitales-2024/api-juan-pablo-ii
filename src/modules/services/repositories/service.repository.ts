@@ -38,7 +38,9 @@ export class ServiceRepository extends BaseRepository<Service> {
    */
   async findOneWithDetails(id: string): Promise<Service> {
     return this.findOneWithRelations(id, {
-      serviceType: true,
+      include: {
+        serviceType: true,
+      },
     });
   }
 }
