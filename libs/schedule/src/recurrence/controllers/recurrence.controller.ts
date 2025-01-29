@@ -19,13 +19,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateRecurrenceDto,
   UpdateRecurrenceDto,
   DeleteRecurrenceDto,
 } from '../dto';
 import { Recurrence } from '../entities/recurrence.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar recurrencias.
@@ -52,7 +53,7 @@ export class RecurrenceController {
   @ApiResponse({
     status: 201,
     description: 'Recurrencia creada exitosamente',
-    type: Recurrence,
+    type: BaseApiResponse<CreateRecurrenceDto>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o recurrencia ya existe',
@@ -60,7 +61,7 @@ export class RecurrenceController {
   create(
     @Body() createRecurrenceDto: CreateRecurrenceDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recurrence>> {
+  ): Promise<BaseApiResponse<Recurrence>> {
     return this.recurrenceService.create(createRecurrenceDto, user);
   }
 
@@ -103,13 +104,13 @@ export class RecurrenceController {
   @ApiResponse({
     status: 200,
     description: 'Recurrencia actualizada exitosamente',
-    type: Recurrence,
+    type: BaseApiResponse<Recurrence>,
   })
   update(
     @Param('id') id: string,
     @Body() updateRecurrenceDto: UpdateRecurrenceDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recurrence>> {
+  ): Promise<BaseApiResponse<Recurrence>> {
     return this.recurrenceService.update(id, updateRecurrenceDto, user);
   }
 
@@ -121,7 +122,7 @@ export class RecurrenceController {
   @ApiResponse({
     status: 200,
     description: 'Recurrencias desactivadas exitosamente',
-    type: [Recurrence],
+    type: [BaseApiResponse<Recurrence>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o recurrencias no existen',
@@ -129,7 +130,7 @@ export class RecurrenceController {
   deleteMany(
     @Body() deleteRecurrenceDto: DeleteRecurrenceDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recurrence[]>> {
+  ): Promise<BaseApiResponse<Recurrence[]>> {
     return this.recurrenceService.deleteMany(deleteRecurrenceDto, user);
   }
 
@@ -140,7 +141,7 @@ export class RecurrenceController {
   @ApiOperation({ summary: 'Reactivar múltiples recurrencias' })
   @ApiOkResponse({
     description: 'Recurrencias reactivadas exitosamente',
-    type: [Recurrence],
+    type: [BaseApiResponse<Recurrence>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o recurrencias no existen',
@@ -148,7 +149,7 @@ export class RecurrenceController {
   reactivateAll(
     @Body() deleteRecurrenceDto: DeleteRecurrenceDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recurrence[]>> {
+  ): Promise<BaseApiResponse<Recurrence[]>> {
     return this.recurrenceService.reactivateMany(deleteRecurrenceDto.ids, user);
   }
 }

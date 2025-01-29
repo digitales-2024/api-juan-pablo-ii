@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateRecurrenceDto } from '../dto/update-recurrence.dto';
 import { Recurrence } from '../entities/recurrence.entity';
 import { RecurrenceRepository } from '../repositories/recurrence.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateRecurrenceUseCase {
@@ -17,16 +18,18 @@ export class UpdateRecurrenceUseCase {
     id: string,
     updateRecurrenceDto: UpdateRecurrenceDto,
     user: UserData,
-  ): Promise<HttpResponse<Recurrence>> {
+  ): Promise<BaseApiResponse<Recurrence>> {
     const updatedRecurrence = await this.recurrenceRepository.transaction(
       async () => {
         // Update recurrence
         const recurrence = await this.recurrenceRepository.update(id, {
-          calendarioId: updateRecurrenceDto.calendarioId,
-          frecuencia: updateRecurrenceDto.frecuencia,
-          intervalo: updateRecurrenceDto.intervalo,
-          fechaInicio: updateRecurrenceDto.fechaInicio,
-          fechaFin: updateRecurrenceDto.fechaFin,
+          frequency: updateRecurrenceDto.frequency,
+          interval: updateRecurrenceDto.interval,
+          daysOfWeek: updateRecurrenceDto.daysOfWeek,
+          exceptions: updateRecurrenceDto.exceptions,
+          startDate: updateRecurrenceDto.startDate,
+          endDate: updateRecurrenceDto.endDate,
+          isActive: updateRecurrenceDto.isActive,
         });
 
         // Register audit
@@ -43,7 +46,7 @@ export class UpdateRecurrenceUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Recurrencia actualizada exitosamente',
       data: updatedRecurrence,
     };

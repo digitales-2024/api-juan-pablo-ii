@@ -19,9 +19,10 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { CreateEventDto, UpdateEventDto, DeleteEventDto } from '../dto';
 import { Event } from '../entities/event.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar eventos.
@@ -48,7 +49,7 @@ export class EventController {
   @ApiResponse({
     status: 201,
     description: 'Evento creado exitosamente',
-    type: Event,
+    type: BaseApiResponse<CreateEventDto>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o evento ya existe',
@@ -56,7 +57,7 @@ export class EventController {
   create(
     @Body() createEventDto: CreateEventDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Event>> {
+  ): Promise<BaseApiResponse<Event>> {
     return this.eventService.create(createEventDto, user);
   }
 
@@ -99,13 +100,13 @@ export class EventController {
   @ApiResponse({
     status: 200,
     description: 'Evento actualizado exitosamente',
-    type: Event,
+    type: BaseApiResponse<UpdateEventDto>,
   })
   update(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Event>> {
+  ): Promise<BaseApiResponse<Event>> {
     return this.eventService.update(id, updateEventDto, user);
   }
 
@@ -117,7 +118,7 @@ export class EventController {
   @ApiResponse({
     status: 200,
     description: 'Eventos desactivados exitosamente',
-    type: [Event],
+    type: [BaseApiResponse<Event>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o eventos no existen',
@@ -125,7 +126,7 @@ export class EventController {
   deleteMany(
     @Body() deleteEventDto: DeleteEventDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Event[]>> {
+  ): Promise<BaseApiResponse<Event[]>> {
     return this.eventService.deleteMany(deleteEventDto, user);
   }
 
@@ -136,7 +137,7 @@ export class EventController {
   @ApiOperation({ summary: 'Reactivar múltiples eventos' })
   @ApiOkResponse({
     description: 'Eventos reactivados exitosamente',
-    type: [Event],
+    type: [BaseApiResponse<Event>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o eventos no existen',
@@ -144,7 +145,7 @@ export class EventController {
   reactivateAll(
     @Body() deleteEventDto: DeleteEventDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Event[]>> {
+  ): Promise<BaseApiResponse<Event[]>> {
     return this.eventService.reactivateMany(deleteEventDto.ids, user);
   }
 }

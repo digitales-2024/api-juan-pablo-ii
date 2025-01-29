@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateCalendarDto } from '../dto/update-calendar.dto';
 import { CalendarRepository } from '../repositories/calendar.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { Calendar } from '../entities/pacient.entity';
+import { Calendar } from '../entities/calendar.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateCalendarUseCase {
@@ -17,16 +18,18 @@ export class UpdateCalendarUseCase {
     id: string,
     updateCalendarDto: UpdateCalendarDto,
     user: UserData,
-  ): Promise<HttpResponse<Calendar>> {
+  ): Promise<BaseApiResponse<Calendar>> {
     const updatedCalendar = await this.calendarRepository.transaction(
       async () => {
         // Update calendar
         const calendar = await this.calendarRepository.update(id, {
-          personalId: updateCalendarDto.personalId,
-          sucursalId: updateCalendarDto.sucursalId,
-          nombre: updateCalendarDto.nombre,
-          color: updateCalendarDto.color,
-          isDefault: updateCalendarDto.isDefault,
+          name: updatedCalendar.name,
+          type: updatedCalendar.type,
+          medicalAppointmentId: updatedCalendar.medicalAppointmentId,
+          medicalConsultationId: updatedCalendar.medicalConsultationId,
+          staffId: updatedCalendar.staffId,
+          branchId: updatedCalendar.branchId,
+          isActive: updatedCalendar.isActive,
         });
 
         // Register audit
@@ -43,7 +46,7 @@ export class UpdateCalendarUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Calendario actualizado exitosamente',
       data: updatedCalendar,
     };

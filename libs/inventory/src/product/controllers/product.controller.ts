@@ -12,16 +12,16 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiParam,
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { CreateProductDto, UpdateProductDto, DeleteProductDto } from '../dto';
-import { Product } from '../entities/product.entity';
+import { Product, ProductWithRelations } from '../entities/product.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar productos.
@@ -45,7 +45,7 @@ export class ProductController {
    */
   @Post()
   @ApiOperation({ summary: 'Crear nuevo producto' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Producto creado exitosamente',
     type: Product,
@@ -56,8 +56,35 @@ export class ProductController {
   create(
     @Body() createProductDto: CreateProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Product>> {
+  ): Promise<BaseApiResponse<Product>> {
     return this.productService.create(createProductDto, user);
+  }
+
+  /**
+   * Obtiene todos los productos
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los productos' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los productos',
+    type: [Product],
+  })
+  findAll(): Promise<Product[]> {
+    return this.productService.findAll();
+  }
+
+  @Get('/detailed')
+  @ApiOperation({
+    summary: 'Obtener todos los productos con informaciòn detallada',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los productos',
+    type: [ProductWithRelations],
+  })
+  findAllWithRelations(): Promise<ProductWithRelations[]> {
+    return this.productService.findAllWithRelations();
   }
 
   /**
@@ -73,22 +100,26 @@ export class ProductController {
   @ApiNotFoundResponse({
     description: 'Producto no encontrado',
   })
-  findOne(@Param('id') id: string): Promise<Product> {
+  findOne(@Param('id') id: string): Promise<BaseApiResponse<Product>> {
     return this.productService.findOne(id);
   }
 
-  /**
-   * Obtiene todos los productos
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los productos' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todos los productos',
-    type: [Product],
+  @Get(':id/detailed')
+  @ApiOperation({
+    summary: 'Obtener producto por ID con informaciòn detallada anidada',
   })
-  findAll(): Promise<Product[]> {
-    return this.productService.findAll();
+  @ApiParam({ name: 'id', description: 'ID del producto' })
+  @ApiOkResponse({
+    description: 'Producto encontrado',
+    type: ProductWithRelations,
+  })
+  @ApiNotFoundResponse({
+    description: 'Producto no encontrado',
+  })
+  findOneWithRelations(
+    @Param('id') id: string,
+  ): Promise<BaseApiResponse<ProductWithRelations>> {
+    return this.productService.findOneWithRelations(id);
   }
 
   /**
@@ -96,7 +127,7 @@ export class ProductController {
    */
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar producto existente' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Producto actualizado exitosamente',
     type: Product,
@@ -105,7 +136,7 @@ export class ProductController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Product>> {
+  ): Promise<BaseApiResponse<Product>> {
     return this.productService.update(id, updateProductDto, user);
   }
 
@@ -114,7 +145,7 @@ export class ProductController {
    */
   @Delete('remove/all')
   @ApiOperation({ summary: 'Desactivar múltiples productos' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Productos desactivados exitosamente',
     type: [Product],
@@ -125,7 +156,7 @@ export class ProductController {
   deleteMany(
     @Body() deleteProductDto: DeleteProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Product[]>> {
+  ): Promise<BaseApiResponse<Product[]>> {
     return this.productService.deleteMany(deleteProductDto, user);
   }
 
@@ -144,7 +175,7 @@ export class ProductController {
   reactivateAll(
     @Body() deleteProductDto: DeleteProductDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Product[]>> {
+  ): Promise<BaseApiResponse<Product[]>> {
     return this.productService.reactivateMany(deleteProductDto.ids, user);
   }
 }

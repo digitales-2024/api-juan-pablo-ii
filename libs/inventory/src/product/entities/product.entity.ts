@@ -1,5 +1,7 @@
 // product.entity.ts
+import { Category } from '@inventory/inventory/category/entities/category.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { TipoProducto } from '@prisma/client';
 
 export class Product {
   @ApiProperty()
@@ -52,4 +54,12 @@ export class Product {
 
   @ApiProperty()
   imagenUrl?: string;
+}
+
+export class ProductWithRelations extends Product {
+  @ApiProperty()
+  categoria: Partial<Category>;
+
+  @ApiProperty()
+  tipoProducto: Partial<TipoProducto>;
 }

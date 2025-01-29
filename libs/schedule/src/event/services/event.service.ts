@@ -1,12 +1,7 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { EventRepository } from '../repositories/event.repository';
 import { Event } from '../entities/event.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { CreateEventDto, UpdateEventDto, DeleteEventDto } from '../dto';
@@ -17,6 +12,7 @@ import {
   ReactivateEventUseCase,
 } from '../use-cases';
 import { eventErrorMessages } from '../errors/errors-event';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class EventService {
@@ -48,7 +44,7 @@ export class EventService {
   async create(
     createEventDto: CreateEventDto,
     user: UserData,
-  ): Promise<HttpResponse<Event>> {
+  ): Promise<BaseApiResponse<Event>> {
     try {
       return await this.createEventUseCase.execute(createEventDto, user);
     } catch (error) {
@@ -68,13 +64,13 @@ export class EventService {
     id: string,
     updateEventDto: UpdateEventDto,
     user: UserData,
-  ): Promise<HttpResponse<Event>> {
+  ): Promise<BaseApiResponse<Event>> {
     try {
       const currentEvent = await this.findById(id);
 
       if (!validateChanges(updateEventDto, currentEvent)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en el evento',
           data: currentEvent,
         };
@@ -137,7 +133,7 @@ export class EventService {
   async deleteMany(
     deleteEventDto: DeleteEventDto,
     user: UserData,
-  ): Promise<HttpResponse<Event[]>> {
+  ): Promise<BaseApiResponse<Event[]>> {
     try {
       validateArray(deleteEventDto.ids, 'IDs de eventos');
       return await this.deleteEventsUseCase.execute(deleteEventDto, user);
@@ -156,7 +152,7 @@ export class EventService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Event[]>> {
+  ): Promise<BaseApiResponse<Event[]>> {
     try {
       validateArray(ids, 'IDs de eventos');
       return await this.reactivateEventUseCase.execute(ids, user);

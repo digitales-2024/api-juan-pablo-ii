@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RecurrenceRepository } from '../repositories/recurrence.repository';
 import { Recurrence } from '../entities/recurrence.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateRecurrenceUseCase {
@@ -15,7 +16,7 @@ export class ReactivateRecurrenceUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Recurrence[]>> {
+  ): Promise<BaseApiResponse<Recurrence[]>> {
     // Reactivar las recurrencias y registrar auditoría
     const reactivatedRecurrences = await this.recurrenceRepository.transaction(
       async () => {
@@ -39,7 +40,7 @@ export class ReactivateRecurrenceUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Recurrencias reactivadas exitosamente',
       data: reactivatedRecurrences,
     };
