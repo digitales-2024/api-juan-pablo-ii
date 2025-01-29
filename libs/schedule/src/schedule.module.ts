@@ -28,10 +28,11 @@ import {
   UpdateRecurrenceUseCase,
 } from './recurrence/use-cases';
 import { RecurrenceController } from './recurrence/controllers/recurrence.controller';
+import { BranchModule } from 'src/modules/branch/branch.module';
 
 @Module({
   controllers: [CalendarController, EventController, RecurrenceController],
-  imports: [AuditModule],
+  imports: [AuditModule, BranchModule],
   providers: [
     //calendario
     CalendarService,
@@ -41,7 +42,6 @@ import { RecurrenceController } from './recurrence/controllers/recurrence.contro
     DeleteCalendarsUseCase,
     ReactivateCalendarUseCase,
     //funcion de validadcion de id de sucursal
-    BranchRepository,
     //eventos
     EventService,
     EventRepository,
