@@ -19,6 +19,6 @@ import { ReactivateBranchesUseCase } from './use-cases/reactive-branch.use-case'
     DeleteBranchesUseCase,
     ReactivateBranchesUseCase,
   ],
-  exports: [BranchService],
+  exports: [BranchService, BranchRepository],
 })
 export class BranchModule {}
