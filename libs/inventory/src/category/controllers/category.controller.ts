@@ -66,6 +66,31 @@ export class CategoryController {
   }
 
   /**
+   * Obtiene todas las categorías
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todas las categorías' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todas las categorías',
+    type: BaseApiResponse<Category[]>,
+  })
+  findAll(): Promise<Category[]> {
+    return this.categoryService.findAll();
+  }
+
+  @Get('active')
+  @ApiOperation({ summary: 'Obtener todas las categorías activas' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todas las categorías activas',
+    type: BaseApiResponse<Category[]>,
+  })
+  findAllActive(): Promise<Category[]> {
+    return this.categoryService.findAllActive();
+  }
+
+  /**
    * Obtiene una categoría por su ID
    */
   @Get(':id')
@@ -80,20 +105,6 @@ export class CategoryController {
   })
   findOne(@Param('id') id: string): Promise<Category> {
     return this.categoryService.findOne(id);
-  }
-
-  /**
-   * Obtiene todas las categorías
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todas las categorías' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todas las categorías',
-    type: BaseApiResponse<Category[]>,
-  })
-  findAll(): Promise<Category[]> {
-    return this.categoryService.findAll();
   }
 
   /**

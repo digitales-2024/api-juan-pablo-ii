@@ -41,6 +41,26 @@ export abstract class BaseRepository<T extends { id: string }> {
   }
 
   /**
+   * Busca múltiples registros activos en la base de datos.
+   *
+   * @param {QueryParams} [params] - Parámetros opcionales para la consulta.
+   * @returns {Promise<T[]>} - Una promesa que resuelve con una lista de registros activos.
+   */
+  async findManyActive(params?: QueryParams): Promise<T[]> {
+    return this.prisma.measureQuery(
+      `findManyActive${String(this.modelName)}`,
+      () =>
+        (this.prisma[this.modelName] as any).findMany({
+          ...params,
+          where: {
+            ...params?.where,
+            isActive: true,
+          },
+        }),
+    );
+  }
+
+  /**
    * Busca un registro por parámetros.
    * @param params - Parámetros de búsqueda.
    * @returns El registro encontrado o null si no se encuentra.

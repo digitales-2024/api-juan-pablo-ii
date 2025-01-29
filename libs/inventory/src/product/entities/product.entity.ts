@@ -54,6 +54,12 @@ export class Product {
 
   @ApiProperty()
   imagenUrl?: string;
+
+  @ApiProperty()
+  isActive?: boolean;
+
+  @ApiProperty()
+  createdAt?: Date;
 }
 
 export class ProductWithRelations extends Product {
