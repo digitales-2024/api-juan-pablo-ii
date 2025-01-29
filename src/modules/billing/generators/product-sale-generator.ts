@@ -135,7 +135,7 @@ export class ProductSaleGenerator extends BaseOrderGenerator {
       const productSubtotal = price * product.quantity;
       subtotal += productSubtotal;
 
-      const productInfo = await this.productService.findOne(product.productId);
+      const productInfo = await this.productService.findById(product.productId);
       productDetails.push({
         id: product.productId,
         name: productInfo.name,
