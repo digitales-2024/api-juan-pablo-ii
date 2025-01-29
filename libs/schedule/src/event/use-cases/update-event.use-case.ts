@@ -34,6 +34,7 @@ export class UpdateEventUseCase {
         duration: updatedEvent.duration,
         patientId: updatedEvent.patientId,
         staffId: updatedEvent.staffId,
+        recurrenceId: updatedEvent.recurrenceId,
         isActive: updatedEvent.isActive,
       });
 
