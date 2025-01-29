@@ -10,6 +10,7 @@ export class Staff {
   @ApiProperty({ description: 'ID del usuario asociado', nullable: true })
   userId: string | null;
 
+  @ApiProperty({ description: 'Nombre del personal' })
   name: string;
 
   @ApiProperty({ description: 'Correo electrónico' })
