@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { CalendarService } from '../services/calendar.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -25,7 +27,7 @@ import {
   UpdateCalendarDto,
   DeleteCalendarDto,
 } from '../dto';
-import { Calendar } from '../entities/calendar.entity';
+import { Calendar, CalendarType } from '../entities/calendar.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
@@ -59,6 +61,8 @@ export class CalendarController {
     description: 'Datos de entrada inválidos o calendario ya existe',
   })
   create(
+    @Param('status', new ParseEnumPipe(CalendarType)) status: CalendarType,
+    @Query('type', new ParseEnumPipe(CalendarType)) type: CalendarType,
     @Body() createCalendarDto: CreateCalendarDto,
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<Calendar>> {
