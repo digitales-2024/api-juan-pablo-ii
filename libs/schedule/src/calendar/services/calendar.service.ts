@@ -16,9 +16,7 @@ import {
   ReactivateCalendarUseCase,
 } from '../use-cases';
 import { Calendar } from '../entities/calendar.entity';
-import { BranchRepository } from 'src/modules/branch/repositories/branch.repository';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
-
 @Injectable()
 export class CalendarService {
   private readonly logger = new Logger(CalendarService.name);
@@ -30,7 +28,6 @@ export class CalendarService {
     private readonly updateCalendarUseCase: UpdateCalendarUseCase,
     private readonly deleteCalendarsUseCase: DeleteCalendarsUseCase,
     private readonly reactivateCalendarUseCase: ReactivateCalendarUseCase,
-    private readonly branchRepository: BranchRepository,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -52,12 +49,6 @@ export class CalendarService {
     user: UserData,
   ): Promise<BaseApiResponse<Calendar>> {
     try {
-      const branchExist = await this.branchRepository.findBranchById(
-        createCalendarDto.branchId,
-      );
-      if (!branchExist) {
-        throw new BadRequestException('No existe la sucursal');
-      }
       return await this.createCalendarUseCase.execute(createCalendarDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
