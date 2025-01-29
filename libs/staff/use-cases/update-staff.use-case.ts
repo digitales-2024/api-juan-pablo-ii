@@ -22,15 +22,16 @@ export class UpdateStaffUseCase {
   ) {}
 
   /**
-   * Valida si ya existe personal con el DNI proporcionado
+   * Valida si ya existe personal con el DNI proporcionado, excluyendo al personal actual
    * @param dni - Número de identificación a validar
-   * @returns {Promise<boolean>} True si existe personal con el DNI, false en caso contrario
+   * @param currentStaffId - ID del personal que se está editando
+   * @returns {Promise<boolean>} True si existe otro personal con el DNI, false en caso contrario
    * @private
    */
-  private async validateDNIExists(dni: string): Promise<boolean> {
+  private async validateDNIExists(dni: string, currentStaffId: string): Promise<boolean> {
     const existingStaff = await this.staffRepository.findStaffByDNI(dni);
-    // Devuelve true si hay pacientes con el DNI proporcionado, false si no
-    return existingStaff.length > 0;
+    // Filtra para excluir al personal actual y verifica si hay otros con el mismo DNI
+    return existingStaff.some(staff => staff.id !== currentStaffId);
   }
 
   /**
@@ -53,9 +54,12 @@ export class UpdateStaffUseCase {
       throw new BadRequestException('El tipo de personal no existe');
     }
 
-    const dniExists = await this.validateDNIExists(updateStaffDto.dni);
-    if (dniExists) {
-      throw new BadRequestException('Ya existe personal con este DNI');
+    // Solo validar el DNI si se está intentando actualizar
+    if (updateStaffDto.dni) {
+      const dniExists = await this.validateDNIExists(updateStaffDto.dni, id);
+      if (dniExists) {
+        throw new BadRequestException('Ya existe otro personal con este DNI');
+      }
     }
 
     const updatedStaff = await this.staffRepository.transaction(async () => {
