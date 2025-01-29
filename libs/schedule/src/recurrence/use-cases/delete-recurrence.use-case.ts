@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RecurrenceRepository } from '../repositories/recurrence.repository';
 import { Recurrence } from '../entities/recurrence.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteRecurrenceDto } from '../dto/delete-recurrence.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteRecurrencesUseCase {
@@ -16,7 +17,7 @@ export class DeleteRecurrencesUseCase {
   async execute(
     deleteRecurrencesDto: DeleteRecurrenceDto,
     user: UserData,
-  ): Promise<HttpResponse<Recurrence[]>> {
+  ): Promise<BaseApiResponse<Recurrence[]>> {
     const deletedRecurrences = await this.recurrenceRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene las recurrencias actualizadas
@@ -42,7 +43,7 @@ export class DeleteRecurrencesUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Recurrencias eliminadas exitosamente',
       data: deletedRecurrences,
     };

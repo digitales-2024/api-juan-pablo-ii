@@ -5,6 +5,6 @@ import { BaseRepository, PrismaService } from '@prisma/prisma';
 @Injectable()
 export class EventRepository extends BaseRepository<Event> {
   constructor(prisma: PrismaService) {
-    super(prisma, 'evento'); // Tabla del esquema de prisma
+    super(prisma, 'event'); // Tabla del esquema de prisma
   }
 }

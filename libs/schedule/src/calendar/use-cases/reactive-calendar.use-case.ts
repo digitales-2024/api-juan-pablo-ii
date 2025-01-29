@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CalendarRepository } from '../repositories/calendar.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { Calendar } from '../entities/pacient.entity';
+import { Calendar } from '../entities/calendar.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateCalendarUseCase {
@@ -15,7 +16,7 @@ export class ReactivateCalendarUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Calendar[]>> {
+  ): Promise<BaseApiResponse<Calendar[]>> {
     // Reactivar los calendarios y registrar auditoría
     const reactivatedCalendars = await this.calendarRepository.transaction(
       async () => {
@@ -39,7 +40,7 @@ export class ReactivateCalendarUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Calendarios reactivados exitosamente',
       data: reactivatedCalendars,
     };

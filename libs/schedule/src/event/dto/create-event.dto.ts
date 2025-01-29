@@ -1,6 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNotEmpty, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+  IsBoolean,
+  IsInt,
+  IsDate,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
+import {
+  EventType,
+  PermissionType,
+  PermissionStatus,
+} from '../entities/event.entity';
 
 export class CreateEventDto {
   @ApiProperty({
@@ -10,26 +22,26 @@ export class CreateEventDto {
   })
   @IsString()
   @IsNotEmpty()
-  calendarioId: string;
+  calendarId: string;
 
   @ApiProperty({
-    description: 'ID del cita al que pertenece el evento',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Tipo de evento',
+    example: 'INGRESO',
     required: true,
   })
   @IsString()
   @IsNotEmpty()
-  appointmentId: string;
+  type: EventType;
 
   @ApiProperty({
-    description: 'Título descriptivo del evento',
+    description: 'Nombre del evento',
     example: 'Ingreso turno mañana',
     required: true,
   })
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }) => value.trim())
-  titulo: string;
+  name: string;
 
   @ApiProperty({
     description: 'Descripción detallada del evento',
@@ -39,44 +51,27 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  descripcion?: string;
+  description?: string;
 
   @ApiProperty({
     description: 'Fecha y hora de inicio del evento',
     example: '2024-03-15T08:00:00',
     required: true,
   })
-  @IsString()
+  @IsDate()
   @IsNotEmpty()
-  fechaInicio: string;
+  @Transform(({ value }) => new Date(value))
+  startDate: Date;
 
   @ApiProperty({
     description: 'Fecha y hora de fin del evento',
     example: '2024-03-15T17:00:00',
     required: true,
   })
-  @IsString()
+  @IsDate()
   @IsNotEmpty()
-  fechaFin: string;
-
-  @ApiProperty({
-    description: 'Indica si el evento dura todo el día',
-    example: false,
-    default: false,
-    required: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  todoElDia?: boolean;
-
-  @ApiProperty({
-    description: 'Tipo de evento',
-    example: 'INGRESO, SALIDA, ETC',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  tipo: string;
+  @Transform(({ value }) => new Date(value))
+  endDate: Date;
 
   @ApiProperty({
     description: 'Color para identificar visualmente el evento',
@@ -89,32 +84,59 @@ export class CreateEventDto {
   color?: string;
 
   @ApiProperty({
-    description: 'Indica si el evento es un permiso',
-    example: false,
-    default: false,
+    description: 'Tipo de permiso (si aplica)',
+    example: 'MEDICO',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  permissionType?: PermissionType;
+
+  @ApiProperty({
+    description: 'Estado del permiso',
+    example: 'PENDIENTE',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  permissionStatus?: PermissionStatus;
+
+  @ApiProperty({
+    description: 'Duración del evento en minutos',
+    example: 60,
+    required: false,
+  })
+  @IsInt()
+  @IsOptional()
+  duration?: number;
+
+  @ApiProperty({
+    description: 'ID del paciente asociado al evento',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  patientId?: string;
+
+  @ApiProperty({
+    description: 'ID del personal asociado al evento',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  staffId?: string;
+
+  @ApiProperty({
+    description: 'Indica si el evento está activo',
+    example: true,
+    default: true,
     required: false,
   })
   @IsBoolean()
   @IsOptional()
-  esPermiso?: boolean;
-
-  @ApiProperty({
-    description: 'Tipo de permiso (si aplica)',
-    example: 'MEDICO, PERSONAL,ETC',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  tipoPermiso?: string;
-
-  @ApiProperty({
-    description: 'Estado del permiso',
-    example: 'PENDIENTE, APROBADO, RECHAZADO, ETC',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  estadoPermiso?: string;
+  isActive?: boolean;
 }

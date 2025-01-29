@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { Event } from '../entities/event.entity';
 import { EventRepository } from '../repositories/event.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateEventUseCase {
@@ -16,22 +17,23 @@ export class CreateEventUseCase {
   async execute(
     createEventDto: CreateEventDto,
     user: UserData,
-  ): Promise<HttpResponse<Event>> {
+  ): Promise<BaseApiResponse<Event>> {
     const newEvent = await this.eventRepository.transaction(async () => {
       // Create event
       const event = await this.eventRepository.create({
-        calendarioId: createEventDto.calendarioId,
-        appointmentId: createEventDto.appointmentId,
-        titulo: createEventDto.titulo,
-        descripcion: createEventDto.descripcion,
-        fechaInicio: createEventDto.fechaInicio,
-        fechaFin: createEventDto.fechaFin,
-        todoElDia: createEventDto.todoElDia,
-        tipo: createEventDto.tipo,
+        calendarId: createEventDto.calendarId,
+        type: createEventDto.type,
+        name: createEventDto.name,
+        description: createEventDto.description,
+        startDate: createEventDto.startDate,
+        endDate: createEventDto.endDate,
         color: createEventDto.color,
-        esPermiso: createEventDto.esPermiso,
-        tipoPermiso: createEventDto.tipoPermiso,
-        estadoPermiso: createEventDto.estadoPermiso,
+        permissionType: createEventDto.permissionType,
+        permissionStatus: createEventDto.permissionStatus,
+        duration: createEventDto.duration,
+        patientId: createEventDto.patientId,
+        staffId: createEventDto.staffId,
+        isActive: createEventDto.isActive,
       });
 
       // Register audit
@@ -47,7 +49,7 @@ export class CreateEventUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Evento creado exitosamente',
       data: newEvent,
     };

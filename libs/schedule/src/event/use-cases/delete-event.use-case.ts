@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventRepository } from '../repositories/event.repository';
 import { Event } from '../entities/event.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteEventDto } from '../dto/delete-event.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteEventsUseCase {
@@ -16,7 +17,7 @@ export class DeleteEventsUseCase {
   async execute(
     deleteEventsDto: DeleteEventDto,
     user: UserData,
-  ): Promise<HttpResponse<Event[]>> {
+  ): Promise<BaseApiResponse<Event[]>> {
     const deletedEvents = await this.eventRepository.transaction(async () => {
       // Realiza el soft delete y obtiene los eventos actualizados
       const events = await this.eventRepository.softDeleteMany(
@@ -40,7 +41,7 @@ export class DeleteEventsUseCase {
     });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Eventos eliminados exitosamente',
       data: deletedEvents,
     };

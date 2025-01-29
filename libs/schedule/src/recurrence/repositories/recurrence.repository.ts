@@ -5,6 +5,6 @@ import { BaseRepository, PrismaService } from '@prisma/prisma';
 @Injectable()
 export class RecurrenceRepository extends BaseRepository<Recurrence> {
   constructor(prisma: PrismaService) {
-    super(prisma, 'recurrencia'); // Tabla del esquema de prisma
+    super(prisma, 'recurrence'); // Tabla del esquema de prisma
   }
 }

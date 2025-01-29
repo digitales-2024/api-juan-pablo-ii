@@ -1,4 +1,3 @@
-// entities/event.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 
 export class Event {
@@ -6,38 +5,72 @@ export class Event {
   id: string;
 
   @ApiProperty()
-  calendarioId: string;
+  calendarId: string;
 
   @ApiProperty()
-  appointmentId: string;
+  type: EventType;
 
   @ApiProperty()
-  titulo: string;
+  name: string;
+
+  @ApiProperty({ required: false })
+  description?: string;
 
   @ApiProperty()
-  descripcion?: string;
+  startDate: Date;
 
   @ApiProperty()
-  fechaInicio: string;
+  endDate: Date;
 
-  @ApiProperty()
-  fechaFin: string;
-
-  @ApiProperty()
-  todoElDia: boolean;
-
-  @ApiProperty()
-  tipo: string;
-
-  @ApiProperty()
+  @ApiProperty({ required: false })
   color?: string;
 
-  @ApiProperty()
-  esPermiso: boolean;
+  @ApiProperty({ required: false })
+  permissionType?: PermissionType;
+
+  @ApiProperty({ required: false })
+  permissionStatus?: PermissionStatus;
+
+  @ApiProperty({ required: false })
+  duration?: number;
+
+  @ApiProperty({ required: false })
+  patientId?: string;
+
+  @ApiProperty({ required: false })
+  staffId?: string;
+
+  @ApiProperty({ default: true })
+  isActive: boolean;
 
   @ApiProperty()
-  tipoPermiso?: string;
+  createdAt: Date;
 
   @ApiProperty()
-  estadoPermiso?: string;
+  updatedAt: Date;
+
+  @ApiProperty({ required: false })
+  recurrenceId?: string;
+}
+
+export enum EventType {
+  CITA_MEDICA = 'CITA_MEDICA',
+  CONTROL_MEDICO = 'CONTROL_MEDICO',
+  INGRESO = 'INGRESO',
+  SALIDA = 'SALIDA',
+  ALMUERZO = 'ALMUERZO',
+  DESCANSO = 'DESCANSO',
+  PERMISO = 'PERMISO',
+}
+
+export enum PermissionType {
+  MEDICO = 'MEDICO',
+  PERSONAL = 'PERSONAL',
+  VACACIONES = 'VACACIONES',
+}
+
+export enum PermissionStatus {
+  PENDIENTE = 'PENDIENTE',
+  APROBADO = 'APROBADO',
+  RECHAZADO = 'RECHAZADO',
 }

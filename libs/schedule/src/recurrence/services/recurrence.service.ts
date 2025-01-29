@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { RecurrenceRepository } from '../repositories/recurrence.repository';
 import { Recurrence } from '../entities/recurrence.entity';
 import { CreateRecurrenceDto } from '../dto/create-recurrence.dto';
 import { UpdateRecurrenceDto } from '../dto/update-recurrence.dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import {
   CreateRecurrenceUseCase,
@@ -19,6 +14,7 @@ import {
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { recurrenceErrorMessages } from '../errors/errors-recurrence';
 import { DeleteRecurrenceDto } from '../dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class RecurrenceService {
@@ -49,7 +45,7 @@ export class RecurrenceService {
   async create(
     createRecurrenceDto: CreateRecurrenceDto,
     user: UserData,
-  ): Promise<HttpResponse<Recurrence>> {
+  ): Promise<BaseApiResponse<Recurrence>> {
     try {
       return await this.createRecurrenceUseCase.execute(
         createRecurrenceDto,
@@ -72,13 +68,13 @@ export class RecurrenceService {
     id: string,
     updateRecurrenceDto: UpdateRecurrenceDto,
     user: UserData,
-  ): Promise<HttpResponse<Recurrence>> {
+  ): Promise<BaseApiResponse<Recurrence>> {
     try {
       const currentRecurrence = await this.findById(id);
 
       if (!validateChanges(updateRecurrenceDto, currentRecurrence)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en la recurrencia',
           data: currentRecurrence,
         };
@@ -145,7 +141,7 @@ export class RecurrenceService {
   async deleteMany(
     deleteRecurrenceDto: DeleteRecurrenceDto,
     user: UserData,
-  ): Promise<HttpResponse<Recurrence[]>> {
+  ): Promise<BaseApiResponse<Recurrence[]>> {
     try {
       validateArray(deleteRecurrenceDto.ids, 'IDs de recurrencias');
       return await this.deleteRecurrencesUseCase.execute(
@@ -167,7 +163,7 @@ export class RecurrenceService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Recurrence[]>> {
+  ): Promise<BaseApiResponse<Recurrence[]>> {
     try {
       validateArray(ids, 'IDs de recurrencias');
       return await this.reactivateRecurrenceUseCase.execute(ids, user);

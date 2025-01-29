@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { Event } from '../entities/event.entity';
 import { EventRepository } from '../repositories/event.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateEventUseCase {
@@ -17,22 +18,23 @@ export class UpdateEventUseCase {
     id: string,
     updateEventDto: UpdateEventDto,
     user: UserData,
-  ): Promise<HttpResponse<Event>> {
+  ): Promise<BaseApiResponse<Event>> {
     const updatedEvent = await this.eventRepository.transaction(async () => {
       // Update event
       const event = await this.eventRepository.update(id, {
-        calendarioId: updateEventDto.calendarioId,
-        appointmentId: updateEventDto.appointmentId,
-        titulo: updateEventDto.titulo,
-        descripcion: updateEventDto.descripcion,
-        fechaInicio: updateEventDto.fechaInicio,
-        fechaFin: updateEventDto.fechaFin,
-        todoElDia: updateEventDto.todoElDia,
-        tipo: updateEventDto.tipo,
-        color: updateEventDto.color,
-        esPermiso: updateEventDto.esPermiso,
-        tipoPermiso: updateEventDto.tipoPermiso,
-        estadoPermiso: updateEventDto.estadoPermiso,
+        calendarId: updatedEvent.calendarId,
+        type: updatedEvent.type,
+        name: updatedEvent.name,
+        description: updatedEvent.description,
+        startDate: updatedEvent.startDate,
+        endDate: updatedEvent.endDate,
+        color: updatedEvent.color,
+        permissionType: updatedEvent.permissionType,
+        permissionStatus: updatedEvent.permissionStatus,
+        duration: updatedEvent.duration,
+        patientId: updatedEvent.patientId,
+        staffId: updatedEvent.staffId,
+        isActive: updatedEvent.isActive,
       });
 
       // Register audit
@@ -48,7 +50,7 @@ export class UpdateEventUseCase {
     });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Evento actualizado exitosamente',
       data: updatedEvent,
     };

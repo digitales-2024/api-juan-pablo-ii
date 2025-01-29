@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCalendarDto } from '../dto/create-calendar.dto';
 import { CalendarRepository } from '../repositories/calendar.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { Calendar } from '../entities/pacient.entity';
+import { Calendar } from '../entities/calendar.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateCalendarUseCase {
@@ -16,15 +17,17 @@ export class CreateCalendarUseCase {
   async execute(
     createCalendarDto: CreateCalendarDto,
     user: UserData,
-  ): Promise<HttpResponse<Calendar>> {
+  ): Promise<BaseApiResponse<Calendar>> {
     const newCalendar = await this.calendarRepository.transaction(async () => {
       // Create calendar
       const calendar = await this.calendarRepository.create({
-        personalId: createCalendarDto.personalId,
-        sucursalId: createCalendarDto.sucursalId,
-        nombre: createCalendarDto.nombre,
-        color: createCalendarDto.color,
-        isDefault: createCalendarDto.isDefault,
+        name: createCalendarDto.name,
+        type: createCalendarDto.type,
+        medicalAppointmentId: createCalendarDto.medicalAppointmentId,
+        medicalConsultationId: createCalendarDto.medicalConsultationId,
+        staffId: createCalendarDto.staffId,
+        branchId: createCalendarDto.branchId,
+        isActive: createCalendarDto.isActive,
       });
 
       // Register audit
@@ -40,7 +43,7 @@ export class CreateCalendarUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Calendario creado exitosamente',
       data: newCalendar,
     };

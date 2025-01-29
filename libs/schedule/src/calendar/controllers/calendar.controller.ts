@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { CalendarService } from '../services/calendar.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -19,13 +21,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateCalendarDto,
   UpdateCalendarDto,
   DeleteCalendarDto,
 } from '../dto';
-import { Calendar } from '../entities/pacient.entity';
+import { Calendar, CalendarType } from '../entities/calendar.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar calendarios.
@@ -49,18 +52,20 @@ export class CalendarController {
    */
   @Post()
   @ApiOperation({ summary: 'Crear nuevo calendario' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Calendario creado exitosamente',
-    type: Calendar,
+    type: BaseApiResponse<CreateCalendarDto>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o calendario ya existe',
   })
   create(
+    @Param('status', new ParseEnumPipe(CalendarType)) status: CalendarType,
+    @Query('type', new ParseEnumPipe(CalendarType)) type: CalendarType,
     @Body() createCalendarDto: CreateCalendarDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Calendar>> {
+  ): Promise<BaseApiResponse<Calendar>> {
     return this.calendarService.create(createCalendarDto, user);
   }
 
@@ -103,13 +108,13 @@ export class CalendarController {
   @ApiResponse({
     status: 200,
     description: 'Calendario actualizado exitosamente',
-    type: Calendar,
+    type: BaseApiResponse<UpdateCalendarDto>,
   })
   update(
     @Param('id') id: string,
     @Body() updateCalendarDto: UpdateCalendarDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Calendar>> {
+  ): Promise<BaseApiResponse<Calendar>> {
     return this.calendarService.update(id, updateCalendarDto, user);
   }
 
@@ -121,7 +126,7 @@ export class CalendarController {
   @ApiResponse({
     status: 200,
     description: 'Calendarios desactivados exitosamente',
-    type: [Calendar],
+    type: [BaseApiResponse<Calendar>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o calendarios no existen',
@@ -129,7 +134,7 @@ export class CalendarController {
   deleteMany(
     @Body() deleteCalendarDto: DeleteCalendarDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Calendar[]>> {
+  ): Promise<BaseApiResponse<Calendar[]>> {
     return this.calendarService.deleteMany(deleteCalendarDto, user);
   }
 
@@ -140,7 +145,7 @@ export class CalendarController {
   @ApiOperation({ summary: 'Reactivar múltiples calendarios' })
   @ApiOkResponse({
     description: 'Calendarios reactivados exitosamente',
-    type: [Calendar],
+    type: [BaseApiResponse<Calendar>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o calendarios no existen',
@@ -148,7 +153,7 @@ export class CalendarController {
   reactivateAll(
     @Body() deleteCalendarDto: DeleteCalendarDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Calendar[]>> {
+  ): Promise<BaseApiResponse<Calendar[]>> {
     return this.calendarService.reactivateMany(deleteCalendarDto.ids, user);
   }
 }
