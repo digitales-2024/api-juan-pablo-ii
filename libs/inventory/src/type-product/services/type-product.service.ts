@@ -143,6 +143,20 @@ export class TypeProductService {
   }
 
   /**
+   * Obtiene todos los productos activos.
+   *
+   * @returns {Promise<TypeProductResponse[]>} Una promesa que resuelve con una lista de productos activos.
+   * @throws {Error} Si ocurre un error al obtener los productos activos.
+   */
+  async findAllActive(): Promise<TypeProductResponse[]> {
+    try {
+      return this.typeProductRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
    * Busca un tipo de producto por su ID
    * @param id - ID del tipo de producto a buscar
    * @returns Una promesa que resuelve con el tipo de producto encontrado

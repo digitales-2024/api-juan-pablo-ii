@@ -132,6 +132,20 @@ export class CategoryService {
   }
 
   /**
+   * Obtiene todas las categorías activas.
+   *
+   * @returns {Promise<Category[]>} Una promesa que resuelve con un arreglo de categorías activas.
+   * @throws {Error} Si ocurre un error al obtener las categorías activas.
+   */
+  async findAllActive(): Promise<Category[]> {
+    try {
+      return this.categoryRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
    * Busca una categoría por su ID
    * @param id - ID de la categoría a buscar
    * @returns Una promesa que resuelve con la categoría encontrada
