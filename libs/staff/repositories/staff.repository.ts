@@ -10,11 +10,33 @@ import { BaseRepository, PrismaService } from '@prisma/prisma';
  */
 @Injectable()
 export class StaffRepository extends BaseRepository<Staff> {
+  private readonly defaultSelect = {
+    select: {
+      id: true,
+      staffTypeId: true,
+      userId: true,
+      name: true,
+      email: true,
+      phone: true,
+      lastName: true,
+      dni: true,
+      birth: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+      staffType: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  };
+
   constructor(prisma: PrismaService) {
     super(prisma, 'staff');
   }
 
-  async createPersonal(data: {
+  async createStaff(data: {
     name: string;
     lastName: string;
     dni: string;
@@ -24,7 +46,7 @@ export class StaffRepository extends BaseRepository<Staff> {
     staffTypeId: string;
     userId?: string;
   }): Promise<Staff> {
-    return this.prisma.measureQuery(`createPersonal`, () =>
+    return this.prisma.measureQuery(`createStaff`, () =>
       this.prisma.staff.create({
         data: {
           name: data.name,
@@ -40,12 +62,29 @@ export class StaffRepository extends BaseRepository<Staff> {
             },
           },
         },
-        include: {
-          staffType: true,
+        select: {
+          id: true,
+          staffTypeId: true,
+          userId: true,
+          name: true,
+          email: true,
+          phone: true,
+          lastName: true,
+          dni: true,
+          birth: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+          staffType: {
+            select: {
+              name: true,
+            },
+          },
         },
       }),
     );
   }
+
   /**
    * Busca personal activo por especialidad
    * @param especialidadId - ID de la especialidad
@@ -57,9 +96,7 @@ export class StaffRepository extends BaseRepository<Staff> {
         staffTypeId,
         isActive: true,
       },
-      include: {
-        staffType: true,
-      },
+      ...this.defaultSelect,
     });
   }
 
@@ -79,9 +116,28 @@ export class StaffRepository extends BaseRepository<Staff> {
         staffTypeId,
         isActive: true,
       },
-      include: {
-        staffType: true,
-      },
+      ...this.defaultSelect,
+    });
+  }
+
+  async findMany(params?: any): Promise<Staff[]> {
+    return this.prisma.staff.findMany({
+      ...params,
+      ...this.defaultSelect,
+    });
+  }
+
+  async findById(id: string): Promise<Staff> {
+    return this.prisma.staff.findUnique({
+      where: { id },
+      ...this.defaultSelect,
+    });
+  }
+
+  async findByField(field: string, value: any): Promise<Staff[]> {
+    return this.prisma.staff.findMany({
+      where: { [field]: value },
+      ...this.defaultSelect,
     });
   }
 }

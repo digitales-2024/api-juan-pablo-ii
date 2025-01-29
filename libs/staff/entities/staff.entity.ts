@@ -7,8 +7,8 @@ export class Staff {
   @ApiProperty({ description: 'ID del tipo de personal' })
   staffTypeId: string;
 
-  @ApiProperty({ description: 'ID del usuario asociado' })
-  userId: string;
+  @ApiProperty({ description: 'ID del usuario asociado', nullable: true })
+  userId: string | null;
 
   @ApiProperty({ description: 'Nombre del personal' })
   name: string;
@@ -36,6 +36,22 @@ export class Staff {
 
   @ApiProperty({ description: 'Fecha de última actualización' })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: 'Información del tipo de personal',
+    example: { name: 'doctor' },
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+        example: 'doctor',
+        description: 'Nombre del tipo de personal'
+      }
+    }
+  })
+  staffType?: {
+    name: string;
+  };
 }
 
 export class StaffType {
