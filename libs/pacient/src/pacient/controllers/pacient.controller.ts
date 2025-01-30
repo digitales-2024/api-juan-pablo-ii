@@ -7,6 +7,8 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { PacientService } from '../services/pacient.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -19,12 +21,17 @@ import {
   ApiParam,
   ApiOkResponse,
   ApiNotFoundResponse,
+  ApiCreatedResponse,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { CreatePacienteDto } from '../dto/create-pacient.dto';
-import { UpdatePacientDto } from '../dto/update-pacient.dto';
-import { Paciente } from '../entities/pacient.entity';
-import { DeletePacientDto } from '../dto';
+import { CreatePatientDto } from '../dto/create-pacient.dto';
+import { UpdatePatientDto } from '../dto/update-pacient.dto';
+import { Patient } from '../entities/pacient.entity';
+import { DeletePatientDto } from '../dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 /**
  * Controlador REST para gestionar pacientes.
@@ -51,33 +58,16 @@ export class PacientController {
   @ApiResponse({
     status: 201,
     description: 'Paciente creado exitosamente',
-    type: Paciente,
+    type: BaseApiResponse<Patient>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o paciente ya existe',
   })
   create(
-    @Body() createPacienteDto: CreatePacienteDto,
+    @Body() createPatientDto: CreatePatientDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
-    return this.pacientService.create(createPacienteDto, user);
-  }
-
-  /**
-   * Obtiene un paciente por su ID
-   */
-  @ApiOperation({ summary: 'Obtener paciente por ID' })
-  @ApiParam({ name: 'id', description: 'ID   paciente' })
-  @ApiOkResponse({
-    description: 'Paciente encontrado',
-    type: Paciente,
-  })
-  @ApiNotFoundResponse({
-    description: 'Paciente no encontrado',
-  })
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<Paciente> {
-    return this.pacientService.findOne(id);
+  ): Promise<BaseApiResponse<Patient>> {
+    return this.pacientService.create(createPatientDto, user);
   }
 
   /**
@@ -88,10 +78,27 @@ export class PacientController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todos los pacientes',
-    type: [Paciente],
+    type: [Patient],
   })
-  findAll(): Promise<Paciente[]> {
+  findAll(): Promise<Patient[]> {
     return this.pacientService.findAll();
+  }
+
+  /**
+   * Obtiene un paciente por su ID
+   */
+  @ApiOperation({ summary: 'Obtener paciente por ID' })
+  @ApiParam({ name: 'id', description: 'ID   paciente' })
+  @ApiOkResponse({
+    description: 'Paciente encontrado',
+    type: Patient,
+  })
+  @ApiNotFoundResponse({
+    description: 'Paciente no encontrado',
+  })
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Patient> {
+    return this.pacientService.findOne(id);
   }
 
   /**
@@ -102,14 +109,14 @@ export class PacientController {
   @ApiResponse({
     status: 200,
     description: 'Paciente actualizado exitosamente',
-    type: Paciente,
+    type: BaseApiResponse<Patient>,
   })
   update(
     @Param('id') id: string,
-    @Body() updatePacientDto: UpdatePacientDto,
+    @Body() updatePatientDto: UpdatePatientDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
-    return this.pacientService.update(id, updatePacientDto, user);
+  ): Promise<BaseApiResponse<Patient>> {
+    return this.pacientService.update(id, updatePatientDto, user);
   }
 
   /**
@@ -120,16 +127,16 @@ export class PacientController {
   @ApiResponse({
     status: 200,
     description: 'Pacientes desactivados exitosamente',
-    type: [Paciente],
+    type: BaseApiResponse<Patient[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o pacientes no existen',
   })
   deleteMany(
-    @Body() deletePacientDto: DeletePacientDto,
+    @Body() deletePatientDto: DeletePatientDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
-    return this.pacientService.deleteMany(deletePacientDto, user);
+  ): Promise<BaseApiResponse<Patient[]>> {
+    return this.pacientService.deleteMany(deletePatientDto, user);
   }
 
   /**
@@ -139,15 +146,47 @@ export class PacientController {
   @ApiOperation({ summary: 'Reactivar múltiples pacientes' })
   @ApiOkResponse({
     description: 'Pacientes reactivados exitosamente',
-    type: [Paciente],
+    type: BaseApiResponse<Patient[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o pacientes no existen',
   })
   reactivateAll(
-    @Body() deletePacientDto: DeletePacientDto,
+    @Body() deletePatientDto: DeletePatientDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
-    return this.pacientService.reactivateMany(deletePacientDto.ids, user);
+  ): Promise<BaseApiResponse<Patient[]>> {
+    return this.pacientService.reactivateMany(deletePatientDto.ids, user);
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Archivo de imagen a subir',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Imagen subida exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number' },
+        message: { type: 'string' },
+        data: { type: 'string' },
+      },
+    },
+  })
+  @Post('upload/image')
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadImage(
+    @UploadedFile() image: Express.Multer.File,
+  ): Promise<HttpResponse<string>> {
+    return this.pacientService.uploadImage(image);
   }
 }
