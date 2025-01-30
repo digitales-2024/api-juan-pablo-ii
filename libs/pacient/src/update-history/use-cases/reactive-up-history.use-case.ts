@@ -1,32 +1,34 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { UpHistoryRepository } from '../repositories/up-history.repository';
-import { UpHistory } from '../entities/up-history.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { UpdateHistoryRepository } from '../repositories/up-history.repository';
+import { UpdateHistory } from '../entities/up-history.entity';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class ReactivateUpHistoryUseCase {
+export class ReactivateUpdateHistoryUseCase {
   constructor(
-    private readonly upHistoryRepository: UpHistoryRepository,
+    private readonly updateHistoryRepository: UpdateHistoryRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<UpHistory[]>> {
+  ): Promise<BaseApiResponse<UpdateHistory[]>> {
     // Reactivar las historias y registrar auditoría
-    const reactivatedUpHistories = await this.upHistoryRepository.transaction(
-      async () => {
-        const upHistories = await this.upHistoryRepository.reactivateMany(ids);
+    const reactivatedUpdateHistories =
+      await this.updateHistoryRepository.transaction(async () => {
+        const updateHistories =
+          await this.updateHistoryRepository.reactivateMany(ids);
 
         // Registrar auditoría para cada historia reactivada
         await Promise.all(
-          upHistories.map((upHistory) =>
+          updateHistories.map((updateHistory) =>
             this.auditService.create({
-              entityId: upHistory.id,
-              entityType: 'updateHistoria',
+              entityId: updateHistory.id,
+              entityType: 'updateHistory',
               action: AuditActionType.UPDATE,
               performedById: user.id,
               createdAt: new Date(),
@@ -34,14 +36,13 @@ export class ReactivateUpHistoryUseCase {
           ),
         );
 
-        return upHistories;
-      },
-    );
+        return updateHistories;
+      });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Actualizaciones de historia médica reactivadas exitosamente',
-      data: reactivatedUpHistories,
+      data: reactivatedUpdateHistories,
     };
   }
 }
