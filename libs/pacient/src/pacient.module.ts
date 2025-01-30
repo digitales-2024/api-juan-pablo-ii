@@ -4,76 +4,76 @@ import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { PacientController } from './pacient/controllers/pacient.controller';
 import { PacientRepository } from './pacient/repositories/pacient.repository';
 import {
-  CreatePacientUseCase,
-  UpdatePacientUseCase,
-  DeletePacientsUseCase,
+  CreatePatientUseCase,
+  UpdatePatientUseCase,
+  DeletePatientsUseCase,
   ReactivatePacientUseCase,
 } from './pacient/use-cases';
-import { RecipeController } from './recipe/controllers/recipe.controller';
-import { RecipeService } from './recipe/services/recipe.service';
+import { PrescriptionController } from './recipe/controllers/recipe.controller';
+import { PrescriptionService } from './recipe/services/recipe.service';
 import {
-  CreateRecipeUseCase,
-  DeleteRecipesUseCase,
-  ReactivateRecipeUseCase,
-  UpdateRecipeUseCase,
+  CreatePrescriptionUseCase,
+  DeletePrescriptionsUseCase,
+  ReactivatePrescriptionUseCase,
+  UpdatePrescriptionUseCase,
 } from './recipe/use-cases';
-import { RecipeRepository } from './recipe/repositories/recipe.repository';
-import { UpHistoryController } from './update-history/controllers/up-history.controller';
-import { UpHistoryService } from './update-history/services/up-history.service';
+import { PrescriptionRepository } from './recipe/repositories/recipe.repository';
+import { UpdateHistoryController } from './update-history/controllers/up-history.controller';
+import { UpdateHistoryService } from './update-history/services/up-history.service';
 import {
-  CreateUpHistoryUseCase,
-  DeleteUpHistoriesUseCase,
-  ReactivateUpHistoryUseCase,
-  UpdateUpHistoryUseCase,
+  CreateUpdateHistoryUseCase,
+  DeleteUpdateHistoriesUseCase,
+  ReactivateUpdateHistoryUseCase,
+  UpdateUpdateHistoryUseCase,
 } from './update-history/use-cases';
-import { UpHistoryRepository } from './update-history/repositories/up-history.repository';
-import { HistoryController } from './history/controllers/history.controller';
-import { HistoryService } from './history/services/history.service';
-import { HistoryRepository } from './history/repositories/history.repository';
+import { UpdateHistoryRepository } from './update-history/repositories/up-history.repository';
+import { MedicalHistoryController } from './history/controllers/history.controller';
+import { MedicalHistoryService } from './history/services/history.service';
+import { MedicalHistoryRepository } from './history/repositories/history.repository';
 import {
-  CreateHistoryUseCase,
-  DeleteHistoriesUseCase,
-  ReactivateHistoryUseCase,
-  UpdateHistoryUseCase,
+  CreateMedicalHistoryUseCase,
+  DeleteMedicalHistoriesUseCase,
+  ReactivateMedicalHistoryUseCase,
+  UpdateMedicalHistoryUseCase,
 } from './history/use-cases';
-
+import { CloudflareModule } from 'src/cloudflare/cloudflare.module';
 @Module({
   controllers: [
     PacientController,
-    RecipeController,
-    UpHistoryController,
-    HistoryController,
+    PrescriptionController,
+    UpdateHistoryController,
+    MedicalHistoryController,
   ],
-  imports: [AuditModule],
+  imports: [AuditModule, CloudflareModule],
   providers: [
     //paciente
     PacientService,
     PacientRepository,
-    CreatePacientUseCase,
-    UpdatePacientUseCase,
-    DeletePacientsUseCase,
+    CreatePatientUseCase,
+    UpdatePatientUseCase,
+    DeletePatientsUseCase,
     ReactivatePacientUseCase,
     //receta
-    RecipeService,
-    CreateRecipeUseCase,
-    UpdateRecipeUseCase,
-    DeleteRecipesUseCase,
-    ReactivateRecipeUseCase,
-    RecipeRepository,
+    PrescriptionService,
+    PrescriptionRepository,
+    CreatePrescriptionUseCase,
+    UpdatePrescriptionUseCase,
+    DeletePrescriptionsUseCase,
+    ReactivatePrescriptionUseCase,
     //historia medica actualizacion
-    UpHistoryService,
-    UpHistoryRepository,
-    CreateUpHistoryUseCase,
-    UpdateUpHistoryUseCase,
-    DeleteUpHistoriesUseCase,
-    ReactivateUpHistoryUseCase,
+    UpdateHistoryService,
+    UpdateHistoryRepository,
+    CreateUpdateHistoryUseCase,
+    UpdateUpdateHistoryUseCase,
+    DeleteUpdateHistoriesUseCase,
+    ReactivateUpdateHistoryUseCase,
     // historia medica
-    HistoryService,
-    HistoryRepository,
-    CreateHistoryUseCase,
-    UpdateHistoryUseCase,
-    DeleteHistoriesUseCase,
-    ReactivateHistoryUseCase,
+    MedicalHistoryService,
+    MedicalHistoryRepository,
+    CreateMedicalHistoryUseCase,
+    UpdateMedicalHistoryUseCase,
+    DeleteMedicalHistoriesUseCase,
+    ReactivateMedicalHistoryUseCase,
   ],
   exports: [PacientModule],
 })
