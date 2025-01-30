@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { UpHistoryService } from '../services/up-history.service';
+import { UpdateHistoryService } from '../services/up-history.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
@@ -19,13 +19,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
-  CreateUpHistoryDto,
-  UpdateUpHistoryDto,
-  DeleteUpHistoryDto,
+  CreateUpdateHistoryDto,
+  UpdateUpdateHistoryDto,
+  DeleteUpdateHistoryDto,
 } from '../dto';
-import { UpHistory } from '../entities/up-history.entity';
+import { UpdateHistory } from '../entities/up-history.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar actualizaciones de historias médicas.
@@ -39,10 +40,10 @@ import { UpHistory } from '../entities/up-history.entity';
 @ApiUnauthorizedResponse({
   description: 'Unauthorized - No autorizado para realizar esta operación',
 })
-@Controller({ path: 'update-historia', version: '1' })
+@Controller({ path: 'update-history', version: '1' })
 @Auth()
-export class UpHistoryController {
-  constructor(private readonly upHistoryService: UpHistoryService) {}
+export class UpdateHistoryController {
+  constructor(private readonly updateHistoryService: UpdateHistoryService) {}
 
   /**
    * Crea una nueva actualización de historia médica
@@ -52,33 +53,16 @@ export class UpHistoryController {
   @ApiResponse({
     status: 201,
     description: 'Actualización de historia médica creada exitosamente',
-    type: UpHistory,
+    type: BaseApiResponse<UpdateHistory>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o actualización ya existe',
   })
   create(
-    @Body() createUpHistoryDto: CreateUpHistoryDto,
+    @Body() createUpdateHistoryDto: CreateUpdateHistoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UpHistory>> {
-    return this.upHistoryService.create(createUpHistoryDto, user);
-  }
-
-  /**
-   * Obtiene una actualización de historia médica por su ID
-   */
-  @Get(':id')
-  @ApiOperation({ summary: 'Obtener actualización de historia médica por ID' })
-  @ApiParam({ name: 'id', description: 'ID de la actualización' })
-  @ApiOkResponse({
-    description: 'Actualización de historia médica encontrada',
-    type: UpHistory,
-  })
-  @ApiNotFoundResponse({
-    description: 'Actualización de historia médica no encontrada',
-  })
-  findOne(@Param('id') id: string): Promise<UpHistory> {
-    return this.upHistoryService.findOne(id);
+  ): Promise<BaseApiResponse<UpdateHistory>> {
+    return this.updateHistoryService.create(createUpdateHistoryDto, user);
   }
 
   /**
@@ -91,10 +75,27 @@ export class UpHistoryController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todas las actualizaciones de historias médicas',
-    type: [UpHistory],
+    type: [UpdateHistory],
   })
-  findAll(): Promise<UpHistory[]> {
-    return this.upHistoryService.findAll();
+  findAll(): Promise<UpdateHistory[]> {
+    return this.updateHistoryService.findAll();
+  }
+
+  /**
+   * Obtiene una actualización de historia médica por su ID
+   */
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener actualización de historia médica por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la actualización' })
+  @ApiOkResponse({
+    description: 'Actualización de historia médica encontrada',
+    type: UpdateHistory,
+  })
+  @ApiNotFoundResponse({
+    description: 'Actualización de historia médica no encontrada',
+  })
+  findOne(@Param('id') id: string): Promise<UpdateHistory> {
+    return this.updateHistoryService.findOne(id);
   }
 
   /**
@@ -107,14 +108,14 @@ export class UpHistoryController {
   @ApiResponse({
     status: 200,
     description: 'Actualización de historia médica actualizada exitosamente',
-    type: UpHistory,
+    type: BaseApiResponse<UpdateHistory>,
   })
   update(
     @Param('id') id: string,
-    @Body() updateUpHistoryDto: UpdateUpHistoryDto,
+    @Body() updateUpdateHistoryDto: UpdateUpdateHistoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UpHistory>> {
-    return this.upHistoryService.update(id, updateUpHistoryDto, user);
+  ): Promise<BaseApiResponse<UpdateHistory>> {
+    return this.updateHistoryService.update(id, updateUpdateHistoryDto, user);
   }
 
   /**
@@ -128,16 +129,16 @@ export class UpHistoryController {
     status: 200,
     description:
       'Actualizaciones de historias médicas desactivadas exitosamente',
-    type: [UpHistory],
+    type: BaseApiResponse<UpdateHistory[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o actualizaciones no existen',
   })
   deleteMany(
-    @Body() deleteUpHistoryDto: DeleteUpHistoryDto,
+    @Body() deleteUpdateHistoryDto: DeleteUpdateHistoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UpHistory[]>> {
-    return this.upHistoryService.deleteMany(deleteUpHistoryDto, user);
+  ): Promise<BaseApiResponse<UpdateHistory[]>> {
+    return this.updateHistoryService.deleteMany(deleteUpdateHistoryDto, user);
   }
 
   /**
@@ -150,15 +151,18 @@ export class UpHistoryController {
   @ApiOkResponse({
     description:
       'Actualizaciones de historias médicas reactivadas exitosamente',
-    type: [UpHistory],
+    type: BaseApiResponse<UpdateHistory[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o actualizaciones no existen',
   })
   reactivateAll(
-    @Body() deleteUpHistoryDto: DeleteUpHistoryDto,
+    @Body() deleteUpdateHistoryDto: DeleteUpdateHistoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<UpHistory[]>> {
-    return this.upHistoryService.reactivateMany(deleteUpHistoryDto.ids, user);
+  ): Promise<BaseApiResponse<UpdateHistory[]>> {
+    return this.updateHistoryService.reactivateMany(
+      deleteUpdateHistoryDto.ids,
+      user,
+    );
   }
 }
