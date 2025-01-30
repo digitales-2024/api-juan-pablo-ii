@@ -3,16 +3,13 @@ import {
   IsString,
   IsOptional,
   IsNotEmpty,
-  IsBoolean,
   IsEmail,
   MaxLength,
   IsDateString,
-  IsArray,
-  ArrayNotEmpty,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreatePacienteDto {
+export class CreatePatientDto {
   @ApiProperty({
     description: 'Nombre completo del paciente',
     example: 'Juan Pérez',
@@ -22,7 +19,7 @@ export class CreatePacienteDto {
   @IsNotEmpty()
   @MaxLength(100)
   @Transform(({ value }) => value.trim())
-  nombre: string;
+  name: string;
 
   @ApiProperty({
     description: 'Apellido del paciente',
@@ -33,7 +30,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
-  apellido?: string;
+  lastName?: string;
 
   @ApiProperty({
     description: 'DNI del paciente',
@@ -52,15 +49,16 @@ export class CreatePacienteDto {
     required: true,
   })
   @IsDateString()
-  cumpleanos: Date;
+  birthDate: Date;
 
   @ApiProperty({
     description: 'Sexo del paciente (M/F)',
-    example: true,
+    example: 'M',
     required: true,
   })
-  @IsBoolean()
-  sexo: boolean;
+  @IsString()
+  @IsNotEmpty()
+  gender: string;
 
   @ApiProperty({
     description: 'Dirección del paciente',
@@ -71,7 +69,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(255)
   @Transform(({ value }) => value?.trim())
-  direccion?: string;
+  address?: string;
 
   @ApiProperty({
     description: 'Número de teléfono del paciente',
@@ -82,7 +80,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(15)
   @Transform(({ value }) => value?.trim())
-  telefono?: string;
+  phone?: string;
 
   @ApiProperty({
     description: 'Correo electrónico del paciente',
@@ -93,7 +91,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
-  correo?: string;
+  email?: string;
 
   @ApiProperty({
     description: 'Fecha de registro del paciente',
@@ -101,27 +99,7 @@ export class CreatePacienteDto {
     required: true,
   })
   @IsDateString()
-  fechaRegistro: Date;
-
-  @ApiProperty({
-    description: 'Alergias conocidas del paciente',
-    example: 'Polen, Maní',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  alergias?: string;
-
-  @ApiProperty({
-    description: 'Medicamentos que el paciente está tomando',
-    example: 'Ibuprofeno, Paracetamol',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  medicamentosActuales?: string;
+  registrationDate: Date;
 
   @ApiProperty({
     description: 'Nombre del contacto de emergencia',
@@ -132,7 +110,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
-  contactoEmergencia?: string;
+  emergencyContact?: string;
 
   @ApiProperty({
     description: 'Teléfono del contacto de emergencia',
@@ -143,7 +121,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(15)
   @Transform(({ value }) => value?.trim())
-  telefonoEmergencia?: string;
+  emergencyPhone?: string;
 
   @ApiProperty({
     description: 'Nombre de la compañía de seguro médico',
@@ -154,7 +132,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
-  seguroMedico?: string;
+  healthInsurance?: string;
 
   @ApiProperty({
     description: 'Estado civil del paciente',
@@ -165,7 +143,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(20)
   @Transform(({ value }) => value?.trim())
-  estadoCivil?: string;
+  maritalStatus?: string;
 
   @ApiProperty({
     description: 'Profesión del paciente',
@@ -176,7 +154,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
-  ocupacion?: string;
+  occupation?: string;
 
   @ApiProperty({
     description: 'Nombre y dirección del lugar de trabajo',
@@ -187,7 +165,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(255)
   @Transform(({ value }) => value?.trim())
-  lugarTrabajo?: string;
+  workplace?: string;
 
   @ApiProperty({
     description: 'Grupo sanguíneo del paciente',
@@ -198,44 +176,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(3)
   @Transform(({ value }) => value?.trim())
-  tipoSangre?: string;
-
-  @ApiProperty({
-    description: 'Enfermedades hereditarias en la familia',
-    example: 'Diabetes, Hipertensión',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  antecedentesFamiliares?: string;
-
-  @ApiProperty({
-    description: 'Hábitos como consumo de tabaco, alcohol, etc.',
-    example: 'Fuma, Bebe ocasionalmente',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  habitosVida?: string;
-
-  @ApiProperty({
-    description: 'Registro de vacunas recibidas',
-    example: [
-      {
-        'COVID-19': 1,
-        Influenza: 2,
-        'Hepatitis B': 3,
-        Sarampión: 1,
-      },
-    ],
-    required: false,
-  })
-  @IsArray()
-  @IsOptional()
-  @ArrayNotEmpty()
-  vacunas: string;
+  bloodType?: string;
 
   @ApiProperty({
     description: 'Nombre y contacto del médico principal',
@@ -246,7 +187,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
-  medicoCabecera?: string;
+  primaryDoctor?: string;
 
   @ApiProperty({
     description: 'Idioma preferido del paciente',
@@ -257,18 +198,7 @@ export class CreatePacienteDto {
   @IsOptional()
   @MaxLength(50)
   @Transform(({ value }) => value?.trim())
-  idioma?: string;
-
-  @ApiProperty({
-    description: 'Consentimientos y autorizaciones firmadas',
-    example: 'Consentimiento informado firmado el 01/01/2023',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  @MaxLength(255)
-  @Transform(({ value }) => value?.trim())
-  autorizacionTratamiento?: string;
+  language?: string;
 
   @ApiProperty({
     description: 'Cualquier otra observación relevante',
@@ -278,7 +208,7 @@ export class CreatePacienteDto {
   @IsString()
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  observaciones?: string;
+  notes?: string;
 
   @ApiProperty({
     description: 'Imagen del paciente para identificación visual',
@@ -287,5 +217,5 @@ export class CreatePacienteDto {
   })
   @IsString()
   @IsOptional()
-  fotografiaPaciente?: string;
+  patientPhoto?: string;
 }
