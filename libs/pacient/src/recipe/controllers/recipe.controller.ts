@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { RecipeService } from '../services/recipe.service';
+import { PrescriptionService } from '../services/recipe.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
@@ -19,9 +19,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
-import { CreateRecipeDto, UpdateRecipeDto, DeleteRecipeDto } from '../dto';
-import { Recipe } from '../entities/recipe.entity';
+import { UserData } from '@login/login/interfaces';
+import {
+  CreatePrescriptionDto,
+  UpdatePrescriptionDto,
+  DeletePrescriptionDto,
+} from '../dto';
+import { Prescription } from '../entities/recipe.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar recetas médicas.
@@ -37,8 +42,8 @@ import { Recipe } from '../entities/recipe.entity';
 })
 @Controller({ path: 'receta', version: '1' })
 @Auth()
-export class RecipeController {
-  constructor(private readonly recipeService: RecipeService) {}
+export class PrescriptionController {
+  constructor(private readonly prescriptionService: PrescriptionService) {}
 
   /**
    * Crea una nueva receta médica
@@ -48,33 +53,16 @@ export class RecipeController {
   @ApiResponse({
     status: 201,
     description: 'Receta médica creada exitosamente',
-    type: Recipe,
+    type: BaseApiResponse<Prescription>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o receta ya existe',
   })
   create(
-    @Body() createRecipeDto: CreateRecipeDto,
+    @Body() createPrescriptionDto: CreatePrescriptionDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recipe>> {
-    return this.recipeService.create(createRecipeDto, user);
-  }
-
-  /**
-   * Obtiene una receta médica por su ID
-   */
-  @Get(':id')
-  @ApiOperation({ summary: 'Obtener receta médica por ID' })
-  @ApiParam({ name: 'id', description: 'ID de la receta médica' })
-  @ApiOkResponse({
-    description: 'Receta médica encontrada',
-    type: Recipe,
-  })
-  @ApiNotFoundResponse({
-    description: 'Receta médica no encontrada',
-  })
-  findOne(@Param('id') id: string): Promise<Recipe> {
-    return this.recipeService.findOne(id);
+  ): Promise<BaseApiResponse<Prescription>> {
+    return this.prescriptionService.create(createPrescriptionDto, user);
   }
 
   /**
@@ -85,10 +73,27 @@ export class RecipeController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todas las recetas médicas',
-    type: [Recipe],
+    type: [Prescription],
   })
-  findAll(): Promise<Recipe[]> {
-    return this.recipeService.findAll();
+  findAll(): Promise<Prescription[]> {
+    return this.prescriptionService.findAll();
+  }
+
+  /**
+   * Obtiene una receta médica por su ID
+   */
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener receta médica por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la receta médica' })
+  @ApiOkResponse({
+    description: 'Receta médica encontrada',
+    type: Prescription,
+  })
+  @ApiNotFoundResponse({
+    description: 'Receta médica no encontrada',
+  })
+  findOne(@Param('id') id: string): Promise<Prescription> {
+    return this.prescriptionService.findOne(id);
   }
 
   /**
@@ -99,14 +104,14 @@ export class RecipeController {
   @ApiResponse({
     status: 200,
     description: 'Receta médica actualizada exitosamente',
-    type: Recipe,
+    type: BaseApiResponse<Prescription>,
   })
   update(
     @Param('id') id: string,
-    @Body() updateRecipeDto: UpdateRecipeDto,
+    @Body() updatePrescriptionDto: UpdatePrescriptionDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recipe>> {
-    return this.recipeService.update(id, updateRecipeDto, user);
+  ): Promise<BaseApiResponse<Prescription>> {
+    return this.prescriptionService.update(id, updatePrescriptionDto, user);
   }
 
   /**
@@ -117,16 +122,16 @@ export class RecipeController {
   @ApiResponse({
     status: 200,
     description: 'Recetas médicas desactivadas exitosamente',
-    type: [Recipe],
+    type: BaseApiResponse<Prescription[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o recetas no existen',
   })
   deleteMany(
-    @Body() deleteRecipeDto: DeleteRecipeDto,
+    @Body() deletePrescriptionDto: DeletePrescriptionDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recipe[]>> {
-    return this.recipeService.deleteMany(deleteRecipeDto, user);
+  ): Promise<BaseApiResponse<Prescription[]>> {
+    return this.prescriptionService.deleteMany(deletePrescriptionDto, user);
   }
 
   /**
@@ -136,15 +141,18 @@ export class RecipeController {
   @ApiOperation({ summary: 'Reactivar múltiples recetas médicas' })
   @ApiOkResponse({
     description: 'Recetas médicas reactivadas exitosamente',
-    type: [Recipe],
+    type: BaseApiResponse<Prescription[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o recetas no existen',
   })
   reactivateAll(
-    @Body() deleteRecipeDto: DeleteRecipeDto,
+    @Body() deletePrescriptionDto: DeletePrescriptionDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Recipe[]>> {
-    return this.recipeService.reactivateMany(deleteRecipeDto.ids, user);
+  ): Promise<BaseApiResponse<Prescription[]>> {
+    return this.prescriptionService.reactivateMany(
+      deletePrescriptionDto.ids,
+      user,
+    );
   }
 }
