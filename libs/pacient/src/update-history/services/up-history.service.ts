@@ -1,50 +1,46 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
-import { UpHistoryRepository } from '../repositories/up-history.repository';
-import { UpHistory } from '../entities/up-history.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { UpdateHistoryRepository } from '../repositories/up-history.repository';
+import { UpdateHistory } from '../entities/up-history.entity';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { upHistoryErrorMessages } from '../errors/errors-up-history';
 import {
-  CreateUpHistoryDto,
-  UpdateUpHistoryDto,
-  DeleteUpHistoryDto,
+  CreateUpdateHistoryDto,
+  UpdateUpdateHistoryDto,
+  DeleteUpdateHistoryDto,
 } from '../dto';
 import {
-  CreateUpHistoryUseCase,
-  UpdateUpHistoryUseCase,
-  DeleteUpHistoriesUseCase,
-  ReactivateUpHistoryUseCase,
+  CreateUpdateHistoryUseCase,
+  UpdateUpdateHistoryUseCase,
+  DeleteUpdateHistoriesUseCase,
+  ReactivateUpdateHistoryUseCase,
 } from '../use-cases';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 // Constantes para nombres de tablas
 const TABLE_NAMES = {
-  CONSULTA_MEDICA: 'consultaMedica',
-  PERSONAL: 'personal',
-  SUCURSAL: 'sucursal',
-  HISTORIA_MEDICA: 'historiaMedica',
+  SERVICE: 'service',
+  STAFF: 'staff',
+  BRANCH: 'branch',
+  MEDICAL_HISTORY: 'medicalHistory',
 } as const;
 
 @Injectable()
-export class UpHistoryService {
-  private readonly logger = new Logger(UpHistoryService.name);
+export class UpdateHistoryService {
+  private readonly logger = new Logger(UpdateHistoryService.name);
   private readonly errorHandler: BaseErrorHandler;
 
   constructor(
-    private readonly upHistoryRepository: UpHistoryRepository,
-    private readonly createUpHistoryUseCase: CreateUpHistoryUseCase,
-    private readonly updateUpHistoryUseCase: UpdateUpHistoryUseCase,
-    private readonly deleteUpHistoriesUseCase: DeleteUpHistoriesUseCase,
-    private readonly reactivateUpHistoryUseCase: ReactivateUpHistoryUseCase,
+    private readonly updateHistoryRepository: UpdateHistoryRepository,
+    private readonly createUpdateHistoryUseCase: CreateUpdateHistoryUseCase,
+    private readonly updateUpdateHistoryUseCase: UpdateUpdateHistoryUseCase,
+    private readonly deleteUpdateHistoriesUseCase: DeleteUpdateHistoriesUseCase,
+    private readonly reactivateUpdateHistoryUseCase: ReactivateUpdateHistoryUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
-      'UpHistory',
+      'UpdateHistory',
       upHistoryErrorMessages,
     );
   }
@@ -53,41 +49,42 @@ export class UpHistoryService {
    * Valida las referencias a otras tablas
    */
   private async validateReferences(
-    dto: CreateUpHistoryDto | UpdateUpHistoryDto,
+    dto: CreateUpdateHistoryDto | UpdateUpdateHistoryDto,
   ) {
-    // Validar ConsultaMedica
-    const consultaExists = await this.upHistoryRepository.findByIdValidate(
-      TABLE_NAMES.CONSULTA_MEDICA,
-      dto.consultaMedicaId,
+    // Validar Servicio
+    const serviceExists = await this.updateHistoryRepository.findByIdValidate(
+      TABLE_NAMES.SERVICE,
+      dto.serviceId,
     );
-    if (!consultaExists) {
-      throw new BadRequestException('Consulta médica no encontrada');
+    if (!serviceExists) {
+      throw new BadRequestException('Servicio no encontrado');
     }
 
     // Validar Personal
-    const personalExists = await this.upHistoryRepository.findByIdValidate(
-      TABLE_NAMES.PERSONAL,
-      dto.personalId,
+    const staffExists = await this.updateHistoryRepository.findByIdValidate(
+      TABLE_NAMES.STAFF,
+      dto.staffId,
     );
-    if (!personalExists) {
+    if (!staffExists) {
       throw new BadRequestException('Personal no encontrado');
     }
 
     // Validar Sucursal
-    const sucursalExists = await this.upHistoryRepository.findByIdValidate(
-      TABLE_NAMES.SUCURSAL,
-      dto.sucursalId,
+    const branchExists = await this.updateHistoryRepository.findByIdValidate(
+      TABLE_NAMES.BRANCH,
+      dto.branchId,
     );
-    if (!sucursalExists) {
+    if (!branchExists) {
       throw new BadRequestException('Sucursal no encontrada');
     }
 
     // Validar HistoriaMedica
-    const historiaExists = await this.upHistoryRepository.findByIdValidate(
-      TABLE_NAMES.HISTORIA_MEDICA,
-      dto.historiaMedicaId,
-    );
-    if (!historiaExists) {
+    const medicalHistoryExists =
+      await this.updateHistoryRepository.findByIdValidate(
+        TABLE_NAMES.MEDICAL_HISTORY,
+        dto.medicalHistoryId,
+      );
+    if (!medicalHistoryExists) {
       throw new BadRequestException('Historia médica no encontrada');
     }
   }
@@ -96,13 +93,13 @@ export class UpHistoryService {
    * Crea una nueva actualización de historia médica
    */
   async create(
-    createUpHistoryDto: CreateUpHistoryDto,
+    createUpdateHistoryDto: CreateUpdateHistoryDto,
     user: UserData,
-  ): Promise<HttpResponse<UpHistory>> {
+  ): Promise<BaseApiResponse<UpdateHistory>> {
     try {
-      await this.validateReferences(createUpHistoryDto);
-      return await this.createUpHistoryUseCase.execute(
-        createUpHistoryDto,
+      await this.validateReferences(createUpdateHistoryDto);
+      return await this.createUpdateHistoryUseCase.execute(
+        createUpdateHistoryDto,
         user,
       );
     } catch (error) {
@@ -116,25 +113,25 @@ export class UpHistoryService {
    */
   async update(
     id: string,
-    updateUpHistoryDto: UpdateUpHistoryDto,
+    updateUpdateHistoryDto: UpdateUpdateHistoryDto,
     user: UserData,
-  ): Promise<HttpResponse<UpHistory>> {
+  ): Promise<BaseApiResponse<UpdateHistory>> {
     try {
-      const currentUpHistory = await this.findById(id);
+      const currentUpdateHistory = await this.findById(id);
 
-      if (!validateChanges(updateUpHistoryDto, currentUpHistory)) {
+      if (!validateChanges(updateUpdateHistoryDto, currentUpdateHistory)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message:
             'No se detectaron cambios en la actualización de historia médica',
-          data: currentUpHistory,
+          data: currentUpdateHistory,
         };
       }
 
-      await this.validateReferences(updateUpHistoryDto);
-      return await this.updateUpHistoryUseCase.execute(
+      await this.validateReferences(updateUpdateHistoryDto);
+      return await this.updateUpdateHistoryUseCase.execute(
         id,
-        updateUpHistoryDto,
+        updateUpdateHistoryDto,
         user,
       );
     } catch (error) {
@@ -146,7 +143,7 @@ export class UpHistoryService {
   /**
    * Busca una actualización de historia médica por su ID
    */
-  async findOne(id: string): Promise<UpHistory> {
+  async findOne(id: string): Promise<UpdateHistory> {
     try {
       return this.findById(id);
     } catch (error) {
@@ -158,9 +155,9 @@ export class UpHistoryService {
   /**
    * Obtiene todas las actualizaciones de historias médicas
    */
-  async findAll(): Promise<UpHistory[]> {
+  async findAll(): Promise<UpdateHistory[]> {
     try {
-      return this.upHistoryRepository.findMany();
+      return this.updateHistoryRepository.findMany();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
       throw error;
@@ -170,30 +167,30 @@ export class UpHistoryService {
   /**
    * Busca una actualización de historia médica por su ID
    */
-  async findById(id: string): Promise<UpHistory> {
-    const upHistory = await this.upHistoryRepository.findById(id);
-    if (!upHistory) {
+  async findById(id: string): Promise<UpdateHistory> {
+    const updateHistory = await this.updateHistoryRepository.findById(id);
+    if (!updateHistory) {
       throw new BadRequestException(
         'Actualización de historia médica no encontrada',
       );
     }
-    return upHistory;
+    return updateHistory;
   }
 
   /**
    * Desactiva múltiples actualizaciones de historias médicas
    */
   async deleteMany(
-    deleteUpHistoryDto: DeleteUpHistoryDto,
+    deleteUpdateHistoryDto: DeleteUpdateHistoryDto,
     user: UserData,
-  ): Promise<HttpResponse<UpHistory[]>> {
+  ): Promise<BaseApiResponse<UpdateHistory[]>> {
     try {
       validateArray(
-        deleteUpHistoryDto.ids,
+        deleteUpdateHistoryDto.ids,
         'IDs de actualizaciones de historias médicas',
       );
-      return await this.deleteUpHistoriesUseCase.execute(
-        deleteUpHistoryDto,
+      return await this.deleteUpdateHistoriesUseCase.execute(
+        deleteUpdateHistoryDto,
         user,
       );
     } catch (error) {
@@ -208,10 +205,10 @@ export class UpHistoryService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<UpHistory[]>> {
+  ): Promise<BaseApiResponse<UpdateHistory[]>> {
     try {
       validateArray(ids, 'IDs de actualizaciones de historias médicas');
-      return await this.reactivateUpHistoryUseCase.execute(ids, user);
+      return await this.reactivateUpdateHistoryUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
       throw error;
