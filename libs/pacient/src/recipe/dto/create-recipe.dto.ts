@@ -1,4 +1,3 @@
-// dto/create-recipe.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
@@ -9,7 +8,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreateRecipeDto {
+export class CreatePrescriptionDto {
   @ApiProperty({
     description: 'ID de la actualización de historia médica',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -17,7 +16,7 @@ export class CreateRecipeDto {
   })
   @IsString()
   @IsNotEmpty()
-  updateHistoriaId: string;
+  updateHistoryId: string;
 
   @ApiProperty({
     description: 'ID de la sucursal donde se emite la receta',
@@ -26,7 +25,7 @@ export class CreateRecipeDto {
   })
   @IsString()
   @IsNotEmpty()
-  sucursalId: string;
+  branchId: string;
 
   @ApiProperty({
     description: 'ID del personal médico que emite la receta',
@@ -35,7 +34,7 @@ export class CreateRecipeDto {
   })
   @IsString()
   @IsNotEmpty()
-  personalId: string;
+  staffId: string;
 
   @ApiProperty({
     description: 'ID del paciente',
@@ -44,7 +43,7 @@ export class CreateRecipeDto {
   })
   @IsString()
   @IsNotEmpty()
-  pacienteId: string;
+  patientId: string;
 
   @ApiProperty({
     description: 'Fecha de emisión de la receta',
@@ -52,7 +51,7 @@ export class CreateRecipeDto {
     required: true,
   })
   @IsDateString()
-  fechaRegistro: Date;
+  registrationDate: Date;
 
   @ApiProperty({
     description: 'Detalle de medicamentos y dosificación',
@@ -70,7 +69,7 @@ export class CreateRecipeDto {
   })
   @IsObject()
   @IsNotEmpty()
-  receta: any;
+  prescription: any;
 
   @ApiProperty({
     description: 'Descripción o notas adicionales',
@@ -80,7 +79,7 @@ export class CreateRecipeDto {
   @IsString()
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  descripcion?: string;
+  description?: string;
 
   @ApiProperty({
     description: 'ID de la orden de compra asociada',
@@ -89,5 +88,5 @@ export class CreateRecipeDto {
   })
   @IsString()
   @IsOptional()
-  ordenCompraId?: string;
+  purchaseOrderId?: string;
 }
