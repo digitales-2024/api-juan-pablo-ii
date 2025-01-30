@@ -1,84 +1,69 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class Paciente {
+export class Patient {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  nombre: string;
+  name: string;
 
   @ApiProperty()
-  apellido?: string;
+  lastName?: string;
 
   @ApiProperty()
   dni: string;
 
   @ApiProperty()
-  cumpleanos: Date;
+  birthDate: Date;
 
   @ApiProperty()
-  sexo: boolean;
+  gender: string;
 
   @ApiProperty()
-  direccion?: string;
+  address?: string;
 
   @ApiProperty()
-  telefono?: string;
+  phone?: string;
 
   @ApiProperty()
-  correo?: string;
+  email?: string;
 
   @ApiProperty()
-  fechaRegistro: Date;
+  registrationDate: Date;
 
   @ApiProperty()
-  alergias?: string;
+  emergencyContact?: string;
 
   @ApiProperty()
-  medicamentosActuales?: string;
+  emergencyPhone?: string;
 
   @ApiProperty()
-  contactoEmergencia?: string;
+  healthInsurance?: string;
 
   @ApiProperty()
-  telefonoEmergencia?: string;
+  maritalStatus?: string;
 
   @ApiProperty()
-  seguroMedico?: string;
+  occupation?: string;
 
   @ApiProperty()
-  estadoCivil?: string;
+  workplace?: string;
 
   @ApiProperty()
-  ocupacion?: string;
+  bloodType?: string;
 
   @ApiProperty()
-  lugarTrabajo?: string;
+  primaryDoctor?: string;
 
   @ApiProperty()
-  tipoSangre?: string;
+  language?: string;
 
   @ApiProperty()
-  antecedentesFamiliares?: string;
+  notes?: string;
 
   @ApiProperty()
-  habitosVida?: string;
+  patientPhoto?: string;
 
   @ApiProperty()
-  vacunas?: string;
-
-  @ApiProperty()
-  medicoCabecera?: string;
-
-  @ApiProperty()
-  idioma?: string;
-
-  @ApiProperty()
-  autorizacionTratamiento?: string;
-
-  @ApiProperty()
-  observaciones?: string;
-
-  @ApiProperty()
-  fotografiaPaciente?: string;
+  isActive: boolean;
 }
