@@ -1,40 +1,48 @@
-// up-history.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpHistory {
+export class UpdateHistory {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  consultaMedicaId: string;
+  serviceId: string;
 
   @ApiProperty()
-  personalId: string;
+  staffId: string;
 
   @ApiProperty()
-  sucursalId: string;
+  branchId: string;
 
   @ApiProperty()
-  historiaMedicaId: string;
+  medicalHistoryId: string;
 
   @ApiProperty()
-  receta: boolean;
+  prescription: boolean;
 
   @ApiProperty()
-  recetaMedicaId?: string;
+  prescriptionId?: string;
 
   @ApiProperty()
-  fecha: Date;
-
-  @ApiProperty()
-  updateHistoria: any;
+  updateHistory: any;
 
   @ApiProperty()
   description?: string;
 
   @ApiProperty()
-  descansoMedico: boolean;
+  medicalLeave: boolean;
 
   @ApiProperty()
-  descripDescanso?: string;
+  medicalLeaveStartDate?: Date;
+
+  @ApiProperty()
+  medicalLeaveEndDate?: Date;
+
+  @ApiProperty()
+  medicalLeaveDays?: number;
+
+  @ApiProperty()
+  leaveDescription?: string;
+
+  @ApiProperty()
+  isActive: boolean;
 }
