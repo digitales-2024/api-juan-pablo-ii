@@ -1,4 +1,3 @@
-// create-up-history.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
@@ -10,15 +9,15 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreateUpHistoryDto {
+export class CreateUpdateHistoryDto {
   @ApiProperty({
-    description: 'ID de la consulta médica',
+    description: 'ID del servicio',
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: true,
   })
   @IsString()
   @IsNotEmpty()
-  consultaMedicaId: string;
+  serviceId: string;
 
   @ApiProperty({
     description: 'ID del personal médico',
@@ -27,7 +26,7 @@ export class CreateUpHistoryDto {
   })
   @IsString()
   @IsNotEmpty()
-  personalId: string;
+  staffId: string;
 
   @ApiProperty({
     description: 'ID de la sucursal',
@@ -36,7 +35,7 @@ export class CreateUpHistoryDto {
   })
   @IsString()
   @IsNotEmpty()
-  sucursalId: string;
+  branchId: string;
 
   @ApiProperty({
     description: 'ID de la historia médica',
@@ -45,7 +44,7 @@ export class CreateUpHistoryDto {
   })
   @IsString()
   @IsNotEmpty()
-  historiaMedicaId: string;
+  medicalHistoryId: string;
 
   @ApiProperty({
     description: 'Indica si tiene receta médica',
@@ -54,7 +53,7 @@ export class CreateUpHistoryDto {
   })
   @IsBoolean()
   @IsOptional()
-  receta?: boolean = false;
+  prescription?: boolean = false;
 
   @ApiProperty({
     description: 'ID de la receta médica',
@@ -63,15 +62,7 @@ export class CreateUpHistoryDto {
   })
   @IsString()
   @IsOptional()
-  recetaMedicaId?: string;
-
-  @ApiProperty({
-    description: 'Fecha de la actualización',
-    example: '2024-03-15T10:00:00Z',
-    required: true,
-  })
-  @IsDateString()
-  fecha: Date;
+  prescriptionId?: string;
 
   @ApiProperty({
     description: 'Detalles de la actualización',
@@ -84,7 +75,7 @@ export class CreateUpHistoryDto {
   })
   @IsObject()
   @IsNotEmpty()
-  updateHistoria: any;
+  updateHistory: any;
 
   @ApiProperty({
     description: 'Descripción adicional',
@@ -103,7 +94,33 @@ export class CreateUpHistoryDto {
   })
   @IsBoolean()
   @IsOptional()
-  descansoMedico?: boolean = false;
+  medicalLeave?: boolean = false;
+
+  @ApiProperty({
+    description: 'Fecha de inicio del descanso médico',
+    example: '2024-03-16T10:00:00Z',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  medicalLeaveStartDate?: Date;
+
+  @ApiProperty({
+    description: 'Fecha de fin del descanso médico',
+    example: '2024-03-19T10:00:00Z',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  medicalLeaveEndDate?: Date;
+
+  @ApiProperty({
+    description: 'Cantidad de días de descanso médico',
+    example: 3,
+    required: false,
+  })
+  @IsOptional()
+  medicalLeaveDays?: number;
 
   @ApiProperty({
     description: 'Descripción del descanso médico',
@@ -113,5 +130,5 @@ export class CreateUpHistoryDto {
   @IsString()
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  descripDescanso?: string;
+  leaveDescription?: string;
 }
