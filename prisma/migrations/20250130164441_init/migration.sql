@@ -2,6 +2,15 @@
 CREATE TYPE "AuditActionType" AS ENUM ('CREATE', 'UPDATE', 'DELETE');
 
 -- CreateEnum
+CREATE TYPE "AppointmentStatus" AS ENUM ('PENDING', 'PAID', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW');
+
+-- CreateEnum
+CREATE TYPE "DayOfWeek" AS ENUM ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY');
+
+-- CreateEnum
+CREATE TYPE "RecurrenceFrequency" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+
+-- CreateEnum
 CREATE TYPE "OrderType" AS ENUM ('MEDICAL_PRESCRIPTION_ORDER', 'MEDICAL_CONSULTATION_ORDER', 'PRODUCT_SALE_ORDER', 'PRODUCT_PURCHASE_ORDER');
 
 -- CreateEnum
@@ -132,42 +141,6 @@ CREATE TABLE "Client" (
 );
 
 -- CreateTable
-CREATE TABLE "Paciente" (
-    "id" TEXT NOT NULL,
-    "nombre" TEXT NOT NULL,
-    "apellido" TEXT,
-    "dni" TEXT NOT NULL,
-    "cumpleanos" VARCHAR(20),
-    "sexo" BOOLEAN NOT NULL,
-    "direccion" VARCHAR(255),
-    "telefono" VARCHAR(15),
-    "correo" VARCHAR(100),
-    "fechaRegistro" VARCHAR(20) NOT NULL,
-    "alergias" TEXT,
-    "medicamentosActuales" TEXT,
-    "contactoEmergencia" VARCHAR(100),
-    "telefonoEmergencia" VARCHAR(15),
-    "seguroMedico" VARCHAR(100),
-    "estadoCivil" VARCHAR(20),
-    "ocupacion" VARCHAR(100),
-    "lugarTrabajo" VARCHAR(255),
-    "tipoSangre" VARCHAR(3),
-    "antecedentesFamiliares" TEXT,
-    "habitosVida" TEXT,
-    "vacunas" JSONB,
-    "medicoCabecera" VARCHAR(100),
-    "idioma" VARCHAR(50),
-    "autorizacionTratamiento" VARCHAR(255),
-    "observaciones" TEXT,
-    "fotografiaPaciente" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Paciente_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "ServiceType" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -194,7 +167,7 @@ CREATE TABLE "Service" (
 );
 
 -- CreateTable
-CREATE TABLE "Especialidad" (
+CREATE TABLE "StaffType" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -202,13 +175,13 @@ CREATE TABLE "Especialidad" (
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Especialidad_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "StaffType_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Personal" (
+CREATE TABLE "Staff" (
     "id" TEXT NOT NULL,
-    "especialidadId" TEXT NOT NULL,
+    "staffTypeId" TEXT NOT NULL,
     "userId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "name" TEXT NOT NULL,
@@ -216,62 +189,12 @@ CREATE TABLE "Personal" (
     "phone" TEXT,
     "lastName" TEXT NOT NULL,
     "dni" TEXT NOT NULL,
-    "birth" TEXT NOT NULL,
+    "birth" TIMESTAMP(3) NOT NULL,
+    "branchId" TEXT,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Personal_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Calendario" (
-    "id" TEXT NOT NULL,
-    "personalId" TEXT NOT NULL,
-    "sucursalId" TEXT NOT NULL,
-    "nombre" TEXT NOT NULL,
-    "color" TEXT,
-    "isDefault" BOOLEAN NOT NULL DEFAULT false,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Calendario_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Evento" (
-    "id" TEXT NOT NULL,
-    "calendarioId" TEXT NOT NULL,
-    "titulo" TEXT NOT NULL,
-    "descripcion" TEXT,
-    "fechaInicio" TEXT NOT NULL,
-    "fechaFin" TEXT NOT NULL,
-    "todoElDia" BOOLEAN NOT NULL DEFAULT false,
-    "tipo" TEXT NOT NULL,
-    "color" TEXT,
-    "esPermiso" BOOLEAN NOT NULL DEFAULT false,
-    "tipoPermiso" TEXT,
-    "estadoPermiso" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Evento_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Recurrencia" (
-    "id" TEXT NOT NULL,
-    "calendarioId" TEXT NOT NULL,
-    "frecuencia" TEXT NOT NULL,
-    "intervalo" INTEGER NOT NULL,
-    "fechaInicio" TIMESTAMP(3) NOT NULL,
-    "fechaFin" TIMESTAMP(3),
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Recurrencia_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Staff_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -431,60 +354,81 @@ CREATE TABLE "Outgoing" (
 );
 
 -- CreateTable
-CREATE TABLE "HistoriaMedica" (
+CREATE TABLE "Appointment" (
     "id" TEXT NOT NULL,
-    "pacienteId" TEXT NOT NULL,
-    "historiaMedica" JSONB NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "description" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "staffId" TEXT NOT NULL,
+    "serviceId" TEXT NOT NULL,
+    "branchId" TEXT NOT NULL,
+    "patientId" TEXT,
+    "patientName" TEXT NOT NULL,
+    "patientEmail" TEXT NOT NULL,
+    "patientPhone" TEXT,
+    "start" TIMESTAMP(3) NOT NULL,
+    "end" TIMESTAMP(3) NOT NULL,
+    "status" "AppointmentStatus" NOT NULL DEFAULT 'PENDING',
+    "recurrenceId" TEXT,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "HistoriaMedica_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "UpdateHistoria" (
+CREATE TABLE "Event" (
     "id" TEXT NOT NULL,
-    "consultaMedicaId" TEXT NOT NULL,
-    "personalId" TEXT NOT NULL,
-    "sucursalId" TEXT NOT NULL,
-    "historiaMedicaId" TEXT NOT NULL,
-    "receta" BOOLEAN NOT NULL DEFAULT false,
-    "recetaMedicaId" TEXT,
-    "fecha" TIMESTAMP(3) NOT NULL,
-    "updateHistoria" JSONB NOT NULL,
+    "appointmentId" TEXT,
+    "recurrenceId" TEXT,
+    "staffId" TEXT NOT NULL,
+    "branchId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
     "description" TEXT,
-    "descansoMedico" BOOLEAN NOT NULL DEFAULT false,
-    "descripDescanso" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "start" TIMESTAMP(3) NOT NULL,
+    "end" TIMESTAMP(3) NOT NULL,
+    "color" TEXT,
+    "isCancelled" BOOLEAN NOT NULL DEFAULT false,
+    "cancellationReason" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "UpdateHistoria_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "RecetaMedica" (
+CREATE TABLE "Recurrence" (
     "id" TEXT NOT NULL,
-    "updateHistoriaId" TEXT NOT NULL,
-    "sucursalId" TEXT NOT NULL,
-    "personalId" TEXT NOT NULL,
-    "pacienteId" TEXT NOT NULL,
-    "fechaRegistro" TIMESTAMP(3) NOT NULL,
-    "receta" JSONB NOT NULL,
-    "description" TEXT,
-    "ordenCompraId" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "frequency" "RecurrenceFrequency" NOT NULL,
+    "interval" INTEGER NOT NULL DEFAULT 1,
+    "count" INTEGER,
+    "until" TIMESTAMP(3),
+    "byWeekDay" "DayOfWeek"[],
+    "byMonthDay" INTEGER[],
+    "byYearDay" INTEGER[],
+    "timeZone" TEXT NOT NULL DEFAULT 'America/Lima',
+    "exdates" TIMESTAMP(3)[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "RecetaMedica_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Recurrence_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Sucursal" (
+CREATE TABLE "StaffSchedule" (
+    "id" TEXT NOT NULL,
+    "staffId" TEXT NOT NULL,
+    "branchId" TEXT NOT NULL,
+    "dayOfWeek" "DayOfWeek" NOT NULL,
+    "startTime" TEXT NOT NULL,
+    "endTime" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "StaffSchedule_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Branch" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "address" TEXT NOT NULL,
@@ -493,59 +437,7 @@ CREATE TABLE "Sucursal" (
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Sucursal_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ConsultaMedica" (
-    "id" TEXT NOT NULL,
-    "serviceId" TEXT NOT NULL,
-    "pacienteId" TEXT NOT NULL,
-    "sucursalId" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "ConsultaMedica_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "TipoCitaMedica" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "TipoCitaMedica_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "CitaMedica" (
-    "id" TEXT NOT NULL,
-    "tipoCitaMedicaId" TEXT NOT NULL,
-    "personalId" TEXT NOT NULL,
-    "consultaId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "description" TEXT NOT NULL,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "CitaMedica_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ProcedimientoMedico" (
-    "id" TEXT NOT NULL,
-    "citaMedicaId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "ProcedimientoMedico_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Branch_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -644,28 +536,37 @@ CREATE UNIQUE INDEX "Client_id_key" ON "Client"("id");
 CREATE UNIQUE INDEX "Client_rucDni_key" ON "Client"("rucDni");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Paciente_id_key" ON "Paciente"("id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Paciente_dni_key" ON "Paciente"("dni");
-
--- CreateIndex
 CREATE UNIQUE INDEX "ServiceType_id_key" ON "ServiceType"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Service_id_key" ON "Service"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Especialidad_id_key" ON "Especialidad"("id");
+CREATE UNIQUE INDEX "StaffType_id_key" ON "StaffType"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Personal_id_key" ON "Personal"("id");
+CREATE UNIQUE INDEX "Staff_id_key" ON "Staff"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Personal_dni_key" ON "Personal"("dni");
+CREATE UNIQUE INDEX "Staff_dni_key" ON "Staff"("dni");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Stock_storageId_productId_key" ON "Stock"("storageId", "productId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Appointment_id_key" ON "Appointment"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Event_id_key" ON "Event"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Recurrence_id_key" ON "Recurrence"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "StaffSchedule_id_key" ON "StaffSchedule"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "StaffSchedule_staffId_branchId_dayOfWeek_key" ON "StaffSchedule"("staffId", "branchId", "dayOfWeek");
 
 -- AddForeignKey
 ALTER TABLE "UserRol" ADD CONSTRAINT "UserRol_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -692,16 +593,10 @@ ALTER TABLE "Audit" ADD CONSTRAINT "Audit_performedById_fkey" FOREIGN KEY ("perf
 ALTER TABLE "Service" ADD CONSTRAINT "Service_serviceTypeId_fkey" FOREIGN KEY ("serviceTypeId") REFERENCES "ServiceType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Personal" ADD CONSTRAINT "Personal_especialidadId_fkey" FOREIGN KEY ("especialidadId") REFERENCES "Especialidad"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Staff" ADD CONSTRAINT "Staff_staffTypeId_fkey" FOREIGN KEY ("staffTypeId") REFERENCES "StaffType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Calendario" ADD CONSTRAINT "Calendario_personalId_fkey" FOREIGN KEY ("personalId") REFERENCES "Personal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Evento" ADD CONSTRAINT "Evento_calendarioId_fkey" FOREIGN KEY ("calendarioId") REFERENCES "Calendario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Recurrencia" ADD CONSTRAINT "Recurrencia_calendarioId_fkey" FOREIGN KEY ("calendarioId") REFERENCES "Calendario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Staff" ADD CONSTRAINT "Staff_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Producto" ADD CONSTRAINT "Producto_categoriaId_fkey" FOREIGN KEY ("categoriaId") REFERENCES "Categoria"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -740,34 +635,34 @@ ALTER TABLE "Incoming" ADD CONSTRAINT "Incoming_storageId_fkey" FOREIGN KEY ("st
 ALTER TABLE "Outgoing" ADD CONSTRAINT "Outgoing_storageId_fkey" FOREIGN KEY ("storageId") REFERENCES "Storage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HistoriaMedica" ADD CONSTRAINT "HistoriaMedica_pacienteId_fkey" FOREIGN KEY ("pacienteId") REFERENCES "Paciente"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UpdateHistoria" ADD CONSTRAINT "UpdateHistoria_historiaMedicaId_fkey" FOREIGN KEY ("historiaMedicaId") REFERENCES "HistoriaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RecetaMedica" ADD CONSTRAINT "RecetaMedica_updateHistoriaId_fkey" FOREIGN KEY ("updateHistoriaId") REFERENCES "UpdateHistoria"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConsultaMedica" ADD CONSTRAINT "ConsultaMedica_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_recurrenceId_fkey" FOREIGN KEY ("recurrenceId") REFERENCES "Recurrence"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConsultaMedica" ADD CONSTRAINT "ConsultaMedica_pacienteId_fkey" FOREIGN KEY ("pacienteId") REFERENCES "Paciente"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Event" ADD CONSTRAINT "Event_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConsultaMedica" ADD CONSTRAINT "ConsultaMedica_sucursalId_fkey" FOREIGN KEY ("sucursalId") REFERENCES "Sucursal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Event" ADD CONSTRAINT "Event_recurrenceId_fkey" FOREIGN KEY ("recurrenceId") REFERENCES "Recurrence"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CitaMedica" ADD CONSTRAINT "CitaMedica_tipoCitaMedicaId_fkey" FOREIGN KEY ("tipoCitaMedicaId") REFERENCES "TipoCitaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Event" ADD CONSTRAINT "Event_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CitaMedica" ADD CONSTRAINT "CitaMedica_personalId_fkey" FOREIGN KEY ("personalId") REFERENCES "Personal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Event" ADD CONSTRAINT "Event_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CitaMedica" ADD CONSTRAINT "CitaMedica_consultaId_fkey" FOREIGN KEY ("consultaId") REFERENCES "ConsultaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StaffSchedule" ADD CONSTRAINT "StaffSchedule_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProcedimientoMedico" ADD CONSTRAINT "ProcedimientoMedico_citaMedicaId_fkey" FOREIGN KEY ("citaMedicaId") REFERENCES "CitaMedica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StaffSchedule" ADD CONSTRAINT "StaffSchedule_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
