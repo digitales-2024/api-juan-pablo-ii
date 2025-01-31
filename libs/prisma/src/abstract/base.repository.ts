@@ -393,7 +393,6 @@ export abstract class BaseRepository<T extends { id: string }> {
       (this.prisma[this.modelName] as any).findMany({
         where: {
           name: name,
-          // No incluimos isActive aquí para permitir búsquedas flexibles
         },
       }),
     );
