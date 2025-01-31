@@ -7,14 +7,11 @@ import { ClientsModule } from '@clients/clients';
 import { ServiceModule } from './modules/services/service.module';
 import { BranchModule } from './modules/branch/branch.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
-import { PacientModule } from '@pacient/pacient/pacient.module';
 import { StaffModule } from 'libs/staff/staff.module';
-import { ScheduleModule } from '@schedule/schedule/schedule.module';
 import { PayModule } from '@pay/pay/pay.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { InventoryModule } from '@inventory/inventory/inventory.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ConsultationModule } from 'libs/consultation/consultation.module';
 
 @Module({
   imports: [
@@ -33,12 +30,9 @@ import { ConsultationModule } from 'libs/consultation/consultation.module';
     ServiceModule,
     BranchModule,
     AppointmentsModule,
-    PacientModule,
     StaffModule,
-    ScheduleModule,
     InventoryModule,
     BillingModule,
-    ConsultationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,6 +6,7 @@ import {
   IsUUID,
   IsOptional,
   IsEmail,
+  isDate,
 } from 'class-validator';
 
 export class CreateStaffDto {
@@ -62,10 +63,9 @@ export class CreateStaffDto {
     example: '1980-05-15',
     required: true,
   })
-  @IsString()
   @IsNotEmpty()
   @Transform(({ value }) => value.trim())
-  birth: string;
+  birth: Date;
 
   @ApiProperty({
     description: 'email',

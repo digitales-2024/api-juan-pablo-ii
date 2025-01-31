@@ -40,7 +40,7 @@ export class StaffRepository extends BaseRepository<Staff> {
     name: string;
     lastName: string;
     dni: string;
-    birth: string;
+    birth: Date;
     email: string;
     phone?: string;
     staffTypeId: string;

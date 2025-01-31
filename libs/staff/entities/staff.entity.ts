@@ -26,7 +26,7 @@ export class Staff {
   dni: string;
 
   @ApiProperty({ description: 'Fecha de nacimiento' })
-  birth: string;
+  birth: Date;
 
   @ApiProperty({ description: 'Estado activo/inactivo del personal' })
   isActive: boolean;

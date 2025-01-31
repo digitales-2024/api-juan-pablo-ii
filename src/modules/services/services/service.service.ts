@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateServiceDto, DeleteServicesDto, UpdateServiceDto } from '../dto';
 import { UserData } from '@login/login/interfaces';
 import { Service } from '../entities/service.entity';
@@ -76,7 +76,7 @@ export class ServiceService {
   ): Promise<BaseApiResponse<Service>> {
     try {
       // Obtener el servicio existente
-      const currentService = await this.findById(id);
+      const currentService = await this.findOne(id);
 
       // Validar si hay cambios significativos
       if (!validateChanges(updateServiceDto, currentService)) {
@@ -103,9 +103,9 @@ export class ServiceService {
    * @returns El servicio encontrado
    * @throws {NotFoundException} Si el servicio no existe
    */
-  async findServiceById(id: string): Promise<Service> {
+  async findOne(id: string): Promise<Service> {
     try {
-      return this.findById(id);
+      return await this.serviceRepository.findById(id);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -161,21 +161,6 @@ export class ServiceService {
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
     }
-  }
-
-  /**
-   * Busca un servicio por su ID (método interno)
-   * @param id - ID del servicio a buscar
-   * @returns El servicio encontrado
-   * @throws {BadRequestException} Si el servicio no existe
-   * @internal
-   */
-  async findById(id: string): Promise<Service> {
-    const service = await this.serviceRepository.findById(id);
-    if (!service) {
-      throw new BadRequestException(`Servicio no encontrado`);
-    }
-    return service;
   }
 
   async findOneWithDetails(id: string): Promise<Service> {
