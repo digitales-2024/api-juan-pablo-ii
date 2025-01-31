@@ -97,13 +97,13 @@ export class TypeProductService {
       }
 
       // Validar si existe otro tipo de producto con el mismo nombre
-      const nameExists = await this.findByName(updateTypeProductDto.name); // Buscar producto por nombre
-      if (nameExists) {
-        // Si retorna 'true', ya existe la categoria
-        throw new BadRequestException(
-          'Ya existe una categoria con este nombre',
-        );
-      }
+      // const nameExists = await this.findByName(updateTypeProductDto.name); // Buscar producto por nombre
+      // if (nameExists) {
+      //   // Si retorna 'true', ya existe la categoria
+      //   throw new BadRequestException(
+      //     'Ya existe una categoria con este nombre',
+      //   );
+      // }
       // fin de la validación
       return await this.updateTypeProductUseCase.execute(
         id,
