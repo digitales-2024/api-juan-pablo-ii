@@ -1,51 +1,49 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-
-import { History } from '../entities/history.entity';
-import { HistoryRepository } from '../repositories/history.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { MedicalHistory } from '../entities/history.entity';
+import { MedicalHistoryRepository } from '../repositories/history.repository';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { UpdateHistoryDto } from '../dto';
+import { UpdateMedicalHistoryDto } from '../dto/update-history.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class UpdateHistoryUseCase {
+export class UpdateMedicalHistoryUseCase {
   constructor(
-    private readonly historyRepository: HistoryRepository,
+    private readonly medicalHistoryRepository: MedicalHistoryRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
     id: string,
-    updateHistoryDto: UpdateHistoryDto,
+    updateMedicalHistoryDto: UpdateMedicalHistoryDto,
     user: UserData,
-  ): Promise<HttpResponse<History>> {
-    const updatedHistory = await this.historyRepository.transaction(
-      async () => {
-        // Update history
-        const history = await this.historyRepository.update(id, {
-          pacienteId: updateHistoryDto.pacienteId,
-          historiaMedica: updateHistoryDto.historiaMedica,
-          date: updateHistoryDto.date,
-          description: updateHistoryDto.description,
+  ): Promise<BaseApiResponse<MedicalHistory>> {
+    const updatedMedicalHistory =
+      await this.medicalHistoryRepository.transaction(async () => {
+        // Update medical history
+        const medicalHistory = await this.medicalHistoryRepository.update(id, {
+          patientId: updateMedicalHistoryDto.patientId,
+          medicalHistory: updateMedicalHistoryDto.medicalHistory,
+          description: updateMedicalHistoryDto.description,
         });
 
         // Register audit
         await this.auditService.create({
-          entityId: history.id,
-          entityType: 'historiaMedica',
+          entityId: medicalHistory.id,
+          entityType: 'medicalHistory',
           action: AuditActionType.UPDATE,
           performedById: user.id,
           createdAt: new Date(),
         });
 
-        return history;
-      },
-    );
+        return medicalHistory;
+      });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Historia médica actualizada exitosamente',
-      data: updatedHistory,
+      data: updatedMedicalHistory,
     };
   }
 }

@@ -1,31 +1,34 @@
-// entities/recipe.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 
-export class Recipe {
+export class Prescription {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  updateHistoriaId: string;
+  updateHistoryId: string;
 
   @ApiProperty()
-  sucursalId: string;
+  branchId: string;
 
   @ApiProperty()
-  personalId: string;
+  staffId: string;
 
   @ApiProperty()
-  pacienteId: string;
+  patientId: string;
 
   @ApiProperty()
-  fechaRegistro: Date;
+  registrationDate: Date;
 
   @ApiProperty()
-  receta: string;
+  prescription: string;
 
   @ApiProperty()
-  descripcion?: string;
+  description?: string;
 
   @ApiProperty()
-  ordenCompraId?: string;
+  purchaseOrderId?: string;
+
+  @ApiProperty()
+  isActive: boolean;
+  
 }

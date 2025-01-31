@@ -155,41 +155,41 @@ model Client {
 }
 
 // tabla pacientes que va a ser usuarios
-model Paciente {
-  id                      String  @id @unique @default(uuid())
-  nombre                  String
-  apellido                String?
-  dni                     String  @unique
-  cumpleanos              String? @db.VarChar(20)
-  sexo                    Boolean
-  direccion               String? @db.VarChar(255)
-  telefono                String? @db.VarChar(15)
-  correo                  String? @db.VarChar(100)
-  fechaRegistro           String  @db.VarChar(20)
-  alergias                String? @db.Text
-  medicamentosActuales    String? @db.Text
-  contactoEmergencia      String? @db.VarChar(100)
-  telefonoEmergencia      String? @db.VarChar(15)
-  seguroMedico            String? @db.VarChar(100)
-  estadoCivil             String? @db.VarChar(20)
-  ocupacion               String? @db.VarChar(100)
-  lugarTrabajo            String? @db.VarChar(255)
-  tipoSangre              String? @db.VarChar(3)
-  antecedentesFamiliares  String? @db.Text
-  habitosVida             String? @db.Text
-  vacunas                 Json?
-  medicoCabecera          String? @db.VarChar(100)
-  idioma                  String? @db.VarChar(50)
-  autorizacionTratamiento String? @db.VarChar(255)
-  observaciones           String? @db.Text
-  fotografiaPaciente      String? @db.Text
+model Patient {
+  id                     String  @id @unique @default(uuid())
+  name                   String
+  lastName               String?
+  dni                    String  @unique
+  birthDate              String? @db.VarChar(20)
+  gender                 Boolean
+  address                String? @db.VarChar(255)
+  phone                  String? @db.VarChar(15)
+  email                  String? @db.VarChar(100)
+  registrationDate       String  @db.VarChar(20)
+  allergies              String? @db.Text
+  currentMedications     String? @db.Text
+  emergencyContact       String? @db.VarChar(100)
+  emergencyPhone         String? @db.VarChar(15)
+  healthInsurance        String? @db.VarChar(100)
+  maritalStatus          String? @db.VarChar(20)
+  occupation             String? @db.VarChar(100)
+  workplace              String? @db.VarChar(255)
+  bloodType              String? @db.VarChar(3)
+  familyHistory          String? @db.Text
+  lifestyleHabits        String? @db.Text
+  vaccinations           Json?
+  primaryDoctor          String? @db.VarChar(100)
+  language               String? @db.VarChar(50)
+  treatmentAuthorization String? @db.VarChar(255)
+  notes                  String? @db.Text
+  patientPhoto           String? @db.Text
 
   //no tocar
-  isActive       Boolean          @default(true)
-  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime         @updatedAt
-  HistoriaMedica HistoriaMedica[]
-  ConsultaMedica ConsultaMedica[]
+  isActive            Boolean          @default(true)
+  createdAt           DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime         @updatedAt
+  MedicalHistory      MedicalHistory[]
+  MedicalConsultation ConsultaMedica[]
 }
 
 //tabla tipo de servicio
@@ -303,23 +303,23 @@ enum DayOfWeek {
 
 // Main models
 model Calendar {
-  id               String         @id @default(uuid())
-  name             String
-  type             CalendarType
-  medicalAppointmentId String?
+  id                    String       @id @default(uuid())
+  name                  String
+  type                  CalendarType
+  medicalAppointmentId  String?
   medicalConsultationId String?
-  staffId          String?
-  branchId         String?
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime       @updatedAt
-  events           Event[]
+  staffId               String?
+  branchId              String?
+  isActive              Boolean      @default(true)
+  createdAt             DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime     @updatedAt
+  events                Event[]
 }
 
 model Event {
-  id               String         @id @default(uuid())
+  id               String            @id @default(uuid())
   calendarId       String
-  calendar         Calendar       @relation(fields: [calendarId], references: [id])
+  calendar         Calendar          @relation(fields: [calendarId], references: [id])
   type             EventType
   name             String
   description      String?
@@ -334,27 +334,27 @@ model Event {
   patientId        String?
   staffId          String?
   // Control
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime       @updatedAt
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime          @updatedAt
   // Relation with recurrence
-  recurrenceId     String?        // Optional relation
-  recurrence       Recurrence?    @relation(fields: [recurrenceId], references: [id])
+  recurrenceId     String? // Optional relation
+  recurrence       Recurrence?       @relation(fields: [recurrenceId], references: [id])
 }
 
 model Recurrence {
-  id          String                @id @default(uuid())
-  frequency   RecurrenceFrequency?   // Daily, weekly, monthly, annual
-  interval    Int?                   // Every how many days, weeks, months, years
-  daysOfWeek  DayOfWeek[]           // Specific days (optional)
-  exceptions  DayOfWeek[]           // Specific dates to exclude
-  startDate   DateTime?              // Start of the recurrence
-  endDate     DateTime?             // Optional: end of the recurrence
-  isActive    Boolean               @default(true)
-  createdAt   DateTime              @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime              @updatedAt
+  id         String               @id @default(uuid())
+  frequency  RecurrenceFrequency? // Daily, weekly, monthly, annual
+  interval   Int? // Every how many days, weeks, months, years
+  daysOfWeek DayOfWeek[] // Specific days (optional)
+  exceptions DayOfWeek[] // Specific dates to exclude
+  startDate  DateTime? // Start of the recurrence
+  endDate    DateTime? // Optional: end of the recurrence
+  isActive   Boolean              @default(true)
+  createdAt  DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime             @updatedAt
 
-  events      Event[]               // Relation with events
+  events Event[] // Relation with events
 }
 
 //////////////////////////////////
@@ -533,65 +533,80 @@ model Outgoing {
   Movement Movement[] // Relación con Movimiento
 }
 
-//tabla historias
-model HistoriaMedica {
+// MedicalHistory table
+model MedicalHistory {
   id             String   @id @default(uuid())
-  pacienteId     String
-  paciente       Paciente @relation(fields: [pacienteId], references: [id])
-  historiaMedica Json
-  date           DateTime
+  patientId      String
+  patient        Patient  @relation(fields: [patientId], references: [id])
+  medicalHistory Json? // Historial médico del paciente
   description    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt
 
-  isActive       Boolean          @default(true)
-  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime         @updatedAt
-  UpdateHistoria UpdateHistoria[]
+  UpdateHistory UpdateHistory[]
 }
 
-//tabla actualizacion ala historia
-model UpdateHistoria {
-  id               String         @id @default(uuid())
-  consultaMedicaId String
-  personalId       String
-  sucursalId       String
-  historiaMedicaId String
-  historiaMedica   HistoriaMedica @relation(fields: [historiaMedicaId], references: [id])
-  receta           Boolean        @default(false)
-  recetaMedicaId   String?
-  fecha            DateTime
-  updateHistoria   Json
-  description      String?
-  descansoMedico   Boolean        @default(false)
-  descripDescanso  String?
-
-  isActive     Boolean        @default(true)
-  createdAt    DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime       @updatedAt
-  RecetaMedica RecetaMedica[]
+// UpdateHistory table
+model UpdateHistory {
+  id                    String         @id @default(uuid())
+  serviceId             String
+  staffId               String // ID del personal que realiza la actualización
+  branchId              String // ID de la sucursal donde se realiza la actualización
+  medicalHistoryId      String // ID del historial médico al que se hace referencia
+  medicalHistory        MedicalHistory @relation(fields: [medicalHistoryId], references: [id])
+  prescription          Boolean        @default(false) // Indica si la actualización tiene una receta medica adjunta
+  prescriptionId        String? // ID de la receta médica asociada si el valor es true
+  updateHistory         Json? // Historial de actualizaciones
+  description           String?
+  medicalLeave          Boolean        @default(false) // indica si tiene descanso medico
+  medicalLeaveStartDate DateTime?
+  medicalLeaveEndDate   DateTime?
+  medicalLeaveDays      Int? // Cantidad de días de descanso médico
+  leaveDescription      String? // Descripción del descanso médico
+  isActive              Boolean        @default(true)
+  createdAt             DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime       @updatedAt
+  Prescription          Prescription[]
+  // Relación con la tabla de ImagePatient
+  ImagePatient          ImagePatient[]
 }
 
-//tabla recetas medicas
-model RecetaMedica {
-  // Campos de identificación
-  id String @id @default(uuid()) // ID único de la receta
+model ImagePatient {
+  id              String         @id @default(uuid())
+  updateHistoryId String?
+  patientId       String?
+  imageUrl        String?
+  UpdateHistory   UpdateHistory? @relation(fields: [imageUrl], references: [id])
+  phothography    Boolean        @default(false)
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime       @updatedAt
+}
 
-  // Relaciones y referencias
-  updateHistoriaId String // ID de la actualización de historia médica
-  UpdateHistoria   UpdateHistoria @relation(fields: [updateHistoriaId], references: [id])
-  sucursalId       String // ID de la sucursal donde se emite
-  personalId       String // ID del personal médico que emite
-  pacienteId       String // ID del paciente
+// Prescription table
+model Prescription {
+  // Identification fields
+  id String @id @default(uuid()) // Unique ID of the prescription
 
-  // Datos principales
-  fechaRegistro DateTime // Fecha de emisión de la receta
-  receta        Json // Detalle de medicamentos y dosificación
-  description   String? // Descripción o notas adicionales (opcional)
-  ordenCompraId String? // Referencia a orden de compra (opcional)
+  // Relationships and references
+  updateHistoryId String // ID of the medical history update
+  updateHistory   UpdateHistory @relation(fields: [updateHistoryId], references: [id])
+  branchId        String // ID of the branch where it is issued
+  staffId         String // ID of the medical staff issuing it
+  patientId       String // ID of the patient
 
-  // Campos de auditoría
+  // Main data
+  registrationDate DateTime // Date of prescription issuance
+  prescription     Json // detalles de la prescripción (medicamentos, dosis, etc.)
+  description      String? // Additional description or notes (optional)
+  purchaseOrderId  String? // referecia a orden de compra (optional)
+
+  // Audit fields
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+  //relacion con la actualizacion de historial medico
 }
 
 //tabla sucursal
@@ -615,7 +630,7 @@ model ConsultaMedica {
   Service    Service  @relation(fields: [serviceId], references: [id])
   //realcion tabla paciente
   pacienteId String
-  paciente   Paciente @relation(fields: [pacienteId], references: [id])
+  patient    Patient  @relation(fields: [pacienteId], references: [id])
   //realcion tabla sucursal
   sucursalId String
   Sucursal   Sucursal @relation(fields: [sucursalId], references: [id])

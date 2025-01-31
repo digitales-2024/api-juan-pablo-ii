@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Recipe } from '../entities/recipe.entity';
+import { Prescription } from '../entities/recipe.entity';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
-export class RecipeRepository extends BaseRepository<Recipe> {
+export class PrescriptionRepository extends BaseRepository<Prescription> {
   constructor(prisma: PrismaService) {
-    super(prisma, 'recetaMedica'); // Tabla del esquema de prisma
+    super(prisma, 'prescription'); // Tabla del esquema de prisma
   }
 
   /**

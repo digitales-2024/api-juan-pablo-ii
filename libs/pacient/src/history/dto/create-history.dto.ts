@@ -1,49 +1,34 @@
-// create-history.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsNotEmpty,
-  IsDateString,
-  IsObject,
-} from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsObject } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreateHistoryDto {
+export class CreateMedicalHistoryDto {
   @ApiProperty({
-    description: 'ID del paciente',
+    description: 'ID of the patient',
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: true,
   })
   @IsString()
   @IsNotEmpty()
-  pacienteId: string;
+  patientId: string;
 
   @ApiProperty({
-    description: 'Datos de la historia médica',
+    description: 'Medical history data',
     example: {
-      antecedentes: 'Sin antecedentes relevantes',
-      alergias: 'Ninguna conocida',
-      enfermedadesCronicas: ['Hipertensión'],
-      cirugiasPrevias: ['Apendicectomía 2018'],
+      antecedentes: 'No relevant history',
+      alergias: 'None known',
+      enfermedadesCronicas: ['Hypertension'],
+      cirugiasPrevias: ['Appendectomy 2018'],
     },
     required: true,
   })
   @IsObject()
   @IsNotEmpty()
-  historiaMedica: string;
+  medicalHistory: any;
 
   @ApiProperty({
-    description: 'Fecha de la historia médica',
-    example: '2024-03-15T10:00:00Z',
-    required: true,
-  })
-  @IsDateString()
-  date: Date;
-
-  @ApiProperty({
-    description: 'Descripción adicional',
-    example: 'Primera consulta del paciente',
+    description: 'Additional description',
+    example: 'First patient consultation',
     required: false,
   })
   @IsString()

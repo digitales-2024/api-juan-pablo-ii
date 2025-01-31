@@ -1,34 +1,35 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PacientRepository } from '../repositories/pacient.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Paciente } from '../entities/pacient.entity';
+import { UserData } from '@login/login/interfaces';
+import { Patient } from '../entities/pacient.entity';
 import { AuditActionType } from '@prisma/client';
-import { DeletePacientDto } from '../dto/delete-pacient.dto';
+import { DeletePatientDto } from '../dto/delete-pacient.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class DeletePacientsUseCase {
+export class DeletePatientsUseCase {
   constructor(
     private readonly pacientRepository: PacientRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    deletePacientsDto: DeletePacientDto,
+    deletePatientsDto: DeletePatientDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
-    const deletedPacients = await this.pacientRepository.transaction(
+  ): Promise<BaseApiResponse<Patient[]>> {
+    const deletedPatients = await this.pacientRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene los pacientes actualizados
-        const pacient = await this.pacientRepository.softDeleteMany(
-          deletePacientsDto.ids,
+        const patient = await this.pacientRepository.softDeleteMany(
+          deletePatientsDto.ids,
         );
 
         // Registra la auditoría para cada paciente eliminado
         await Promise.all(
-          pacient.map((paciente) =>
+          patient.map((patient) =>
             this.auditService.create({
-              entityId: paciente.id,
+              entityId: patient.id,
               entityType: 'paciente',
               action: AuditActionType.DELETE,
               performedById: user.id,
@@ -37,14 +38,14 @@ export class DeletePacientsUseCase {
           ),
         );
 
-        return pacient;
+        return patient;
       },
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Pacientes eliminados exitosamente',
-      data: deletedPacients,
+      data: deletedPatients,
     };
   }
 }

@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PacientRepository } from '../repositories/pacient.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Paciente } from '../entities/pacient.entity';
+import { UserData } from '@login/login/interfaces';
+import { Patient } from '../entities/pacient.entity';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivatePacientUseCase {
@@ -15,17 +16,17 @@ export class ReactivatePacientUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Paciente[]>> {
+  ): Promise<BaseApiResponse<Patient[]>> {
     // Reactivar los pacientes y registrar auditoría
-    const reactivatedPacients = await this.pacientRepository.transaction(
+    const reactivatedPatients = await this.pacientRepository.transaction(
       async () => {
-        const pacients = await this.pacientRepository.reactivateMany(ids);
+        const patients = await this.pacientRepository.reactivateMany(ids);
 
         // Registrar auditoría para cada paciente reactivado
         await Promise.all(
-          pacients.map((Pacient) =>
+          patients.map((patient) =>
             this.auditService.create({
-              entityId: Pacient.id,
+              entityId: patient.id,
               entityType: 'Pacient',
               action: AuditActionType.UPDATE,
               performedById: user.id,
@@ -34,14 +35,14 @@ export class ReactivatePacientUseCase {
           ),
         );
 
-        return pacients;
+        return patients;
       },
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Pacientes reactivados exitosamente',
-      data: reactivatedPacients,
+      data: reactivatedPatients,
     };
   }
 }

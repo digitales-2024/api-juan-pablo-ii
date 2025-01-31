@@ -1,69 +1,65 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreatePacienteDto } from '../dto/create-pacient.dto';
-import { Paciente } from '../entities/pacient.entity';
+import { Injectable } from '@nestjs/common';
+import { CreatePatientDto } from '../dto/create-pacient.dto';
+import { Patient } from '../entities/pacient.entity';
 import { PacientRepository } from '../repositories/pacient.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class CreatePacientUseCase {
+export class CreatePatientUseCase {
   constructor(
     private readonly pacientRepository: PacientRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    createPacientDto: CreatePacienteDto,
+    createPatientDto: CreatePatientDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
-    const newPacient = await this.pacientRepository.transaction(async () => {
-      // Create pacient
-      const pacient = await this.pacientRepository.create({
-        nombre: createPacientDto.nombre,
-        apellido: createPacientDto.apellido,
-        dni: createPacientDto.dni,
-        cumpleanos: createPacientDto.cumpleanos,
-        sexo: createPacientDto.sexo,
-        direccion: createPacientDto.direccion,
-        telefono: createPacientDto.telefono,
-        correo: createPacientDto.correo,
-        fechaRegistro: createPacientDto.fechaRegistro,
-        alergias: createPacientDto.alergias,
-        medicamentosActuales: createPacientDto.medicamentosActuales,
-        contactoEmergencia: createPacientDto.contactoEmergencia,
-        telefonoEmergencia: createPacientDto.telefonoEmergencia,
-        seguroMedico: createPacientDto.seguroMedico,
-        estadoCivil: createPacientDto.estadoCivil,
-        ocupacion: createPacientDto.ocupacion,
-        lugarTrabajo: createPacientDto.lugarTrabajo,
-        tipoSangre: createPacientDto.tipoSangre,
-        antecedentesFamiliares: createPacientDto.antecedentesFamiliares,
-        habitosVida: createPacientDto.habitosVida,
-        vacunas: createPacientDto.vacunas,
-        medicoCabecera: createPacientDto.medicoCabecera,
-        idioma: createPacientDto.idioma,
-        autorizacionTratamiento: createPacientDto.autorizacionTratamiento,
-        observaciones: createPacientDto.observaciones,
-        fotografiaPaciente: createPacientDto.fotografiaPaciente,
+  ): Promise<BaseApiResponse<Patient>> {
+    const newPatient = await this.pacientRepository.transaction(async () => {
+      // Create patient
+      const patient = await this.pacientRepository.create({
+        name: createPatientDto.name,
+        lastName: createPatientDto.lastName,
+        dni: createPatientDto.dni,
+        birthDate: createPatientDto.birthDate,
+        gender: createPatientDto.gender,
+        address: createPatientDto.address,
+        phone: createPatientDto.phone,
+        email: createPatientDto.email,
+        registrationDate: createPatientDto.registrationDate,
+        emergencyContact: createPatientDto.emergencyContact,
+        emergencyPhone: createPatientDto.emergencyPhone,
+        healthInsurance: createPatientDto.healthInsurance,
+        maritalStatus: createPatientDto.maritalStatus,
+        occupation: createPatientDto.occupation,
+        workplace: createPatientDto.workplace,
+        bloodType: createPatientDto.bloodType,
+        primaryDoctor: createPatientDto.primaryDoctor,
+        language: createPatientDto.language,
+        notes: createPatientDto.notes,
+        patientPhoto: createPatientDto.patientPhoto,
+        isActive: true,
       });
 
       // Register audit
       await this.auditService.create({
-        entityId: pacient.id,
-        entityType: 'paciente',
+        entityId: patient.id,
+        entityType: 'patient',
         action: AuditActionType.CREATE,
         performedById: user.id,
         createdAt: new Date(),
       });
 
-      return pacient;
+      return patient;
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
-      message: 'Paciente creado exitosamente',
-      data: newPacient,
+      success: true,
+      message: 'Paciente Creado exitosamente',
+      data: newPatient,
     };
   }
 }
