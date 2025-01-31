@@ -1,0 +1,55 @@
+import { Injectable } from '@nestjs/common';
+import { CreatePrescriptionDto } from '../dto/create-recipe.dto';
+import { Prescription } from '../entities/recipe.entity';
+import { PrescriptionRepository } from '../repositories/recipe.repository';
+import { UserData } from '@login/login/interfaces';
+import { AuditService } from '@login/login/admin/audit/audit.service';
+import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+
+@Injectable()
+export class CreatePrescriptionUseCase {
+  constructor(
+    private readonly prescriptionRepository: PrescriptionRepository,
+    private readonly auditService: AuditService,
+  ) {}
+
+  async execute(
+    createPrescriptionDto: CreatePrescriptionDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<Prescription>> {
+    const newPrescription = await this.prescriptionRepository.transaction(
+      async () => {
+        // Create prescription
+        const prescription = await this.prescriptionRepository.create({
+          updateHistoryId: createPrescriptionDto.updateHistoryId,
+          branchId: createPrescriptionDto.branchId,
+          staffId: createPrescriptionDto.staffId,
+          patientId: createPrescriptionDto.patientId,
+          registrationDate: createPrescriptionDto.registrationDate,
+          prescription: createPrescriptionDto.prescription,
+          description: createPrescriptionDto.description,
+          purchaseOrderId: createPrescriptionDto.purchaseOrderId,
+          isActive: true,
+        });
+
+        // Register audit
+        await this.auditService.create({
+          entityId: prescription.id,
+          entityType: 'prescription',
+          action: AuditActionType.CREATE,
+          performedById: user.id,
+          createdAt: new Date(),
+        });
+
+        return prescription;
+      },
+    );
+
+    return {
+      success: true,
+      message: 'Receta médica creada exitosamente',
+      data: newPrescription,
+    };
+  }
+}
