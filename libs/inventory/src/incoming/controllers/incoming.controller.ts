@@ -12,14 +12,13 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiParam,
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateIncomingDto,
   UpdateIncomingDto,
@@ -27,6 +26,7 @@ import {
 } from '../dto';
 import { Incoming } from '../entities/incoming.entity';
 import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar ingresos.
@@ -50,7 +50,7 @@ export class IncomingController {
    */
   @Post()
   @ApiOperation({ summary: 'Crear nuevo ingreso' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Ingreso creado exitosamente',
     type: Incoming,
@@ -61,7 +61,7 @@ export class IncomingController {
   create(
     @Body() createIncomingDto: CreateIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Incoming>> {
+  ): Promise<BaseApiResponse<Incoming>> {
     return this.incomingService.create(createIncomingDto, user);
   }
 
@@ -87,7 +87,7 @@ export class IncomingController {
    */
   @Get()
   @ApiOperation({ summary: 'Obtener todos los ingresos' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Lista de todos los ingresos',
     type: [Incoming],
@@ -101,7 +101,7 @@ export class IncomingController {
    */
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar ingreso existente' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Ingreso actualizado exitosamente',
     type: Incoming,
@@ -110,7 +110,7 @@ export class IncomingController {
     @Param('id') id: string,
     @Body() updateIncomingDto: UpdateIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Incoming>> {
+  ): Promise<BaseApiResponse<Incoming>> {
     return this.incomingService.update(id, updateIncomingDto, user);
   }
 
@@ -119,7 +119,7 @@ export class IncomingController {
    */
   @Delete('remove/all')
   @ApiOperation({ summary: 'Desactivar múltiples ingresos' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Ingresos desactivados exitosamente',
     type: [Incoming],
@@ -130,7 +130,7 @@ export class IncomingController {
   deleteMany(
     @Body() deleteIncomingDto: DeleteIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<Incoming[]>> {
     return this.incomingService.deleteMany(deleteIncomingDto, user);
   }
 
@@ -149,7 +149,7 @@ export class IncomingController {
   reactivateAll(
     @Body() deleteIncomingDto: DeleteIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<Incoming[]>> {
     return this.incomingService.reactivateMany(deleteIncomingDto.ids, user);
   }
 
@@ -158,7 +158,7 @@ export class IncomingController {
    */
   @Post('create/incomingStorage')
   @ApiOperation({ summary: 'Crear nuevo ingreso directo a alamacen' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Ingreso a almacen creado exitosamente',
     type: Incoming,
@@ -169,7 +169,7 @@ export class IncomingController {
   createIncoming(
     @Body() createIncomingDtoStorage: CreateIncomingDtoStorage,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<string>> {
+  ): Promise<BaseApiResponse<string>> {
     return this.incomingService.createIncoming(createIncomingDtoStorage, user);
   }
 }

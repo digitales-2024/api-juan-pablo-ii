@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { Stock } from '../entities/stock.entity';
 import { UpdateStockDto } from '../dto';
 import { StockRepository } from '../repositories/stock.repository';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateStockUseCase {
@@ -17,7 +18,7 @@ export class UpdateStockUseCase {
     id: string,
     updateStockDto: UpdateStockDto,
     user: UserData,
-  ): Promise<HttpResponse<Stock>> {
+  ): Promise<BaseApiResponse<Stock>> {
     const updatedStock = await this.stockRepository.transaction(async () => {
       // Update product
       const stock = await this.stockRepository.update(id, {
@@ -40,7 +41,7 @@ export class UpdateStockUseCase {
     });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'stock actualizado exitosamente',
       data: updatedStock,
     };

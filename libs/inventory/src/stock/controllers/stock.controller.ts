@@ -1,7 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { StockService } from '../services/stock.service';
 import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
-import { StockDto } from '../dto';
+import { StockByStorage } from '../entities/stock.entity';
 
 @ApiTags('Stock')
 @Controller({ path: 'stock', version: '1' })
@@ -20,7 +20,7 @@ export class StockController {
     summary: 'Obtener stock de un producto por ID de todos los alamacenes',
   })
   @ApiParam({ name: 'id', description: 'ID del producto' })
-  async getStockByProduct(@Param('id') id: string): Promise<StockDto[]> {
+  async getStockByProduct(@Param('id') id: string): Promise<StockByStorage[]> {
     return this.stockService.getStockByProduct(id);
   }
 
@@ -33,7 +33,7 @@ export class StockController {
    */
   @Get('storages')
   @ApiOperation({ summary: 'Obtener stock de todos los almacenes' })
-  async getStockForAllStorages(): Promise<StockDto[]> {
+  async getStockForAllStorages(): Promise<StockByStorage[]> {
     return this.stockService.getStockForAllStorages();
   }
 
@@ -48,7 +48,7 @@ export class StockController {
   @Get('storage/:id')
   @ApiOperation({ summary: 'Obtener stock por almacén por ID' })
   @ApiParam({ name: 'id', description: 'ID del almacén' })
-  async getStockByStorage(@Param('id') id: string): Promise<StockDto[]> {
+  async getStockByStorage(@Param('id') id: string): Promise<StockByStorage[]> {
     return this.stockService.getStockByStorage(id);
   }
 
@@ -60,7 +60,7 @@ export class StockController {
   async getStockByStorageProduct(
     @Param('storageId') storageId: string,
     @Param('productId') productId: string,
-  ): Promise<StockDto> {
+  ): Promise<StockByStorage[]> {
     return this.stockService.getStockByStorageProduct(storageId, productId);
   }
 }

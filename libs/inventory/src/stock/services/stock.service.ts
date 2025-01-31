@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { StockDto } from '../dto';
-
 import { StockRepository } from '../repositories/stock.repository';
 import { UpdateStockUseCase } from '../use-cases/update-storage.use-case';
 import { CreateStockUseCase } from '../use-cases/create-storage.use-case';
 import { UserData } from '@login/login/interfaces';
+import { StockByStorage } from '../entities/stock.entity';
 
 @Injectable()
 export class StockService {
@@ -17,7 +16,7 @@ export class StockService {
   ) {}
 
   // Función para obtener el stock de un producto en todos los almacenes
-  async getStockByProduct(productId: string): Promise<StockDto[]> {
+  async getStockByProduct(productId: string): Promise<StockByStorage[]> {
     try {
       const byStock = await this.stockRepository.getStockByIdStorageByIdProduct(
         undefined,
@@ -31,7 +30,7 @@ export class StockService {
   }
 
   // Función para obtener el stock de un almacén específico
-  async getStockByStorage(storageId: string): Promise<StockDto[]> {
+  async getStockByStorage(storageId: string): Promise<StockByStorage[]> {
     try {
       const byStock =
         await this.stockRepository.getStockByIdStorageByIdProduct(storageId);
@@ -43,7 +42,7 @@ export class StockService {
   }
 
   // Función para obtener todos los stocks de todos los almacenes
-  async getStockForAllStorages(): Promise<any> {
+  async getStockForAllStorages(): Promise<StockByStorage[]> {
     try {
       const byStock =
         await this.stockRepository.getStockByIdStorageByIdProduct();
@@ -58,7 +57,7 @@ export class StockService {
   async getStockByStorageProduct(
     storageId: string,
     productId: string,
-  ): Promise<StockDto> {
+  ): Promise<StockByStorage[]> {
     try {
       const byStock = await this.stockRepository.getStockByIdStorageByIdProduct(
         storageId,

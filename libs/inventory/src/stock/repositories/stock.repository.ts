@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
-import { Stock } from '../entities/stock.entity';
+import { Stock, StockByStorage } from '../entities/stock.entity';
 
 @Injectable()
 export class StockRepository extends BaseRepository<Stock> {
@@ -79,7 +79,7 @@ export class StockRepository extends BaseRepository<Stock> {
   async getStockByIdStorageByIdProduct(
     storageId?: string,
     productId?: string,
-  ): Promise<any> {
+  ): Promise<StockByStorage[]> {
     if (!storageId && !productId) {
       return this.getAllStoragesWithProducts();
     }
@@ -92,7 +92,7 @@ export class StockRepository extends BaseRepository<Stock> {
   }
 
   // Función privada para obtener todos los almacenes con sus productos
-  private async getAllStoragesWithProducts(): Promise<any> {
+  private async getAllStoragesWithProducts(): Promise<StockByStorage[]> {
     const allStorages = await this.prisma.storage.findMany({
       where: { isActive: true },
       select: { id: true, name: true, location: true, typeStorageId: true },
@@ -116,13 +116,13 @@ export class StockRepository extends BaseRepository<Stock> {
       });
     }
 
-    return { almacenes: stockByStorage };
+    return stockByStorage;
   }
 
   // Función privada para obtener todos los almacenes con un producto específico
   private async getAllStoragesWithSpecificProduct(
     productId: string,
-  ): Promise<any> {
+  ): Promise<StockByStorage[]> {
     const allStorages = await this.prisma.storage.findMany({
       where: { isActive: true },
       select: { id: true, name: true, location: true, typeStorageId: true },
@@ -146,14 +146,14 @@ export class StockRepository extends BaseRepository<Stock> {
       });
     }
 
-    return { almacenes: stockByStorage };
+    return stockByStorage;
   }
 
   // Función privada para obtener un almacén específico con sus productos
   private async getSpecificStorageWithProducts(
     storageId: string,
     productId?: string,
-  ): Promise<any> {
+  ): Promise<StockByStorage[]> {
     const storage = await this.fetchStorageById(storageId);
     const stockByStorage = [];
 
@@ -171,7 +171,7 @@ export class StockRepository extends BaseRepository<Stock> {
       stock: await this.getStockByStorage(storageId, productId),
     });
 
-    return { almacenes: stockByStorage };
+    return stockByStorage;
   }
 
   // Función privada para obtener el stock de un producto en un almacén específico

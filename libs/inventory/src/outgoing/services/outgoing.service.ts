@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
 import { Outgoing } from '../entities/outgoing.entity';
 import { CreateOutgoingDto } from '../dto/create-outgoing.dto';
 import { UpdateOutgoingDto } from '../dto/update-outgoing.dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateOutgoingUseCase } from '../use-cases/create-outgoing.use-case';
 import { UpdateOutgoingUseCase } from '../use-cases/update-outgoing.use-case';
@@ -20,6 +15,7 @@ import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
 import { StockService } from '@inventory/inventory/stock/services/stock.service';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class OutgoingService {
@@ -53,7 +49,7 @@ export class OutgoingService {
   async create(
     createOutgoingDto: CreateOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<Outgoing>> {
     try {
       return await this.createOutgoingUseCase.execute(createOutgoingDto, user);
     } catch (error) {
@@ -74,13 +70,13 @@ export class OutgoingService {
     id: string,
     updateOutgoingDto: UpdateOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<Outgoing>> {
     try {
       const currentOutgoing = await this.findById(id);
 
       if (!validateChanges(updateOutgoingDto, currentOutgoing)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en la salida',
           data: currentOutgoing,
         };
@@ -150,7 +146,7 @@ export class OutgoingService {
   async deleteMany(
     deleteOutgoingDto: DeleteOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<Outgoing[]>> {
     try {
       validateArray(deleteOutgoingDto.ids, 'IDs de salidas');
       return await this.deleteOutgoingUseCase.execute(deleteOutgoingDto, user);
@@ -170,7 +166,7 @@ export class OutgoingService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<Outgoing[]>> {
     try {
       validateArray(ids, 'IDs de salidas');
       return await this.reactivateOutgoingUseCase.execute(ids, user);
@@ -181,17 +177,17 @@ export class OutgoingService {
   }
 
   //crear ingreso de productos al alamacen
-/**
- * Crea una nueva salida de productos del almacén.
- *
- * @param createOutgoingDtoStorage - DTO que contiene los datos necesarios para crear la salida.
- * @param user - Datos del usuario que realiza la operación.
- * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID de la nueva salida.
- */
+  /**
+   * Crea una nueva salida de productos del almacén.
+   *
+   * @param createOutgoingDtoStorage - DTO que contiene los datos necesarios para crear la salida.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID de la nueva salida.
+   */
   async createOutgoing(
     createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     user: UserData,
-  ): Promise<HttpResponse<string>> {
+  ): Promise<BaseApiResponse<string>> {
     try {
       // Extraer los datos necesarios del DTO
       const { movement, state, name, storageId, date } =
@@ -261,7 +257,7 @@ export class OutgoingService {
         }),
       );
       return {
-        statusCode: HttpStatus.CREATED, // Código de estado HTTP 201
+        success: true, // Código de estado HTTP 201
         message: 'Salida creada exitosamente',
         data: `${outgoingId} -  ${movementTypeId}} `, // El ID del nuevo ingreso
       };
@@ -272,18 +268,18 @@ export class OutgoingService {
 
       // Retornar un objeto de error con un código de estado adecuado
       return {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR, // o el código que consideres apropiado
+        success: true, // o el código que consideres apropiado
         message: 'Error al crear la salida',
         data: null, // o puedes incluir más información sobre el error si es necesario
       };
     }
   }
   /**
- * Extrae los IDs de productos y sus cantidades de un array de movimientos.
- *
- * @param movement - Un array de objetos que contienen `productId` y `quantity`.
- * @returns Un array de objetos con `productId` y `quantity`.
- */
+   * Extrae los IDs de productos y sus cantidades de un array de movimientos.
+   *
+   * @param movement - Un array de objetos que contienen `productId` y `quantity`.
+   * @returns Un array de objetos con `productId` y `quantity`.
+   */
   private extractProductoIdQuantity(
     movement: Array<{ productId: string; quantity: number }>,
   ): { productId: string; quantity: number }[] {

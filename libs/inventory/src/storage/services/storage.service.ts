@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { StorageRepository } from '../repositories/storage.repository';
 import { Storage } from '../entities/storage.entity';
 import { CreateStorageDto } from '../dto/create-storage.dto';
 import { UpdateStorageDto } from '../dto/update-storage.dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateStorageUseCase } from '../use-cases/create-storage.use-case';
 import { UpdateStorageUseCase } from '../use-cases/update-storage.use-case';
@@ -16,6 +11,7 @@ import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handle
 import { storageErrorMessages } from '../errors/errors-storage';
 import { DeleteStorageDto } from '../dto';
 import { DeleteStorageUseCase, ReactivateStorageUseCase } from '../use-cases';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class StorageService {
@@ -47,7 +43,7 @@ export class StorageService {
   async create(
     createStorageDto: CreateStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     try {
       // Validar si existe un almacén con el mismo nombre
       const nameExists = await this.findByName(createStorageDto.name);
@@ -75,25 +71,20 @@ export class StorageService {
     id: string,
     updateStorageDto: UpdateStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     try {
       const currentStorage = await this.findById(id);
 
       if (!validateChanges(updateStorageDto, currentStorage)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en el almacén',
           data: currentStorage,
         };
       }
 
       // Validar si existe otro almacén con el mismo nombre
-      if (updateStorageDto.name) {
-        const nameExists = await this.findByName(updateStorageDto.name);
-        if (nameExists && currentStorage.name !== updateStorageDto.name) {
-          throw new BadRequestException('Ya existe un almacén con este nombre');
-        }
-      }
+      //Se hace con Prisma unique constraint
 
       return await this.updateStorageUseCase.execute(
         id,
@@ -156,7 +147,7 @@ export class StorageService {
   async deleteMany(
     deleteStorageDto: DeleteStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<Storage[]>> {
+  ): Promise<BaseApiResponse<Storage[]>> {
     try {
       validateArray(deleteStorageDto.ids, 'IDs de almacenes');
       return await this.deleteStorageUseCase.execute(deleteStorageDto, user);
@@ -175,7 +166,7 @@ export class StorageService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Storage[]>> {
+  ): Promise<BaseApiResponse<Storage[]>> {
     try {
       validateArray(ids, 'IDs de almacenes');
       return await this.reactivateStorageUseCase.execute(ids, user);

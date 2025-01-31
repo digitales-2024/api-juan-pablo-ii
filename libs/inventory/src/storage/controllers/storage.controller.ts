@@ -19,9 +19,10 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { CreateStorageDto, UpdateStorageDto, DeleteStorageDto } from '../dto';
 import { Storage } from '../entities/storage.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar almacenes.
@@ -56,7 +57,7 @@ export class StorageController {
   create(
     @Body() createStorageDto: CreateStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     return this.storageService.create(createStorageDto, user);
   }
 
@@ -105,7 +106,7 @@ export class StorageController {
     @Param('id') id: string,
     @Body() updateStorageDto: UpdateStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     return this.storageService.update(id, updateStorageDto, user);
   }
 
@@ -125,7 +126,7 @@ export class StorageController {
   deleteMany(
     @Body() deleteStorageDto: DeleteStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage[]>> {
+  ): Promise<BaseApiResponse<Storage[]>> {
     return this.storageService.deleteMany(deleteStorageDto, user);
   }
 
@@ -144,7 +145,7 @@ export class StorageController {
   reactivateAll(
     @Body() deleteStorageDto: DeleteStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage[]>> {
+  ): Promise<BaseApiResponse<Storage[]>> {
     return this.storageService.reactivateMany(deleteStorageDto.ids, user);
   }
 }

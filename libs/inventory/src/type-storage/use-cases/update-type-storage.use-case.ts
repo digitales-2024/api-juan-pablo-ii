@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateTypeStorageDto } from '../dto/update-type-storage.dto';
 import { TypeStorage } from '../entities/type-storage.entity';
 import { TypeStorageRepository } from '../repositories/type-storage.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateTypeStorageUseCase {
@@ -17,7 +18,7 @@ export class UpdateTypeStorageUseCase {
     id: string,
     updateTypeStorageDto: UpdateTypeStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     const updatedTypeStorage = await this.typeStorageRepository.transaction(
       async () => {
         // Update type storage
@@ -42,7 +43,7 @@ export class UpdateTypeStorageUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Tipo de almacenamiento actualizado exitosamente',
       data: updatedTypeStorage,
     };

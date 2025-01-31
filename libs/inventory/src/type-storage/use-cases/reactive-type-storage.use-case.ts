@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TypeStorageRepository } from '../repositories/type-storage.repository';
 import { TypeStorage } from '../entities/type-storage.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateTypeStorageUseCase {
@@ -15,7 +16,7 @@ export class ReactivateTypeStorageUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     // Reactivar los tipos de almacenamiento y registrar auditoría
     const reactivatedTypeStorages =
       await this.typeStorageRepository.transaction(async () => {
@@ -39,7 +40,7 @@ export class ReactivateTypeStorageUseCase {
       });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Tipos de almacenamiento reactivados exitosamente',
       data: reactivatedTypeStorages,
     };

@@ -19,13 +19,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateTypeStorageDto,
   UpdateTypeStorageDto,
   DeleteTypeStorageDto,
 } from '../dto';
 import { TypeStorage } from '../entities/type-storage.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar tipos de almacenamiento.
@@ -61,7 +62,7 @@ export class TypeStorageController {
   create(
     @Body() createTypeStorageDto: CreateTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     return this.typeStorageService.create(createTypeStorageDto, user);
   }
 
@@ -110,7 +111,7 @@ export class TypeStorageController {
     @Param('id') id: string,
     @Body() updateTypeStorageDto: UpdateTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     return this.typeStorageService.update(id, updateTypeStorageDto, user);
   }
 
@@ -130,7 +131,7 @@ export class TypeStorageController {
   deleteMany(
     @Body() deleteTypeStorageDto: DeleteTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     return this.typeStorageService.deleteMany(deleteTypeStorageDto, user);
   }
 
@@ -149,7 +150,7 @@ export class TypeStorageController {
   reactivateAll(
     @Body() deleteTypeStorageDto: DeleteTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     return this.typeStorageService.reactivateMany(
       deleteTypeStorageDto.ids,
       user,
