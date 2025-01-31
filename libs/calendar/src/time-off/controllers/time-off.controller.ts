@@ -23,6 +23,8 @@ import {
 import { TimeOff } from '../entities/time-off.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateTimeOffDto } from '../dto/create-time-off.dto';
+import { UpdateTimeOffDto } from '../dto/update-time-off.dto';
+import { DeleteTimeOffsDto } from '../dto/delete-time-offs.dto';
 
 /**
  * Controlador REST para gestionar ausencias temporales.
@@ -89,4 +91,65 @@ export class TimeOffController {
   findAll(): Promise<TimeOff[]> {
     return this.timeOffService.findAll();
   }
+  /**
+   * Actualiza un evento existente.
+   */
+  @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar evento existente' })
+  @ApiParam({ name: 'id', description: 'ID del evento a actualizar' })
+  @ApiOkResponse({
+    description: 'Evento actualizado exitosamente',
+    type: Event,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o evento no existe',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateTimeOffDto: UpdateTimeOffDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<TimeOff>> {
+    return this.timeOffService.update(id, updateTimeOffDto, user);
+  }
+
+  /**
+   * Desactiva múltiples eventos.
+   */
+  @ApiOperation({ summary: 'Desactivar múltiples eventos' })
+  @ApiOkResponse({
+    description: 'Eventos desactivados exitosamente',
+    type: [Event],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o eventos no existen',
+  })
+  @Delete('remove/all')
+  deleteMany(
+    @Body() deleteTimeOffsDto: DeleteTimeOffsDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<TimeOff[]>> {
+    return this.timeOffService.deleteMany(deleteTimeOffsDto, user);
+  }
+
+    /**
+     * Reactiva múltiples eventos.
+     */
+    @Patch('reactivate/all')
+    @ApiOperation({ summary: 'Reactivar múltiples eventos' })
+    @ApiOkResponse({
+      description: 'Eventos reactivados exitosamente',
+      type: [Event],
+    })
+    @ApiBadRequestResponse({
+      description: 'IDs inválidos o eventos no existen',
+    })
+    @Patch('reactivate/all')
+    reactivateAll(
+      @Body() reactivateTimeOffsDto: DeleteTimeOffsDto,
+      @GetUser() user: UserData,
+    ): Promise<BaseApiResponse<TimeOff[]>> {
+      return this.timeOffService.reactivateMany(reactivateTimeOffsDto, user);
+    }
+
+
 }

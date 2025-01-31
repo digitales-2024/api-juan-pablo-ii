@@ -9,6 +9,9 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateTimeOffDto } from '../dto/create-time-off.dto';
 import { CreateTimeOffUseCase } from '../use-cases/create-time-off.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
+import { UpdateTimeOffDto } from '../dto/update-time-off.dto';
+import { DeleteTimeOffsUseCase, ReactivateTimeOffsUseCase, UpdateTimeOffUseCase } from '../use-cases';
+import { DeleteTimeOffsDto } from '../dto/delete-time-offs.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para solicitudes de tiempo libre.
@@ -23,9 +26,9 @@ export class TimeOffService {
   constructor(
     private readonly timeOffRepository: TimeOffRepository,
     private readonly createTimeOffUseCase: CreateTimeOffUseCase,
-    // private readonly updateTimeOffUseCase: UpdateTimeOffUseCase,
-    // private readonly deleteTimeOffsUseCase: DeleteTimeOffsUseCase,
-    // private readonly reactivateTimeOffsUseCase: ReactivateTimeOffsUseCase,
+    private readonly updateTimeOffUseCase: UpdateTimeOffUseCase,
+    private readonly deleteTimeOffsUseCase: DeleteTimeOffsUseCase,
+    private readonly reactivateTimeOffsUseCase: ReactivateTimeOffsUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -52,36 +55,36 @@ export class TimeOffService {
     }
   }
 
-//   /**
-//    * Actualiza una solicitud de tiempo libre existente.
-//    * @param id - ID de la solicitud a actualizar.
-//    * @param updateTimeOffDto - DTO con los datos a actualizar.
-//    * @param user - Datos del usuario que realiza la operación.
-//    * @returns Respuesta HTTP con la solicitud actualizada.
-//    * @throws {BadRequestException} Si la solicitud no existe o los datos son inválidos.
-//    */
-//   async update(
-//     id: string,
-//     updateTimeOffDto: UpdateTimeOffDto,
-//     user: UserData,
-//   ): Promise<BaseApiResponse<TimeOff>> {
-//     try {
-//       const currentTimeOff = await this.findById(id);
+  /**
+   * Actualiza una solicitud de tiempo libre existente.
+   * @param id - ID de la solicitud a actualizar.
+   * @param updateTimeOffDto - DTO con los datos a actualizar.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Respuesta HTTP con la solicitud actualizada.
+   * @throws {BadRequestException} Si la solicitud no existe o los datos son inválidos.
+   */
+  async update(
+    id: string,
+    updateTimeOffDto: UpdateTimeOffDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<TimeOff>> {
+    try {
+      const currentTimeOff = await this.findOne(id);
 
-//       if (!validateChanges(updateTimeOffDto, currentTimeOff)) {
-//         this.logger.log('No hay cambios significativos, omitiendo actualización');
-//         return {
-//           success: true,
-//           message: 'Solicitud de tiempo libre actualizada correctamente',
-//           data: currentTimeOff,
-//         };
-//       }
+      if (!validateChanges(updateTimeOffDto, currentTimeOff)) {
+        this.logger.log('No hay cambios significativos, omitiendo actualización');
+        return {
+          success: true,
+          message: 'Solicitud de tiempo libre actualizada correctamente',
+          data: currentTimeOff,
+        };
+      }
 
-//       return await this.updateTimeOffUseCase.execute(id, updateTimeOffDto, user);
-//     } catch (error) {
-//       this.errorHandler.handleError(error, 'updating');
-//     }
-//   }
+      return await this.updateTimeOffUseCase.execute(id, updateTimeOffDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
 
   /**
    * Busca una solicitud de tiempo libre por su ID.
@@ -109,42 +112,42 @@ export class TimeOffService {
     }
   }
 
-//   /**
-//    * Desactiva múltiples solicitudes de tiempo libre.
-//    * @param deleteTimeOffsDto - DTO con los IDs de las solicitudes a desactivar.
-//    * @param user - Datos del usuario que realiza la operación.
-//    * @returns Respuesta HTTP con las solicitudes desactivadas.
-//    * @throws {BadRequestException} Si alguna solicitud no existe.
-//    */
-//   async deleteMany(
-//     deleteTimeOffsDto: DeleteTimeOffsDto,
-//     user: UserData,
-//   ): Promise<BaseApiResponse<TimeOff[]>> {
-//     try {
-//       validateArray(deleteTimeOffsDto.ids, 'IDs de solicitudes de tiempo libre');
-//       return await this.deleteTimeOffsUseCase.execute(deleteTimeOffsDto, user);
-//     } catch (error) {
-//       this.errorHandler.handleError(error, 'deactivating');
-//     }
-//   }
+  /**
+   * Desactiva múltiples solicitudes de tiempo libre.
+   * @param deleteTimeOffsDto - DTO con los IDs de las solicitudes a desactivar.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Respuesta HTTP con las solicitudes desactivadas.
+   * @throws {BadRequestException} Si alguna solicitud no existe.
+   */
+  async deleteMany(
+    deleteTimeOffsDto: DeleteTimeOffsDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<TimeOff[]>> {
+    try {
+      validateArray(deleteTimeOffsDto.ids, 'IDs de solicitudes de tiempo libre');
+      return await this.deleteTimeOffsUseCase.execute(deleteTimeOffsDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deactivating');
+    }
+  }
 
-//   /**
-//    * Reactiva múltiples solicitudes de tiempo libre.
-//    * @param ids - Lista de IDs de las solicitudes a reactivar.
-//    * @param user - Datos del usuario que realiza la operación.
-//    * @returns Respuesta HTTP con las solicitudes reactivadas.
-//    * @throws {BadRequestException} Si alguna solicitud no existe.
-//    */
-//   async reactivateMany(
-//     ids: string[],
-//     user: UserData,
-//   ): Promise<BaseApiResponse<TimeOff[]>> {
-//     try {
-//       validateArray(ids, 'IDs de solicitudes de tiempo libre');
-//       return await this.reactivateTimeOffsUseCase.execute(ids, user);
-//     } catch (error) {
-//       this.errorHandler.handleError(error, 'reactivating');
-//     }
-//   }
+  /**
+   * Reactiva múltiples solicitudes de tiempo libre.
+   * @param ids - Lista de IDs de las solicitudes a reactivar.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Respuesta HTTP con las solicitudes reactivadas.
+   * @throws {BadRequestException} Si alguna solicitud no existe.
+   */
+  async reactivateMany(
+    reactivateTimeOffsDto: DeleteTimeOffsDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<TimeOff[]>> {
+    try {
+      validateArray(reactivateTimeOffsDto.ids, 'IDs de solicitudes de tiempo libre');
+      return await this.reactivateTimeOffsUseCase.execute(reactivateTimeOffsDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'reactivating');
+    }
+  }
 
 }
