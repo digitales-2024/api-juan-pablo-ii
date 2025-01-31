@@ -23,6 +23,8 @@ import {
 import { Event } from '../entities/event.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateEventDto } from '../dto/create-event.dto';
+import { UpdateEventDto } from '../dto/update-event.dto';
+import { DeleteEventsDto } from '../dto/delete-events.dto';
 
 /**
  * Controlador REST para gestionar eventos del calendario.
@@ -39,7 +41,7 @@ import { CreateEventDto } from '../dto/create-event.dto';
 @Controller({ path: 'events', version: '1' })
 @Auth()
 export class EventController {
-  constructor(private readonly eventService: EventService) {}
+  constructor(private readonly eventService: EventService) { }
 
   /**
    * Crea un nuevo evento.
@@ -90,63 +92,63 @@ export class EventController {
     return this.eventService.findAll();
   }
 
-//   /**
-//    * Actualiza un evento existente.
-//    */
-//   @Patch(':id')
-//   @ApiOperation({ summary: 'Actualizar evento existente' })
-//   @ApiParam({ name: 'id', description: 'ID del evento a actualizar' })
-//   @ApiOkResponse({
-//     description: 'Evento actualizado exitosamente',
-//     type: Event,
-//   })
-//   @ApiBadRequestResponse({
-//     description: 'Datos de entrada inválidos o evento no existe',
-//   })
-//   update(
-//     @Param('id') id: string,
-//     @Body() updateEventDto: UpdateEventDto,
-//     @GetUser() user: UserData,
-//   ): Promise<BaseApiResponse<Event>> {
-//     return this.eventService.update(id, updateEventDto, user);
-//   }
+  /**
+   * Actualiza un evento existente.
+   */
+  @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar evento existente' })
+  @ApiParam({ name: 'id', description: 'ID del evento a actualizar' })
+  @ApiOkResponse({
+    description: 'Evento actualizado exitosamente',
+    type: Event,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o evento no existe',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateEventDto: UpdateEventDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Event>> {
+    return this.eventService.update(id, updateEventDto, user);
+  }
 
-//   /**
-//    * Desactiva múltiples eventos.
-//    */
-//   @ApiOperation({ summary: 'Desactivar múltiples eventos' })
-//   @ApiOkResponse({
-//     description: 'Eventos desactivados exitosamente',
-//     type: [Event],
-//   })
-//   @ApiBadRequestResponse({
-//     description: 'IDs inválidos o eventos no existen',
-//   })
-//   @Delete('remove/all')
-//   deleteMany(
-//     @Body() deleteEventsDto: DeleteEventsDto,
-//     @GetUser() user: UserData,
-//   ): Promise<BaseApiResponse<Event[]>> {
-//     return this.eventService.deleteMany(deleteEventsDto, user);
-//   }
+  /**
+   * Desactiva múltiples eventos.
+   */
+  @ApiOperation({ summary: 'Desactivar múltiples eventos' })
+  @ApiOkResponse({
+    description: 'Eventos desactivados exitosamente',
+    type: [Event],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o eventos no existen',
+  })
+  @Delete('remove/all')
+  deleteMany(
+    @Body() deleteEventsDto: DeleteEventsDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Event[]>> {
+    return this.eventService.deleteMany(deleteEventsDto, user);
+  }
 
-//   /**
-//    * Reactiva múltiples eventos.
-//    */
-//   @Patch('reactivate/all')
-//   @ApiOperation({ summary: 'Reactivar múltiples eventos' })
-//   @ApiOkResponse({
-//     description: 'Eventos reactivados exitosamente',
-//     type: [Event],
-//   })
-//   @ApiBadRequestResponse({
-//     description: 'IDs inválidos o eventos no existen',
-//   })
-//   @Patch('reactivate/all')
-//   reactivateAll(
-//     @Body() deleteEventsDto: DeleteEventsDto,
-//     @GetUser() user: UserData,
-//   ): Promise<BaseApiResponse<Event[]>> {
-//     return this.eventService.reactivateMany(deleteEventsDto.ids, user);
-//   }
+    /**
+     * Reactiva múltiples eventos.
+     */
+    @Patch('reactivate/all')
+    @ApiOperation({ summary: 'Reactivar múltiples eventos' })
+    @ApiOkResponse({
+      description: 'Eventos reactivados exitosamente',
+      type: [Event],
+    })
+    @ApiBadRequestResponse({
+      description: 'IDs inválidos o eventos no existen',
+    })
+    @Patch('reactivate/all')
+    reactivateAll(
+      @Body() deleteEventsDto: DeleteEventsDto,
+      @GetUser() user: UserData,
+    ): Promise<BaseApiResponse<Event[]>> {
+      return this.eventService.reactivateMany(deleteEventsDto.ids, user);
+    }
 }

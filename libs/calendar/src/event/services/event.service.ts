@@ -5,12 +5,17 @@ import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { EventRepository } from '../repositories/event.repository';
 import {
   CreateEventUseCase,
+  DeleteEventsUseCase,
+  ReactivateEventsUseCase,
+  UpdateEventUseCase,
  
 } from '../use-cases';
 import { eventErrorMessages } from '../errors/errors-event';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { CreateEventDto } from '../dto/create-event.dto';
+import { UpdateEventDto } from '../dto/update-event.dto';
+import { DeleteEventsDto } from '../dto/delete-events.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para eventos del calendario.
@@ -25,9 +30,9 @@ export class EventService {
   constructor(
     private readonly eventRepository: EventRepository,
     private readonly createEventUseCase: CreateEventUseCase,
-    // private readonly updateEventUseCase: UpdateEventUseCase,
-    // private readonly deleteEventsUseCase: DeleteEventsUseCase,
-    // private readonly reactivateEventsUseCase: ReactivateEventsUseCase,
+    private readonly updateEventUseCase: UpdateEventUseCase,
+    private readonly deleteEventsUseCase: DeleteEventsUseCase,
+    private readonly reactivateEventsUseCase: ReactivateEventsUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -54,36 +59,36 @@ export class EventService {
     }
   }
 
-//   /**
-//    * Actualiza un evento existente.
-//    * @param id - ID del evento a actualizar.
-//    * @param updateEventDto - DTO con los datos a actualizar.
-//    * @param user - Datos del usuario que realiza la operación.
-//    * @returns Respuesta HTTP con el evento actualizado.
-//    * @throws {BadRequestException} Si el evento no existe o los datos son inválidos.
-//    */
-//   async update(
-//     id: string,
-//     updateEventDto: UpdateEventDto,
-//     user: UserData,
-//   ): Promise<BaseApiResponse<Event>> {
-//     try {
-//       const currentEvent = await this.findById(id);
+  /**
+   * Actualiza un evento existente.
+   * @param id - ID del evento a actualizar.
+   * @param updateEventDto - DTO con los datos a actualizar.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Respuesta HTTP con el evento actualizado.
+   * @throws {BadRequestException} Si el evento no existe o los datos son inválidos.
+   */
+  async update(
+    id: string,
+    updateEventDto: UpdateEventDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<Event>> {
+    try {
+      const currentEvent = await this.findOne(id);
 
-//       if (!validateChanges(updateEventDto, currentEvent)) {
-//         this.logger.log('No hay cambios significativos, omitiendo actualización');
-//         return {
-//           success: true,
-//           message: 'Evento actualizado correctamente',
-//           data: currentEvent,
-//         };
-//       }
+      if (!validateChanges(updateEventDto, currentEvent)) {
+        this.logger.log('No hay cambios significativos, omitiendo actualización');
+        return {
+          success: true,
+          message: 'Evento actualizado correctamente',
+          data: currentEvent,
+        };
+      }
 
-//       return await this.updateEventUseCase.execute(id, updateEventDto, user);
-//     } catch (error) {
-//       this.errorHandler.handleError(error, 'updating');
-//     }
-//   }
+      return await this.updateEventUseCase.execute(id, updateEventDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
 
   /**
    * Busca un evento por su ID.
@@ -111,43 +116,43 @@ export class EventService {
     }
   }
 
-//   /**
-//    * Desactiva múltiples eventos.
-//    * @param deleteEventsDto - DTO con los IDs de los eventos a desactivar.
-//    * @param user - Datos del usuario que realiza la operación.
-//    * @returns Respuesta HTTP con los eventos desactivados.
-//    * @throws {BadRequestException} Si algún evento no existe.
-//    */
-//   async deleteMany(
-//     deleteEventsDto: DeleteEventsDto,
-//     user: UserData,
-//   ): Promise<BaseApiResponse<Event[]>> {
-//     try {
-//       validateArray(deleteEventsDto.ids, 'IDs de eventos');
-//       return await this.deleteEventsUseCase.execute(deleteEventsDto, user);
-//     } catch (error) {
-//       this.errorHandler.handleError(error, 'deactivating');
-//     }
-//   }
+  /**
+   * Desactiva múltiples eventos.
+   * @param deleteEventsDto - DTO con los IDs de los eventos a desactivar.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Respuesta HTTP con los eventos desactivados.
+   * @throws {BadRequestException} Si algún evento no existe.
+   */
+  async deleteMany(
+    deleteEventsDto: DeleteEventsDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<Event[]>> {
+    try {
+      validateArray(deleteEventsDto.ids, 'IDs de eventos');
+      return await this.deleteEventsUseCase.execute(deleteEventsDto, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deactivating');
+    }
+  }
 
-//   /**
-//    * Reactiva múltiples eventos.
-//    * @param ids - Lista de IDs de los eventos a reactivar.
-//    * @param user - Datos del usuario que realiza la operación.
-//    * @returns Respuesta HTTP con los eventos reactivados.
-//    * @throws {BadRequestException} Si algún evento no existe.
-//    */
-//   async reactivateMany(
-//     ids: string[],
-//     user: UserData,
-//   ): Promise<BaseApiResponse<Event[]>> {
-//     try {
-//       validateArray(ids, 'IDs de eventos');
-//       return await this.reactivateEventsUseCase.execute(ids, user);
-//     } catch (error) {
-//       this.errorHandler.handleError(error, 'reactivating');
-//     }
-//   }
+  /**
+   * Reactiva múltiples eventos.
+   * @param ids - Lista de IDs de los eventos a reactivar.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Respuesta HTTP con los eventos reactivados.
+   * @throws {BadRequestException} Si algún evento no existe.
+   */
+  async reactivateMany(
+    ids: string[],
+    user: UserData,
+  ): Promise<BaseApiResponse<Event[]>> {
+    try {
+      validateArray(ids, 'IDs de eventos');
+      return await this.reactivateEventsUseCase.execute(ids, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'reactivating');
+    }
+  }
 
  
 }
