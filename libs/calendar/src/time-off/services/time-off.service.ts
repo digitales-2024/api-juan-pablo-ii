@@ -1,18 +1,14 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { CreateTimeOffDto, UpdateTimeOffDto, DeleteTimeOffsDto } from '../dto';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserData } from '@login/login/interfaces';
 import { TimeOff } from '../entities/time-off.entity';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { TimeOffRepository } from '../repositories/time-off.repository';
-import { BaseErrorHandler } from 'src/common/error-handlers/time-off-error.handler';
-import {
-  CreateTimeOffUseCase,
-  UpdateTimeOffUseCase,
-  DeleteTimeOffsUseCase,
-  ReactivateTimeOffsUseCase,
-} from '../use-cases';
+
 import { timeOffErrorMessages } from '../errors/errors-time-off';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { CreateTimeOffDto } from '../dto/create-time-off.dto';
+import { CreateTimeOffUseCase } from '../use-cases/create-time-off.use-case';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 
 /**
  * Servicio que implementa la lógica de negocio para solicitudes de tiempo libre.
