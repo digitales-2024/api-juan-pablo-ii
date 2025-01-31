@@ -11,7 +11,7 @@ import { Patient } from '../entities/pacient.entity';
 import { CreatePatientDto } from '../dto/create-pacient.dto';
 import { UpdatePatientDto } from '../dto/update-pacient.dto';
 import { HttpResponse, UserData } from '@login/login/interfaces';
-import { validateArray, validateChanges } from '@prisma/prisma/utils';
+import { validateArray } from '@prisma/prisma/utils';
 import { CreatePatientUseCase } from '../use-cases/create-pacient.use-case';
 import { UpdatePatientUseCase } from '../use-cases/update-pacient.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
@@ -59,10 +59,7 @@ export class PacientService {
       if (dniExists) {
         throw new BadRequestException('Ya existe un paciente con este DNI');
       }
-      //crear tabla de imagenn
-      //retorna url
-      //true/false
-      //error
+
       return await this.createPatientUseCase.execute(createPatientDto, user);
 
       // imagwenw del paciente
@@ -87,16 +84,6 @@ export class PacientService {
     user: UserData,
   ): Promise<BaseApiResponse<Patient>> {
     try {
-      const currentPatient = await this.findById(id);
-
-      if (!validateChanges(updatePatientDto, currentPatient)) {
-        return {
-          success: true,
-          message: 'No se detectaron cambios en el paciente',
-          data: currentPatient,
-        };
-      }
-
       return await this.updatePatientUseCase.execute(
         id,
         updatePatientDto,
@@ -201,6 +188,13 @@ export class PacientService {
     }
   }
 
+  /**
+   * Sube una imagen y devuelve la URL
+   * @param image - Imagen a subir
+   * @returns Respuesta HTTP con la URL de la imagen subida
+   * @throws {BadRequestException} Si no se proporciona una imagen, o si se proporciona un array de archivos
+   * @throws {InternalServerErrorException} Si ocurre un error al subir la imagen
+   */
   async uploadImage(image: Express.Multer.File): Promise<HttpResponse<string>> {
     let imageUrl: string = null;
 
@@ -249,5 +243,42 @@ export class PacientService {
 
       throw new InternalServerErrorException('Error subiendo la imagen');
     }
+  }
+
+  /**
+   * Crea un nuevo paciente con imagen opcional
+   * @param createPatientDto - DTO con los datos para crear el paciente
+   * @param image - Archivo de imagen del paciente (opcional)
+   * @param user - Datos del usuario que realiza la creación
+   * @returns Una promesa que resuelve con la respuesta HTTP que contiene el paciente creado
+   */
+  async createPatientWithImage(
+    createPatientDto: CreatePatientDto,
+    image: Express.Multer.File,
+    user: UserData,
+  ): Promise<BaseApiResponse<Patient>> {
+    // Validar si el DNI ya existe
+    const dniExists = await this.validateDNIExists(createPatientDto.dni);
+    if (dniExists) {
+      throw new BadRequestException('Ya existe un paciente con este DNI');
+    }
+
+    // Si no hay imagen, solo creamos el paciente
+    if (!image) {
+      return await this.create(createPatientDto, user);
+    }
+
+    // Si hay imagen, primero la subimos
+    const imageResponse = await this.uploadImage(image);
+
+    // Creamos el paciente
+    const createdPatientResponse = await this.create(createPatientDto, user);
+
+    // Actualizamos el paciente con la URL de la imagen
+    return await this.update(
+      createdPatientResponse.data.id,
+      { patientPhoto: imageResponse.data },
+      user,
+    );
   }
 }
