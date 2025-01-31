@@ -94,14 +94,6 @@ export class CreatePatientDto {
   email?: string;
 
   @ApiProperty({
-    description: 'Fecha de registro del paciente',
-    example: '2023-01-01',
-    required: true,
-  })
-  @IsDateString()
-  registrationDate: Date;
-
-  @ApiProperty({
     description: 'Nombre del contacto de emergencia',
     example: 'María Pérez',
     required: false,
