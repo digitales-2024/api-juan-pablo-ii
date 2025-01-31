@@ -96,6 +96,12 @@
       ],
       "@schedule/schedule/*": [
         "libs/schedule/src/*"
+      ],
+      "@calendar/calendar": [
+        "libs/calendar/src"
+      ],
+      "@calendar/calendar/*": [
+        "libs/calendar/src/*"
       ]
     }
   }

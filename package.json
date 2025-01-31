@@ -125,7 +125,8 @@
       "^@medical-procedure/medical-procedure(|/.*)$": "<rootDir>/libs/medical-procedure/src/$1",
       "^@medical-consultation/medical-consultation(|/.*)$": "<rootDir>/libs/medical-consultation/src/$1",
       "^@pacient/pacient(|/.*)$": "<rootDir>/libs/pacient/src/$1",
-      "^@schedule/schedule(|/.*)$": "<rootDir>/libs/schedule/src/$1"
+      "^@schedule/schedule(|/.*)$": "<rootDir>/libs/schedule/src/$1",
+      "^@calendar/calendar(|/.*)$": "<rootDir>/libs/calendar/src/$1"
     }
   }
 }
