@@ -165,7 +165,6 @@ model Patient {
   address                String? @db.VarChar(255)
   phone                  String? @db.VarChar(15)
   email                  String? @db.VarChar(100)
-  registrationDate       String  @db.VarChar(20)
   allergies              String? @db.Text
   currentMedications     String? @db.Text
   emergencyContact       String? @db.VarChar(100)
