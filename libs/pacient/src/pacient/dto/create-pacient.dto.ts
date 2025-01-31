@@ -53,7 +53,7 @@ export class CreatePatientDto {
 
   @ApiProperty({
     description: 'Sexo del paciente (M/F)',
-    example: 'M',
+    example: 'Masculino Femenino',
     required: true,
   })
   @IsString()

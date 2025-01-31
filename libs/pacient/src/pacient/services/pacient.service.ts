@@ -64,7 +64,6 @@ export class PacientService {
       //true/false
       //error
       return await this.createPatientUseCase.execute(createPatientDto, user);
-      
 
       // imagwenw del paciente
       // id del paciente y el url
