@@ -362,7 +362,7 @@ model Recurrence {
 // Tabla Categoria
 model Categoria {
   id          String  @id @default(uuid())
-  name        String // Nombre de la categoría (ej. 'Medicamentos', 'Cosméticos', 'Materiales', etc.)
+  name        String  @unique// Nombre de la categoría (ej. 'Medicamentos', 'Cosméticos', 'Materiales', etc.)
   description String? // Descripción opcional que proporciona más detalles sobre la categoría
 
   isActive  Boolean    @default(true) // Campo para controlar si la categoría está activa o no
@@ -374,7 +374,7 @@ model Categoria {
 // Tabla TipoProducto
 model TipoProducto {
   id          String  @id @default(uuid())
-  name        String // Nombre del tipo de producto (subcategoría), como 'Antibióticos', 'Bloqueadores solares', 'Gasas', etc.
+  name        String  @unique// Nombre del tipo de producto (subcategoría), como 'Antibióticos', 'Bloqueadores solares', 'Gasas', etc.
   description String? // Descripción opcional del tipo de producto (detalles adicionales o especificaciones)
 
   isActive  Boolean    @default(true) // Campo para controlar si el tipo de producto está activo o no
@@ -394,7 +394,7 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  name                      String // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
+  name                      String @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
   precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor

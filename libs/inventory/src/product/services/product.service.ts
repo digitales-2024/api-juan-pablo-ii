@@ -91,12 +91,13 @@ export class ProductService {
         };
       }
 
+      //TODO: tHINK BETTER THIS  LOGIC ALSO IN CATEGORY
       // Validación de nombre de producto
-      const nameExists = await this.findByName(updateProductDto.name); // Buscar producto por nombre
-      if (nameExists) {
-        // Si retorna 'true', ya existe el producto
-        throw new BadRequestException('Ya existe un producto con este nombre');
-      }
+      // const nameExists = await this.findByName(updateProductDto.name, ); // Buscar producto por nombre
+      // if (nameExists) {
+      //   // Si retorna 'true', ya existe el producto
+      //   throw new BadRequestException('Ya existe un producto con este nombre');
+      // }
       // Validación de id de categoría
       await this.categoryService.findById(updateProductDto.categoriaId);
       // Validación de id de typoproducto
