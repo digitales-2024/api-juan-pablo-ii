@@ -85,14 +85,15 @@ export class CategoryService {
           data: currentCategory,
         };
       }
-      // Validar si existe otro tipo de categoria con el mismo nombre
-      const nameExists = await this.findByName(updateCategoryDto.name); // Buscar producto por nombre
-      if (nameExists) {
-        // Si retorna 'true', ya existe la categoria
-        throw new BadRequestException(
-          'Ya existe una categoria con este nombre',
-        );
-      }
+      //No es necesario al actualizar
+      // // Validar si existe otro tipo de categoria con el mismo nombre
+      // const nameExists = await this.findByName(updateCategoryDto.name); // Buscar producto por nombre
+      // if (nameExists) {
+      //   // Si retorna 'true', ya existe la categoria
+      //   throw new BadRequestException(
+      //     'Ya existe una categoria con este nombre',
+      //   );
+      // }
       // fin de la validación
       return await this.updateCategoryUseCase.execute(
         id,
