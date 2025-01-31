@@ -185,11 +185,11 @@ model Patient {
   patientPhoto           String? @db.Text
 
   //no tocar
-  isActive            Boolean          @default(true)
-  createdAt           DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt           DateTime         @updatedAt
-  MedicalHistory      MedicalHistory[]
-  MedicalConsultation ConsultaMedica[]
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt
+  MedicalHistory MedicalHistory[]
+  Appointment    Appointment[]
 }
 
 //tabla tipo de servicio
@@ -495,13 +495,15 @@ model Prescription {
   prescription     Json // detalles de la prescripción (medicamentos, dosis, etc.)
   description      String? // Additional description or notes (optional)
   purchaseOrderId  String? // referecia a orden de compra (optional)
+}
 
-  // Audit fields
-enum AppointmentStatus {
+ enum AppointmentStatus {
   PENDING
 
   //TODO: ver que estados tendran las citas
 }
+  // Audit fields
+ 
 
 enum DayOfWeek {
   MONDAY
@@ -519,29 +521,31 @@ enum AppointmentType {
 }
 
 model Appointment {
-  id           String            @id @default(uuid())
-  eventId      String?           @unique // Relación 1:1 con Event
-  event        Event?            @relation(name: "AppointmentToEvent", fields: [eventId], references: [id])
-  staffId      String
-  serviceId    String
-  branchId     String
-  patientId    String?
-  // TODO: agregar solo pacienteId y quitar los otros campos
-  patientName  String 
-  patientEmail String
-  patientPhone String?
-  start        DateTime
-  end          DateTime
-  status       AppointmentStatus @default(PENDING)
-  type         AppointmentType   @default(CONSULTA)
-  notes        String?
-  staff        Staff             @relation(fields: [staffId], references: [id])
-  service      Service           @relation(fields: [serviceId], references: [id])
-  branch       Branch            @relation(fields: [branchId], references: [id])
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id        String            @id @default(uuid())
+  eventId   String?          @unique
+  event     Event?           @relation(name: "AppointmentToEvent", fields: [eventId], references: [id])
+  staffId   String
+  serviceId String
+  branchId  String
+  patientId String
+  start     DateTime
+  end       DateTime
+  status    AppointmentStatus @default(PENDING)
+  type      AppointmentType   @default(CONSULTA)
+  notes     String?
+
+  // Relaciones
+  staff    Staff    @relation(fields: [staffId], references: [id])
+  service  Service  @relation(fields: [serviceId], references: [id])
+  branch   Branch   @relation(fields: [branchId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+
+  // Campos de auditoría
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([staffId, start])
+  @@index([patientId, start])
 }
 
 enum EventType {
@@ -566,6 +570,7 @@ model Event {
   end                DateTime
   color              String? // Color dinámico basado en el estado
   status             EventStatus? // Estado del evento (refleja el estado de la cita)
+  isActive Boolean @default(true)
   isCancelled        Boolean        @default(false)
   cancellationReason String?
   staffScheduleId    String?
