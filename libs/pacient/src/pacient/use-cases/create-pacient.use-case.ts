@@ -29,7 +29,6 @@ export class CreatePatientUseCase {
         address: createPatientDto.address,
         phone: createPatientDto.phone,
         email: createPatientDto.email,
-        registrationDate: createPatientDto.registrationDate,
         emergencyContact: createPatientDto.emergencyContact,
         emergencyPhone: createPatientDto.emergencyPhone,
         healthInsurance: createPatientDto.healthInsurance,

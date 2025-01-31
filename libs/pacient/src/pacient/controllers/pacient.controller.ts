@@ -21,11 +21,10 @@ import {
   ApiParam,
   ApiOkResponse,
   ApiNotFoundResponse,
-  ApiCreatedResponse,
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { CreatePatientDto } from '../dto/create-pacient.dto';
 import { UpdatePatientDto } from '../dto/update-pacient.dto';
 import { Patient } from '../entities/pacient.entity';
@@ -151,6 +150,12 @@ export class PacientController {
   @ApiBadRequestResponse({
     description: 'IDs inválidos o pacientes no existen',
   })
+  /**
+   * Reactiva múltiples pacientes.
+   * @param deletePatientDto - DTO que contiene los IDs de los pacientes a reactivar.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Una promesa que resuelve con una respuesta HTTP que contiene los pacientes reactivados.
+   */
   reactivateAll(
     @Body() deletePatientDto: DeletePatientDto,
     @GetUser() user: UserData,
@@ -158,35 +163,71 @@ export class PacientController {
     return this.pacientService.reactivateMany(deletePatientDto.ids, user);
   }
 
+  /**
+   * Crea un nuevo paciente con imagen opcional
+   * @param createPatientDto - DTO con los datos para crear el paciente
+   * @param image - Archivo de imagen del paciente (opcional)
+   * @param user - Datos del usuario que realiza la creación
+   * @returns Promesa que resuelve con la respuesta de la API que contiene el paciente creado
+   */
+  @Post('create-with-image')
+  @ApiOperation({ summary: 'Crear nuevo paciente con imagen opcional' })
+  @ApiResponse({
+    status: 201,
+    description: 'Paciente creado exitosamente',
+    type: BaseApiResponse<Patient>,
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
+        name: { type: 'string', example: 'Juan Pérez' },
+        lastName: { type: 'string', example: 'González' },
+        dni: { type: 'string', example: '12345678' },
+        birthDate: { type: 'string', format: 'date', example: '1990-01-01' },
+        gender: { type: 'string', example: 'Masculino' },
+        address: { type: 'string', example: 'Av. Principal 123' },
+        phone: { type: 'string', example: '+51999999999' },
+        email: { type: 'string', example: 'juan.perez@example.com' },
+        emergencyContact: { type: 'string', example: 'María Pérez' },
+        emergencyPhone: { type: 'string', example: '+51999999999' },
+        healthInsurance: { type: 'string', example: 'Seguro Salud' },
+        maritalStatus: { type: 'string', example: 'Soltero' },
+        occupation: { type: 'string', example: 'Ingeniero' },
+        workplace: {
+          type: 'string',
+          example: 'Empresa XYZ, Av. Industrial 456',
+        },
+        bloodType: { type: 'string', example: 'O+' },
+        primaryDoctor: {
+          type: 'string',
+          example: 'Dr. Juan Pérez, +51999999999',
+        },
+        language: { type: 'string', example: 'Español' },
+        notes: {
+          type: 'string',
+          example: 'Paciente con antecedentes de alergias severas',
+        },
+        patientPhoto: { type: 'string', example: 'data:image/png;base64,...' },
         image: {
           type: 'string',
           format: 'binary',
-          description: 'Archivo de imagen a subir',
+          description: 'Imagen del paciente (opcional)',
         },
       },
     },
   })
-  @ApiCreatedResponse({
-    description: 'Imagen subida exitosamente',
-    schema: {
-      type: 'object',
-      properties: {
-        statusCode: { type: 'number' },
-        message: { type: 'string' },
-        data: { type: 'string' },
-      },
-    },
-  })
-  @Post('upload/image')
   @UseInterceptors(FileInterceptor('image'))
-  async uploadImage(
+  async createWithImage(
+    @Body() createPatientDto: CreatePatientDto,
     @UploadedFile() image: Express.Multer.File,
-  ): Promise<HttpResponse<string>> {
-    return this.pacientService.uploadImage(image);
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Patient>> {
+    return this.pacientService.createPatientWithImage(
+      createPatientDto,
+      image,
+      user,
+    );
   }
 }

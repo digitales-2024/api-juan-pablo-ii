@@ -29,9 +29,6 @@ export class Patient {
   email?: string;
 
   @ApiProperty()
-  registrationDate: Date;
-
-  @ApiProperty()
   emergencyContact?: string;
 
   @ApiProperty()
