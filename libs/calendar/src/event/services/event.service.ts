@@ -1,18 +1,16 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { CreateEventDto, UpdateEventDto, DeleteEventsDto } from '../dto';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserData } from '@login/login/interfaces';
 import { Event } from '../entities/event.entity';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { EventRepository } from '../repositories/event.repository';
-import { BaseErrorHandler } from 'src/common/error-handlers/event-error.handler';
 import {
   CreateEventUseCase,
-  UpdateEventUseCase,
-  DeleteEventsUseCase,
-  ReactivateEventsUseCase,
+ 
 } from '../use-cases';
 import { eventErrorMessages } from '../errors/errors-event';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
+import { CreateEventDto } from '../dto/create-event.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para eventos del calendario.
