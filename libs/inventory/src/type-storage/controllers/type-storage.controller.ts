@@ -50,7 +50,7 @@ export class TypeStorageController {
    */
   @Post()
   @ApiOperation({ summary: 'Crear nuevo tipo de almacenamiento' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Tipo de almacenamiento creado exitosamente',
     type: TypeStorage,

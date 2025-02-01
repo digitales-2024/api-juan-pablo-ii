@@ -24,7 +24,10 @@ import {
   UpdateIncomingDto,
   DeleteIncomingDto,
 } from '../dto';
-import { Incoming } from '../entities/incoming.entity';
+import {
+  Incoming,
+  IncomingCreateResponseData,
+} from '../entities/incoming.entity';
 import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
@@ -161,7 +164,7 @@ export class IncomingController {
   @ApiOkResponse({
     status: 201,
     description: 'Ingreso a almacen creado exitosamente',
-    type: Incoming,
+    type: IncomingCreateResponseData,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o ingreso ya existe',
@@ -169,7 +172,7 @@ export class IncomingController {
   createIncoming(
     @Body() createIncomingDtoStorage: CreateIncomingDtoStorage,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<string>> {
+  ): Promise<BaseApiResponse<IncomingCreateResponseData>> {
     return this.incomingService.createIncoming(createIncomingDtoStorage, user);
   }
 }

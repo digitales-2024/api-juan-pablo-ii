@@ -1,6 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { IncomingRepository } from '../repositories/incoming.repository';
-import { Incoming } from '../entities/incoming.entity';
+import {
+  Incoming,
+  IncomingCreateResponseData,
+} from '../entities/incoming.entity';
 import { CreateIncomingDto } from '../dto/create-incoming.dto';
 import { UpdateIncomingDto } from '../dto/update-incoming.dto';
 import { UserData } from '@login/login/interfaces';
@@ -181,7 +184,7 @@ export class IncomingService {
   async createIncoming(
     createIncomingDtoStorage: CreateIncomingDtoStorage,
     user: UserData,
-  ): Promise<BaseApiResponse<string>> {
+  ): Promise<BaseApiResponse<IncomingCreateResponseData>> {
     try {
       // Extraer los datos necesarios del DTO
       const { movement, state, name, storageId, date } =
@@ -250,10 +253,15 @@ export class IncomingService {
           console.log(`Movimiento creado con ID: ${idStock}`);
         }),
       );
+
+      const data: IncomingCreateResponseData = {
+        incomingId,
+        movementTypeId,
+      };
       return {
         success: true, // Código de estado HTTP 201
         message: 'Ingreso creado exitosamente',
-        data: `${incomingId} -  ${movementTypeId}} `, // El ID del nuevo ingreso
+        data, // El ID del nuevo ingreso y el tipo de movimiento
       };
       //
       //

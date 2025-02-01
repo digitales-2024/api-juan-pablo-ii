@@ -1,6 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
-import { Outgoing } from '../entities/outgoing.entity';
+import {
+  Outgoing,
+  OutgoingCreateResponseData,
+} from '../entities/outgoing.entity';
 import { CreateOutgoingDto } from '../dto/create-outgoing.dto';
 import { UpdateOutgoingDto } from '../dto/update-outgoing.dto';
 import { UserData } from '@login/login/interfaces';
@@ -187,7 +190,7 @@ export class OutgoingService {
   async createOutgoing(
     createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     user: UserData,
-  ): Promise<BaseApiResponse<string>> {
+  ): Promise<BaseApiResponse<OutgoingCreateResponseData>> {
     try {
       // Extraer los datos necesarios del DTO
       const { movement, state, name, storageId, date } =
@@ -256,10 +259,14 @@ export class OutgoingService {
           console.log(`Movimiento creado con ID: ${idStock}`);
         }),
       );
+      const data = {
+        outgoingId,
+        movementTypeId,
+      };
       return {
         success: true, // Código de estado HTTP 201
         message: 'Salida creada exitosamente',
-        data: `${outgoingId} -  ${movementTypeId}} `, // El ID del nuevo ingreso
+        data, // El ID del nuevo ingreso
       };
       //
       //

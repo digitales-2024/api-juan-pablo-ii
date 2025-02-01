@@ -1,6 +1,11 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { StockService } from '../services/stock.service';
-import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { StockByStorage } from '../entities/stock.entity';
 
 @ApiTags('Stock')
@@ -19,6 +24,11 @@ export class StockController {
   @ApiOperation({
     summary: 'Obtener stock de un producto por ID de todos los alamacenes',
   })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Stock de un producto en todos los almacenes',
+    type: [StockByStorage],
+  })
   @ApiParam({ name: 'id', description: 'ID del producto' })
   async getStockByProduct(@Param('id') id: string): Promise<StockByStorage[]> {
     return this.stockService.getStockByProduct(id);
@@ -33,6 +43,11 @@ export class StockController {
    */
   @Get('storages')
   @ApiOperation({ summary: 'Obtener stock de todos los almacenes' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Stock de todos los productos en todos los almacenes',
+    type: [StockByStorage],
+  })
   async getStockForAllStorages(): Promise<StockByStorage[]> {
     return this.stockService.getStockForAllStorages();
   }
@@ -47,6 +62,11 @@ export class StockController {
    */
   @Get('storage/:id')
   @ApiOperation({ summary: 'Obtener stock por almacén por ID' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Stock de todos los productos en un almacén',
+    type: [StockByStorage],
+  })
   @ApiParam({ name: 'id', description: 'ID del almacén' })
   async getStockByStorage(@Param('id') id: string): Promise<StockByStorage[]> {
     return this.stockService.getStockByStorage(id);
@@ -55,6 +75,11 @@ export class StockController {
   // Endpoint para obtener el stock de producto en un almacén específico
   @Get('storage/:storageId/product/:productId')
   @ApiOperation({ summary: 'Obtener stock por almacén y producto' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Stock de un producto en un almacén',
+    type: [StockByStorage],
+  })
   @ApiParam({ name: 'storageId', description: 'ID del almacén' })
   @ApiParam({ name: 'productId', description: 'ID del producto' })
   async getStockByStorageProduct(

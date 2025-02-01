@@ -4,10 +4,12 @@ import { UpdateStockUseCase } from '../use-cases/update-storage.use-case';
 import { CreateStockUseCase } from '../use-cases/create-storage.use-case';
 import { UserData } from '@login/login/interfaces';
 import { StockByStorage } from '../entities/stock.entity';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 
 @Injectable()
 export class StockService {
   private readonly logger = new Logger(StockService.name);
+  private readonly errorHandler: BaseErrorHandler;
 
   constructor(
     private readonly stockRepository: StockRepository,
@@ -22,9 +24,15 @@ export class StockService {
         undefined,
         productId,
       );
+      if (byStock.length === 0) {
+        throw new Error(
+          `No se encontraró stock para el producto: ${productId} en ningun almacen`,
+        );
+      }
       return byStock;
     } catch (error) {
       this.logger.error(`Error fetching stock for product ${productId}`, error);
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
@@ -34,9 +42,15 @@ export class StockService {
     try {
       const byStock =
         await this.stockRepository.getStockByIdStorageByIdProduct(storageId);
+      if (byStock.length === 0) {
+        throw new Error(
+          `No se encontro stock de productos para el almacen: ${storageId}`,
+        );
+      }
       return byStock;
     } catch (error) {
       this.logger.error(`Error fetching stock for storage ${storageId}`, error);
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
@@ -46,9 +60,13 @@ export class StockService {
     try {
       const byStock =
         await this.stockRepository.getStockByIdStorageByIdProduct();
+      if (byStock.length === 0) {
+        throw new Error('No se encontro stock de productos en los almacenes');
+      }
       return byStock;
     } catch (error) {
       this.logger.error('Error fetching stock for all storages', error);
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
@@ -63,12 +81,18 @@ export class StockService {
         storageId,
         productId,
       );
+      if (byStock.length === 0) {
+        throw new Error(
+          `No se encontro stock para el producto: ${productId} en el almacen: ${storageId}`,
+        );
+      }
       return byStock;
     } catch (error) {
       this.logger.error(
         `Error fetching stock for storage ${storageId} and product ${productId}`,
         error,
       );
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
@@ -137,6 +161,7 @@ export class StockService {
         `Error updating stock for product ${productId} in storage ${storageId}`,
         error,
       );
+      this.errorHandler.handleError(error, 'updating');
       throw error;
     }
   }
@@ -207,6 +232,7 @@ export class StockService {
         `Error updating stock for product ${productId} in storage ${storageId}`,
         error,
       );
+      this.errorHandler.handleError(error, 'updating');
       throw error;
     }
   }

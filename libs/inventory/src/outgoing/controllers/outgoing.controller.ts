@@ -24,7 +24,10 @@ import {
   UpdateOutgoingDto,
   DeleteOutgoingDto,
 } from '../dto';
-import { Outgoing } from '../entities/outgoing.entity';
+import {
+  Outgoing,
+  OutgoingCreateResponseData,
+} from '../entities/outgoing.entity';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
@@ -161,7 +164,7 @@ export class OutgoingController {
   @ApiOkResponse({
     status: 201,
     description: 'Salida de almacen creada exitosamente',
-    type: Outgoing,
+    type: OutgoingCreateResponseData,
   })
   @ApiBadRequestResponse({
     description: 'Datos de salida inválidos o salida ya existe',
@@ -169,7 +172,7 @@ export class OutgoingController {
   createOutgoing(
     @Body() createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<string>> {
+  ): Promise<BaseApiResponse<OutgoingCreateResponseData>> {
     return this.outgoingService.createOutgoing(createOutgoingDtoStorage, user);
   }
 }
