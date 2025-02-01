@@ -27,29 +27,6 @@ export class Stock {
 //   stock: any,
 // }
 
-export class StockByStorage {
-  @ApiProperty()
-  idStorage: string;
-
-  @ApiProperty()
-  name: string;
-
-  @ApiProperty()
-  location?: string;
-
-  @ApiProperty()
-  address: string;
-
-  @ApiProperty()
-  staff: string;
-
-  @ApiProperty()
-  description: string;
-
-  @ApiProperty()
-  stock: ProductStockResponse[]; //Stock[]
-}
-
 // {
 //   "idProduct": "18abef76-b67e-44eb-afdc-3bb8f573f17c",
 //   "name": "Paracetamol 500mg",
@@ -78,4 +55,27 @@ export class ProductStockResponse {
 
   @ApiProperty()
   totalPrice: number;
+}
+
+export class StockByStorage {
+  @ApiProperty()
+  idStorage: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  location?: string;
+
+  @ApiProperty()
+  address: string;
+
+  @ApiProperty()
+  staff: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty({ type: [ProductStockResponse] })
+  stock: ProductStockResponse[];
 }
