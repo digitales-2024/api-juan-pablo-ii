@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { StorageRepository } from '../repositories/storage.repository';
-import { Storage } from '../entities/storage.entity';
+import { DetailedStorage, Storage } from '../entities/storage.entity';
 import { CreateStorageDto } from '../dto/create-storage.dto';
 import { UpdateStorageDto } from '../dto/update-storage.dto';
 import { UserData } from '@login/login/interfaces';
@@ -110,6 +110,23 @@ export class StorageService {
     }
   }
 
+  async finOneWithRelations(id: string): Promise<DetailedStorage> {
+    try {
+      const storage = await this.storageRepository.findOneWithRelations(id, {
+        include: {
+          typeStorage: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+      return this.storageRepository.mapToEntity(storage);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   /**
    * Obtiene todos los almacenes
    * @returns Una promesa que resuelve con una lista de todos los almacenes
@@ -118,6 +135,45 @@ export class StorageService {
   async findAll(): Promise<Storage[]> {
     try {
       return this.storageRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los elementos de almacenamiento activos.
+   *
+   * @returns {Promise<Storage[]>} Una promesa que resuelve con una lista de elementos de almacenamiento activos.
+   * @throws {Error} Si ocurre un error al obtener los elementos de almacenamiento activos.
+   */
+  async findAllActive(): Promise<Storage[]> {
+    try {
+      return this.storageRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los almacenamientos con sus relaciones detalladas.
+   *
+   * @returns {Promise<DetailedStorage[]>} Una promesa que resuelve con una lista de almacenamientos detallados.
+   * @throws {Error} Si ocurre un error al obtener los almacenamientos.
+   */
+  async findAllWithRelations(): Promise<DetailedStorage[]> {
+    try {
+      const storages = await this.storageRepository.findManyWithRelations({
+        include: {
+          TypeStorage: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+      return storages.map((storage) =>
+        this.storageRepository.mapToEntity(storage),
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

@@ -15,4 +15,7 @@ export class TypeStorage {
 
   @ApiProperty()
   staffId?: string;
+
+  @ApiProperty()
+  isActive: boolean;
 }

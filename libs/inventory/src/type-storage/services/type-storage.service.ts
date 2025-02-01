@@ -110,9 +110,14 @@ export class TypeStorageService {
    * @returns El tipo de almacenamiento encontrado
    * @throws {NotFoundException} Si el tipo de almacenamiento no existe
    */
-  async findOne(id: string): Promise<TypeStorage> {
+  async findOne(id: string): Promise<BaseApiResponse<TypeStorage>> {
     try {
-      return this.findById(id);
+      const typeStorage = await this.findById(id);
+      return {
+        success: true,
+        data: typeStorage,
+        message: 'Tipo de almacenamiento encontrado',
+      };
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

@@ -53,7 +53,7 @@ export class TypeStorageController {
   @ApiOkResponse({
     status: 201,
     description: 'Tipo de almacenamiento creado exitosamente',
-    type: TypeStorage,
+    type: BaseApiResponse<TypeStorage>,
   })
   @ApiBadRequestResponse({
     description:
@@ -74,12 +74,12 @@ export class TypeStorageController {
   @ApiParam({ name: 'id', description: 'ID del tipo de almacenamiento' })
   @ApiOkResponse({
     description: 'Tipo de almacenamiento encontrado',
-    type: TypeStorage,
+    type: BaseApiResponse<TypeStorage>,
   })
   @ApiNotFoundResponse({
     description: 'Tipo de almacenamiento no encontrado',
   })
-  findOne(@Param('id') id: string): Promise<TypeStorage> {
+  findOne(@Param('id') id: string): Promise<BaseApiResponse<TypeStorage>> {
     return this.typeStorageService.findOne(id);
   }
 
@@ -105,7 +105,7 @@ export class TypeStorageController {
   @ApiResponse({
     status: 200,
     description: 'Tipo de almacenamiento actualizado exitosamente',
-    type: TypeStorage,
+    type: BaseApiResponse<TypeStorage>,
   })
   update(
     @Param('id') id: string,
@@ -123,7 +123,7 @@ export class TypeStorageController {
   @ApiResponse({
     status: 200,
     description: 'Tipos de almacenamiento desactivados exitosamente',
-    type: [TypeStorage],
+    type: BaseApiResponse<TypeStorage[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o tipos de almacenamiento no existen',
@@ -142,7 +142,7 @@ export class TypeStorageController {
   @ApiOperation({ summary: 'Reactivar múltiples tipos de almacenamiento' })
   @ApiOkResponse({
     description: 'Tipos de almacenamiento reactivados exitosamente',
-    type: [TypeStorage],
+    type: [BaseApiResponse<TypeStorage[]>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o tipos de almacenamiento no existen',
