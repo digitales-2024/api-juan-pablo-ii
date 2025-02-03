@@ -1,6 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { TypeStorageRepository } from '../repositories/type-storage.repository';
-import { TypeStorage } from '../entities/type-storage.entity';
+import {
+  DetailedTypeStorage,
+  TypeStorage,
+} from '../entities/type-storage.entity';
 import { CreateTypeStorageDto } from '../dto/create-type-storage.dto';
 import { UpdateTypeStorageDto } from '../dto/update-type-storage.dto';
 import { UserData } from '@login/login/interfaces';
@@ -131,6 +134,39 @@ export class TypeStorageService {
   async findAll(): Promise<TypeStorage[]> {
     try {
       return this.typeStorageRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findAllActive(): Promise<TypeStorage[]> {
+    try {
+      return this.typeStorageRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findAllWithRelations(): Promise<DetailedTypeStorage[]> {
+    try {
+      const storages = await this.typeStorageRepository.findMany();
+      // const storages = await this.typeStorageRepository.findManyWithRelations({
+      //   include: {
+      //     Staff: {
+      //       select: {
+      //         name: true,
+      //       },
+      //     },
+      //     Branch: {
+      //       select: {
+      //         name: true,
+      //       },
+      //     },
+      //   },
+      // });
+      return storages.map((storage) =>
+        this.typeStorageRepository.mapToEntity(storage),
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

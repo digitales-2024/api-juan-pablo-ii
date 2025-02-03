@@ -63,6 +63,34 @@ export class BranchController {
   }
 
   /**
+   * Obtiene todas las sucursales
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todas las sucursales' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todas las sucursales',
+    type: [Branch],
+  })
+  findAll(): Promise<Branch[]> {
+    return this.branchService.findAll();
+  }
+
+  /**
+   * Obtiene todas las sucursales
+   */
+  @Get('/active')
+  @ApiOperation({ summary: 'Obtener todas las sucursales activas' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todas las sucursales activas',
+    type: [Branch],
+  })
+  findAllActive(): Promise<Branch[]> {
+    return this.branchService.findAllActive();
+  }
+
+  /**
    * Obtiene un servicio por su ID
    */
   @ApiOperation({ summary: 'Obtener sucursal por ID' })
@@ -77,20 +105,6 @@ export class BranchController {
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Branch> {
     return this.branchService.findOne(id);
-  }
-
-  /**
-   * Obtiene todas las sucursales
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todas las sucursales' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todas las sucursales',
-    type: [Branch],
-  })
-  findAll(): Promise<Branch[]> {
-    return this.branchService.findAll();
   }
 
   /**

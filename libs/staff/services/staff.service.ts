@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
@@ -98,6 +94,18 @@ export class StaffService {
   async findAll(): Promise<Staff[]> {
     try {
       return await this.staffRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los registros de personal activo
+   * @returns Lista de todo el personal
+   */
+  async findAllActive(): Promise<Staff[]> {
+    try {
+      return await this.staffRepository.findManyActive();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

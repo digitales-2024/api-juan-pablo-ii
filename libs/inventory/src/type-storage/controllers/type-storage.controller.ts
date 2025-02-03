@@ -25,7 +25,10 @@ import {
   UpdateTypeStorageDto,
   DeleteTypeStorageDto,
 } from '../dto';
-import { TypeStorage } from '../entities/type-storage.entity';
+import {
+  DetailedTypeStorage,
+  TypeStorage,
+} from '../entities/type-storage.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
@@ -67,6 +70,46 @@ export class TypeStorageController {
   }
 
   /**
+   * Obtiene todos los tipos de almacenamiento
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los tipos de almacenamiento' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los tipos de almacenamiento',
+    type: [TypeStorage],
+  })
+  findAll(): Promise<TypeStorage[]> {
+    return this.typeStorageService.findAll();
+  }
+
+  @Get('/active')
+  @ApiOperation({
+    summary: 'Obtener todos los tipos de almacenamiento activos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los tipos de almacenamiento activos',
+    type: [TypeStorage],
+  })
+  findAllActive(): Promise<TypeStorage[]> {
+    return this.typeStorageService.findAllActive();
+  }
+
+  @Get('/detailed')
+  @ApiOperation({
+    summary: 'Obtener todos los tipos de almacenamiento activos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los tipos de almacenamiento activos',
+    type: [DetailedTypeStorage],
+  })
+  findAllDetailed(): Promise<DetailedTypeStorage[]> {
+    return this.typeStorageService.findAllWithRelations();
+  }
+
+  /**
    * Obtiene un tipo de almacenamiento por su ID
    */
   @Get(':id')
@@ -81,20 +124,6 @@ export class TypeStorageController {
   })
   findOne(@Param('id') id: string): Promise<BaseApiResponse<TypeStorage>> {
     return this.typeStorageService.findOne(id);
-  }
-
-  /**
-   * Obtiene todos los tipos de almacenamiento
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los tipos de almacenamiento' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todos los tipos de almacenamiento',
-    type: [TypeStorage],
-  })
-  findAll(): Promise<TypeStorage[]> {
-    return this.typeStorageService.findAll();
   }
 
   /**
