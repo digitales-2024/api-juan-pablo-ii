@@ -491,7 +491,11 @@ CREATE TABLE "Event" (
     "end" TIMESTAMP(3) NOT NULL,
     "color" TEXT,
     "status" "EventStatus",
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "isCancelled" BOOLEAN NOT NULL DEFAULT false,
+    "isBaseEvent" BOOLEAN NOT NULL DEFAULT true,
+    "recurrence" JSONB,
+    "exceptionDates" TIMESTAMP(3)[],
     "cancellationReason" TEXT,
     "staffScheduleId" TEXT,
     "staffId" TEXT NOT NULL,
@@ -660,6 +664,15 @@ CREATE UNIQUE INDEX "StaffType_id_key" ON "StaffType"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Staff_dni_key" ON "Staff"("dni");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Categoria_name_key" ON "Categoria"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TipoProducto_name_key" ON "TipoProducto"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Producto_name_key" ON "Producto"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Stock_storageId_productId_key" ON "Stock"("storageId", "productId");

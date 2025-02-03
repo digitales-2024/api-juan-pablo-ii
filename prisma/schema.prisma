@@ -256,7 +256,7 @@ model Staff {
 // Tabla Categoria
 model Categoria {
   id          String  @id @default(uuid())
-  name        String  @unique// Nombre de la categoría (ej. 'Medicamentos', 'Cosméticos', 'Materiales', etc.)
+  name        String  @unique // Nombre de la categoría (ej. 'Medicamentos', 'Cosméticos', 'Materiales', etc.)
   description String? // Descripción opcional que proporciona más detalles sobre la categoría
 
   isActive  Boolean    @default(true) // Campo para controlar si la categoría está activa o no
@@ -268,7 +268,7 @@ model Categoria {
 // Tabla TipoProducto
 model TipoProducto {
   id          String  @id @default(uuid())
-  name        String  @unique// Nombre del tipo de producto (subcategoría), como 'Antibióticos', 'Bloqueadores solares', 'Gasas', etc.
+  name        String  @unique // Nombre del tipo de producto (subcategoría), como 'Antibióticos', 'Bloqueadores solares', 'Gasas', etc.
   description String? // Descripción opcional del tipo de producto (detalles adicionales o especificaciones)
 
   isActive  Boolean    @default(true) // Campo para controlar si el tipo de producto está activo o no
@@ -288,7 +288,7 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  name                      String @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
+  name                      String  @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
   precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
@@ -497,13 +497,13 @@ model Prescription {
   purchaseOrderId  String? // referecia a orden de compra (optional)
 }
 
- enum AppointmentStatus {
+enum AppointmentStatus {
   PENDING
 
   //TODO: ver que estados tendran las citas
 }
-  // Audit fields
- 
+
+// Audit fields
 
 enum DayOfWeek {
   MONDAY
@@ -522,8 +522,8 @@ enum AppointmentType {
 
 model Appointment {
   id        String            @id @default(uuid())
-  eventId   String?          @unique
-  event     Event?           @relation(name: "AppointmentToEvent", fields: [eventId], references: [id])
+  eventId   String?           @unique
+  event     Event?            @relation(name: "AppointmentToEvent", fields: [eventId], references: [id])
   staffId   String
   serviceId String
   branchId  String
@@ -535,10 +535,10 @@ model Appointment {
   notes     String?
 
   // Relaciones
-  staff    Staff    @relation(fields: [staffId], references: [id])
-  service  Service  @relation(fields: [serviceId], references: [id])
-  branch   Branch   @relation(fields: [branchId], references: [id])
-  patient  Patient  @relation(fields: [patientId], references: [id])
+  staff   Staff   @relation(fields: [staffId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
 
   // Campos de auditoría
   createdAt DateTime @default(now())
@@ -570,8 +570,11 @@ model Event {
   end                DateTime
   color              String? // Color dinámico basado en el estado
   status             EventStatus? // Estado del evento (refleja el estado de la cita)
-  isActive Boolean @default(true)
+  isActive           Boolean        @default(true)
   isCancelled        Boolean        @default(false)
+  isBaseEvent        Boolean        @default(true)
+  recurrence         Json? // { frequency: 'WEEKLY', interval: 1, until: Date }
+  exceptionDates     DateTime[] // Fechas excluidas
   cancellationReason String?
   staffScheduleId    String?
   staffSchedule      StaffSchedule? @relation(fields: [staffScheduleId], references: [id])
@@ -617,7 +620,7 @@ model StaffSchedule {
   startTime  String // Formato "HH:mm" (08:00)
   endTime    String // Formato "HH:mm" (17:00)
   daysOfWeek DayOfWeek[] // Días de aplicación
-  recurrence Json // { frequency: "WEEKLY", interval: 1, until: "2024-12-31" }
+  recurrence Json // { frequency: "WEEKLY", interval: 1, until: "2024-12-31", count: 10 }
   exceptions DateTime[] // Fechas excluidas
   isActive   Boolean     @default(true)
   events     Event[] // Eventos generados
