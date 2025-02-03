@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
 import { Event, EventStatus } from '../entities/event.entity';
+import { EventType } from '../entities/event-type.enum';
+import { CreateEventDto } from '../dto/create-event.dto';
 
 @Injectable()
 export class EventRepository extends BaseRepository<Event> {
@@ -53,4 +55,48 @@ export class EventRepository extends BaseRepository<Event> {
       return createdEvents;
     });
   }
+
+  async findEventsByType(staffId: string, type: EventType, start: Date, end: Date): Promise<Event[]> {
+    return this.findMany({
+      where: {
+        staffId,
+        type,
+        start: { gte: start },
+        end: { lte: end }
+      }
+    });
+  }
+
+  /**
+   * Crea múltiples eventos en la base de datos de manera transaccional
+   * @param events - Array de eventos a crear
+   * @returns Array con los eventos creados
+   */
+  async createEvents(events: Event[]): Promise<Event[]> {
+    return this.prisma.$transaction(async (tx) => {
+      const createdEvents = [];
+      for (const eventData of events) {
+        createdEvents.push(
+          await tx.event.create({
+            data: eventData,
+            select: {
+              id: true,
+              title: true,
+              type: true,
+              start: true,
+              end: true,
+              staffId: true,
+              branchId: true,
+              status: true,
+              color: true,
+              staffScheduleId: true,
+              isActive: true
+            }
+          })
+        );
+      }
+      return createdEvents;
+    });
+  }
+  
 }

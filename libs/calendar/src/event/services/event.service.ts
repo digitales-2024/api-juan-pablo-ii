@@ -8,7 +8,7 @@ import {
   DeleteEventsUseCase,
   ReactivateEventsUseCase,
   UpdateEventUseCase,
- 
+
 } from '../use-cases';
 import { eventErrorMessages } from '../errors/errors-event';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
@@ -16,6 +16,8 @@ import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handle
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { DeleteEventsDto } from '../dto/delete-events.dto';
+import { EventType } from '../entities/event-type.enum';
+import { CreateRecurrentEventsUseCase } from '../use-cases/create-recurrent-events.use-case';
 
 /**
  * Servicio que implementa la lógica de negocio para eventos del calendario.
@@ -33,6 +35,7 @@ export class EventService {
     private readonly updateEventUseCase: UpdateEventUseCase,
     private readonly deleteEventsUseCase: DeleteEventsUseCase,
     private readonly reactivateEventsUseCase: ReactivateEventsUseCase,
+    private readonly createRecurrentEventsUseCase: CreateRecurrentEventsUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -154,5 +157,30 @@ export class EventService {
     }
   }
 
- 
+  async createRecurrentEvents(
+    staffScheduleId: string,
+    user: UserData,
+  ): Promise<BaseApiResponse<Event[]>> {
+    try {
+      this.logger.debug(`Iniciando la creación de eventos recurrentes con staffScheduleId: ${staffScheduleId} y usuario: ${JSON.stringify(user)}`);
+      const response = await this.createRecurrentEventsUseCase.execute(staffScheduleId, user);
+      this.logger.debug(`Eventos recurrentes creados exitosamente: ${JSON.stringify(response)}`);
+      return response;
+    } catch (error) {
+      this.logger.error('Error generando eventos recurrentes', error.stack);
+      throw error;
+    }
+  }
+
+  async findEventsByType(staffId: string, type: EventType, start: Date, end: Date): Promise<Event[]> {
+    try {
+      return this.eventRepository.findEventsByType(staffId, type, start, end);
+
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+
+
 }

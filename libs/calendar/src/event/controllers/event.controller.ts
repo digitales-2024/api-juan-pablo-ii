@@ -25,6 +25,10 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { DeleteEventsDto } from '../dto/delete-events.dto';
+import { EventResponseDto } from '../dto/event-response.dto';
+import { plainToClass } from 'class-transformer';
+import { ClassSerializerInterceptor } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common';
 
 /**
  * Controlador REST para gestionar eventos del calendario.
@@ -40,6 +44,7 @@ import { DeleteEventsDto } from '../dto/delete-events.dto';
 })
 @Controller({ path: 'events', version: '1' })
 @Auth()
+@UseInterceptors(ClassSerializerInterceptor)
 export class EventController {
   constructor(private readonly eventService: EventService) { }
 
@@ -75,8 +80,11 @@ export class EventController {
     description: 'Evento no encontrado',
   })
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Event> {
-    return this.eventService.findOne(id);
+  async findOne(@Param('id') id: string): Promise<EventResponseDto> {
+    const event = await this.eventService.findOne(id);
+    return plainToClass(EventResponseDto, event, { 
+      excludeExtraneousValues: false 
+    });
   }
 
   /**
@@ -88,8 +96,13 @@ export class EventController {
     description: 'Lista de todos los eventos',
     type: [Event],
   })
-  findAll(): Promise<Event[]> {
-    return this.eventService.findAll();
+  async findAll(): Promise<EventResponseDto[]> {
+    const events = await this.eventService.findAll();
+    return events.map(event => 
+      plainToClass(EventResponseDto, event, { 
+        excludeExtraneousValues: false 
+      })
+    );
   }
 
   /**
@@ -132,23 +145,31 @@ export class EventController {
     return this.eventService.deleteMany(deleteEventsDto, user);
   }
 
-    /**
-     * Reactiva múltiples eventos.
-     */
-    @Patch('reactivate/all')
-    @ApiOperation({ summary: 'Reactivar múltiples eventos' })
-    @ApiOkResponse({
-      description: 'Eventos reactivados exitosamente',
-      type: [Event],
-    })
-    @ApiBadRequestResponse({
-      description: 'IDs inválidos o eventos no existen',
-    })
-    @Patch('reactivate/all')
-    reactivateAll(
-      @Body() deleteEventsDto: DeleteEventsDto,
-      @GetUser() user: UserData,
-    ): Promise<BaseApiResponse<Event[]>> {
-      return this.eventService.reactivateMany(deleteEventsDto.ids, user);
-    }
+  /**
+   * Reactiva múltiples eventos.
+   */
+  @Patch('reactivate/all')
+  @ApiOperation({ summary: 'Reactivar múltiples eventos' })
+  @ApiOkResponse({
+    description: 'Eventos reactivados exitosamente',
+    type: [Event],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o eventos no existen',
+  })
+  @Patch('reactivate/all')
+  reactivateAll(
+    @Body() deleteEventsDto: DeleteEventsDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Event[]>> {
+    return this.eventService.reactivateMany(deleteEventsDto.ids, user);
+  }
+
+  @Post(':id/generate-events')
+  async generateEvents(
+    @Param('id') staffScheduleId: string,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Event[]>> {
+    return this.eventService.createRecurrentEvents(staffScheduleId, user);
+  }
 }
