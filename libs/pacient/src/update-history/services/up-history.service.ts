@@ -1,7 +1,13 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { UpdateHistoryRepository } from '../repositories/up-history.repository';
 import { UpdateHistory } from '../entities/up-history.entity';
-import { UserData } from '@login/login/interfaces';
+import { HttpResponse, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { upHistoryErrorMessages } from '../errors/errors-up-history';
@@ -17,6 +23,8 @@ import {
   ReactivateUpdateHistoryUseCase,
 } from '../use-cases';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { CloudflareService } from 'src/cloudflare/cloudflare.service';
+import { CreateImagePatientData } from '../repositories/up-history.repository';
 
 // Constantes para nombres de tablas
 const TABLE_NAMES = {
@@ -37,6 +45,7 @@ export class UpdateHistoryService {
     private readonly updateUpdateHistoryUseCase: UpdateUpdateHistoryUseCase,
     private readonly deleteUpdateHistoriesUseCase: DeleteUpdateHistoriesUseCase,
     private readonly reactivateUpdateHistoryUseCase: ReactivateUpdateHistoryUseCase,
+    private readonly cloudflareService: CloudflareService,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -211,6 +220,284 @@ export class UpdateHistoryService {
       return await this.reactivateUpdateHistoryUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
+      throw error;
+    }
+  }
+
+  /**
+   * Sube una imagen y devuelve la URL
+   * @param image - Imagen a subir
+   * @returns Respuesta HTTP con la URL de la imagen subida
+   * @throws {BadRequestException} Si no se proporciona una imagen, o si se proporciona un array de archivos
+   * @throws {InternalServerErrorException} Si ocurre un error al subir la imagen
+   */
+  async uploadImage(image: Express.Multer.File): Promise<HttpResponse<string>> {
+    if (!image) {
+      throw new BadRequestException('Image not provided');
+    }
+
+    if (Array.isArray(image)) {
+      throw new BadRequestException('Only one file can be uploaded at a time');
+    }
+
+    const validMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (!validMimeTypes.includes(image.mimetype)) {
+      throw new BadRequestException(
+        'The file must be an image in JPEG, PNG, GIF, or WEBP format',
+      );
+    }
+
+    try {
+      const imageUrl = await this.cloudflareService.uploadImage(image);
+      return {
+        statusCode: HttpStatus.CREATED,
+        message: 'Image uploaded successfully',
+        data: imageUrl,
+      };
+    } catch (error) {
+      this.logger.error(`Error uploading image: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Error subiendo la imagen');
+    }
+  }
+  /**
+   * Actualizar imagen
+   * @param image Imagen a actualizar
+   * @param existingFileName Nombre del archivo existente
+   * @returns URL de la imagen actualizada
+   */
+  async updateImage(
+    image: Express.Multer.File,
+    existingFileName: string,
+  ): Promise<HttpResponse<string>> {
+    if (!image) {
+      throw new BadRequestException('Image not provided');
+    }
+
+    if (Array.isArray(image)) {
+      throw new BadRequestException('Only one file can be uploaded at a time');
+    }
+
+    const validMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (!validMimeTypes.includes(image.mimetype)) {
+      throw new BadRequestException(
+        'The file must be an image in JPEG, PNG, GIF, or WEBP format',
+      );
+    }
+
+    try {
+      const imageUrl = await this.cloudflareService.updateImage(
+        image,
+        existingFileName,
+      );
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Image updated successfully',
+        data: imageUrl,
+      };
+    } catch (error) {
+      this.logger.error(`Error updating image: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Error updating image');
+    }
+  }
+
+  /**
+   * Crea una nueva actualización de historia médica con imágenes
+   * @param createUpdateHistoryDto - DTO con los datos para crear la actualización
+   * @param images - Array de archivos de imágenes
+   * @param user - Datos del usuario que realiza la creación
+   */
+  async createWithImages(
+    createUpdateHistoryDto: CreateUpdateHistoryDto,
+    images: Express.Multer.File[],
+    user: UserData,
+  ): Promise<
+    BaseApiResponse<
+      UpdateHistory & { images: Record<string, { id: string; url: string }> }
+    >
+  > {
+    try {
+      const historyResponse = await this.create(createUpdateHistoryDto, user);
+
+      if (!images?.length) {
+        return {
+          ...historyResponse,
+          data: { ...historyResponse.data, images: {} },
+        };
+      }
+
+      const imagePromises = images.map(async (image) => {
+        try {
+          const imageResponse = await this.uploadImage(image);
+          const imageData: CreateImagePatientData = {
+            patientId: historyResponse.data.medicalHistoryId,
+            imageUrl: imageResponse.data,
+            updateHistoryId: historyResponse.data.id,
+            phothography: true,
+          };
+          await this.updateHistoryRepository.createImagePatient(imageData);
+        } catch (imageError) {
+          this.logger.error(`Error procesando imagen: ${imageError.message}`);
+        }
+      });
+
+      await Promise.all(imagePromises);
+
+      // Obtener las imágenes con sus IDs
+      const imagesData =
+        await this.updateHistoryRepository.findImagesByHistoryId(
+          historyResponse.data.id,
+        );
+
+      return {
+        ...historyResponse,
+        data: { ...historyResponse.data, images: imagesData },
+      };
+    } catch (error) {
+      this.errorHandler.handleError(error, 'creating');
+      throw error;
+    }
+  }
+
+  /**
+   * Actualiza una historia médica con sus imágenes
+   */
+  async updateWithImages(
+    id: string,
+    user: UserData,
+    updateUpdateHistoryDto: UpdateUpdateHistoryDto,
+    newImages?: Express.Multer.File[],
+    imageUpdates?: { imageId: string; file: Express.Multer.File }[],
+  ): Promise<
+    BaseApiResponse<
+      UpdateHistory & { images: Record<string, { id: string; url: string }> }
+    >
+  > {
+    try {
+      // Actualizamos la historia médica
+      const historyResponse = await this.update(
+        id,
+        updateUpdateHistoryDto,
+        user,
+      );
+
+      // Caso 1: Actualizar imágenes existentes
+      if (imageUpdates?.length) {
+        for (const update of imageUpdates) {
+          try {
+            // Obtenemos la imagen existente para obtener su URL
+            const existingImage =
+              await this.updateHistoryRepository.findImageById(update.imageId);
+            if (!existingImage) {
+              this.logger.warn(`Imagen con ID ${update.imageId} no encontrada`);
+              continue;
+            }
+
+            // Obtenemos el nombre del archivo de la URL existente
+            const existingFileName = existingImage.imageUrl.split('/').pop();
+
+            // Actualizamos la imagen en Cloudflare
+            const imageResponse = await this.updateImage(
+              update.file,
+              existingFileName,
+            );
+
+            // Actualizamos la URL en la base de datos
+            await this.updateHistoryRepository.updateImageUrl(
+              update.imageId,
+              imageResponse.data,
+            );
+          } catch (error) {
+            this.logger.error(
+              `Error actualizando imagen ${update.imageId}: ${error.message}`,
+            );
+          }
+        }
+      }
+
+      // Caso 2: Agregar nuevas imágenes
+      if (newImages?.length) {
+        const imagePromises = newImages.map(async (image) => {
+          try {
+            const imageResponse = await this.uploadImage(image);
+            const imageData: CreateImagePatientData = {
+              patientId: historyResponse.data.medicalHistoryId,
+              imageUrl: imageResponse.data,
+              updateHistoryId: historyResponse.data.id,
+              phothography: true,
+            };
+            await this.updateHistoryRepository.createImagePatient(imageData);
+          } catch (imageError) {
+            this.logger.error(
+              `Error procesando nueva imagen: ${imageError.message}`,
+            );
+          }
+        });
+
+        await Promise.all(imagePromises);
+      }
+
+      // Caso 3: Sin cambios en imágenes o después de procesar cambios
+      // Siempre obtenemos todas las imágenes actualizadas para incluirlas en la respuesta
+      const imagesData =
+        await this.updateHistoryRepository.findImagesByHistoryId(
+          historyResponse.data.id,
+        );
+
+      // Retornamos la respuesta con las imágenes actualizadas
+      return {
+        success: true,
+        message: 'Historia médica actualizada exitosamente',
+        data: {
+          ...historyResponse.data,
+          images: imagesData, // Incluye todas las imágenes, sean nuevas, actualizadas o sin cambios
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error en updateWithImages: ${error.message}`);
+      this.errorHandler.handleError(error, 'updating');
+      throw error;
+    }
+  }
+
+  /**
+   * Busca una actualización de historia médica por su ID incluyendo sus imágenes
+   */
+  async findOneWithImages(id: string): Promise<
+    BaseApiResponse<
+      UpdateHistory & {
+        images: Record<string, { id: string; url: string }>;
+      }
+    >
+  > {
+    try {
+      // Obtenemos la historia médica
+      const updateHistory = await this.findById(id);
+
+      // Obtenemos las imágenes asociadas
+      const imagesData =
+        await this.updateHistoryRepository.findImagesByHistoryId(id);
+
+      return {
+        success: true,
+        message: 'Historia médica encontrada exitosamente',
+        data: {
+          ...updateHistory,
+          images: imagesData,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error en findOneWithImages: ${error.message}`);
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }

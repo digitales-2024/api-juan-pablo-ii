@@ -5,6 +5,9 @@ export class UpdateHistory {
   id: string;
 
   @ApiProperty()
+  patientId: string;
+
+  @ApiProperty()
   serviceId: string;
 
   @ApiProperty()

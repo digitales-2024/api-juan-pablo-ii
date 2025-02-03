@@ -204,10 +204,10 @@ export class CreatePatientDto {
 
   @ApiProperty({
     description: 'Imagen del paciente para identificación visual',
-    example: 'data:image/png;base64,...',
+    example: null,
     required: false,
   })
   @IsString()
   @IsOptional()
-  patientPhoto?: string;
+  patientPhoto?: string = null;
 }

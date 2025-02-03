@@ -11,6 +11,15 @@ import { Transform } from 'class-transformer';
 
 export class CreateUpdateHistoryDto {
   @ApiProperty({
+    description: 'ID del paciente',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  patientId: string;
+
+  @ApiProperty({
     description: 'ID del servicio',
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: true,

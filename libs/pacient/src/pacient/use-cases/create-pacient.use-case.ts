@@ -39,7 +39,7 @@ export class CreatePatientUseCase {
         primaryDoctor: createPatientDto.primaryDoctor,
         language: createPatientDto.language,
         notes: createPatientDto.notes,
-        patientPhoto: createPatientDto.patientPhoto,
+        patientPhoto: null,
         isActive: true,
       });
 
