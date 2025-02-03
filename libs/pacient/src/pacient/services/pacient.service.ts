@@ -4,7 +4,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { PacientRepository } from '../repositories/pacient.repository';
 import { Patient } from '../entities/pacient.entity';
@@ -196,36 +195,28 @@ export class PacientService {
    * @throws {InternalServerErrorException} Si ocurre un error al subir la imagen
    */
   async uploadImage(image: Express.Multer.File): Promise<HttpResponse<string>> {
-    let imageUrl: string = null;
+    if (!image) {
+      throw new BadRequestException('Image not provided');
+    }
+
+    if (Array.isArray(image)) {
+      throw new BadRequestException('Only one file can be uploaded at a time');
+    }
+
+    const validMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (!validMimeTypes.includes(image.mimetype)) {
+      throw new BadRequestException(
+        'The file must be an image in JPEG, PNG, GIF, or WEBP format',
+      );
+    }
 
     try {
-      if (!image) {
-        throw new BadRequestException('Image not provided');
-      }
-
-      // Validar que solo se suba un archivo
-      if (Array.isArray(image)) {
-        throw new BadRequestException(
-          'Only one file can be uploaded at a time',
-        );
-      }
-
-      // Validar que el archivo sea una imagen
-      const validMimeTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-      ];
-      if (!validMimeTypes.includes(image.mimetype)) {
-        throw new BadRequestException(
-          'The file must be an image in JPEG, PNG, GIF, or WEBP format',
-        );
-      }
-
-      // Sube la imagen y devuelve la URL
-      imageUrl = await this.cloudflareService.uploadImage(image);
-      //que lo guar en una tabla de la base de datos
+      const imageUrl = await this.cloudflareService.uploadImage(image);
       return {
         statusCode: HttpStatus.CREATED,
         message: 'Image uploaded successfully',
@@ -233,14 +224,6 @@ export class PacientService {
       };
     } catch (error) {
       this.logger.error(`Error uploading image: ${error.message}`, error.stack);
-
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-
       throw new InternalServerErrorException('Error subiendo la imagen');
     }
   }
@@ -254,35 +237,28 @@ export class PacientService {
     image: Express.Multer.File,
     existingFileName: string,
   ): Promise<HttpResponse<string>> {
-    let imageUrl: string = null;
+    if (!image) {
+      throw new BadRequestException('Image not provided');
+    }
+
+    if (Array.isArray(image)) {
+      throw new BadRequestException('Only one file can be uploaded at a time');
+    }
+
+    const validMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (!validMimeTypes.includes(image.mimetype)) {
+      throw new BadRequestException(
+        'The file must be an image in JPEG, PNG, GIF, or WEBP format',
+      );
+    }
 
     try {
-      if (!image) {
-        throw new BadRequestException('Image not provided');
-      }
-
-      // Validar que solo se suba un archivo
-      if (Array.isArray(image)) {
-        throw new BadRequestException(
-          'Only one file can be uploaded at a time',
-        );
-      }
-
-      // Validar que el archivo sea una imagen
-      const validMimeTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-      ];
-      if (!validMimeTypes.includes(image.mimetype)) {
-        throw new BadRequestException(
-          'The file must be an image in JPEG, PNG, GIF, or WEBP format',
-        );
-      }
-
-      // Actualizar la imagen y devuelve la URL
-      imageUrl = await this.cloudflareService.updateImage(
+      const imageUrl = await this.cloudflareService.updateImage(
         image,
         existingFileName,
       );
@@ -293,14 +269,6 @@ export class PacientService {
       };
     } catch (error) {
       this.logger.error(`Error updating image: ${error.message}`, error.stack);
-
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-
       throw new InternalServerErrorException('Error updating image');
     }
   }
