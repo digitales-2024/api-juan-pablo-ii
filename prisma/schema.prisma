@@ -247,6 +247,7 @@ model Staff {
   birth    String
 
   CitaMedica CitaMedica[] // Relación con CitaMedica
+  typeStorage TypeStorage[] // Relación con TypeStorage
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
@@ -426,6 +427,8 @@ model TypeStorage {
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
+  branch      Branch? @relation(fields: [branchId], references: [id])// Relación con la tabla Sucursal
+  staff       Staff?  @relation(fields: [staffId], references: [id])// Relación con la tabla Personal
   Storage Storage[] // Relación con la tabla Almacen
 }
 
@@ -620,6 +623,7 @@ model Branch {
   createdAt      DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime         @updatedAt
   ConsultaMedica ConsultaMedica[] // Relación con ConsultaMedica
+  typeStorage    TypeStorage[]    // Relación con TypeStorage
 }
 
 //tabla consultas medicas

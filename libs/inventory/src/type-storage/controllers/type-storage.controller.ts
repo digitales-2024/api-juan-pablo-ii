@@ -112,6 +112,25 @@ export class TypeStorageController {
   /**
    * Obtiene un tipo de almacenamiento por su ID
    */
+  @Get('/detailed/:id')
+  @ApiOperation({ summary: 'Obtener tipo detallado de almacenamiento por ID' })
+  @ApiParam({ name: 'id', description: 'ID del tipo de almacenamiento' })
+  @ApiOkResponse({
+    description: 'Tipo de almacenamiento encontrado',
+    type: [DetailedTypeStorage],
+  })
+  @ApiNotFoundResponse({
+    description: 'Tipo de almacenamiento no encontrado',
+  })
+  findOneWithRelations(
+    @Param('id') id: string,
+  ): Promise<DetailedTypeStorage[]> {
+    return this.typeStorageService.findONeWIthRelations(id);
+  }
+
+  /**
+   * Obtiene un tipo de almacenamiento por su ID
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Obtener tipo de almacenamiento por ID' })
   @ApiParam({ name: 'id', description: 'ID del tipo de almacenamiento' })
