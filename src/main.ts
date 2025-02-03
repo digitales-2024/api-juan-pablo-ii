@@ -4,6 +4,7 @@ import * as cookieParser from 'cookie-parser';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
+import { DateTransformInterceptor } from './common/interceptors/date-transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,10 +22,14 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+
+  app.useGlobalInterceptors(new DateTransformInterceptor)
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 

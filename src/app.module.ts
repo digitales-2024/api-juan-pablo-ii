@@ -14,6 +14,7 @@ import { InventoryModule } from '@inventory/inventory/inventory.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CloudflareModule } from './cloudflare/cloudflare.module';
 import { CalendarModule } from '@calendar/calendar/calendar.module';
+import { StaffScheduleModule } from './modules/staff-schedule/staff-schedule.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CalendarModule } from '@calendar/calendar/calendar.module';
     BillingModule,
     CloudflareModule,
     CalendarModule,
+    StaffScheduleModule,
   ],
   controllers: [AppController],
   providers: [AppService],
