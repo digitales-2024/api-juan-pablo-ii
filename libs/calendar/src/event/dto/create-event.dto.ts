@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsDate, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
+import { EventType } from '../entities/event-type.enum';
 
 /**
  * DTO para la creación de eventos
@@ -24,7 +25,7 @@ export class CreateEventDto {
   })
   @IsString()
   @IsNotEmpty()
-  type: 'TURNO' | 'CITA' | 'OTRO';
+  type: EventType;
 
   @ApiProperty({
     description: 'Fecha y hora de inicio del evento',

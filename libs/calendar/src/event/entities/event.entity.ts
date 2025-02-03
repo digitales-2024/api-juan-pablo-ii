@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EventType } from './event-type.enum';
 
 /**
  * Entidad que representa un evento en el calendario
@@ -11,8 +12,8 @@ export class Event {
   @ApiProperty()
   title: string;
 
-  @ApiProperty({ enum: ['TURNO', 'CITA', 'OTRO'] })
-  type: 'TURNO' | 'CITA' | 'OTRO';
+  @ApiProperty({ enum: EventType })
+  type: EventType;
 
   @ApiProperty()
   start: Date;
@@ -46,6 +47,8 @@ export class Event {
 
   @ApiProperty()
   updatedAt: Date;
+
+  isBaseEvent?: boolean;
 }
 
 export enum EventStatus {
