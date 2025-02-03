@@ -259,7 +259,7 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Función privada para obtener los datos de Sucursal
   private async fetchBranch(branchId: string) {
-    return await this.prisma.sucursal.findUnique({
+    return await this.prisma.branch.findUnique({
       where: { id: branchId },
       select: { address: true },
     });

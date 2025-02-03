@@ -31,6 +31,7 @@ import { Patient } from '../entities/pacient.entity';
 import { DeletePatientDto } from '../dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RemoveImageInterceptor } from './remove-image.interceptor';
 
 /**
  * Controlador REST para gestionar pacientes.
@@ -209,7 +210,7 @@ export class PacientController {
           type: 'string',
           example: 'Paciente con antecedentes de alergias severas',
         },
-        patientPhoto: { type: 'string', example: 'data:image/png;base64,...' },
+        patientPhoto: { type: 'string', example: null },
         image: {
           type: 'string',
           format: 'binary',
@@ -218,7 +219,7 @@ export class PacientController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image'), RemoveImageInterceptor)
   async createWithImage(
     @Body() createPatientDto: CreatePatientDto,
     @UploadedFile() image: Express.Multer.File,
@@ -226,6 +227,74 @@ export class PacientController {
   ): Promise<BaseApiResponse<Patient>> {
     return this.pacientService.createPatientWithImage(
       createPatientDto,
+      image,
+      user,
+    );
+  }
+
+  /**
+   * Actualiza un paciente existente con imagen opcional
+   */
+  @Patch(':id/update-with-image')
+  @ApiOperation({
+    summary: 'Actualizar paciente existente con imagen opcional',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Juan Pérez' },
+        lastName: { type: 'string', example: 'González' },
+        dni: { type: 'string', example: '12345678' },
+        birthDate: { type: 'string', format: 'date', example: '1990-01-01' },
+        gender: { type: 'string', example: 'Masculino' },
+        address: { type: 'string', example: 'Av. Principal 123' },
+        phone: { type: 'string', example: '+51999999999' },
+        email: { type: 'string', example: 'juan.perez@example.com' },
+        emergencyContact: { type: 'string', example: 'María Pérez' },
+        emergencyPhone: { type: 'string', example: '+51999999999' },
+        healthInsurance: { type: 'string', example: 'Seguro Salud' },
+        maritalStatus: { type: 'string', example: 'Soltero' },
+        occupation: { type: 'string', example: 'Ingeniero' },
+        workplace: {
+          type: 'string',
+          example: 'Empresa XYZ, Av. Industrial 456',
+        },
+        bloodType: { type: 'string', example: 'O+' },
+        primaryDoctor: {
+          type: 'string',
+          example: 'Dr. Juan Pérez, +51999999999',
+        },
+        language: { type: 'string', example: 'Español' },
+        notes: {
+          type: 'string',
+          example: 'Paciente con antecedentes de alergias severas',
+        },
+        patientPhoto: { type: 'string', example: null },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen del paciente (opcional)',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paciente actualizado exitosamente',
+    type: BaseApiResponse<Patient>,
+  })
+  @UseInterceptors(FileInterceptor('image'))
+  async updateWithImage(
+    @Param('id') id: string,
+    @Body() updatePatientDto: UpdatePatientDto,
+    @UploadedFile() image: Express.Multer.File,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Patient>> {
+    return this.pacientService.updatePatientWithImage(
+      id,
+      updatePatientDto,
       image,
       user,
     );

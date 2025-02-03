@@ -4,7 +4,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { PacientRepository } from '../repositories/pacient.repository';
 import { Patient } from '../entities/pacient.entity';
@@ -196,36 +195,28 @@ export class PacientService {
    * @throws {InternalServerErrorException} Si ocurre un error al subir la imagen
    */
   async uploadImage(image: Express.Multer.File): Promise<HttpResponse<string>> {
-    let imageUrl: string = null;
+    if (!image) {
+      throw new BadRequestException('Image not provided');
+    }
+
+    if (Array.isArray(image)) {
+      throw new BadRequestException('Only one file can be uploaded at a time');
+    }
+
+    const validMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (!validMimeTypes.includes(image.mimetype)) {
+      throw new BadRequestException(
+        'The file must be an image in JPEG, PNG, GIF, or WEBP format',
+      );
+    }
 
     try {
-      if (!image) {
-        throw new BadRequestException('Image not provided');
-      }
-
-      // Validar que solo se suba un archivo
-      if (Array.isArray(image)) {
-        throw new BadRequestException(
-          'Only one file can be uploaded at a time',
-        );
-      }
-
-      // Validar que el archivo sea una imagen
-      const validMimeTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-      ];
-      if (!validMimeTypes.includes(image.mimetype)) {
-        throw new BadRequestException(
-          'The file must be an image in JPEG, PNG, GIF, or WEBP format',
-        );
-      }
-
-      // Sube la imagen y devuelve la URL
-      imageUrl = await this.cloudflareService.uploadImage(image);
-      //que lo guar en una tabla de la base de datos
+      const imageUrl = await this.cloudflareService.uploadImage(image);
       return {
         statusCode: HttpStatus.CREATED,
         message: 'Image uploaded successfully',
@@ -233,15 +224,52 @@ export class PacientService {
       };
     } catch (error) {
       this.logger.error(`Error uploading image: ${error.message}`, error.stack);
-
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-
       throw new InternalServerErrorException('Error subiendo la imagen');
+    }
+  }
+  /**
+   * Actualizar imagen
+   * @param image Imagen a actualizar
+   * @param existingFileName Nombre del archivo existente
+   * @returns URL de la imagen actualizada
+   */
+  async updateImage(
+    image: Express.Multer.File,
+    existingFileName: string,
+  ): Promise<HttpResponse<string>> {
+    if (!image) {
+      throw new BadRequestException('Image not provided');
+    }
+
+    if (Array.isArray(image)) {
+      throw new BadRequestException('Only one file can be uploaded at a time');
+    }
+
+    const validMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (!validMimeTypes.includes(image.mimetype)) {
+      throw new BadRequestException(
+        'The file must be an image in JPEG, PNG, GIF, or WEBP format',
+      );
+    }
+
+    try {
+      const imageUrl = await this.cloudflareService.updateImage(
+        image,
+        existingFileName,
+      );
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Image updated successfully',
+        data: imageUrl,
+      };
+    } catch (error) {
+      this.logger.error(`Error updating image: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Error updating image');
     }
   }
 
@@ -278,6 +306,49 @@ export class PacientService {
     return await this.update(
       createdPatientResponse.data.id,
       { patientPhoto: imageResponse.data },
+      user,
+    );
+  }
+
+  /**
+   * Actualiza un paciente existente con imagen opcional
+   * @param id - ID del paciente a actualizar
+   * @param updatePatientDto - DTO con los datos para actualizar el paciente
+   * @param image - Archivo de imagen del paciente (opcional)
+   * @param user - Datos del usuario que realiza la actualización
+   * @returns Una promesa que resuelve con la respuesta HTTP que contiene el paciente actualizado
+   */
+  async updatePatientWithImage(
+    id: string,
+    updatePatientDto: UpdatePatientDto,
+    image: Express.Multer.File,
+    user: UserData,
+  ): Promise<BaseApiResponse<Patient>> {
+    // Obtener el paciente actual para verificar la imagen existente
+    const currentPatient = await this.findOne(id);
+
+    // Si no hay nueva imagen, solo actualizar datos
+    if (!image) {
+      return await this.update(id, updatePatientDto, user);
+    }
+
+    // Procesar la imagen según el caso
+    let imageUrl: string;
+    if (!currentPatient.patientPhoto) {
+      // Si no tenía imagen, subir como nueva
+      const imageResponse = await this.uploadImage(image);
+      imageUrl = imageResponse.data;
+    } else {
+      // Si ya tenía imagen, actualizar la existente
+      const existingFileName = currentPatient.patientPhoto.split('/').pop();
+      const imageResponse = await this.updateImage(image, existingFileName);
+      imageUrl = imageResponse.data;
+    }
+
+    // Actualizar paciente con la nueva imagen y datos
+    return await this.update(
+      id,
+      { ...updatePatientDto, patientPhoto: imageUrl },
       user,
     );
   }

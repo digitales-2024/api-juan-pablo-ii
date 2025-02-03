@@ -361,7 +361,7 @@ model Recurrence {
 // Tabla Categoria
 model Categoria {
   id          String  @id @default(uuid())
-  name        String  @unique// Nombre de la categoría (ej. 'Medicamentos', 'Cosméticos', 'Materiales', etc.)
+  name        String  @unique // Nombre de la categoría (ej. 'Medicamentos', 'Cosméticos', 'Materiales', etc.)
   description String? // Descripción opcional que proporciona más detalles sobre la categoría
 
   isActive  Boolean    @default(true) // Campo para controlar si la categoría está activa o no
@@ -373,7 +373,7 @@ model Categoria {
 // Tabla TipoProducto
 model TipoProducto {
   id          String  @id @default(uuid())
-  name        String  @unique// Nombre del tipo de producto (subcategoría), como 'Antibióticos', 'Bloqueadores solares', 'Gasas', etc.
+  name        String  @unique // Nombre del tipo de producto (subcategoría), como 'Antibióticos', 'Bloqueadores solares', 'Gasas', etc.
   description String? // Descripción opcional del tipo de producto (detalles adicionales o especificaciones)
 
   isActive  Boolean    @default(true) // Campo para controlar si el tipo de producto está activo o no
@@ -393,7 +393,7 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  name                      String @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
+  name                      String  @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
   precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
@@ -549,6 +549,7 @@ model MedicalHistory {
 // UpdateHistory table
 model UpdateHistory {
   id                    String         @id @default(uuid())
+  patientId             String
   serviceId             String
   staffId               String // ID del personal que realiza la actualización
   branchId              String // ID de la sucursal donde se realiza la actualización
@@ -573,10 +574,10 @@ model UpdateHistory {
 
 model ImagePatient {
   id              String         @id @default(uuid())
-  updateHistoryId String?
   patientId       String?
   imageUrl        String?
-  UpdateHistory   UpdateHistory? @relation(fields: [imageUrl], references: [id])
+  updateHistoryId String?
+  UpdateHistory   UpdateHistory? @relation(fields: [updateHistoryId], references: [id])
   phothography    Boolean        @default(false)
   isActive        Boolean        @default(true)
   createdAt       DateTime       @default(now()) @db.Timestamptz(6)
@@ -609,7 +610,7 @@ model Prescription {
 }
 
 //tabla sucursal
-model Sucursal {
+model Branch {
   id       String  @id @default(uuid())
   name     String
   address  String
@@ -623,16 +624,16 @@ model Sucursal {
 
 //tabla consultas medicas
 model ConsultaMedica {
-  id         String   @id @default(uuid())
+  id         String  @id @default(uuid())
   //realcion tabla servicios
   serviceId  String
-  Service    Service  @relation(fields: [serviceId], references: [id])
+  Service    Service @relation(fields: [serviceId], references: [id])
   //realcion tabla paciente
   pacienteId String
-  patient    Patient  @relation(fields: [pacienteId], references: [id])
+  patient    Patient @relation(fields: [pacienteId], references: [id])
   //realcion tabla sucursal
   sucursalId String
-  Sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
+  Sucursal   Branch  @relation(fields: [sucursalId], references: [id])
 
   description String?
   date        DateTime
