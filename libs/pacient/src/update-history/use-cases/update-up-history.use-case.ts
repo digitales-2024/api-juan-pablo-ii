@@ -24,6 +24,7 @@ export class UpdateUpdateHistoryUseCase {
         // Update update history
         const updateHistory = await this.updateHistoryRepository.update(id, {
           serviceId: updateUpdateHistoryDto.serviceId,
+          patientId: updateUpdateHistoryDto.patientId,
           staffId: updateUpdateHistoryDto.staffId,
           branchId: updateUpdateHistoryDto.branchId,
           medicalHistoryId: updateUpdateHistoryDto.medicalHistoryId,
