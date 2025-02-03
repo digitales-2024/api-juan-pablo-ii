@@ -1,14 +1,12 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { TypeStorageRepository } from '../repositories/type-storage.repository';
-import { TypeStorage } from '../entities/type-storage.entity';
+import {
+  DetailedTypeStorage,
+  TypeStorage,
+} from '../entities/type-storage.entity';
 import { CreateTypeStorageDto } from '../dto/create-type-storage.dto';
 import { UpdateTypeStorageDto } from '../dto/update-type-storage.dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateTypeStorageUseCase } from '../use-cases/create-type-storage.use-case';
 import { UpdateTypeStorageUseCase } from '../use-cases/update-type-storage.use-case';
@@ -19,6 +17,7 @@ import {
   DeleteTypeStorageUseCase,
   ReactivateTypeStorageUseCase,
 } from '../use-cases';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class TypeStorageService {
@@ -50,7 +49,7 @@ export class TypeStorageService {
   async create(
     createTypeStorageDto: CreateTypeStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     try {
       // Validar si existe un tipo de almacenamiento con el mismo nombre
       /* const nameExists = await this.findByName(createTypeStorageDto.name);
@@ -84,30 +83,19 @@ export class TypeStorageService {
     id: string,
     updateTypeStorageDto: UpdateTypeStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     try {
       const currentTypeStorage = await this.findById(id);
 
       if (!validateChanges(updateTypeStorageDto, currentTypeStorage)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en el tipo de almacenamiento',
           data: currentTypeStorage,
         };
       }
 
-      // Validar si existe otro tipo de almacenamiento con el mismo nombre
-      if (updateTypeStorageDto.name) {
-        const nameExists = await this.findByName(updateTypeStorageDto.name);
-        if (
-          nameExists &&
-          currentTypeStorage.name !== updateTypeStorageDto.name
-        ) {
-          throw new BadRequestException(
-            'Ya existe un tipo de almacenamiento con este nombre',
-          );
-        }
-      }
+      //Name Validation with prisma @unique
 
       return await this.updateTypeStorageUseCase.execute(
         id,
@@ -125,9 +113,14 @@ export class TypeStorageService {
    * @returns El tipo de almacenamiento encontrado
    * @throws {NotFoundException} Si el tipo de almacenamiento no existe
    */
-  async findOne(id: string): Promise<TypeStorage> {
+  async findOne(id: string): Promise<BaseApiResponse<TypeStorage>> {
     try {
-      return this.findById(id);
+      const typeStorage = await this.findById(id);
+      return {
+        success: true,
+        data: typeStorage,
+        message: 'Tipo de almacenamiento encontrado',
+      };
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -141,6 +134,39 @@ export class TypeStorageService {
   async findAll(): Promise<TypeStorage[]> {
     try {
       return this.typeStorageRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findAllActive(): Promise<TypeStorage[]> {
+    try {
+      return this.typeStorageRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findAllWithRelations(): Promise<DetailedTypeStorage[]> {
+    try {
+      const storages = await this.typeStorageRepository.findMany();
+      // const storages = await this.typeStorageRepository.findManyWithRelations({
+      //   include: {
+      //     Staff: {
+      //       select: {
+      //         name: true,
+      //       },
+      //     },
+      //     Branch: {
+      //       select: {
+      //         name: true,
+      //       },
+      //     },
+      //   },
+      // });
+      return storages.map((storage) =>
+        this.typeStorageRepository.mapToEntity(storage),
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -170,7 +196,7 @@ export class TypeStorageService {
   async deleteMany(
     deleteTypeStorageDto: DeleteTypeStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     try {
       validateArray(deleteTypeStorageDto.ids, 'IDs de tipos de almacenamiento');
       return await this.deleteTypeStorageUseCase.execute(
@@ -192,7 +218,7 @@ export class TypeStorageService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     try {
       validateArray(ids, 'IDs de tipos de almacenamiento');
       return await this.reactivateTypeStorageUseCase.execute(ids, user);

@@ -22,3 +22,11 @@ export class Outgoing {
   @ApiProperty()
   referenceId?: string;
 }
+
+export class OutgoingCreateResponseData {
+  @ApiProperty()
+  outgoingId: string;
+
+  @ApiProperty()
+  movementTypeId: string;
+}

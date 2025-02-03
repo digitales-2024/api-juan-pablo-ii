@@ -418,7 +418,7 @@ model Producto {
 
 model TypeStorage {
   id          String   @id @default(uuid())
-  name        String // Ejemplo: "Producto Terminado", "Materia Prima", etc.
+  name        String  @unique// Ejemplo: "Producto Terminado", "Materia Prima", etc.
   description String? // Descripción opcional del tipo de almacén
   branchId    String? // Clave foránea a Sucursal o local
   staffId     String? // Clave foránea a Personal empleado responsable del almacén
@@ -432,7 +432,7 @@ model TypeStorage {
 //tabla almacen
 model Storage {
   id            String      @id @default(uuid())
-  name          String // Nombre del almacén
+  name          String @unique// Nombre del almacén
   location      String? // Ubicación física del almacén
   typeStorageId String
   TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen

@@ -19,13 +19,17 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateTypeStorageDto,
   UpdateTypeStorageDto,
   DeleteTypeStorageDto,
 } from '../dto';
-import { TypeStorage } from '../entities/type-storage.entity';
+import {
+  DetailedTypeStorage,
+  TypeStorage,
+} from '../entities/type-storage.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar tipos de almacenamiento.
@@ -49,10 +53,10 @@ export class TypeStorageController {
    */
   @Post()
   @ApiOperation({ summary: 'Crear nuevo tipo de almacenamiento' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Tipo de almacenamiento creado exitosamente',
-    type: TypeStorage,
+    type: BaseApiResponse<TypeStorage>,
   })
   @ApiBadRequestResponse({
     description:
@@ -61,25 +65,8 @@ export class TypeStorageController {
   create(
     @Body() createTypeStorageDto: CreateTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     return this.typeStorageService.create(createTypeStorageDto, user);
-  }
-
-  /**
-   * Obtiene un tipo de almacenamiento por su ID
-   */
-  @Get(':id')
-  @ApiOperation({ summary: 'Obtener tipo de almacenamiento por ID' })
-  @ApiParam({ name: 'id', description: 'ID del tipo de almacenamiento' })
-  @ApiOkResponse({
-    description: 'Tipo de almacenamiento encontrado',
-    type: TypeStorage,
-  })
-  @ApiNotFoundResponse({
-    description: 'Tipo de almacenamiento no encontrado',
-  })
-  findOne(@Param('id') id: string): Promise<TypeStorage> {
-    return this.typeStorageService.findOne(id);
   }
 
   /**
@@ -96,6 +83,49 @@ export class TypeStorageController {
     return this.typeStorageService.findAll();
   }
 
+  @Get('/active')
+  @ApiOperation({
+    summary: 'Obtener todos los tipos de almacenamiento activos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los tipos de almacenamiento activos',
+    type: [TypeStorage],
+  })
+  findAllActive(): Promise<TypeStorage[]> {
+    return this.typeStorageService.findAllActive();
+  }
+
+  @Get('/detailed')
+  @ApiOperation({
+    summary: 'Obtener todos los tipos de almacenamiento activos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los tipos de almacenamiento activos',
+    type: [DetailedTypeStorage],
+  })
+  findAllDetailed(): Promise<DetailedTypeStorage[]> {
+    return this.typeStorageService.findAllWithRelations();
+  }
+
+  /**
+   * Obtiene un tipo de almacenamiento por su ID
+   */
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener tipo de almacenamiento por ID' })
+  @ApiParam({ name: 'id', description: 'ID del tipo de almacenamiento' })
+  @ApiOkResponse({
+    description: 'Tipo de almacenamiento encontrado',
+    type: BaseApiResponse<TypeStorage>,
+  })
+  @ApiNotFoundResponse({
+    description: 'Tipo de almacenamiento no encontrado',
+  })
+  findOne(@Param('id') id: string): Promise<BaseApiResponse<TypeStorage>> {
+    return this.typeStorageService.findOne(id);
+  }
+
   /**
    * Actualiza un tipo de almacenamiento existente
    */
@@ -104,13 +134,13 @@ export class TypeStorageController {
   @ApiResponse({
     status: 200,
     description: 'Tipo de almacenamiento actualizado exitosamente',
-    type: TypeStorage,
+    type: BaseApiResponse<TypeStorage>,
   })
   update(
     @Param('id') id: string,
     @Body() updateTypeStorageDto: UpdateTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     return this.typeStorageService.update(id, updateTypeStorageDto, user);
   }
 
@@ -122,7 +152,7 @@ export class TypeStorageController {
   @ApiResponse({
     status: 200,
     description: 'Tipos de almacenamiento desactivados exitosamente',
-    type: [TypeStorage],
+    type: BaseApiResponse<TypeStorage[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o tipos de almacenamiento no existen',
@@ -130,7 +160,7 @@ export class TypeStorageController {
   deleteMany(
     @Body() deleteTypeStorageDto: DeleteTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     return this.typeStorageService.deleteMany(deleteTypeStorageDto, user);
   }
 
@@ -141,7 +171,7 @@ export class TypeStorageController {
   @ApiOperation({ summary: 'Reactivar múltiples tipos de almacenamiento' })
   @ApiOkResponse({
     description: 'Tipos de almacenamiento reactivados exitosamente',
-    type: [TypeStorage],
+    type: [BaseApiResponse<TypeStorage[]>],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o tipos de almacenamiento no existen',
@@ -149,7 +179,7 @@ export class TypeStorageController {
   reactivateAll(
     @Body() deleteTypeStorageDto: DeleteTypeStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     return this.typeStorageService.reactivateMany(
       deleteTypeStorageDto.ids,
       user,

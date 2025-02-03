@@ -12,21 +12,24 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiParam,
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateOutgoingDto,
   UpdateOutgoingDto,
   DeleteOutgoingDto,
 } from '../dto';
-import { Outgoing } from '../entities/outgoing.entity';
+import {
+  Outgoing,
+  OutgoingCreateResponseData,
+} from '../entities/outgoing.entity';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar salidas.
@@ -50,7 +53,7 @@ export class OutgoingController {
    */
   @Post()
   @ApiOperation({ summary: 'Crear nueva salida' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Salida creada exitosamente',
     type: Outgoing,
@@ -61,7 +64,7 @@ export class OutgoingController {
   create(
     @Body() createOutgoingDto: CreateOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<Outgoing>> {
     return this.outgoingService.create(createOutgoingDto, user);
   }
 
@@ -87,7 +90,7 @@ export class OutgoingController {
    */
   @Get()
   @ApiOperation({ summary: 'Obtener todas las salidas' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Lista de todas las salidas',
     type: [Outgoing],
@@ -101,7 +104,7 @@ export class OutgoingController {
    */
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar salida existente' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Salida actualizada exitosamente',
     type: Outgoing,
@@ -110,7 +113,7 @@ export class OutgoingController {
     @Param('id') id: string,
     @Body() updateOutgoingDto: UpdateOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<Outgoing>> {
     return this.outgoingService.update(id, updateOutgoingDto, user);
   }
 
@@ -119,7 +122,7 @@ export class OutgoingController {
    */
   @Delete('remove/all')
   @ApiOperation({ summary: 'Desactivar múltiples salidas' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Salidas desactivadas exitosamente',
     type: [Outgoing],
@@ -130,7 +133,7 @@ export class OutgoingController {
   deleteMany(
     @Body() deleteOutgoingDto: DeleteOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<Outgoing[]>> {
     return this.outgoingService.deleteMany(deleteOutgoingDto, user);
   }
 
@@ -149,7 +152,7 @@ export class OutgoingController {
   reactivateAll(
     @Body() deleteOutgoingDto: DeleteOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<Outgoing[]>> {
     return this.outgoingService.reactivateMany(deleteOutgoingDto.ids, user);
   }
 
@@ -158,10 +161,10 @@ export class OutgoingController {
    */
   @Post('create/outgoingStorage')
   @ApiOperation({ summary: 'Crear nueva salida directa de alamacen' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Salida de almacen creada exitosamente',
-    type: Outgoing,
+    type: OutgoingCreateResponseData,
   })
   @ApiBadRequestResponse({
     description: 'Datos de salida inválidos o salida ya existe',
@@ -169,7 +172,7 @@ export class OutgoingController {
   createOutgoing(
     @Body() createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<string>> {
+  ): Promise<BaseApiResponse<OutgoingCreateResponseData>> {
     return this.outgoingService.createOutgoing(createOutgoingDtoStorage, user);
   }
 }

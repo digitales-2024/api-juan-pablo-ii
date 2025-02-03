@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { IncomingRepository } from '../repositories/incoming.repository';
 import { Incoming } from '../entities/incoming.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteIncomingDto } from '../dto/delete-incoming.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteIncomingUseCase {
@@ -16,7 +17,7 @@ export class DeleteIncomingUseCase {
   async execute(
     deleteIncomingDto: DeleteIncomingDto,
     user: UserData,
-  ): Promise<HttpResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<Incoming[]>> {
     const deletedIncomings = await this.incomingRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene los ingresos actualizados
@@ -42,7 +43,7 @@ export class DeleteIncomingUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Ingresos eliminados exitosamente',
       data: deletedIncomings,
     };

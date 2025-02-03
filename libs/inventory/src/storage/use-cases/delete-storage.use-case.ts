@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { StorageRepository } from '../repositories/storage.repository';
 import { Storage } from '../entities/storage.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteStorageDto } from '../dto/delete-storage.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteStorageUseCase {
@@ -16,7 +17,7 @@ export class DeleteStorageUseCase {
   async execute(
     deleteStorageDto: DeleteStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<Storage[]>> {
+  ): Promise<BaseApiResponse<Storage[]>> {
     const deletedStorages = await this.storageRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene los almacenes actualizados
@@ -42,7 +43,7 @@ export class DeleteStorageUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Almacenes eliminados exitosamente',
       data: deletedStorages,
     };
