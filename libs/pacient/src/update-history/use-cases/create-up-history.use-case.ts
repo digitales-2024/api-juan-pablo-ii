@@ -23,6 +23,7 @@ export class CreateUpdateHistoryUseCase {
         // Create update history
         const updateHistory = await this.updateHistoryRepository.create({
           serviceId: createUpdateHistoryDto.serviceId,
+          patientId: createUpdateHistoryDto.patientId,
           staffId: createUpdateHistoryDto.staffId,
           branchId: createUpdateHistoryDto.branchId,
           medicalHistoryId: createUpdateHistoryDto.medicalHistoryId,

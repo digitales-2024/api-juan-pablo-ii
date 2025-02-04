@@ -22,3 +22,15 @@ export class Incoming {
   @ApiProperty()
   referenceId?: string;
 }
+
+// {
+//   incomingId,
+//   movementTypeId,
+// };
+export class IncomingCreateResponseData {
+  @ApiProperty()
+  incomingId: string;
+
+  @ApiProperty()
+  movementTypeId: string;
+}

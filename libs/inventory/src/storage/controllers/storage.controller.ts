@@ -19,9 +19,10 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { CreateStorageDto, UpdateStorageDto, DeleteStorageDto } from '../dto';
-import { Storage } from '../entities/storage.entity';
+import { DetailedStorage, Storage } from '../entities/storage.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar almacenes.
@@ -56,8 +57,44 @@ export class StorageController {
   create(
     @Body() createStorageDto: CreateStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     return this.storageService.create(createStorageDto, user);
+  }
+
+  /**
+   * Obtiene todos los almacenes
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los almacenes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los almacenes',
+    type: [Storage],
+  })
+  findAll(): Promise<Storage[]> {
+    return this.storageService.findAll();
+  }
+
+  @Get('/detailed')
+  @ApiOperation({ summary: 'Obtener todos los almacenes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los almacenes',
+    type: [DetailedStorage],
+  })
+  findAllWithRelations(): Promise<DetailedStorage[]> {
+    return this.storageService.findAllWithRelations();
+  }
+
+  @Get('/active')
+  @ApiOperation({ summary: 'Obtener todos los almacenes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los almacenes',
+    type: [Storage],
+  })
+  findAllActive(): Promise<Storage[]> {
+    return this.storageService.findAllActive();
   }
 
   /**
@@ -78,20 +115,6 @@ export class StorageController {
   }
 
   /**
-   * Obtiene todos los almacenes
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los almacenes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todos los almacenes',
-    type: [Storage],
-  })
-  findAll(): Promise<Storage[]> {
-    return this.storageService.findAll();
-  }
-
-  /**
    * Actualiza un almacén existente
    */
   @Patch(':id')
@@ -105,7 +128,7 @@ export class StorageController {
     @Param('id') id: string,
     @Body() updateStorageDto: UpdateStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     return this.storageService.update(id, updateStorageDto, user);
   }
 
@@ -125,7 +148,7 @@ export class StorageController {
   deleteMany(
     @Body() deleteStorageDto: DeleteStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage[]>> {
+  ): Promise<BaseApiResponse<Storage[]>> {
     return this.storageService.deleteMany(deleteStorageDto, user);
   }
 
@@ -144,7 +167,7 @@ export class StorageController {
   reactivateAll(
     @Body() deleteStorageDto: DeleteStorageDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Storage[]>> {
+  ): Promise<BaseApiResponse<Storage[]>> {
     return this.storageService.reactivateMany(deleteStorageDto.ids, user);
   }
 }

@@ -1,14 +1,12 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { IncomingRepository } from '../repositories/incoming.repository';
-import { Incoming } from '../entities/incoming.entity';
+import {
+  Incoming,
+  IncomingCreateResponseData,
+} from '../entities/incoming.entity';
 import { CreateIncomingDto } from '../dto/create-incoming.dto';
 import { UpdateIncomingDto } from '../dto/update-incoming.dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateIncomingUseCase } from '../use-cases/create-incoming.use-case';
 import { UpdateIncomingUseCase } from '../use-cases/update-incoming.use-case';
@@ -20,6 +18,7 @@ import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
 import { StockService } from '@inventory/inventory/stock/services/stock.service';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class IncomingService {
@@ -53,7 +52,7 @@ export class IncomingService {
   async create(
     createIncomingDto: CreateIncomingDto,
     user: UserData,
-  ): Promise<HttpResponse<Incoming>> {
+  ): Promise<BaseApiResponse<Incoming>> {
     try {
       return await this.createIncomingUseCase.execute(createIncomingDto, user);
     } catch (error) {
@@ -73,13 +72,13 @@ export class IncomingService {
     id: string,
     updateIncomingDto: UpdateIncomingDto,
     user: UserData,
-  ): Promise<HttpResponse<Incoming>> {
+  ): Promise<BaseApiResponse<Incoming>> {
     try {
       const currentIncoming = await this.findById(id);
 
       if (!validateChanges(updateIncomingDto, currentIncoming)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en el ingreso',
           data: currentIncoming,
         };
@@ -93,7 +92,6 @@ export class IncomingService {
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
     }
-
   }
 
   /**
@@ -147,7 +145,7 @@ export class IncomingService {
   async deleteMany(
     deleteIncomingDto: DeleteIncomingDto,
     user: UserData,
-  ): Promise<HttpResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<Incoming[]>> {
     try {
       validateArray(deleteIncomingDto.ids, 'IDs de ingresos');
       return await this.deleteIncomingUseCase.execute(deleteIncomingDto, user);
@@ -166,7 +164,7 @@ export class IncomingService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<Incoming[]>> {
     try {
       validateArray(ids, 'IDs de ingresos');
       return await this.reactivateIncomingUseCase.execute(ids, user);
@@ -176,17 +174,17 @@ export class IncomingService {
   }
 
   //crear ingreso de productos al alamacen
-/**
- * Crea un nuevo ingreso de productos al almacén.
- *
- * @param createIncomingDtoStorage - DTO que contiene los datos necesarios para crear el ingreso.
- * @param user - Datos del usuario que realiza la operación.
- * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID del nuevo ingreso.
- */
+  /**
+   * Crea un nuevo ingreso de productos al almacén.
+   *
+   * @param createIncomingDtoStorage - DTO que contiene los datos necesarios para crear el ingreso.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID del nuevo ingreso.
+   */
   async createIncoming(
     createIncomingDtoStorage: CreateIncomingDtoStorage,
     user: UserData,
-  ): Promise<HttpResponse<string>> {
+  ): Promise<BaseApiResponse<IncomingCreateResponseData>> {
     try {
       // Extraer los datos necesarios del DTO
       const { movement, state, name, storageId, date } =
@@ -255,10 +253,15 @@ export class IncomingService {
           console.log(`Movimiento creado con ID: ${idStock}`);
         }),
       );
+
+      const data: IncomingCreateResponseData = {
+        incomingId,
+        movementTypeId,
+      };
       return {
-        statusCode: HttpStatus.CREATED, // Código de estado HTTP 201
+        success: true, // Código de estado HTTP 201
         message: 'Ingreso creado exitosamente',
-        data: `${incomingId} -  ${movementTypeId}} `, // El ID del nuevo ingreso
+        data, // El ID del nuevo ingreso y el tipo de movimiento
       };
       //
       //
@@ -267,18 +270,18 @@ export class IncomingService {
 
       // Retornar un objeto de error con un código de estado adecuado
       return {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR, // o el código que consideres apropiado
+        success: true, // o el código que consideres apropiado
         message: 'Error al crear el ingreso',
         data: null, // o puedes incluir más información sobre el error si es necesario
       };
     }
   }
   /**
- * Extrae los IDs de productos y sus cantidades de un array de movimientos.
- *
- * @param movement - Un array de objetos que contienen `productId` y `quantity`.
- * @returns Un array de objetos con `productId` y `quantity`.
- */
+   * Extrae los IDs de productos y sus cantidades de un array de movimientos.
+   *
+   * @param movement - Un array de objetos que contienen `productId` y `quantity`.
+   * @returns Un array de objetos con `productId` y `quantity`.
+   */
   private extractProductoIdQuantity(
     movement: Array<{ productId: string; quantity: number }>,
   ): { productId: string; quantity: number }[] {
@@ -287,5 +290,4 @@ export class IncomingService {
       quantity: item.quantity,
     }));
   }
-  
 }

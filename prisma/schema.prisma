@@ -161,11 +161,10 @@ model Patient {
   lastName               String?
   dni                    String  @unique
   birthDate              String? @db.VarChar(20)
-  gender                 Boolean
+  gender                 String
   address                String? @db.VarChar(255)
   phone                  String? @db.VarChar(15)
   email                  String? @db.VarChar(100)
-  registrationDate       String  @db.VarChar(20)
   allergies              String? @db.Text
   currentMedications     String? @db.Text
   emergencyContact       String? @db.VarChar(100)
@@ -313,7 +312,7 @@ model Producto {
 
 model TypeStorage {
   id          String   @id @default(uuid())
-  name        String // Ejemplo: "Producto Terminado", "Materia Prima", etc.
+  name        String  @unique// Ejemplo: "Producto Terminado", "Materia Prima", etc.
   description String? // Descripción opcional del tipo de almacén
   branchId    String? // Clave foránea a Sucursal o local
   staffId     String? // Clave foránea a Personal empleado responsable del almacén
@@ -327,7 +326,7 @@ model TypeStorage {
 //tabla almacen
 model Storage {
   id            String      @id @default(uuid())
-  name          String // Nombre del almacén
+  name          String @unique// Nombre del almacén
   location      String? // Ubicación física del almacén
   typeStorageId String
   TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
@@ -444,6 +443,7 @@ model MedicalHistory {
 // UpdateHistory table
 model UpdateHistory {
   id                    String         @id @default(uuid())
+  patientId             String
   serviceId             String
   staffId               String // ID del personal que realiza la actualización
   branchId              String // ID de la sucursal donde se realiza la actualización
@@ -468,10 +468,10 @@ model UpdateHistory {
 
 model ImagePatient {
   id              String         @id @default(uuid())
-  updateHistoryId String?
   patientId       String?
   imageUrl        String?
-  UpdateHistory   UpdateHistory? @relation(fields: [imageUrl], references: [id])
+  updateHistoryId String?
+  UpdateHistory   UpdateHistory? @relation(fields: [updateHistoryId], references: [id])
   phothography    Boolean        @default(false)
   isActive        Boolean        @default(true)
   createdAt       DateTime       @default(now()) @db.Timestamptz(6)

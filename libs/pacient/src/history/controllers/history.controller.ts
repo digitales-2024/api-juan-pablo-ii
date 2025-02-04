@@ -154,4 +154,33 @@ export class MedicalHistoryController {
       user,
     );
   }
+
+  /**
+   * Obtiene una historia médica por ID con todas sus actualizaciones e imágenes
+   */
+  @Get(':id/complete')
+  @ApiOperation({ summary: 'Obtener historia médica completa por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la historia médica' })
+  @ApiResponse({
+    status: 200,
+    description: 'Historia médica encontrada con actualizaciones e imágenes',
+    type: MedicalHistory,
+  })
+  async findOneComplete(@Param('id') id: string): Promise<
+    BaseApiResponse<
+      MedicalHistory & {
+        updates: Record<
+          string,
+          {
+            service: string;
+            staff: string;
+            branch: string;
+            images: Array<{ id: string; url: string }>;
+          }
+        >;
+      }
+    >
+  > {
+    return this.medicalHistoryService.findOneComplete(id);
+  }
 }

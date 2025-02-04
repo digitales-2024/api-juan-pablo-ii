@@ -1,14 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { StockDto } from '../dto';
-
 import { StockRepository } from '../repositories/stock.repository';
 import { UpdateStockUseCase } from '../use-cases/update-storage.use-case';
 import { CreateStockUseCase } from '../use-cases/create-storage.use-case';
 import { UserData } from '@login/login/interfaces';
+import { StockByStorage } from '../entities/stock.entity';
+import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 
 @Injectable()
 export class StockService {
   private readonly logger = new Logger(StockService.name);
+  private readonly errorHandler: BaseErrorHandler;
 
   constructor(
     private readonly stockRepository: StockRepository,
@@ -17,39 +18,55 @@ export class StockService {
   ) {}
 
   // Función para obtener el stock de un producto en todos los almacenes
-  async getStockByProduct(productId: string): Promise<StockDto[]> {
+  async getStockByProduct(productId: string): Promise<StockByStorage[]> {
     try {
       const byStock = await this.stockRepository.getStockByIdStorageByIdProduct(
         undefined,
         productId,
       );
+      if (byStock.length === 0) {
+        throw new Error(
+          `No se encontraró stock para el producto: ${productId} en ningun almacen`,
+        );
+      }
       return byStock;
     } catch (error) {
       this.logger.error(`Error fetching stock for product ${productId}`, error);
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
 
   // Función para obtener el stock de un almacén específico
-  async getStockByStorage(storageId: string): Promise<StockDto[]> {
+  async getStockByStorage(storageId: string): Promise<StockByStorage[]> {
     try {
       const byStock =
         await this.stockRepository.getStockByIdStorageByIdProduct(storageId);
+      if (byStock.length === 0) {
+        throw new Error(
+          `No se encontro stock de productos para el almacen: ${storageId}`,
+        );
+      }
       return byStock;
     } catch (error) {
       this.logger.error(`Error fetching stock for storage ${storageId}`, error);
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
 
   // Función para obtener todos los stocks de todos los almacenes
-  async getStockForAllStorages(): Promise<any> {
+  async getStockForAllStorages(): Promise<StockByStorage[]> {
     try {
       const byStock =
         await this.stockRepository.getStockByIdStorageByIdProduct();
+      if (byStock.length === 0) {
+        throw new Error('No se encontro stock de productos en los almacenes');
+      }
       return byStock;
     } catch (error) {
       this.logger.error('Error fetching stock for all storages', error);
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
@@ -58,18 +75,24 @@ export class StockService {
   async getStockByStorageProduct(
     storageId: string,
     productId: string,
-  ): Promise<StockDto> {
+  ): Promise<StockByStorage[]> {
     try {
       const byStock = await this.stockRepository.getStockByIdStorageByIdProduct(
         storageId,
         productId,
       );
+      if (byStock.length === 0) {
+        throw new Error(
+          `No se encontro stock para el producto: ${productId} en el almacen: ${storageId}`,
+        );
+      }
       return byStock;
     } catch (error) {
       this.logger.error(
         `Error fetching stock for storage ${storageId} and product ${productId}`,
         error,
       );
+      this.errorHandler.handleError(error, 'getting');
       throw error;
     }
   }
@@ -138,6 +161,7 @@ export class StockService {
         `Error updating stock for product ${productId} in storage ${storageId}`,
         error,
       );
+      this.errorHandler.handleError(error, 'updating');
       throw error;
     }
   }
@@ -208,6 +232,7 @@ export class StockService {
         `Error updating stock for product ${productId} in storage ${storageId}`,
         error,
       );
+      this.errorHandler.handleError(error, 'updating');
       throw error;
     }
   }

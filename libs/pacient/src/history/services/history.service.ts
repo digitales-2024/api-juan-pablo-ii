@@ -178,4 +178,50 @@ export class MedicalHistoryService {
       throw error;
     }
   }
+
+  /**
+   * Obtiene una historia médica completa con sus actualizaciones e imágenes
+   */
+  async findOneComplete(id: string): Promise<
+    BaseApiResponse<
+      MedicalHistory & {
+        updates: Record<
+          string,
+          {
+            service: string;
+            staff: string;
+            branch: string;
+            images: Array<{ id: string; url: string }>;
+          }
+        >;
+      }
+    >
+  > {
+    try {
+      // Primero obtenemos la historia médica base
+      const medicalHistory = await this.findById(id);
+
+      if (!medicalHistory) {
+        throw new BadRequestException('Historia médica no encontrada');
+      }
+
+      // Obtenemos las actualizaciones con imágenes
+      const updatesWithImages =
+        await this.medicalHistoryRepository.findOneWithUpdatesAndImages(
+          medicalHistory.patientId,
+        );
+
+      return {
+        success: true,
+        message: 'Historia médica encontrada exitosamente',
+        data: {
+          ...medicalHistory,
+          updates: updatesWithImages || {},
+        },
+      };
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+      throw error;
+    }
+  }
 }

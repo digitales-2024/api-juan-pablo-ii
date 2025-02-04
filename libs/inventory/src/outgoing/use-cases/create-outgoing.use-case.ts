@@ -1,11 +1,12 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateOutgoingDto } from '../dto/create-outgoing.dto';
 import { Outgoing } from '../entities/outgoing.entity';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateOutgoingUseCase {
@@ -17,7 +18,7 @@ export class CreateOutgoingUseCase {
   async execute(
     createOutgoingDto: CreateOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<Outgoing>> {
     const newOutgoing = await this.outgoingRepository.transaction(async () => {
       // Create outgoing
       const outgoing = await this.outgoingRepository.create({
@@ -42,7 +43,7 @@ export class CreateOutgoingUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Salida creada exitosamente',
       data: newOutgoing,
     };
@@ -67,7 +68,7 @@ export class CreateOutgoingUseCase {
     return idIncoming;
   }
 
-  private extractId(dataOutgoingStorage: HttpResponse<Outgoing>): string {
+  private extractId(dataOutgoingStorage: BaseApiResponse<Outgoing>): string {
     // Verificar si la respuesta contiene datos y extraer el ID
     if (
       dataOutgoingStorage &&

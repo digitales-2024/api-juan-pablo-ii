@@ -18,7 +18,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Staff } from '../entities/staff.entity';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
@@ -62,6 +62,16 @@ export class StaffController {
     return this.staffService.findAll();
   }
 
+  @Get('/active')
+  @ApiOperation({ summary: 'Obtener Personal Activo' })
+  @ApiOkResponse({
+    description: 'Lista de todo el personal activo',
+    type: [Staff],
+  })
+  findAllActive(): Promise<Staff[]> {
+    return this.staffService.findAllActive();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener personal por ID' })
   @ApiOkResponse({
@@ -87,7 +97,7 @@ export class StaffController {
   }
 
   /**
-    * Elimina múltiple Personal
+   * Elimina múltiple Personal
    */
   @Delete('remove/all')
   @ApiOperation({ summary: 'Eliminar múltiple personal' })

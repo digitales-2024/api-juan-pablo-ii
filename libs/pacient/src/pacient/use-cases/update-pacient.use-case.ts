@@ -31,7 +31,6 @@ export class UpdatePatientUseCase {
           address: updatePatientDto.address,
           phone: updatePatientDto.phone,
           email: updatePatientDto.email,
-          registrationDate: updatePatientDto.registrationDate,
           emergencyContact: updatePatientDto.emergencyContact,
           emergencyPhone: updatePatientDto.emergencyPhone,
           healthInsurance: updatePatientDto.healthInsurance,

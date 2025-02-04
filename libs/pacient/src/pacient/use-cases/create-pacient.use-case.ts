@@ -29,7 +29,6 @@ export class CreatePatientUseCase {
         address: createPatientDto.address,
         phone: createPatientDto.phone,
         email: createPatientDto.email,
-        registrationDate: createPatientDto.registrationDate,
         emergencyContact: createPatientDto.emergencyContact,
         emergencyPhone: createPatientDto.emergencyPhone,
         healthInsurance: createPatientDto.healthInsurance,
@@ -40,7 +39,7 @@ export class CreatePatientUseCase {
         primaryDoctor: createPatientDto.primaryDoctor,
         language: createPatientDto.language,
         notes: createPatientDto.notes,
-        patientPhoto: createPatientDto.patientPhoto,
+        patientPhoto: null,
         isActive: true,
       });
 

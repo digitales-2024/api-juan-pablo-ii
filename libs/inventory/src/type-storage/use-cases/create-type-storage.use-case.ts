@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateTypeStorageDto } from '../dto/create-type-storage.dto';
 import { TypeStorage } from '../entities/type-storage.entity';
 import { TypeStorageRepository } from '../repositories/type-storage.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateTypeStorageUseCase {
@@ -16,7 +17,7 @@ export class CreateTypeStorageUseCase {
   async execute(
     createTypeStorageDto: CreateTypeStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage>> {
+  ): Promise<BaseApiResponse<TypeStorage>> {
     const newTypeStorage = await this.typeStorageRepository.transaction(
       async () => {
         // Create type storage
@@ -41,7 +42,7 @@ export class CreateTypeStorageUseCase {
     );
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Tipo de almacenamiento creado exitosamente',
       data: newTypeStorage,
     };

@@ -53,7 +53,7 @@ export class CreatePatientDto {
 
   @ApiProperty({
     description: 'Sexo del paciente (M/F)',
-    example: 'M',
+    example: 'Masculino Femenino',
     required: true,
   })
   @IsString()
@@ -92,14 +92,6 @@ export class CreatePatientDto {
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
   email?: string;
-
-  @ApiProperty({
-    description: 'Fecha de registro del paciente',
-    example: '2023-01-01',
-    required: true,
-  })
-  @IsDateString()
-  registrationDate: Date;
 
   @ApiProperty({
     description: 'Nombre del contacto de emergencia',
@@ -212,10 +204,10 @@ export class CreatePatientDto {
 
   @ApiProperty({
     description: 'Imagen del paciente para identificación visual',
-    example: 'data:image/png;base64,...',
+    example: null,
     required: false,
   })
   @IsString()
   @IsOptional()
-  patientPhoto?: string;
+  patientPhoto?: string = null;
 }
