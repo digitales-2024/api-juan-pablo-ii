@@ -24,8 +24,16 @@ export class CreateTypeStorageUseCase {
         const typeStorage = await this.typeStorageRepository.create({
           name: createTypeStorageDto.name,
           description: createTypeStorageDto.description,
-          branchId: createTypeStorageDto.branchId,
-          staffId: createTypeStorageDto.staffId,
+          branchId:
+            createTypeStorageDto.branchId.length === 0 ||
+            !createTypeStorageDto.branchId
+              ? null
+              : createTypeStorageDto.branchId,
+          staffId:
+            createTypeStorageDto.staffId.length === 0 ||
+            !createTypeStorageDto.staffId
+              ? null
+              : createTypeStorageDto.staffId,
         });
 
         // Register audit

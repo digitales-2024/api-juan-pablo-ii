@@ -98,6 +98,23 @@ export class StorageController {
   }
 
   /**
+   * Obtiene un almacén por su ID con detalles de sus relaciones habilitadas
+   */
+  @Get('/detailed/:id')
+  @ApiOperation({ summary: 'Obtener almacén por ID' })
+  @ApiParam({ name: 'id', description: 'ID del almacén' })
+  @ApiOkResponse({
+    description: 'Almacén encontrado',
+    type: [DetailedStorage],
+  })
+  @ApiNotFoundResponse({
+    description: 'Almacén no encontrado',
+  })
+  findOneWithRelations(@Param('id') id: string): Promise<DetailedStorage[]> {
+    return this.storageService.finOneWithRelations(id);
+  }
+
+  /**
    * Obtiene un almacén por su ID
    */
   @Get(':id')

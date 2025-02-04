@@ -244,6 +244,7 @@ model Staff {
   birth        DateTime
   branchId     String?
   branch       Branch?         @relation(fields: [branchId], references: [id])
+  typeStorage TypeStorage[] // Relación con TypeStorage
   schedules    StaffSchedule[] // Relación 1:N con horarios
   timeOffs     TimeOff[] // Relación con ausencias
   appointments Appointment[] // Citas asociadas
@@ -320,6 +321,8 @@ model TypeStorage {
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
+  branch      Branch? @relation(fields: [branchId], references: [id])// Relación con la tabla Sucursal
+  staff       Staff?  @relation(fields: [staffId], references: [id])// Relación con la tabla Personal
   Storage Storage[] // Relación con la tabla Almacen
 }
 
@@ -642,11 +645,13 @@ model Branch {
 
   createdAt      DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime        @updatedAt
+  
   staffSchedules StaffSchedule[]
   appointments   Appointment[]
   events         Event[]
   staff          Staff[]
   timeOffs       TimeOff[]
+  typeStorage    TypeStorage[]    // Relación con TypeStorage
 }
 
 enum OrderType {
