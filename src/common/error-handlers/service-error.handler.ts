@@ -14,6 +14,7 @@ import { movementErrorMessages } from '@inventory/inventory/movement/errors/erro
 import { paymentErrorMessages } from '@pay/pay/errors/errors-payment';
 import { orderErrorMessages } from '@pay/pay/errors/errors-order';
 import { billingErrorMessages } from 'src/modules/billing/errors/errors-billing';
+import { staffScheduleErrorMessages } from 'src/modules/staff-schedule/errors/errors-staff-schedule';
 
 export type ServiceAction =
   | 'creating'
@@ -162,6 +163,7 @@ export const entityErrorMessages = {
   payment: paymentErrorMessages,
   order: orderErrorMessages,
   billing: billingErrorMessages,
+  staffSchedule: staffScheduleErrorMessages,
   // Para agregar un nuevo módulo:
   // 1. Crear constante de mensajes de error siguiendo la interfaz ErrorMessages
   // 2. Agregar aquí con una clave apropiada

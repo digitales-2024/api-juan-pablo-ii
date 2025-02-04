@@ -150,4 +150,15 @@ export class TimeOffService {
     }
   }
 
+  // time-off.service.ts
+  async findTimeOffs(staffId: string, start: Date, end: Date): Promise<TimeOff[]> {
+    return this.timeOffRepository.findMany({
+      where: {
+        staffId,
+        start: { lte: end }, // TimeOff que empieza antes del final del slot
+        end: { gte: start }  // TimeOff que termina después del inicio del slot
+      }
+    });
+  }
+
 }

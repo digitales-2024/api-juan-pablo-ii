@@ -47,7 +47,9 @@ export class StaffSchedule {
 
   @ApiProperty({ 
     description: 'Fechas excluidas del horario',
-    type: [Date]
+    type: [Date],
+    required: false,
+    default: []
   })
   exceptions: Date[];
 
