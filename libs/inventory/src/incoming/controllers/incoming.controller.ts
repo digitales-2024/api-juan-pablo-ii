@@ -25,6 +25,7 @@ import {
   DeleteIncomingDto,
 } from '../dto';
 import {
+  DetailedIncoming,
   Incoming,
   IncomingCreateResponseData,
 } from '../entities/incoming.entity';
@@ -69,6 +70,57 @@ export class IncomingController {
   }
 
   /**
+   * Obtiene todos los ingresos
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los ingresos' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los ingresos',
+    type: [Incoming],
+  })
+  findAll(): Promise<Incoming[]> {
+    return this.incomingService.findAll();
+  }
+
+  /**
+   * Obtiene todos los ingresos con detalles de sus relaciones
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener los ingresos
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   */
+  @Get('/detailed')
+  @ApiOperation({ summary: 'Obtener todos los ingresos' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los ingresos',
+    type: [DetailedIncoming],
+  })
+  findAllWithRelations(): Promise<DetailedIncoming[]> {
+    return this.incomingService.findAllWithRelations();
+  }
+
+  /**
+   * Obtiene un ingreso con detalles de sus relaciones
+   * @param id - ID del ingreso a buscar
+   * @returns Una promesa que resuelve con el ingreso encontrado con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener el ingreso
+   */
+  @Get('/detailed/:id')
+  @ApiOperation({ summary: 'Obtener ingreso por ID' })
+  @ApiParam({ name: 'id', description: 'ID del ingreso' })
+  @ApiOkResponse({
+    description: 'Ingreso encontrado',
+    type: [DetailedIncoming],
+  })
+  @ApiNotFoundResponse({
+    description: 'Ingreso no encontrado',
+  })
+  findOneWithRelations(@Param('id') id: string): Promise<DetailedIncoming[]> {
+    return this.incomingService.findByIdWithRelations(id);
+  }
+
+  /**
    * Obtiene un ingreso por su ID
    */
   @Get(':id')
@@ -83,20 +135,6 @@ export class IncomingController {
   })
   findOne(@Param('id') id: string): Promise<Incoming> {
     return this.incomingService.findOne(id);
-  }
-
-  /**
-   * Obtiene todos los ingresos
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los ingresos' })
-  @ApiOkResponse({
-    status: 200,
-    description: 'Lista de todos los ingresos',
-    type: [Incoming],
-  })
-  findAll(): Promise<Incoming[]> {
-    return this.incomingService.findAll();
   }
 
   /**

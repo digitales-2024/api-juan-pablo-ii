@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
 import {
+  DetailedOutgoing,
   Outgoing,
   OutgoingCreateResponseData,
 } from '../entities/outgoing.entity';
@@ -193,8 +194,13 @@ export class OutgoingService {
   ): Promise<BaseApiResponse<OutgoingCreateResponseData>> {
     try {
       // Extraer los datos necesarios del DTO
-      const { movement, state, name, storageId, date } =
-        createOutgoingDtoStorage;
+      const {
+        movement: movementsList,
+        state,
+        name,
+        storageId,
+        date,
+      } = createOutgoingDtoStorage;
       const isIncoming = false;
 
       console.log('idIncoming', storageId);
@@ -216,11 +222,11 @@ export class OutgoingService {
         );
 
       // Extraer los datos de movement y usarlos en createMovementStorage
-      const movementData = await this.extractProductoIdQuantity(movement);
+      //const movementData = await this.extractProductoIdQuantity(movement);
 
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
-        movementData.map(async (item) => {
+        movementsList.map(async (item) => {
           const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
@@ -242,10 +248,10 @@ export class OutgoingService {
       );
       //registra y sumar ingreso al alamacen y al stock
       // Extraer los datos de movement y usarlos en createMovementStorage
-      const stockData = await this.extractProductoIdQuantity(movement);
+      //const stockData = await this.extractProductoIdQuantity(movement);
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
-        stockData.map(async (item) => {
+        movementsList.map(async (item) => {
           const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
@@ -287,12 +293,51 @@ export class OutgoingService {
    * @param movement - Un array de objetos que contienen `productId` y `quantity`.
    * @returns Un array de objetos con `productId` y `quantity`.
    */
-  private extractProductoIdQuantity(
-    movement: Array<{ productId: string; quantity: number }>,
-  ): { productId: string; quantity: number }[] {
-    return movement.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-    }));
+  // private extractProductoIdQuantity(
+  //   movement: Array<{ productId: string; quantity: number }>,
+  // ): { productId: string; quantity: number }[] {
+  //   return movement.map((item) => ({
+  //     productId: item.productId,
+  //     quantity: item.quantity,
+  //   }));
+  // }
+
+  /**
+   * Obtiene una salida por su ID con detalles de sus relaciones.
+   *
+   * @param id - ID de la salida a buscar.
+   * @returns Una promesa que resuelve con la salida encontrado.
+   * @throws {BadRequestException} Si la salida no existe.
+   */
+  async findByIdWithRelations(id: string): Promise<DetailedOutgoing[]> {
+    try {
+      const outgoing =
+        await this.outgoingRepository.findDetailedOutgoingById(id);
+      if (!outgoing) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return [outgoing];
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos las salidas con sus relaciones detalladas.
+   *
+   * @returns Una promesa que resuelve con una lista de salidas detallados.
+   * @throws {Error} Si ocurre un error al obtener los salidas.
+   */
+  async findAllWithRelations(): Promise<DetailedOutgoing[]> {
+    try {
+      const outgoingData =
+        await this.outgoingRepository.getAllDetailedOutgoing();
+      if (!outgoingData) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return outgoingData;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
   }
 }
