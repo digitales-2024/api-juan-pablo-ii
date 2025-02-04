@@ -244,7 +244,7 @@ model Staff {
   birth        DateTime
   branchId     String?
   branch       Branch?         @relation(fields: [branchId], references: [id])
-  typeStorage TypeStorage[] // Relación con TypeStorage
+  typeStorage  TypeStorage[] // Relación con TypeStorage
   schedules    StaffSchedule[] // Relación 1:N con horarios
   timeOffs     TimeOff[] // Relación con ausencias
   appointments Appointment[] // Citas asociadas
@@ -313,7 +313,7 @@ model Producto {
 
 model TypeStorage {
   id          String   @id @default(uuid())
-  name        String  @unique// Ejemplo: "Producto Terminado", "Materia Prima", etc.
+  name        String   @unique // Ejemplo: "Producto Terminado", "Materia Prima", etc.
   description String? // Descripción opcional del tipo de almacén
   branchId    String? // Clave foránea a Sucursal o local
   staffId     String? // Clave foránea a Personal empleado responsable del almacén
@@ -321,15 +321,15 @@ model TypeStorage {
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
-  branch      Branch? @relation(fields: [branchId], references: [id])// Relación con la tabla Sucursal
-  staff       Staff?  @relation(fields: [staffId], references: [id])// Relación con la tabla Personal
+  branch  Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
+  staff   Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
   Storage Storage[] // Relación con la tabla Almacen
 }
 
 //tabla almacen
 model Storage {
   id            String      @id @default(uuid())
-  name          String @unique// Nombre del almacén
+  name          String      @unique // Nombre del almacén
   location      String? // Ubicación física del almacén
   typeStorageId String
   TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
@@ -643,15 +643,15 @@ model Branch {
   phone    String?
   isActive Boolean @default(true)
 
-  createdAt      DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime        @updatedAt
-  
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+
   staffSchedules StaffSchedule[]
   appointments   Appointment[]
   events         Event[]
   staff          Staff[]
   timeOffs       TimeOff[]
-  typeStorage    TypeStorage[]    // Relación con TypeStorage
+  typeStorage    TypeStorage[] // Relación con TypeStorage
 }
 
 enum OrderType {

@@ -6,8 +6,9 @@ import {
   IsUUID,
   IsOptional,
   IsEmail,
-  isDate,
+  IsDate,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateStaffDto {
   @ApiProperty({
@@ -64,7 +65,14 @@ export class CreateStaffDto {
     required: true,
   })
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
+  @IsDate()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return new Date(value.trim());
+    }
+    return value;
+  })
+  @Type(() => Date)
   birth: Date;
 
   @ApiProperty({
