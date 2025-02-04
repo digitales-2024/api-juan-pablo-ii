@@ -88,6 +88,27 @@ export class ProductController {
   }
 
   /**
+   * Obtiene un producto por su ID con detalles de sus relaciones
+   */
+  @Get('detailed/:id')
+  @ApiOperation({
+    summary: 'Obtener producto por ID con informaciòn detallada anidada',
+  })
+  @ApiParam({ name: 'id', description: 'ID del producto' })
+  @ApiOkResponse({
+    description: 'Producto encontrado',
+    type: [ProductWithRelations],
+  })
+  @ApiNotFoundResponse({
+    description: 'Producto no encontrado',
+  })
+  findOneWithRelations(
+    @Param('id') id: string,
+  ): Promise<ProductWithRelations[]> {
+    return this.productService.findByIdWithRelations(id);
+  }
+
+  /**
    * Obtiene un producto por su ID
    */
   @Get(':id')
@@ -102,24 +123,6 @@ export class ProductController {
   })
   findOne(@Param('id') id: string): Promise<BaseApiResponse<Product>> {
     return this.productService.findOne(id);
-  }
-
-  @Get(':id/detailed')
-  @ApiOperation({
-    summary: 'Obtener producto por ID con informaciòn detallada anidada',
-  })
-  @ApiParam({ name: 'id', description: 'ID del producto' })
-  @ApiOkResponse({
-    description: 'Producto encontrado',
-    type: ProductWithRelations,
-  })
-  @ApiNotFoundResponse({
-    description: 'Producto no encontrado',
-  })
-  findOneWithRelations(
-    @Param('id') id: string,
-  ): Promise<BaseApiResponse<ProductWithRelations>> {
-    return this.productService.findOneWithRelations(id);
   }
 
   /**

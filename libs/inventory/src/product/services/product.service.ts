@@ -139,26 +139,6 @@ export class ProductService {
     }
   }
 
-  async findOneWithRelations(
-    id: string,
-  ): Promise<BaseApiResponse<ProductWithRelations>> {
-    try {
-      const product: BaseApiResponse<ProductWithRelations> =
-        await this.findByIdWithRelations(id).then((product) => {
-          return {
-            // statusCode: HttpStatus.OK,
-            success: true,
-            message: 'Producto encontrado',
-            data: product,
-          };
-        });
-
-      return product;
-    } catch (error) {
-      this.errorHandler.handleError(error, 'getting');
-    }
-  }
-
   /**
    * Obtiene todos los productos
    * @returns Una promesa que resuelve con una lista de todos los productos
@@ -214,7 +194,7 @@ export class ProductService {
     return product;
   }
 
-  async findByIdWithRelations(id: string): Promise<ProductWithRelations> {
+  async findByIdWithRelations(id: string): Promise<ProductWithRelations[]> {
     try {
       const product = await this.productRepository.findOneWithRelations(id, {
         include: {
@@ -230,7 +210,10 @@ export class ProductService {
           },
         },
       });
-      return this.productRepository.mapToEntity(product);
+      if (!product) {
+        throw new BadRequestException('Producto no encontrado');
+      }
+      return [this.productRepository.mapToEntity(product)];
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
