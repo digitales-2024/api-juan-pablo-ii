@@ -7,15 +7,15 @@ import { ClientsModule } from '@clients/clients';
 import { ServiceModule } from './modules/services/service.module';
 import { BranchModule } from './modules/branch/branch.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
-import { PacientModule } from '@pacient/pacient/pacient.module';
 import { StaffModule } from 'libs/staff/staff.module';
-import { ScheduleModule } from '@schedule/schedule/schedule.module';
 import { PayModule } from '@pay/pay/pay.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { InventoryModule } from '@inventory/inventory/inventory.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ConsultationModule } from 'libs/consultation/consultation.module';
 import { CloudflareModule } from './cloudflare/cloudflare.module';
+import { CalendarModule } from '@calendar/calendar/calendar.module';
+import { StaffScheduleModule } from './modules/staff-schedule/staff-schedule.module';
+import { PacientModule } from '@pacient/pacient/pacient.module';
 
 @Module({
   imports: [
@@ -34,13 +34,14 @@ import { CloudflareModule } from './cloudflare/cloudflare.module';
     ServiceModule,
     BranchModule,
     AppointmentsModule,
-    PacientModule,
     StaffModule,
-    ScheduleModule,
     InventoryModule,
     BillingModule,
-    ConsultationModule,
     CloudflareModule,
+    CalendarModule,
+    StaffScheduleModule,
+    PacientModule,
+
   ],
   controllers: [AppController],
   providers: [AppService],

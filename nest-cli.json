@@ -117,6 +117,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/schedule/tsconfig.lib.json"
       }
+    },
+    "calendar": {
+      "type": "library",
+      "root": "libs/calendar",
+      "entryFile": "index",
+      "sourceRoot": "libs/calendar/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/calendar/tsconfig.lib.json"
+      }
     }
   }
 }

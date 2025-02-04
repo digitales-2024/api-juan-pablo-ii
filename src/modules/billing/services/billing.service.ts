@@ -5,12 +5,6 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Order } from '@pay/pay/entities/order.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { billingErrorMessages } from '../errors/errors-billing';
-import { CreateMedicalConsultationOrderUseCase } from '../use-cases/create-medical-consultation-billing.use-case';
-import { CreateMedicalConsultationBillingDto } from '../dto';
-import { MedicalConsultationGenerator } from '../generators/medical-consultation.generator';
-import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
-import { CreateMedicalPrescriptionOrderUseCase } from '../use-cases/create-medical-prescription-billing.use-case';
-import { MedicalPrescriptionGenerator } from '../generators/medical-prescription.generator';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
 import { ProductSaleGenerator } from '../generators/product-sale-generator';
 import { CreateProductSaleOrderUseCase } from '../use-cases/create-product-sale-billing.use-case';
@@ -26,11 +20,7 @@ export class BillingService {
   constructor(
     private readonly orderService: OrderService,
     private readonly createProductSaleUseCase: CreateProductSaleOrderUseCase,
-    private readonly createMedicalConsultationUseCase: CreateMedicalConsultationOrderUseCase,
-    private readonly createMedicalPrescriptionUseCase: CreateMedicalPrescriptionOrderUseCase,
     private readonly createProductPurchaseUseCase: CreateProductPurchaseOrderUseCase,
-    private readonly medicalConsultationGenerator: MedicalConsultationGenerator,
-    private readonly medicalPrescriptionGenerator: MedicalPrescriptionGenerator,
     private readonly productSaleGenerator: ProductSaleGenerator,
     private readonly productPurchaseGenerator: ProductPurchaseGenerator,
   ) {
@@ -39,53 +29,51 @@ export class BillingService {
       'Billing',
       billingErrorMessages,
     );
-    this.orderService.registerGenerator(this.medicalConsultationGenerator);
-    this.orderService.registerGenerator(this.medicalPrescriptionGenerator);
     this.orderService.registerGenerator(this.productSaleGenerator);
     this.orderService.registerGenerator(this.productPurchaseGenerator);
   }
 
-  /**
-   * Crea una consulta médica
-   * @param createDto - DTO con los datos de la consulta médica
-   * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con la orden de consulta médica creada
-   * @throws {Error} Si hay un problema al crear la consulta médica
-   */
-  async createMedicalConsultation(
-    createDto: CreateMedicalConsultationBillingDto,
-    user: UserData,
-  ): Promise<HttpResponse<Order>> {
-    try {
-      return await this.createMedicalConsultationUseCase.execute(
-        createDto,
-        user,
-      );
-    } catch (error) {
-      this.errorHandler.handleError(error, 'creating');
-    }
-  }
+  // /**
+  //  * Crea una consulta médica
+  //  * @param createDto - DTO con los datos de la consulta médica
+  //  * @param user - Datos del usuario que realiza la operación
+  //  * @returns Respuesta HTTP con la orden de consulta médica creada
+  //  * @throws {Error} Si hay un problema al crear la consulta médica
+  //  */
+  // async createMedicalConsultation(
+  //   createDto: CreateMedicalConsultationBillingDto,
+  //   user: UserData,
+  // ): Promise<HttpResponse<Order>> {
+  //   try {
+  //     return await this.createMedicalConsultationUseCase.execute(
+  //       createDto,
+  //       user,
+  //     );
+  //   } catch (error) {
+  //     this.errorHandler.handleError(error, 'creating');
+  //   }
+  // }
 
-  /**
-   * Crea una prescripción médica
-   * @param createDto - DTO con los datos de la prescripción médica
-   * @param user - Datos del usuario que realiza la operación
-   * @returns Respuesta HTTP con la orden de prescripción médica creada
-   * @throws {Error} Si hay un problema al crear la prescripción médica
-   */
-  async createMedicalPrescription(
-    createDto: CreateMedicalPrescriptionBillingDto,
-    user: UserData,
-  ): Promise<HttpResponse<Order>> {
-    try {
-      return await this.createMedicalPrescriptionUseCase.execute(
-        createDto,
-        user,
-      );
-    } catch (error) {
-      this.errorHandler.handleError(error, 'creating');
-    }
-  }
+  // /**
+  //  * Crea una prescripción médica
+  //  * @param createDto - DTO con los datos de la prescripción médica
+  //  * @param user - Datos del usuario que realiza la operación
+  //  * @returns Respuesta HTTP con la orden de prescripción médica creada
+  //  * @throws {Error} Si hay un problema al crear la prescripción médica
+  //  */
+  // async createMedicalPrescription(
+  //   createDto: CreateMedicalPrescriptionBillingDto,
+  //   user: UserData,
+  // ): Promise<HttpResponse<Order>> {
+  //   try {
+  //     return await this.createMedicalPrescriptionUseCase.execute(
+  //       createDto,
+  //       user,
+  //     );
+  //   } catch (error) {
+  //     this.errorHandler.handleError(error, 'creating');
+  //   }
+  // }
 
   /**
    * Crea una venta de producto
