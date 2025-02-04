@@ -19,17 +19,17 @@ export class TypeStorage {
   staffId?: string;
 
   @ApiProperty()
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export class DetailedTypeStorage extends TypeStorage {
   @ApiProperty({
     type: Branch,
   })
-  Branch?: Pick<Branch, 'name'>;
+  branch?: Pick<Branch, 'name'>;
 
   @ApiProperty({
     type: Staff,
   })
-  Staff?: Pick<Staff, 'name'>;
+  staff?: Pick<Staff, 'name'>;
 }

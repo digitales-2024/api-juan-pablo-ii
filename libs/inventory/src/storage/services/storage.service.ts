@@ -110,18 +110,21 @@ export class StorageService {
     }
   }
 
-  async finOneWithRelations(id: string): Promise<DetailedStorage> {
+  async finOneWithRelations(id: string): Promise<DetailedStorage[]> {
     try {
       const storage = await this.storageRepository.findOneWithRelations(id, {
         include: {
-          typeStorage: {
+          TypeStorage: {
             select: {
               name: true,
             },
           },
         },
       });
-      return this.storageRepository.mapToEntity(storage);
+      if (!storage) {
+        throw new BadRequestException('Almacén no encontrado');
+      }
+      return [this.storageRepository.mapToEntity(storage)];
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

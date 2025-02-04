@@ -126,6 +126,34 @@ export class TypeStorageService {
     }
   }
 
+  async findONeWIthRelations(id: string): Promise<DetailedTypeStorage[]> {
+    try {
+      const typeStorage = await this.typeStorageRepository.findOneWithRelations(
+        id,
+        {
+          include: {
+            staff: {
+              select: {
+                name: true,
+              },
+            },
+            branch: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      );
+      if (!typeStorage) {
+        throw new BadRequestException('Tipo de almacenamiento no encontrado');
+      }
+      return this.typeStorageRepository.mapToEntity([typeStorage]);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   /**
    * Obtiene todos los tipos de almacenamiento
    * @returns Una promesa que resuelve con una lista de todos los tipos de almacenamiento
@@ -149,21 +177,21 @@ export class TypeStorageService {
 
   async findAllWithRelations(): Promise<DetailedTypeStorage[]> {
     try {
-      const storages = await this.typeStorageRepository.findMany();
-      // const storages = await this.typeStorageRepository.findManyWithRelations({
-      //   include: {
-      //     Staff: {
-      //       select: {
-      //         name: true,
-      //       },
-      //     },
-      //     Branch: {
-      //       select: {
-      //         name: true,
-      //       },
-      //     },
-      //   },
-      // });
+      // const storages = await this.typeStorageRepository.findMany();
+      const storages = await this.typeStorageRepository.findManyWithRelations({
+        include: {
+          staff: {
+            select: {
+              name: true,
+            },
+          },
+          branch: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
       return storages.map((storage) =>
         this.typeStorageRepository.mapToEntity(storage),
       );
