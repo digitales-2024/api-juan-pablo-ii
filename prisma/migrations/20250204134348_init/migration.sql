@@ -156,11 +156,10 @@ CREATE TABLE "Patient" (
     "lastName" TEXT,
     "dni" TEXT NOT NULL,
     "birthDate" VARCHAR(20),
-    "gender" BOOLEAN NOT NULL,
+    "gender" TEXT NOT NULL,
     "address" VARCHAR(255),
     "phone" VARCHAR(15),
     "email" VARCHAR(100),
-    "registrationDate" VARCHAR(20) NOT NULL,
     "allergies" TEXT,
     "currentMedications" TEXT,
     "emergencyContact" VARCHAR(100),
@@ -414,6 +413,7 @@ CREATE TABLE "MedicalHistory" (
 -- CreateTable
 CREATE TABLE "UpdateHistory" (
     "id" TEXT NOT NULL,
+    "patientId" TEXT NOT NULL,
     "serviceId" TEXT NOT NULL,
     "staffId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
@@ -437,9 +437,9 @@ CREATE TABLE "UpdateHistory" (
 -- CreateTable
 CREATE TABLE "ImagePatient" (
     "id" TEXT NOT NULL,
-    "updateHistoryId" TEXT,
     "patientId" TEXT,
     "imageUrl" TEXT,
+    "updateHistoryId" TEXT,
     "phothography" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -675,6 +675,12 @@ CREATE UNIQUE INDEX "TipoProducto_name_key" ON "TipoProducto"("name");
 CREATE UNIQUE INDEX "Producto_name_key" ON "Producto"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "TypeStorage_name_key" ON "TypeStorage"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Storage_name_key" ON "Storage"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Stock_storageId_productId_key" ON "Stock"("storageId", "productId");
 
 -- CreateIndex
@@ -768,7 +774,7 @@ ALTER TABLE "MedicalHistory" ADD CONSTRAINT "MedicalHistory_patientId_fkey" FORE
 ALTER TABLE "UpdateHistory" ADD CONSTRAINT "UpdateHistory_medicalHistoryId_fkey" FOREIGN KEY ("medicalHistoryId") REFERENCES "MedicalHistory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ImagePatient" ADD CONSTRAINT "ImagePatient_imageUrl_fkey" FOREIGN KEY ("imageUrl") REFERENCES "UpdateHistory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ImagePatient" ADD CONSTRAINT "ImagePatient_updateHistoryId_fkey" FOREIGN KEY ("updateHistoryId") REFERENCES "UpdateHistory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Prescription" ADD CONSTRAINT "Prescription_updateHistoryId_fkey" FOREIGN KEY ("updateHistoryId") REFERENCES "UpdateHistory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -16,7 +16,7 @@ export class Storage {
   typeStorageId: string;
 
   @ApiProperty()
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export class DetailedStorage extends Storage {

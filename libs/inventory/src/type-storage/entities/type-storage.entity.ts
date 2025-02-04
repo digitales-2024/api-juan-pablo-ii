@@ -19,7 +19,7 @@ export class TypeStorage {
   staffId?: string;
 
   @ApiProperty()
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export class DetailedTypeStorage extends TypeStorage {
