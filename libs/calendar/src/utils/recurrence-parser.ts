@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { addDays, eachWeekOfInterval, parse, setHours, setMinutes, startOfDay, endOfDay, isValid, lastDayOfMonth } from 'date-fns';
+import { addDays, eachWeekOfInterval, setHours, setMinutes, startOfDay, endOfDay, isValid, lastDayOfMonth } from 'date-fns';
 import { formatInTimeZone, toDate } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 
@@ -45,7 +45,7 @@ export class RecurrenceParser {
       try {
         // Primero intentamos crear la fecha normalmente
         parsedUntilDate = new Date(year, month - 1, day);
-        
+
         // Si la fecha no es válida (como 31 de febrero), usamos el último día del mes
         if (!isValid(parsedUntilDate)) {
           parsedUntilDate = lastDayOfMonth(new Date(year, month - 1, 1));
@@ -59,7 +59,6 @@ export class RecurrenceParser {
         parsedStartDate: startDate.toISOString(),
         parsedUntilDate: parsedUntilDate.toISOString()
       });
-
       // Convertir fechas a la zona horaria correcta
       const localStartDate = toDate(startDate, { timeZone: TIMEZONE });
       const untilDate = toDate(endOfDay(parsedUntilDate), { timeZone: TIMEZONE });
@@ -82,7 +81,7 @@ export class RecurrenceParser {
       weeks.forEach(week => {
         weekDayNumbers.forEach(dayNumber => {
           const date = addDays(week, dayNumber);
-          
+
           if (date >= localStartDate && date <= untilDate) {
             const eventDate = toDate(
               setMinutes(
@@ -101,7 +100,6 @@ export class RecurrenceParser {
           }
         });
       });
-
       this.logger.debug(`Total de fechas generadas: ${dates.length}`);
 
       return dates;
