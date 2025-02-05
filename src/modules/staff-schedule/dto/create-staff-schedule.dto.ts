@@ -7,10 +7,41 @@ import {
   ArrayNotEmpty, 
   IsEnum, 
   IsObject,
-  ValidateNested
+  ValidateNested,
+  IsPositive,
+  IsISO8601,
+  IsInt,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { DayOfWeek } from '../entities/staff-schedule.entity';
+
+class RecurrenceDto {
+  @ApiProperty({
+    description: 'Frecuencia de recurrencia',
+    enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'],
+    example: 'WEEKLY'
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'])
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+
+  @ApiProperty({
+    description: 'Intervalo de repetición',
+    example: 1,
+    minimum: 1
+  })
+  @IsInt()
+  @IsPositive()
+  interval: number;
+
+  @ApiProperty({
+    description: 'Fecha límite de recurrencia en formato YYYY-MM-DD',
+    example: '2024-12-31'
+  })
+  @IsISO8601({ strict: false })
+  until: string;
+}
 
 export class CreateStaffScheduleDto {
   @ApiProperty({
@@ -77,23 +108,21 @@ export class CreateStaffScheduleDto {
 
   @ApiProperty({
     description: 'Configuración de recurrencia para el horario',
-    example: { frequency: 'WEEKLY', interval: 1, until: '2024-12-31' },
+    type: RecurrenceDto,
     required: true,
   })
   @IsObject()
-  recurrence: Record<string, any>;
+  @ValidateNested()
+  @Type(() => RecurrenceDto)
+  recurrence: RecurrenceDto;
 
   @ApiProperty({
-    description: 'Fechas excluidas del horario',
-    type: [Date],
-    required: false,
-    default: []
+    description: 'Fechas excluidas en formato YYYY-MM-DD',
+    example: ['2024-05-01'],
+    type: [String],
   })
   @IsOptional()
   @IsArray()
-  @Type(() => Date)
-  @ValidateNested({ each: true })
-  exceptions?: Date[] = [];
-
-  
+  @IsISO8601({ strict: false }, { each: true })
+  exceptions: string[];
 }
