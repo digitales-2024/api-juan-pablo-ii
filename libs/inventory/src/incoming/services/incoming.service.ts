@@ -146,7 +146,7 @@ export class IncomingService {
   async deleteMany(
     deleteIncomingDto: DeleteIncomingDto,
     user: UserData,
-  ): Promise<BaseApiResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<DetailedIncoming[]>> {
     try {
       validateArray(deleteIncomingDto.ids, 'IDs de ingresos');
       return await this.deleteIncomingUseCase.execute(deleteIncomingDto, user);
@@ -165,7 +165,7 @@ export class IncomingService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<BaseApiResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<DetailedIncoming[]>> {
     try {
       validateArray(ids, 'IDs de ingresos');
       return await this.reactivateIncomingUseCase.execute(ids, user);
@@ -185,7 +185,7 @@ export class IncomingService {
   async createIncoming(
     createIncomingDtoStorage: CreateIncomingDtoStorage,
     user: UserData,
-  ): Promise<BaseApiResponse<IncomingWithStorage>> {
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
     try {
       // Extraer los datos necesarios del DTO
       const {
@@ -267,19 +267,14 @@ export class IncomingService {
       return {
         success: true, // Código de estado HTTP 201
         message: 'Ingreso creado exitosamente',
-        data: incoming, // El ID del nuevo ingreso y el tipo de movimiento
+        data: await this.incomingRepository.findDetailedIncomingById(
+          incoming.id,
+        ), // El ID del nuevo ingreso y el tipo de movimiento
       };
       //
       //
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
-
-      // Retornar un objeto de error con un código de estado adecuado
-      return {
-        success: true, // o el código que consideres apropiado
-        message: 'Error al crear el ingreso',
-        data: null, // o puedes incluir más información sobre el error si es necesario
-      };
     }
   }
   /**

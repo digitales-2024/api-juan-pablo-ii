@@ -24,11 +24,7 @@ import {
   UpdateOutgoingDto,
   DeleteOutgoingDto,
 } from '../dto';
-import {
-  DetailedOutgoing,
-  Outgoing,
-  OutgoingCreateResponseData,
-} from '../entities/outgoing.entity';
+import { DetailedOutgoing, Outgoing } from '../entities/outgoing.entity';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
@@ -163,7 +159,7 @@ export class OutgoingController {
   @ApiOkResponse({
     status: 200,
     description: 'Salidas desactivadas exitosamente',
-    type: [Outgoing],
+    type: [DetailedOutgoing],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o salidas no existen',
@@ -171,7 +167,7 @@ export class OutgoingController {
   deleteMany(
     @Body() deleteOutgoingDto: DeleteOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing[]>> {
     return this.outgoingService.deleteMany(deleteOutgoingDto, user);
   }
 
@@ -182,7 +178,7 @@ export class OutgoingController {
   @ApiOperation({ summary: 'Reactivar múltiples salidas' })
   @ApiOkResponse({
     description: 'Salidas reactivadas exitosamente',
-    type: [Outgoing],
+    type: [DetailedOutgoing],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o salidas no existen',
@@ -190,7 +186,7 @@ export class OutgoingController {
   reactivateAll(
     @Body() deleteOutgoingDto: DeleteOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing[]>> {
     return this.outgoingService.reactivateMany(deleteOutgoingDto.ids, user);
   }
 
@@ -202,7 +198,7 @@ export class OutgoingController {
   @ApiOkResponse({
     status: 201,
     description: 'Salida de almacen creada exitosamente',
-    type: OutgoingCreateResponseData,
+    type: DetailedOutgoing,
   })
   @ApiBadRequestResponse({
     description: 'Datos de salida inválidos o salida ya existe',
@@ -210,7 +206,7 @@ export class OutgoingController {
   createOutgoing(
     @Body() createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<OutgoingCreateResponseData>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     return this.outgoingService.createOutgoing(createOutgoingDtoStorage, user);
   }
 }

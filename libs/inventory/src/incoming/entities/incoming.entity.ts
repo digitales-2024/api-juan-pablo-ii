@@ -30,13 +30,13 @@ export class Incoming {
 //   incomingId,
 //   movementTypeId,
 // };
-export class IncomingCreateResponseData {
-  @ApiProperty()
-  incomingId: string;
+// export class IncomingCreateResponseData {
+//   @ApiProperty()
+//   incomingId: string;
 
-  @ApiProperty()
-  movementTypeId: string;
-}
+//   @ApiProperty()
+//   movementTypeId: string;
+// }
 
 // //Evaluar donde seleccionar los registros activos
 // async getAllDetailedIncoming() {
@@ -100,27 +100,27 @@ export class IncomingStorage {
 //   Movement Movement[]
 //   Stock    Stock[]
 // }
-export class IncomingStock {
-  @ApiProperty()
-  id: string;
+// export class IncomingStock {
+//   @ApiProperty()
+//   id: string;
 
-  @ApiProperty()
-  storageId: string;
+//   @ApiProperty()
+//   storageId: string;
 
-  @ApiProperty()
-  stock: number;
+//   @ApiProperty()
+//   stock: number;
 
-  @ApiProperty()
-  price: number;
+//   @ApiProperty()
+//   price: number;
 
-  @ApiProperty()
-  isActive?: boolean;
+//   @ApiProperty()
+//   isActive?: boolean;
 
-  @ApiProperty({
-    type: IncomingStorage,
-  })
-  Storage: IncomingStorage;
-}
+//   @ApiProperty({
+//     type: IncomingStorage,
+//   })
+//   Storage: IncomingStorage;
+// }
 
 export class IncomingProduct {
   @ApiProperty()
@@ -156,10 +156,10 @@ export class IncomingProduct {
   @ApiProperty()
   isActive?: boolean;
 
-  @ApiProperty({
-    type: [IncomingStock],
-  })
-  Stock: IncomingStock[];
+  // @ApiProperty({
+  //   type: [IncomingStock],
+  // })
+  // Stock: IncomingStock[];
 }
 
 // model Movement {
@@ -206,6 +206,11 @@ export class IncomingMovement {
 }
 
 export class DetailedIncoming extends Incoming {
+  @ApiProperty({
+    type: IncomingStorage,
+  })
+  Storage: IncomingStorage;
+
   @ApiProperty({
     type: [IncomingMovement],
   })

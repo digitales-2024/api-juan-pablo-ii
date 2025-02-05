@@ -39,27 +39,27 @@ export class OutgoingStorage {
   name: string;
 }
 
-export class OutgoingStock {
-  @ApiProperty()
-  id: string;
+// export class OutgoingStock {
+//   @ApiProperty()
+//   id: string;
 
-  @ApiProperty()
-  storageId: string;
+//   @ApiProperty()
+//   storageId: string;
 
-  @ApiProperty()
-  stock: number;
+//   @ApiProperty()
+//   stock: number;
 
-  @ApiProperty()
-  price: number;
+//   @ApiProperty()
+//   price: number;
 
-  @ApiProperty()
-  isActive?: boolean;
+//   @ApiProperty()
+//   isActive?: boolean;
 
-  @ApiProperty({
-    type: OutgoingStorage,
-  })
-  Storage: OutgoingStorage;
-}
+//   @ApiProperty({
+//     type: OutgoingStorage,
+//   })
+//   Storage: OutgoingStorage;
+// }
 
 export class OutgoingProduct {
   @ApiProperty()
@@ -95,10 +95,10 @@ export class OutgoingProduct {
   @ApiProperty()
   isActive?: boolean;
 
-  @ApiProperty({
-    type: [OutgoingStock],
-  })
-  Stock: OutgoingStock[];
+  // @ApiProperty({
+  //   type: [OutgoingStock],
+  // })
+  // Stock: OutgoingStock[];
 }
 
 export class OutgoingMovement {
@@ -127,6 +127,11 @@ export class OutgoingMovement {
 }
 
 export class DetailedOutgoing extends Outgoing {
+  @ApiProperty({
+    type: OutgoingStorage,
+  })
+  Storage: OutgoingStorage;
+
   @ApiProperty({
     type: [OutgoingMovement],
   })

@@ -12,21 +12,14 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
   async getAllDetailedOutgoing(): Promise<DetailedOutgoing[]> {
     return this.prisma.outgoing.findMany({
       include: {
+        Storage: {
+          select: {
+            name: true,
+          },
+        },
         Movement: {
           include: {
-            Producto: {
-              include: {
-                Stock: {
-                  include: {
-                    Storage: {
-                      select: {
-                        name: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
+            Producto: true,
           },
         },
       },
@@ -39,21 +32,14 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
         id,
       },
       include: {
+        Storage: {
+          select: {
+            name: true,
+          },
+        },
         Movement: {
           include: {
-            Producto: {
-              include: {
-                Stock: {
-                  include: {
-                    Storage: {
-                      select: {
-                        name: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
+            Producto: true,
           },
         },
       },

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateIncomingDto } from '../dto/create-incoming.dto';
-import { Incoming, IncomingWithStorage } from '../entities/incoming.entity';
+import { DetailedIncoming, Incoming } from '../entities/incoming.entity';
 import { IncomingRepository } from '../repositories/incoming.repository';
 import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
@@ -52,14 +52,14 @@ export class CreateIncomingUseCase {
   async createIncomingStorage(
     createIncomingDtoStorage: CreateIncomingDtoStorage,
     user: UserData,
-  ): Promise<IncomingWithStorage> {
+  ): Promise<DetailedIncoming> {
     // Cambiamos el tipo de retorno a string para devolver solo el ID
     // Llamada a la función execute para crear un nuevo ingreso
     const dataIncomingStorage = await this.execute(
       createIncomingDtoStorage,
       user,
     ).then((response) =>
-      this.incomingRepository.findWithStorageById(response.data.id),
+      this.incomingRepository.findDetailedIncomingById(response.data.id),
     );
 
     // Extraer el ID usando la función privada
