@@ -63,13 +63,22 @@ export class StaffScheduleService {
   }
 
   /**
-   * Obtiene la lista de todos los horarios del personal.
-   * @returns Lista de horarios
+   * Obtiene la lista de todos los horarios del personal con información básica del staff
+   * @returns Lista de horarios con nombre y apellido del staff
    * @throws Lanza un error en caso de fallo al obtener los datos
    */
   async findAll(): Promise<StaffSchedule[]> {
     try {
-      return await this.staffScheduleRepository.findMany();
+      return await this.staffScheduleRepository.findMany({
+        include: {
+          staff: {
+            select: {
+              name: true,
+              lastName: true
+            }
+          }
+        }
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
