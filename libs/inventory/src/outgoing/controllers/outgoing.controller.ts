@@ -141,13 +141,13 @@ export class OutgoingController {
   @ApiOkResponse({
     status: 200,
     description: 'Salida actualizada exitosamente',
-    type: Outgoing,
+    type: DetailedOutgoing,
   })
   update(
     @Param('id') id: string,
     @Body() updateOutgoingDto: UpdateOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     return this.outgoingService.update(id, updateOutgoingDto, user);
   }
 

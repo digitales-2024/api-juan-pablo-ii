@@ -164,13 +164,13 @@ export class IncomingController {
   @ApiOkResponse({
     status: 200,
     description: 'Ingreso actualizado exitosamente',
-    type: Incoming,
+    type: DetailedIncoming,
   })
   update(
     @Param('id') id: string,
     @Body() updateIncomingDto: UpdateIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Incoming>> {
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
     return this.incomingService.update(id, updateIncomingDto, user);
   }
 

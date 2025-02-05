@@ -70,7 +70,7 @@ export class OutgoingService {
     id: string,
     updateOutgoingDto: UpdateOutgoingDto,
     user: UserData,
-  ): Promise<BaseApiResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     try {
       const currentOutgoing = await this.findById(id);
 
@@ -78,7 +78,7 @@ export class OutgoingService {
         return {
           success: true,
           message: 'No se detectaron cambios en la salida',
-          data: currentOutgoing,
+          data: await this.outgoingRepository.findDetailedOutgoingById(id),
         };
       }
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateOutgoingDto } from '../dto/update-outgoing.dto';
-import { Outgoing } from '../entities/outgoing.entity';
+import { DetailedOutgoing } from '../entities/outgoing.entity';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
 import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
@@ -18,7 +18,7 @@ export class UpdateOutgoingUseCase {
     id: string,
     updateOutgoingDto: UpdateOutgoingDto,
     user: UserData,
-  ): Promise<BaseApiResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     const updatedOutgoing = await this.outgoingRepository.transaction(
       async () => {
         // Update outgoing
@@ -40,7 +40,9 @@ export class UpdateOutgoingUseCase {
           createdAt: new Date(),
         });
 
-        return outgoing;
+        return await this.outgoingRepository.findDetailedOutgoingById(
+          outgoing.id,
+        );
       },
     );
 

@@ -73,7 +73,7 @@ export class IncomingService {
     id: string,
     updateIncomingDto: UpdateIncomingDto,
     user: UserData,
-  ): Promise<BaseApiResponse<Incoming>> {
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
     try {
       const currentIncoming = await this.findById(id);
 
@@ -81,7 +81,7 @@ export class IncomingService {
         return {
           success: true,
           message: 'No se detectaron cambios en el ingreso',
-          data: currentIncoming,
+          data: await this.incomingRepository.findDetailedIncomingById(id),
         };
       }
 
