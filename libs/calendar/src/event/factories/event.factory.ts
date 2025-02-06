@@ -4,6 +4,7 @@ import { Event, EventStatus } from '../entities/event.entity';
 import { EventType } from '../entities/event-type.enum';
 import { StaffSchedule } from 'src/modules/staff-schedule/entities/staff-schedule.entity';
 import { RecurrenceParser } from '@calendar/calendar/utils/recurrence-parser';
+import { formatInTimeZone } from 'date-fns-tz';
 
 @Injectable()
 export class EventFactory {
@@ -66,7 +67,13 @@ export class EventFactory {
         staffSchedule.daysOfWeek
       );
       
-      return dates.map(date => {
+      // Filtrar excepciones
+      const filteredDates = dates.filter(date => {
+        const dateString = formatInTimeZone(date, 'America/Lima', 'yyyy-MM-dd');
+        return !staffSchedule.exceptions.includes(dateString);
+      });
+
+      return filteredDates.map(date => {
         const event = new Event();
         Object.assign(event, {...baseEvent});
         

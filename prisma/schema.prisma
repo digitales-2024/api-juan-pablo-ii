@@ -624,7 +624,7 @@ model StaffSchedule {
   endTime    String // Formato "HH:mm" (17:00)
   daysOfWeek DayOfWeek[] // Días de aplicación
   recurrence Json // { frequency: "WEEKLY", interval: 1, until: "2024-12-31", count: 10 }
-  exceptions DateTime[] // Fechas excluidas
+  exceptions String[] // Cambiar de DateTime[] a String[] para aceptar fechas en formato YYYY-MM-DD
   isActive   Boolean     @default(true)
   events     Event[] // Eventos generados
   staff      Staff       @relation(fields: [staffId], references: [id])

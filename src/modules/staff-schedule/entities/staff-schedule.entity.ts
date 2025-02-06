@@ -43,15 +43,17 @@ export class StaffSchedule {
     description: 'Configuración de recurrencia',
     example: { frequency: 'WEEKLY', interval: 1, until: '2024-12-31' }
   })
-  recurrence: Record<string, any>;
+  recurrence: {
+    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+    interval: number;
+    until: string;
+  };
 
   @ApiProperty({ 
-    description: 'Fechas excluidas del horario',
-    type: [Date],
-    required: false,
-    default: []
+    description: 'Fechas excluidas en formato YYYY-MM-DD',
+    example: ['2024-05-01']
   })
-  exceptions: Date[];
+  exceptions: string[];
 
   @ApiProperty({ default: true })
   isActive: boolean;
