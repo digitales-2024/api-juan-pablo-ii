@@ -48,8 +48,8 @@ export class CreatePatientDto {
     example: '1990-01-01',
     required: true,
   })
-  @IsDateString()
-  birthDate: Date;
+  @IsString()
+  birthDate: string;
 
   @ApiProperty({
     description: 'Sexo del paciente (M/F)',
