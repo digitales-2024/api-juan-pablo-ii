@@ -5,7 +5,6 @@ import {
   IsNotEmpty,
   IsEmail,
   MaxLength,
-  IsDateString,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -87,7 +86,7 @@ export class CreatePatientDto {
     example: 'juan.perez@example.com',
     required: false,
   })
-  @IsEmail()
+  @IsString()
   @IsOptional()
   @MaxLength(100)
   @Transform(({ value }) => value?.trim())
@@ -207,7 +206,6 @@ export class CreatePatientDto {
     example: null,
     required: false,
   })
-  @IsString()
   @IsOptional()
   patientPhoto?: string = null;
 }
