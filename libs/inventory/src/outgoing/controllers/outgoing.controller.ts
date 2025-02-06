@@ -24,10 +24,7 @@ import {
   UpdateOutgoingDto,
   DeleteOutgoingDto,
 } from '../dto';
-import {
-  Outgoing,
-  OutgoingCreateResponseData,
-} from '../entities/outgoing.entity';
+import { DetailedOutgoing, Outgoing } from '../entities/outgoing.entity';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
@@ -69,6 +66,57 @@ export class OutgoingController {
   }
 
   /**
+   * Obtiene todas las salidas
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todas las salidas' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todas las salidas',
+    type: [Outgoing],
+  })
+  findAll(): Promise<Outgoing[]> {
+    return this.outgoingService.findAll();
+  }
+
+  /**
+   * Obtiene todos los ingresos con detalles de sus relaciones
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener los ingresos
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   */
+  @Get('/detailed')
+  @ApiOperation({ summary: 'Obtener todos los ingresos' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los ingresos',
+    type: [DetailedOutgoing],
+  })
+  findAllWithRelations(): Promise<DetailedOutgoing[]> {
+    return this.outgoingService.findAllWithRelations();
+  }
+
+  /**
+   * Obtiene un ingreso con detalles de sus relaciones
+   * @param id - ID del ingreso a buscar
+   * @returns Una promesa que resuelve con el ingreso encontrado con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener el ingreso
+   */
+  @Get('/detailed/:id')
+  @ApiOperation({ summary: 'Obtener ingreso por ID' })
+  @ApiParam({ name: 'id', description: 'ID del ingreso' })
+  @ApiOkResponse({
+    description: 'Ingreso encontrado',
+    type: [DetailedOutgoing],
+  })
+  @ApiNotFoundResponse({
+    description: 'Ingreso no encontrado',
+  })
+  findOneWithRelations(@Param('id') id: string): Promise<DetailedOutgoing[]> {
+    return this.outgoingService.findByIdWithRelations(id);
+  }
+
+  /**
    * Obtiene una salida por su ID
    */
   @Get(':id')
@@ -86,20 +134,6 @@ export class OutgoingController {
   }
 
   /**
-   * Obtiene todas las salidas
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todas las salidas' })
-  @ApiOkResponse({
-    status: 200,
-    description: 'Lista de todas las salidas',
-    type: [Outgoing],
-  })
-  findAll(): Promise<Outgoing[]> {
-    return this.outgoingService.findAll();
-  }
-
-  /**
    * Actualiza una salida existente
    */
   @Patch(':id')
@@ -107,13 +141,13 @@ export class OutgoingController {
   @ApiOkResponse({
     status: 200,
     description: 'Salida actualizada exitosamente',
-    type: Outgoing,
+    type: DetailedOutgoing,
   })
   update(
     @Param('id') id: string,
     @Body() updateOutgoingDto: UpdateOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     return this.outgoingService.update(id, updateOutgoingDto, user);
   }
 
@@ -125,7 +159,7 @@ export class OutgoingController {
   @ApiOkResponse({
     status: 200,
     description: 'Salidas desactivadas exitosamente',
-    type: [Outgoing],
+    type: [DetailedOutgoing],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o salidas no existen',
@@ -133,7 +167,7 @@ export class OutgoingController {
   deleteMany(
     @Body() deleteOutgoingDto: DeleteOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing[]>> {
     return this.outgoingService.deleteMany(deleteOutgoingDto, user);
   }
 
@@ -144,7 +178,7 @@ export class OutgoingController {
   @ApiOperation({ summary: 'Reactivar múltiples salidas' })
   @ApiOkResponse({
     description: 'Salidas reactivadas exitosamente',
-    type: [Outgoing],
+    type: [DetailedOutgoing],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o salidas no existen',
@@ -152,7 +186,7 @@ export class OutgoingController {
   reactivateAll(
     @Body() deleteOutgoingDto: DeleteOutgoingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing[]>> {
     return this.outgoingService.reactivateMany(deleteOutgoingDto.ids, user);
   }
 
@@ -164,7 +198,7 @@ export class OutgoingController {
   @ApiOkResponse({
     status: 201,
     description: 'Salida de almacen creada exitosamente',
-    type: OutgoingCreateResponseData,
+    type: DetailedOutgoing,
   })
   @ApiBadRequestResponse({
     description: 'Datos de salida inválidos o salida ya existe',
@@ -172,7 +206,7 @@ export class OutgoingController {
   createOutgoing(
     @Body() createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<OutgoingCreateResponseData>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     return this.outgoingService.createOutgoing(createOutgoingDtoStorage, user);
   }
 }

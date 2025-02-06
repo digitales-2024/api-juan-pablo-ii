@@ -20,7 +20,11 @@ import {
 } from '@nestjs/swagger';
 import { UserData } from '@login/login/interfaces';
 import { CreateProductDto, UpdateProductDto, DeleteProductDto } from '../dto';
-import { Product, ProductWithRelations } from '../entities/product.entity';
+import {
+  ActiveProduct,
+  Product,
+  ProductWithRelations,
+} from '../entities/product.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
@@ -74,6 +78,23 @@ export class ProductController {
     return this.productService.findAll();
   }
 
+  @Get('/active')
+  @ApiOperation({
+    summary:
+      'Obtener todos los productos activos con informaciòn detallada relevante',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los productos',
+    type: [ActiveProduct],
+  })
+  findAllActive(): Promise<ActiveProduct[]> {
+    return this.productService.findAllActive();
+  }
+
+  /**
+   * Obtiene todos los productos con detalles de sus relaciones
+   */
   @Get('/detailed')
   @ApiOperation({
     summary: 'Obtener todos los productos con informaciòn detallada',
@@ -85,6 +106,27 @@ export class ProductController {
   })
   findAllWithRelations(): Promise<ProductWithRelations[]> {
     return this.productService.findAllWithRelations();
+  }
+
+  /**
+   * Obtiene un producto por su ID con detalles de sus relaciones
+   */
+  @Get('detailed/:id')
+  @ApiOperation({
+    summary: 'Obtener producto por ID con informaciòn detallada anidada',
+  })
+  @ApiParam({ name: 'id', description: 'ID del producto' })
+  @ApiOkResponse({
+    description: 'Producto encontrado',
+    type: [ProductWithRelations],
+  })
+  @ApiNotFoundResponse({
+    description: 'Producto no encontrado',
+  })
+  findOneWithRelations(
+    @Param('id') id: string,
+  ): Promise<ProductWithRelations[]> {
+    return this.productService.findByIdWithRelations(id);
   }
 
   /**
@@ -102,24 +144,6 @@ export class ProductController {
   })
   findOne(@Param('id') id: string): Promise<BaseApiResponse<Product>> {
     return this.productService.findOne(id);
-  }
-
-  @Get(':id/detailed')
-  @ApiOperation({
-    summary: 'Obtener producto por ID con informaciòn detallada anidada',
-  })
-  @ApiParam({ name: 'id', description: 'ID del producto' })
-  @ApiOkResponse({
-    description: 'Producto encontrado',
-    type: ProductWithRelations,
-  })
-  @ApiNotFoundResponse({
-    description: 'Producto no encontrado',
-  })
-  findOneWithRelations(
-    @Param('id') id: string,
-  ): Promise<BaseApiResponse<ProductWithRelations>> {
-    return this.productService.findOneWithRelations(id);
   }
 
   /**

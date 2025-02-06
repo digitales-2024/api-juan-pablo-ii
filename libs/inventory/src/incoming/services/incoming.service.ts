@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { IncomingRepository } from '../repositories/incoming.repository';
 import {
+  DetailedIncoming,
   Incoming,
-  IncomingCreateResponseData,
+  IncomingWithStorage,
 } from '../entities/incoming.entity';
 import { CreateIncomingDto } from '../dto/create-incoming.dto';
 import { UpdateIncomingDto } from '../dto/update-incoming.dto';
@@ -72,7 +73,7 @@ export class IncomingService {
     id: string,
     updateIncomingDto: UpdateIncomingDto,
     user: UserData,
-  ): Promise<BaseApiResponse<Incoming>> {
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
     try {
       const currentIncoming = await this.findById(id);
 
@@ -80,7 +81,7 @@ export class IncomingService {
         return {
           success: true,
           message: 'No se detectaron cambios en el ingreso',
-          data: currentIncoming,
+          data: await this.incomingRepository.findDetailedIncomingById(id),
         };
       }
 
@@ -145,7 +146,7 @@ export class IncomingService {
   async deleteMany(
     deleteIncomingDto: DeleteIncomingDto,
     user: UserData,
-  ): Promise<BaseApiResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<DetailedIncoming[]>> {
     try {
       validateArray(deleteIncomingDto.ids, 'IDs de ingresos');
       return await this.deleteIncomingUseCase.execute(deleteIncomingDto, user);
@@ -164,7 +165,7 @@ export class IncomingService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<BaseApiResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<DetailedIncoming[]>> {
     try {
       validateArray(ids, 'IDs de ingresos');
       return await this.reactivateIncomingUseCase.execute(ids, user);
@@ -184,16 +185,21 @@ export class IncomingService {
   async createIncoming(
     createIncomingDtoStorage: CreateIncomingDtoStorage,
     user: UserData,
-  ): Promise<BaseApiResponse<IncomingCreateResponseData>> {
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
     try {
       // Extraer los datos necesarios del DTO
-      const { movement, state, name, storageId, date } =
-        createIncomingDtoStorage;
+      const {
+        movement: movementsList,
+        state,
+        name,
+        storageId,
+        date,
+      } = createIncomingDtoStorage;
       const isIncoming = true;
 
       console.log('idIncoming', storageId);
       // Llamar a createIncomingUseCase y esperar el ID del registro del nuevo ingreso
-      const incomingId = await this.createIncomingUseCase.createIncomingStorage(
+      const incoming = await this.createIncomingUseCase.createIncomingStorage(
         createIncomingDtoStorage,
         user,
       );
@@ -210,11 +216,11 @@ export class IncomingService {
         );
 
       // Extraer los datos de movement y usarlos en createMovementStorage
-      const movementData = await this.extractProductoIdQuantity(movement);
+      //const movementData = this.extractProductoIdQuantity(movement);
 
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
-        movementData.map(async (item) => {
+        movementsList.map(async (item) => {
           const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
@@ -222,7 +228,7 @@ export class IncomingService {
             await this.createMovementUseCase.createMovementStorage(
               {
                 movementTypeId,
-                incomingId,
+                incomingId: incoming.id,
                 productId,
                 quantity,
                 date,
@@ -236,10 +242,10 @@ export class IncomingService {
       );
       //registra y sumar ingreso al alamacen y al stock
       // Extraer los datos de movement y usarlos en createMovementStorage
-      const stockData = await this.extractProductoIdQuantity(movement);
+      //const stockData = this.extractProductoIdQuantity(movement);
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
-        stockData.map(async (item) => {
+        movementsList.map(async (item) => {
           const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
@@ -254,26 +260,21 @@ export class IncomingService {
         }),
       );
 
-      const data: IncomingCreateResponseData = {
-        incomingId,
-        movementTypeId,
-      };
+      // const data: IncomingCreateResponseData = {
+      //   incomingId,
+      //   movementTypeId,
+      // };
       return {
         success: true, // Código de estado HTTP 201
         message: 'Ingreso creado exitosamente',
-        data, // El ID del nuevo ingreso y el tipo de movimiento
+        data: await this.incomingRepository.findDetailedIncomingById(
+          incoming.id,
+        ), // El ID del nuevo ingreso y el tipo de movimiento
       };
       //
       //
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
-
-      // Retornar un objeto de error con un código de estado adecuado
-      return {
-        success: true, // o el código que consideres apropiado
-        message: 'Error al crear el ingreso',
-        data: null, // o puedes incluir más información sobre el error si es necesario
-      };
     }
   }
   /**
@@ -282,12 +283,89 @@ export class IncomingService {
    * @param movement - Un array de objetos que contienen `productId` y `quantity`.
    * @returns Un array de objetos con `productId` y `quantity`.
    */
-  private extractProductoIdQuantity(
-    movement: Array<{ productId: string; quantity: number }>,
-  ): { productId: string; quantity: number }[] {
-    return movement.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-    }));
+  // private extractProductoIdQuantity(
+  //   movement: Omit<Movement, 'id'>[],
+  // ): { productId: string; quantity: number }[] {
+  //   return movement.map((item) => ({
+  //     productId: item.productId,
+  //     quantity: item.quantity,
+  //   }));
+  // }
+
+  /**
+   * Obtiene un ingreso por su ID con detalles de sus relaciones.
+   *
+   * @param id - ID del ingreso a buscar.
+   * @returns Una promesa que resuelve con el ingreso encontrado.
+   * @throws {BadRequestException} Si el ingreso no existe.
+   */
+  async findByIdWithRelations(id: string): Promise<DetailedIncoming[]> {
+    try {
+      const incoming =
+        await this.incomingRepository.findDetailedIncomingById(id);
+      if (!incoming) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return [incoming];
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los ingresos con sus relaciones detalladas.
+   *
+   * @returns Una promesa que resuelve con una lista de ingresos detallados.
+   * @throws {Error} Si ocurre un error al obtener los ingresos.
+   */
+  async findAllWithRelations(): Promise<DetailedIncoming[]> {
+    try {
+      const incomingData =
+        await this.incomingRepository.getAllDetailedIncoming();
+      if (!incomingData) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return incomingData;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los registros de ingreso con su respectivo almacenamiento.
+   *
+   * @returns {Promise<IncomingWithStorage[]>} Una promesa que resuelve con una lista de objetos IncomingWithStorage.
+   * @throws {BadRequestException} Si no se encuentran datos de ingreso.
+   * @throws {Error} Si ocurre un error al obtener los datos.
+   */
+  async getAllWithStorage(): Promise<IncomingWithStorage[]> {
+    try {
+      const incomingData = await this.incomingRepository.getAllWithStorage();
+      if (!incomingData) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return incomingData;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca un ingreso con almacenamiento por su ID.
+   *
+   * @param {string} id - El ID del ingreso a buscar.
+   * @returns {Promise<IncomingWithStorage[]>} Una promesa que resuelve con un array que contiene el ingreso con almacenamiento.
+   * @throws {BadRequestException} Si no se encuentra el ingreso.
+   */
+  async findWithStorageById(id: string): Promise<IncomingWithStorage[]> {
+    try {
+      const incoming = await this.incomingRepository.findWithStorageById(id);
+      if (!incoming) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return [incoming];
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
   }
 }
