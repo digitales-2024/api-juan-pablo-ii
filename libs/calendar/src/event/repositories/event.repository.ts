@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
 import { Event, EventStatus } from '../entities/event.entity';
 import { EventType } from '../entities/event-type.enum';
-import { CreateEventDto } from '../dto/create-event.dto';
 
 @Injectable()
 export class EventRepository extends BaseRepository<Event> {
@@ -99,4 +98,18 @@ export class EventRepository extends BaseRepository<Event> {
     });
   }
   
+  async findMany(params?: {
+    where?: any;
+    orderBy?: any;
+    include?: any;
+  }): Promise<Event[]> {
+    return this.prisma.event.findMany({
+      ...params,
+      include: {
+        ...params?.include,
+        staff: params?.include?.staff || false,
+        branch: params?.include?.branch || false
+      }
+    });
+  }
 }
