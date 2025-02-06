@@ -1,5 +1,3 @@
-export enum EventType {
-    TURNO = 'TURNO',
-    CITA = 'CITA',
-    OTRO = 'OTRO',
-  }
+import { EventType as PrismaEventType } from '@prisma/client';
+
+export { PrismaEventType as EventType };

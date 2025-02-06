@@ -37,6 +37,19 @@ export class FindEventsByFilterUseCase {
     const events = await this.eventRepository.findMany({
       where,
       orderBy: { start: 'desc' },
+      include: {
+        staff: {
+          select: {
+            name: true,
+            lastName: true
+          }
+        },
+        branch: {
+          select: {
+            name: true
+          }
+        }
+      }
     });
 
     this.logger.debug(`Eventos encontrados: ${JSON.stringify(events)}`);
