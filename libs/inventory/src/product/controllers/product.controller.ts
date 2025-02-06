@@ -20,7 +20,11 @@ import {
 } from '@nestjs/swagger';
 import { UserData } from '@login/login/interfaces';
 import { CreateProductDto, UpdateProductDto, DeleteProductDto } from '../dto';
-import { Product, ProductWithRelations } from '../entities/product.entity';
+import {
+  ActiveProduct,
+  Product,
+  ProductWithRelations,
+} from '../entities/product.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
@@ -74,6 +78,23 @@ export class ProductController {
     return this.productService.findAll();
   }
 
+  @Get('/active')
+  @ApiOperation({
+    summary:
+      'Obtener todos los productos activos con informaciòn detallada relevante',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los productos',
+    type: [ActiveProduct],
+  })
+  findAllActive(): Promise<ActiveProduct[]> {
+    return this.productService.findAllActive();
+  }
+
+  /**
+   * Obtiene todos los productos con detalles de sus relaciones
+   */
   @Get('/detailed')
   @ApiOperation({
     summary: 'Obtener todos los productos con informaciòn detallada',

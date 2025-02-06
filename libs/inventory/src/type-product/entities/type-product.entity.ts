@@ -28,3 +28,11 @@ export class TypeProductResponse {
   @ApiProperty()
   createdAt: Date;
 }
+
+export class ActiveProductTypeProduct {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  isActive: boolean;
+}

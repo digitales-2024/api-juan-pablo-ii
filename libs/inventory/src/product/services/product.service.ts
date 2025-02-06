@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
-import { Product, ProductWithRelations } from '../entities/product.entity';
+import {
+  ActiveProduct,
+  Product,
+  ProductWithRelations,
+} from '../entities/product.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { UserData } from '@login/login/interfaces';
@@ -279,6 +283,18 @@ export class ProductService {
   async getProductPriceById(productId: string): Promise<number | null> {
     try {
       return this.productRepository.getProductPriceById(productId);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findAllActive(): Promise<ActiveProduct[]> {
+    try {
+      const products = await this.productRepository.findAllActiveProducts();
+      if (!products) {
+        throw new BadRequestException('Producto no encontrado');
+      }
+      return products;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

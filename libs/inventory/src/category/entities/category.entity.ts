@@ -18,6 +18,14 @@ export class Category {
   createdAt: Date;
 }
 
+export class ActiveProductCategory {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  isActive: boolean;
+}
+
 // export class CategoryResponse {
 //   @ApiProperty()
 //   id: string;
