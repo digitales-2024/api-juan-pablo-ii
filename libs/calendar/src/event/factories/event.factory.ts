@@ -38,7 +38,7 @@ export class EventFactory {
     if (!dto.staffScheduleId) throw new Error('StaffScheduleId requerido para TURNO');
     
     event.status = EventStatus.CONFIRMED;
-    event.color = '#FF9900';
+    event.color = 'sky';
     event.staffScheduleId = dto.staffScheduleId;
     return event;
   }

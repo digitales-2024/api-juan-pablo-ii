@@ -12,6 +12,7 @@ import { CreateRecurrentEventsUseCase } from "./use-cases/create-recurrent-event
 import { StaffScheduleModule } from "src/modules/staff-schedule/staff-schedule.module";
 import { RecurrenceParser } from "../utils/recurrence-parser";
 import { APP_INTERCEPTOR } from "@nestjs/core";
+import { FindEventsByFilterUseCase } from "./use-cases/find-events-by-filter.use-case";
 
 /**
  * Módulo que gestiona los eventos del calendario.
@@ -27,6 +28,7 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
     DeleteEventsUseCase,
     ReactivateEventsUseCase,
     CreateRecurrentEventsUseCase,
+    FindEventsByFilterUseCase,
     EventFactory,
     RecurrenceParser,
     {
