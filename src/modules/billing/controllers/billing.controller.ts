@@ -10,7 +10,6 @@ import {
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { UserData } from '@login/login/interfaces';
 import { BillingService } from '../services/billing.service';
-import { CreateMedicalConsultationBillingDto } from '../dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { HttpResponse } from '@login/login/interfaces';
 // import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
@@ -38,18 +37,18 @@ import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
-  @Post('medical-consultation')
-  @ApiOperation({ summary: 'Create medical consultation order' })
-  @ApiCreatedResponse({
-    description: 'Medical consultation order created successfully',
-    type: Order,
-  })
-  async createMedicalConsultationOrder(
-    @Body() createDto: CreateMedicalConsultationBillingDto,
-    @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
-    return this.billingService.createMedicalConsultation(createDto, user);
-  }
+  // @Post('medical-consultation')
+  // @ApiOperation({ summary: 'Create medical consultation order' })
+  // @ApiCreatedResponse({
+  //   description: 'Medical consultation order created successfully',
+  //   type: Order,
+  // })
+  // async createMedicalConsultationOrder(
+  //   @Body() createDto: CreateMedicalConsultationBillingDto,
+  //   @GetUser() user: UserData,
+  // ): Promise<HttpResponse<Order>> {
+  //   return this.billingService.createMedicalConsultation(createDto, user);
+  // }
   // @Post('medical-prescription')
   // @ApiOperation({ summary: 'Create medical prescription order' })
   // @ApiCreatedResponse({
