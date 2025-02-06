@@ -285,6 +285,7 @@ export class PacientService {
     image: Express.Multer.File,
     user: UserData,
   ): Promise<BaseApiResponse<Patient>> {
+    console.log('createPatientWithImage', createPatientDto, image, user);
     // Validar si el DNI ya existe
     const dniExists = await this.validateDNIExists(createPatientDto.dni);
     if (dniExists) {
