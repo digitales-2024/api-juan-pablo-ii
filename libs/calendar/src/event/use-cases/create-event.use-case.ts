@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Event, EventStatus } from '../entities/event.entity';
+import { Event} from '../entities/event.entity';
 import { EventRepository } from '../repositories/event.repository';
 import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { AuditActionType } from '@prisma/client';
+import { AuditActionType, EventStatus } from '@prisma/client';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateEventDto } from '../dto/create-event.dto';
 
@@ -36,6 +36,7 @@ export class CreateEventUseCase {
         ...createEventDto,
         status: EventStatus.PENDING,
         isCancelled: false,
+        isActive: true,
       });
 
       // Registrar auditoría

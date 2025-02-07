@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { EventType } from '../entities/event-type.enum';
-import { EventStatus } from '../entities/event.entity';
+import { EventStatus } from '@prisma/client';
 
 /**
  * DTO para filtrar eventos, por ejemplo por staffId, tipo, sucursal y estado.
