@@ -1,11 +1,12 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateOutgoingDto } from '../dto/create-outgoing.dto';
-import { Outgoing } from '../entities/outgoing.entity';
+import { DetailedOutgoing, Outgoing } from '../entities/outgoing.entity';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateOutgoingUseCase {
@@ -17,7 +18,7 @@ export class CreateOutgoingUseCase {
   async execute(
     createOutgoingDto: CreateOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<Outgoing>> {
     const newOutgoing = await this.outgoingRepository.transaction(async () => {
       // Create outgoing
       const outgoing = await this.outgoingRepository.create({
@@ -42,7 +43,7 @@ export class CreateOutgoingUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Salida creada exitosamente',
       data: newOutgoing,
     };
@@ -52,31 +53,15 @@ export class CreateOutgoingUseCase {
   async createOugoingStorage(
     createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     user: UserData,
-  ): Promise<string> {
-    // Cambiamos el tipo de retorno a string para devolver solo el ID
+  ): Promise<DetailedOutgoing> {
     // Llamada a la función execute para crear una nueva salida
     const dataOutgoingStorage = await this.execute(
       createOutgoingDtoStorage,
       user,
+    ).then((response) =>
+      this.outgoingRepository.findDetailedOutgoingById(response.data.id),
     );
 
-    // Extraer el ID usando la función privada
-    const idIncoming = this.extractId(dataOutgoingStorage);
-
-    // Retornar el ID extraído
-    return idIncoming;
-  }
-
-  private extractId(dataOutgoingStorage: HttpResponse<Outgoing>): string {
-    // Verificar si la respuesta contiene datos y extraer el ID
-    if (
-      dataOutgoingStorage &&
-      dataOutgoingStorage.data &&
-      dataOutgoingStorage.data.id
-    ) {
-      return dataOutgoingStorage.data.id; // Retorna el ID del ingreso creado
-    } else {
-      throw new Error('ID no encontrado en la respuesta'); // Manejo de errores si no se encuentra el ID
-    }
+    return dataOutgoingStorage;
   }
 }

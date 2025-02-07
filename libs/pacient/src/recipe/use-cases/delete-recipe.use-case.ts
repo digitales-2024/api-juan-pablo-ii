@@ -1,48 +1,51 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { RecipeRepository } from '../repositories/recipe.repository';
-import { Recipe } from '../entities/recipe.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { PrescriptionRepository } from '../repositories/recipe.repository';
+import { Prescription } from '../entities/recipe.entity';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { DeleteRecipeDto } from '../dto/delete-recipe.dto';
+import { DeletePrescriptionDto } from '../dto/delete-recipe.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class DeleteRecipesUseCase {
+export class DeletePrescriptionsUseCase {
   constructor(
-    private readonly recipeRepository: RecipeRepository,
+    private readonly prescriptionRepository: PrescriptionRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    deleteRecipesDto: DeleteRecipeDto,
+    deletePrescriptionsDto: DeletePrescriptionDto,
     user: UserData,
-  ): Promise<HttpResponse<Recipe[]>> {
-    const deletedRecipes = await this.recipeRepository.transaction(async () => {
-      // Realiza el soft delete y obtiene las recetas actualizadas
-      const recipes = await this.recipeRepository.softDeleteMany(
-        deleteRecipesDto.ids,
-      );
+  ): Promise<BaseApiResponse<Prescription[]>> {
+    const deletedPrescriptions = await this.prescriptionRepository.transaction(
+      async () => {
+        // Perform soft delete and get updated prescriptions
+        const prescriptions = await this.prescriptionRepository.softDeleteMany(
+          deletePrescriptionsDto.ids,
+        );
 
-      // Registra la auditoría para cada receta eliminada
-      await Promise.all(
-        recipes.map((recipe) =>
-          this.auditService.create({
-            entityId: recipe.id,
-            entityType: 'receta',
-            action: AuditActionType.DELETE,
-            performedById: user.id,
-            createdAt: new Date(),
-          }),
-        ),
-      );
+        // Register audit for each deleted prescription
+        await Promise.all(
+          prescriptions.map((prescription) =>
+            this.auditService.create({
+              entityId: prescription.id,
+              entityType: 'prescription',
+              action: AuditActionType.DELETE,
+              performedById: user.id,
+              createdAt: new Date(),
+            }),
+          ),
+        );
 
-      return recipes;
-    });
+        return prescriptions;
+      },
+    );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Recetas médicas eliminadas exitosamente',
-      data: deletedRecipes,
+      data: deletedPrescriptions,
     };
   }
 }

@@ -1,35 +1,37 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { UpHistoryRepository } from '../repositories/up-history.repository';
-import { UpHistory } from '../entities/up-history.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { UpdateHistoryRepository } from '../repositories/up-history.repository';
+import { UpdateHistory } from '../entities/up-history.entity';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
-import { DeleteUpHistoryDto } from '../dto/delete-up-history.dto';
+import { DeleteUpdateHistoryDto } from '../dto/delete-up-history.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class DeleteUpHistoriesUseCase {
+export class DeleteUpdateHistoriesUseCase {
   constructor(
-    private readonly upHistoryRepository: UpHistoryRepository,
+    private readonly updateHistoryRepository: UpdateHistoryRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    deleteUpHistoriesDto: DeleteUpHistoryDto,
+    deleteUpdateHistoriesDto: DeleteUpdateHistoryDto,
     user: UserData,
-  ): Promise<HttpResponse<UpHistory[]>> {
-    const deletedUpHistories = await this.upHistoryRepository.transaction(
-      async () => {
+  ): Promise<BaseApiResponse<UpdateHistory[]>> {
+    const deletedUpdateHistories =
+      await this.updateHistoryRepository.transaction(async () => {
         // Realiza el soft delete y obtiene las historias actualizadas
-        const upHistories = await this.upHistoryRepository.softDeleteMany(
-          deleteUpHistoriesDto.ids,
-        );
+        const updateHistories =
+          await this.updateHistoryRepository.softDeleteMany(
+            deleteUpdateHistoriesDto.ids,
+          );
 
         // Registra la auditoría para cada historia eliminada
         await Promise.all(
-          upHistories.map((upHistory) =>
+          updateHistories.map((updateHistory) =>
             this.auditService.create({
-              entityId: upHistory.id,
-              entityType: 'updateHistoria',
+              entityId: updateHistory.id,
+              entityType: 'updateHistory',
               action: AuditActionType.DELETE,
               performedById: user.id,
               createdAt: new Date(),
@@ -37,14 +39,13 @@ export class DeleteUpHistoriesUseCase {
           ),
         );
 
-        return upHistories;
-      },
-    );
+        return updateHistories;
+      });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Actualizaciones de historia médica eliminadas exitosamente',
-      data: deletedUpHistories,
+      data: deletedUpdateHistories,
     };
   }
 }

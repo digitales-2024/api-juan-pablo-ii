@@ -20,8 +20,8 @@ export class Movement {
   quantity: number;
 
   @ApiProperty()
-  date: Date;
+  date?: Date;
 
   @ApiProperty()
-  state: boolean;
+  state?: boolean;
 }

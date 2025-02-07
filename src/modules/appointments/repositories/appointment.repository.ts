@@ -5,7 +5,7 @@ import { Appointment } from '../entities/appointment.entity';
 @Injectable()
 export class AppointmentRepository extends BaseRepository<Appointment> {
   constructor(prisma: PrismaService) {
-    super(prisma, 'citaMedica');
+    super(prisma, 'appointment');
   }
 
   async findByDateRange(

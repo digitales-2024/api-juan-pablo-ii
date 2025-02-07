@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 import { Product } from '../entities/product.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteProductDto } from '../dto/delete-product.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteProductsUseCase {
@@ -16,7 +17,7 @@ export class DeleteProductsUseCase {
   async execute(
     deleteProductsDto: DeleteProductDto,
     user: UserData,
-  ): Promise<HttpResponse<Product[]>> {
+  ): Promise<BaseApiResponse<Product[]>> {
     const deletedProducts = await this.productRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene los productos actualizados
@@ -42,7 +43,8 @@ export class DeleteProductsUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      // statusCode: HttpStatus.OK,
+      success: true,
       message: 'Productos eliminados exitosamente',
       data: deletedProducts,
     };

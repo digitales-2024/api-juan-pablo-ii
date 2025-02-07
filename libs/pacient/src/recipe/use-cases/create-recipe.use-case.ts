@@ -1,51 +1,55 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateRecipeDto } from '../dto/create-recipe.dto';
-import { Recipe } from '../entities/recipe.entity';
-import { RecipeRepository } from '../repositories/recipe.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { CreatePrescriptionDto } from '../dto/create-recipe.dto';
+import { Prescription } from '../entities/recipe.entity';
+import { PrescriptionRepository } from '../repositories/recipe.repository';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class CreateRecipeUseCase {
+export class CreatePrescriptionUseCase {
   constructor(
-    private readonly recipeRepository: RecipeRepository,
+    private readonly prescriptionRepository: PrescriptionRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    createRecipeDto: CreateRecipeDto,
+    createPrescriptionDto: CreatePrescriptionDto,
     user: UserData,
-  ): Promise<HttpResponse<Recipe>> {
-    const newRecipe = await this.recipeRepository.transaction(async () => {
-      // Create recipe
-      const recipe = await this.recipeRepository.create({
-        updateHistoriaId: createRecipeDto.updateHistoriaId,
-        sucursalId: createRecipeDto.sucursalId,
-        personalId: createRecipeDto.personalId,
-        pacienteId: createRecipeDto.pacienteId,
-        fechaRegistro: createRecipeDto.fechaRegistro,
-        receta: createRecipeDto.receta,
-        descripcion: createRecipeDto.descripcion,
-        ordenCompraId: createRecipeDto.ordenCompraId,
-      });
+  ): Promise<BaseApiResponse<Prescription>> {
+    const newPrescription = await this.prescriptionRepository.transaction(
+      async () => {
+        // Create prescription
+        const prescription = await this.prescriptionRepository.create({
+          updateHistoryId: createPrescriptionDto.updateHistoryId,
+          branchId: createPrescriptionDto.branchId,
+          staffId: createPrescriptionDto.staffId,
+          patientId: createPrescriptionDto.patientId,
+          registrationDate: createPrescriptionDto.registrationDate,
+          prescription: createPrescriptionDto.prescription,
+          description: createPrescriptionDto.description,
+          purchaseOrderId: createPrescriptionDto.purchaseOrderId,
+          isActive: true,
+        });
 
-      // Register audit
-      await this.auditService.create({
-        entityId: recipe.id,
-        entityType: 'receta',
-        action: AuditActionType.CREATE,
-        performedById: user.id,
-        createdAt: new Date(),
-      });
+        // Register audit
+        await this.auditService.create({
+          entityId: prescription.id,
+          entityType: 'prescription',
+          action: AuditActionType.CREATE,
+          performedById: user.id,
+          createdAt: new Date(),
+        });
 
-      return recipe;
-    });
+        return prescription;
+      },
+    );
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Receta médica creada exitosamente',
-      data: newRecipe,
+      data: newPrescription,
     };
   }
 }

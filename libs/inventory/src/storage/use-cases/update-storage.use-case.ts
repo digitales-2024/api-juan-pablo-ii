@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateStorageDto } from '../dto/update-storage.dto';
 import { Storage } from '../entities/storage.entity';
 import { StorageRepository } from '../repositories/storage.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateStorageUseCase {
@@ -17,7 +18,7 @@ export class UpdateStorageUseCase {
     id: string,
     updateStorageDto: UpdateStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     const updatedStorage = await this.storageRepository.transaction(
       async () => {
         // Update storage
@@ -41,7 +42,7 @@ export class UpdateStorageUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Almacén actualizado exitosamente',
       data: updatedStorage,
     };

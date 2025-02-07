@@ -69,6 +69,34 @@ export class TypeProductController {
   }
 
   /**
+   * Obtiene todos los tipos de productos
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los tipos de productos' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los tipos de productos',
+    type: [TypeProductResponse],
+  })
+  findAll(): Promise<TypeProductResponse[]> {
+    return this.typeProductService.findAll();
+  }
+
+  /**
+   * Obtiene todos los tipos de productos activos
+   */
+  @Get('/active')
+  @ApiOperation({ summary: 'Obtener todos los tipos de productos activos' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los tipos de productos activos',
+    type: [TypeProductResponse],
+  })
+  findAllActive(): Promise<TypeProductResponse[]> {
+    return this.typeProductService.findAllActive();
+  }
+
+  /**
    * Obtiene un tipo de producto por su ID
    */
   @Get(':id')
@@ -83,20 +111,6 @@ export class TypeProductController {
   })
   findOne(@Param('id') id: string): Promise<TypeProduct> {
     return this.typeProductService.findOne(id);
-  }
-
-  /**
-   * Obtiene todos los tipos de productos
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los tipos de productos' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todos los tipos de productos',
-    type: [TypeProductResponse],
-  })
-  findAll(): Promise<TypeProductResponse[]> {
-    return this.typeProductService.findAll();
   }
 
   /**

@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateStorageDto } from '../dto/create-storage.dto';
 import { Storage } from '../entities/storage.entity';
 import { StorageRepository } from '../repositories/storage.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateStorageUseCase {
@@ -16,7 +17,7 @@ export class CreateStorageUseCase {
   async execute(
     createStorageDto: CreateStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<Storage>> {
+  ): Promise<BaseApiResponse<Storage>> {
     const newStorage = await this.storageRepository.transaction(async () => {
       // Create storage
       const storage = await this.storageRepository.create({
@@ -38,7 +39,7 @@ export class CreateStorageUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Almacén creado exitosamente',
       data: newStorage,
     };

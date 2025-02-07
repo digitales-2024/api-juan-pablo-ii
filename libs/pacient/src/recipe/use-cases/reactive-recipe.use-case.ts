@@ -1,32 +1,34 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { RecipeRepository } from '../repositories/recipe.repository';
-import { Recipe } from '../entities/recipe.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { PrescriptionRepository } from '../repositories/recipe.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { UserData } from '@login/login/interfaces';
+import { Prescription } from '../entities/recipe.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class ReactivateRecipeUseCase {
+export class ReactivatePrescriptionUseCase {
   constructor(
-    private readonly recipeRepository: RecipeRepository,
+    private readonly prescriptionRepository: PrescriptionRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Recipe[]>> {
+  ): Promise<BaseApiResponse<Prescription[]>> {
     // Reactivar las recetas y registrar auditoría
-    const reactivatedRecipes = await this.recipeRepository.transaction(
-      async () => {
-        const recipes = await this.recipeRepository.reactivateMany(ids);
+    const reactivatedPrescriptions =
+      await this.prescriptionRepository.transaction(async () => {
+        const prescriptions =
+          await this.prescriptionRepository.reactivateMany(ids);
 
         // Registrar auditoría para cada receta reactivada
         await Promise.all(
-          recipes.map((recipe) =>
+          prescriptions.map((prescription) =>
             this.auditService.create({
-              entityId: recipe.id,
-              entityType: 'receta',
+              entityId: prescription.id,
+              entityType: 'prescription',
               action: AuditActionType.UPDATE,
               performedById: user.id,
               createdAt: new Date(),
@@ -34,14 +36,13 @@ export class ReactivateRecipeUseCase {
           ),
         );
 
-        return recipes;
-      },
-    );
+        return prescriptions;
+      });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Recetas médicas reactivadas exitosamente',
-      data: reactivatedRecipes,
+      data: reactivatedPrescriptions,
     };
   }
 }

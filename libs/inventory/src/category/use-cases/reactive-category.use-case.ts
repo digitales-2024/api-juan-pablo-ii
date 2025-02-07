@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Category } from '../entities/category.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateCategoryUseCase {
@@ -15,7 +16,7 @@ export class ReactivateCategoryUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Category[]>> {
+  ): Promise<BaseApiResponse<Category[]>> {
     // Reactivar las categorías y registrar auditoría
     const reactivatedCategories = await this.categoryRepository.transaction(
       async () => {
@@ -39,7 +40,7 @@ export class ReactivateCategoryUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Categorías reactivadas exitosamente',
       data: reactivatedCategories,
     };

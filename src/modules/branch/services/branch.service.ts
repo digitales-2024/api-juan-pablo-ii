@@ -102,6 +102,19 @@ export class BranchService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
+
+  /**
+   * Obtiene todas las sucursales activas
+   * @returns Lista de todas las sucursales activas
+   */
+  async findAllActive(): Promise<Branch[]> {
+    try {
+      return this.branchRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   /**
    * Desactiva múltiples sucursales
    * @param deleteBranchesDto - DTO con los IDs de las sucursales a desactivar

@@ -1,47 +1,50 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateHistoryDto } from '../dto/create-history.dto';
-import { History } from '../entities/history.entity';
-import { HistoryRepository } from '../repositories/history.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { Injectable } from '@nestjs/common';
+import { CreateMedicalHistoryDto } from '../dto/create-history.dto';
+import { MedicalHistory } from '../entities/history.entity';
+import { MedicalHistoryRepository } from '../repositories/history.repository';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class CreateHistoryUseCase {
+export class CreateMedicalHistoryUseCase {
   constructor(
-    private readonly historyRepository: HistoryRepository,
+    private readonly medicalHistoryRepository: MedicalHistoryRepository,
     private readonly auditService: AuditService,
   ) {}
 
   async execute(
-    createHistoryDto: CreateHistoryDto,
+    createMedicalHistoryDto: CreateMedicalHistoryDto,
     user: UserData,
-  ): Promise<HttpResponse<History>> {
-    const newHistory = await this.historyRepository.transaction(async () => {
-      // Create history
-      const history = await this.historyRepository.create({
-        pacienteId: createHistoryDto.pacienteId,
-        historiaMedica: createHistoryDto.historiaMedica,
-        date: createHistoryDto.date,
-        description: createHistoryDto.description,
-      });
+  ): Promise<BaseApiResponse<MedicalHistory>> {
+    const newMedicalHistory = await this.medicalHistoryRepository.transaction(
+      async () => {
+        // Create medical history
+        const medicalHistory = await this.medicalHistoryRepository.create({
+          patientId: createMedicalHistoryDto.patientId,
+          medicalHistory: createMedicalHistoryDto.medicalHistory,
+          description: createMedicalHistoryDto.description,
+          isActive: true,
+        });
 
-      // Register audit
-      await this.auditService.create({
-        entityId: history.id,
-        entityType: 'historiaMedica',
-        action: AuditActionType.CREATE,
-        performedById: user.id,
-        createdAt: new Date(),
-      });
+        // Register audit
+        await this.auditService.create({
+          entityId: medicalHistory.id,
+          entityType: 'medicalHistory',
+          action: AuditActionType.CREATE,
+          performedById: user.id,
+          createdAt: new Date(),
+        });
 
-      return history;
-    });
+        return medicalHistory;
+      },
+    );
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Historia médica creada exitosamente',
-      data: newHistory,
+      data: newMedicalHistory,
     };
   }
 }

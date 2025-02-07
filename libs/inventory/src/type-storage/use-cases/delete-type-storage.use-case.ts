@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TypeStorageRepository } from '../repositories/type-storage.repository';
 import { TypeStorage } from '../entities/type-storage.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteTypeStorageDto } from '../dto/delete-type-storage.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteTypeStorageUseCase {
@@ -16,7 +17,7 @@ export class DeleteTypeStorageUseCase {
   async execute(
     deleteTypeStorageDto: DeleteTypeStorageDto,
     user: UserData,
-  ): Promise<HttpResponse<TypeStorage[]>> {
+  ): Promise<BaseApiResponse<TypeStorage[]>> {
     const deletedTypeStorages = await this.typeStorageRepository.transaction(
       async () => {
         // Realiza el soft delete y obtiene los tipos de almacenamiento actualizados
@@ -42,7 +43,7 @@ export class DeleteTypeStorageUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Tipos de almacenamiento eliminados exitosamente',
       data: deletedTypeStorages,
     };

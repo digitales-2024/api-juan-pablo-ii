@@ -6,17 +6,19 @@ import {
   IsUUID,
   IsOptional,
   IsEmail,
+  IsDate,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateStaffDto {
   @ApiProperty({
-    description: 'ID de la especialidad del personal médico',
+    description: 'ID del tipo de personal',
     example: '550e8400-e29b-41d4-a716-446655440000',
     required: true,
   })
   @IsUUID()
   @IsNotEmpty()
-  especialidadId: string;
+  staffTypeId: string;
 
   @ApiProperty({
     description: 'ID del usuario asociado al personal médico en el sistema',
@@ -62,10 +64,16 @@ export class CreateStaffDto {
     example: '1980-05-15',
     required: true,
   })
-  @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
-  birth: string;
+  @IsDate()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return new Date(value.trim());
+    }
+    return value;
+  })
+  @Type(() => Date)
+  birth: Date;
 
   @ApiProperty({
     description: 'email',

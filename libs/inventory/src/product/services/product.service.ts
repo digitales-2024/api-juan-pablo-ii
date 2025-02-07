@@ -1,14 +1,13 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
-import { Product } from '../entities/product.entity';
+import {
+  ActiveProduct,
+  Product,
+  ProductWithRelations,
+} from '../entities/product.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateProductUseCase } from '../use-cases/create-product.use-case';
 import { UpdateProductUseCase } from '../use-cases/update-product.use-case';
@@ -18,7 +17,7 @@ import { DeleteProductDto } from '../dto';
 import { DeleteProductsUseCase, ReactivateProductUseCase } from '../use-cases';
 import { CategoryService } from '@inventory/inventory/category/services/category.service';
 import { TypeProductService } from '@inventory/inventory/type-product/services/type-product.service';
-
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 @Injectable()
 export class ProductService {
   private readonly logger = new Logger(ProductService.name);
@@ -51,7 +50,7 @@ export class ProductService {
   async create(
     createProductDto: CreateProductDto,
     user: UserData,
-  ): Promise<HttpResponse<Product>> {
+  ): Promise<BaseApiResponse<Product>> {
     try {
       // Validación de nombre de producto
       const nameExists = await this.findByName(createProductDto.name); // Buscar producto por nombre
@@ -83,24 +82,26 @@ export class ProductService {
     id: string,
     updateProductDto: UpdateProductDto,
     user: UserData,
-  ): Promise<HttpResponse<Product>> {
+  ): Promise<BaseApiResponse<Product>> {
     try {
       const currentProduct = await this.findById(id);
 
       if (!validateChanges(updateProductDto, currentProduct)) {
         return {
-          statusCode: HttpStatus.OK,
+          // statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en el producto',
           data: currentProduct,
         };
       }
 
+      //TODO: tHINK BETTER THIS  LOGIC ALSO IN CATEGORY
       // Validación de nombre de producto
-      const nameExists = await this.findByName(updateProductDto.name); // Buscar producto por nombre
-      if (nameExists) {
-        // Si retorna 'true', ya existe el producto
-        throw new BadRequestException('Ya existe un producto con este nombre');
-      }
+      // const nameExists = await this.findByName(updateProductDto.name, ); // Buscar producto por nombre
+      // if (nameExists) {
+      //   // Si retorna 'true', ya existe el producto
+      //   throw new BadRequestException('Ya existe un producto con este nombre');
+      // }
       // Validación de id de categoría
       await this.categoryService.findById(updateProductDto.categoriaId);
       // Validación de id de typoproducto
@@ -123,9 +124,20 @@ export class ProductService {
    * @returns El producto encontrado
    * @throws {NotFoundException} Si el producto no existe
    */
-  async findOne(id: string): Promise<Product> {
+  async findOne(id: string): Promise<BaseApiResponse<Product>> {
     try {
-      return this.findById(id);
+      const product: BaseApiResponse<Product> = await this.findById(id).then(
+        (product) => {
+          return {
+            // statusCode: HttpStatus.OK,
+            success: true,
+            message: 'Producto encontrado',
+            data: product,
+          };
+        },
+      );
+
+      return product;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -138,7 +150,21 @@ export class ProductService {
    */
   async findAll(): Promise<Product[]> {
     try {
-      return this.productRepository.findMany({
+      return this.productRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Recupera todos los productos con sus categorías y tipos de productos relacionados.
+   *
+   * @returns {Promise<Product[]>} Una promesa que resuelve a un array de productos con sus categorías y tipos de productos relacionados.
+   * @throws Lanzará un error si hay un problema al recuperar los productos.
+   */
+  async findAllWithRelations(): Promise<ProductWithRelations[]> {
+    try {
+      const products = await this.productRepository.findManyWithRelations({
         include: {
           categoria: {
             select: {
@@ -152,6 +178,7 @@ export class ProductService {
           },
         },
       });
+      return this.productRepository.mapManyToEntities(products);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -171,6 +198,31 @@ export class ProductService {
     return product;
   }
 
+  async findByIdWithRelations(id: string): Promise<ProductWithRelations[]> {
+    try {
+      const product = await this.productRepository.findOneWithRelations(id, {
+        include: {
+          categoria: {
+            select: {
+              name: true,
+            },
+          },
+          tipoProducto: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+      if (!product) {
+        throw new BadRequestException('Producto no encontrado');
+      }
+      return [this.productRepository.mapToEntity(product)];
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   /**
    * Desactiva múltiples productos
    * @param deleteProductDto - DTO con los IDs de los productos a desactivar
@@ -181,7 +233,7 @@ export class ProductService {
   async deleteMany(
     deleteProductDto: DeleteProductDto,
     user: UserData,
-  ): Promise<HttpResponse<Product[]>> {
+  ): Promise<BaseApiResponse<Product[]>> {
     try {
       validateArray(deleteProductDto.ids, 'IDs de productos');
       return await this.deleteProductsUseCase.execute(deleteProductDto, user);
@@ -200,7 +252,7 @@ export class ProductService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Product[]>> {
+  ): Promise<BaseApiResponse<Product[]>> {
     try {
       validateArray(ids, 'IDs de productos');
       return await this.reactivateProductUseCase.execute(ids, user);
@@ -221,9 +273,28 @@ export class ProductService {
     return result && result.length > 0 ? true : false;
   }
 
+  /**
+   * Recupera el precio de un producto por su ID.
+   *
+   * @param {string} productId - El identificador único del producto.
+   * @returns {Promise<number | null>} Una promesa que resuelve al precio del producto, o null si el producto no se encuentra.
+   * @throws Manejará y registrará cualquier error que ocurra durante el proceso de recuperación.
+   */
   async getProductPriceById(productId: string): Promise<number | null> {
     try {
       return this.productRepository.getProductPriceById(productId);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findAllActive(): Promise<ActiveProduct[]> {
+    try {
+      const products = await this.productRepository.findAllActiveProducts();
+      if (!products) {
+        throw new BadRequestException('Producto no encontrado');
+      }
+      return products;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

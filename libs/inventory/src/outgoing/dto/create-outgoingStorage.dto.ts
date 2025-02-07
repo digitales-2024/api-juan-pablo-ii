@@ -8,6 +8,7 @@ import {
   IsObject,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { OutgoingIncomingMovementDto } from '@inventory/inventory/movement/dto';
 
 export class CreateOutgoingDtoStorage {
   @ApiProperty({
@@ -78,12 +79,14 @@ export class CreateOutgoingDtoStorage {
         quantity: 10,
       },
     ],
+    type: [OutgoingIncomingMovementDto],
     required: true,
   })
   @IsObject({ each: true })
   @IsNotEmpty()
-  movement: Array<{
-    productId: string;
-    quantity: number;
-  }>;
+  movement: OutgoingIncomingMovementDto[];
+  // movement: Array<{
+  //   productId: string;
+  //   quantity: number;
+  // }>;
 }

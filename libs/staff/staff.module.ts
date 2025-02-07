@@ -1,25 +1,25 @@
 import { Module } from '@nestjs/common';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
-import { SpecializationController } from './controllers/specialization.controller';
-import { SpecializationService } from './services/specialization.service';
-import { SpecializationRepository } from './repositories/specialization.repository';
+import { StaffTypeService } from './services/staff-type.service';
+import { StaffTypeRepository } from './repositories/staff-type.repository';
 import {
-  CreateSpecializationUseCase,
+  CreateStaffTypeUseCase,
   CreateStaffUseCase,
-  DeleteSpecializationUseCase,
+  DeleteStaffTypeUseCase,
   DeleteStaffUseCase,
-  ReactivateSpecializationUseCase,
+  ReactivateStaffTypeUseCase,
   ReactivateStaffUseCase,
-  UpdateSpecializationUseCase,
+  UpdateStaffTypeUseCase,
   UpdateStaffUseCase,
 } from './use-cases';
 import { StaffService } from './services/staff.service';
 import { StaffRepository } from './repositories/staff.repository';
 import { StaffController } from './controllers/staff.controller';
+import { StaffTypeController } from './controllers/staff-type.controller';
 
 @Module({
   imports: [AuditModule],
-  controllers: [SpecializationController, StaffController],
+  controllers: [StaffTypeController, StaffController],
   providers: [
     // Services
     //
@@ -30,18 +30,18 @@ import { StaffController } from './controllers/staff.controller';
     CreateStaffUseCase,
     UpdateStaffUseCase,
 
-    SpecializationService,
-    SpecializationRepository,
-    CreateSpecializationUseCase,
-    UpdateSpecializationUseCase,
-    DeleteSpecializationUseCase,
-    ReactivateSpecializationUseCase,
+    StaffTypeService,
+    StaffTypeRepository,
+    CreateStaffTypeUseCase,
+    UpdateStaffTypeUseCase,
+    DeleteStaffTypeUseCase,
+    ReactivateStaffTypeUseCase,
     DeleteStaffUseCase,
     ReactivateStaffUseCase,
 
     // Repositories
     // Use Cases
   ],
-  exports: [SpecializationService, StaffService],
+  exports: [StaffTypeService, StaffService],
 })
 export class StaffModule {}

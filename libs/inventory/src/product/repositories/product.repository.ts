@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
-import { Product } from '../entities/product.entity';
+import { ActiveProduct, Product } from '../entities/product.entity';
 
 @Injectable()
 export class ProductRepository extends BaseRepository<Product> {
@@ -35,5 +35,32 @@ export class ProductRepository extends BaseRepository<Product> {
       select: { precio: true },
     });
     return product ? product.precio : null;
+  }
+
+  async findAllActiveProducts(): Promise<ActiveProduct[]> {
+    return await this.prisma.producto.findMany({
+      where: {
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        categoriaId: true,
+        tipoProductoId: true,
+        categoria: {
+          select: {
+            name: true,
+            isActive: true,
+          },
+        },
+        tipoProducto: {
+          select: {
+            name: true,
+            isActive: true,
+          },
+        },
+      },
+    });
   }
 }

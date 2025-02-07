@@ -1,13 +1,14 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { UpdatePacientDto } from '../dto/update-pacient.dto';
-import { Paciente } from '../entities/pacient.entity';
+import { Injectable } from '@nestjs/common';
+import { UpdatePatientDto } from '../dto/update-pacient.dto';
+import { Patient } from '../entities/pacient.entity';
 import { PacientRepository } from '../repositories/pacient.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
-export class UpdatePacientUseCase {
+export class UpdatePatientUseCase {
   constructor(
     private readonly pacientRepository: PacientRepository,
     private readonly auditService: AuditService,
@@ -15,58 +16,52 @@ export class UpdatePacientUseCase {
 
   async execute(
     id: string,
-    updatePacientDto: UpdatePacientDto,
+    updatePatientDto: UpdatePatientDto,
     user: UserData,
-  ): Promise<HttpResponse<Paciente>> {
-    const updatedPacient = await this.pacientRepository.transaction(
+  ): Promise<BaseApiResponse<Patient>> {
+    const updatedPatient = await this.pacientRepository.transaction(
       async () => {
-        // Update pacient
-        const pacient = await this.pacientRepository.update(id, {
-          nombre: updatePacientDto.nombre,
-          apellido: updatePacientDto.apellido,
-          dni: updatePacientDto.dni,
-          cumpleanos: updatePacientDto.cumpleanos,
-          sexo: updatePacientDto.sexo,
-          direccion: updatePacientDto.direccion,
-          telefono: updatePacientDto.telefono,
-          correo: updatePacientDto.correo,
-          fechaRegistro: updatePacientDto.fechaRegistro,
-          alergias: updatePacientDto.alergias,
-          medicamentosActuales: updatePacientDto.medicamentosActuales,
-          contactoEmergencia: updatePacientDto.contactoEmergencia,
-          telefonoEmergencia: updatePacientDto.telefonoEmergencia,
-          seguroMedico: updatePacientDto.seguroMedico,
-          estadoCivil: updatePacientDto.estadoCivil,
-          ocupacion: updatePacientDto.ocupacion,
-          lugarTrabajo: updatePacientDto.lugarTrabajo,
-          tipoSangre: updatePacientDto.tipoSangre,
-          antecedentesFamiliares: updatePacientDto.antecedentesFamiliares,
-          habitosVida: updatePacientDto.habitosVida,
-          vacunas: updatePacientDto.vacunas,
-          medicoCabecera: updatePacientDto.medicoCabecera,
-          idioma: updatePacientDto.idioma,
-          autorizacionTratamiento: updatePacientDto.autorizacionTratamiento,
-          observaciones: updatePacientDto.observaciones,
-          fotografiaPaciente: updatePacientDto.fotografiaPaciente,
+        // Update patient
+        const patient = await this.pacientRepository.update(id, {
+          name: updatePatientDto.name,
+          lastName: updatePatientDto.lastName,
+          dni: updatePatientDto.dni,
+          birthDate: updatePatientDto.birthDate,
+          gender: updatePatientDto.gender,
+          address: updatePatientDto.address,
+          phone: updatePatientDto.phone,
+          email: updatePatientDto.email,
+          emergencyContact: updatePatientDto.emergencyContact,
+          emergencyPhone: updatePatientDto.emergencyPhone,
+          healthInsurance: updatePatientDto.healthInsurance,
+          maritalStatus: updatePatientDto.maritalStatus,
+          occupation: updatePatientDto.occupation,
+          workplace: updatePatientDto.workplace,
+          bloodType: updatePatientDto.bloodType,
+          primaryDoctor: updatePatientDto.primaryDoctor,
+          language: updatePatientDto.language,
+          notes: updatePatientDto.notes,
+          patientPhoto: updatePatientDto.patientPhoto,
+          isActive: true,
         });
 
         // Register audit
         await this.auditService.create({
-          entityId: pacient.id,
-          entityType: 'paciente',
+          entityId: patient.id,
+          entityType: 'patient',
           action: AuditActionType.UPDATE,
           performedById: user.id,
           createdAt: new Date(),
         });
 
-        return pacient;
+        return patient;
       },
     );
 
     return {
-      statusCode: HttpStatus.OK,
-      message: 'Paciente actualizado exitosamente',
-      data: updatedPacient,
+      success: true,
+      message: 'Paciente Actualizado exitosamente',
+      data: updatedPatient,
     };
   }
 }

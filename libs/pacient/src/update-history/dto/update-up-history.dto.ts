@@ -1,4 +1,6 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateUpHistoryDto } from './create-up-history.dto';
+import { CreateUpdateHistoryDto } from './create-up-history.dto';
 
-export class UpdateUpHistoryDto extends PartialType(CreateUpHistoryDto) {}
+export class UpdateUpdateHistoryDto extends PartialType(
+  CreateUpdateHistoryDto,
+) {}

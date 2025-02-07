@@ -19,13 +19,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateCategoryDto,
   UpdateCategoryDto,
   DeleteCategoryDto,
 } from '../dto';
 import { Category } from '../entities/category.entity';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
  * Controlador REST para gestionar categorías.
@@ -49,10 +50,10 @@ export class CategoryController {
    */
   @Post()
   @ApiOperation({ summary: 'Crear nueva categoría' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 201,
     description: 'Categoría creada exitosamente',
-    type: Category,
+    type: BaseApiResponse<Category>,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o categoría ya existe',
@@ -60,8 +61,33 @@ export class CategoryController {
   create(
     @Body() createCategoryDto: CreateCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Category>> {
+  ): Promise<BaseApiResponse<Category>> {
     return this.categoryService.create(createCategoryDto, user);
+  }
+
+  /**
+   * Obtiene todas las categorías
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todas las categorías' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todas las categorías',
+    type: BaseApiResponse<Category[]>,
+  })
+  findAll(): Promise<Category[]> {
+    return this.categoryService.findAll();
+  }
+
+  @Get('active')
+  @ApiOperation({ summary: 'Obtener todas las categorías activas' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todas las categorías activas',
+    type: BaseApiResponse<Category[]>,
+  })
+  findAllActive(): Promise<Category[]> {
+    return this.categoryService.findAllActive();
   }
 
   /**
@@ -82,34 +108,20 @@ export class CategoryController {
   }
 
   /**
-   * Obtiene todas las categorías
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todas las categorías' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todas las categorías',
-    type: [Category],
-  })
-  findAll(): Promise<Category[]> {
-    return this.categoryService.findAll();
-  }
-
-  /**
    * Actualiza una categoría existente
    */
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar categoría existente' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Categoría actualizada exitosamente',
-    type: Category,
+    type: BaseApiResponse<Category>,
   })
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Category>> {
+  ): Promise<BaseApiResponse<Category>> {
     return this.categoryService.update(id, updateCategoryDto, user);
   }
 
@@ -118,10 +130,10 @@ export class CategoryController {
    */
   @Delete('remove/all')
   @ApiOperation({ summary: 'Desactivar múltiples categorías' })
-  @ApiResponse({
+  @ApiOkResponse({
     status: 200,
     description: 'Categorías desactivadas exitosamente',
-    type: [Category],
+    type: BaseApiResponse<Category[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o categorías no existen',
@@ -129,7 +141,7 @@ export class CategoryController {
   deleteMany(
     @Body() deleteCategoryDto: DeleteCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Category[]>> {
+  ): Promise<BaseApiResponse<Category[]>> {
     return this.categoryService.deleteMany(deleteCategoryDto, user);
   }
 
@@ -140,7 +152,7 @@ export class CategoryController {
   @ApiOperation({ summary: 'Reactivar múltiples categorías' })
   @ApiOkResponse({
     description: 'Categorías reactivadas exitosamente',
-    type: [Category],
+    type: BaseApiResponse<Category[]>,
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o categorías no existen',
@@ -148,7 +160,7 @@ export class CategoryController {
   reactivateAll(
     @Body() deleteCategoryDto: DeleteCategoryDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Category[]>> {
+  ): Promise<BaseApiResponse<Category[]>> {
     return this.categoryService.reactivateMany(deleteCategoryDto.ids, user);
   }
 }

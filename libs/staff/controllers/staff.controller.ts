@@ -18,9 +18,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Staff } from '../entities/staff.entity';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @ApiTags('Staff')
 @ApiBadRequestResponse({
@@ -38,33 +39,43 @@ export class StaffController {
   @Post()
   @ApiOperation({ summary: 'Crear nuevo personal' })
   @ApiCreatedResponse({
-    description: 'Personal médico creado exitosamente',
+    description: 'Personal creado exitosamente',
     type: Staff,
   })
   @ApiBadRequestResponse({
-    description: 'Datos de entrada inválidos o personal médico ya existe',
+    description: 'Datos de entrada inválidos o personal ya existe',
   })
   create(
     @Body() createStaffDto: CreateStaffDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Staff>> {
+  ): Promise<BaseApiResponse<Staff>> {
     return this.staffService.create(createStaffDto, user);
   }
 
   @Get()
   @ApiOperation({ summary: 'Obtener Personal' })
   @ApiOkResponse({
-    description: 'Lista de todo el personal médico',
+    description: 'Lista de todo el personal',
     type: [Staff],
   })
   findAll(): Promise<Staff[]> {
     return this.staffService.findAll();
   }
 
+  @Get('/active')
+  @ApiOperation({ summary: 'Obtener Personal Activo' })
+  @ApiOkResponse({
+    description: 'Lista de todo el personal activo',
+    type: [Staff],
+  })
+  findAllActive(): Promise<Staff[]> {
+    return this.staffService.findAllActive();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener personal por ID' })
   @ApiOkResponse({
-    description: 'Personal médico encontrado',
+    description: 'Personal encontrado',
     type: Staff,
   })
   findOne(@Param('id') id: string): Promise<Staff> {
@@ -74,14 +85,14 @@ export class StaffController {
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar personal existente' })
   @ApiOkResponse({
-    description: 'Personal médico actualizado exitosamente',
+    description: 'Personal actualizado exitosamente',
     type: Staff,
   })
   update(
     @Param('id') id: string,
     @Body() updateStaffDto: UpdateStaffDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Staff>> {
+  ): Promise<BaseApiResponse<Staff>> {
     return this.staffService.update(id, updateStaffDto, user);
   }
 
@@ -89,7 +100,7 @@ export class StaffController {
    * Elimina múltiple Personal
    */
   @Delete('remove/all')
-  @ApiOperation({ summary: 'Actualizar personal existente' })
+  @ApiOperation({ summary: 'Eliminar múltiple personal' })
   @ApiResponse({
     status: 200,
     description: 'Personal eliminado exitosamente',
@@ -101,7 +112,7 @@ export class StaffController {
   deleteMany(
     @Body() deleteStaffDto: DeleteStaffDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Staff[]>> {
+  ): Promise<BaseApiResponse<Staff[]>> {
     return this.staffService.deleteMany(deleteStaffDto, user);
   }
 
@@ -120,7 +131,7 @@ export class StaffController {
   reactivateAll(
     @Body() deleteStaffDto: DeleteStaffDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Staff[]>> {
+  ): Promise<BaseApiResponse<Staff[]>> {
     return this.staffService.reactivateMany(deleteStaffDto.ids, user);
   }
 }

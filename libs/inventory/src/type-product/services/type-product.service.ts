@@ -97,13 +97,13 @@ export class TypeProductService {
       }
 
       // Validar si existe otro tipo de producto con el mismo nombre
-      const nameExists = await this.findByName(updateTypeProductDto.name); // Buscar producto por nombre
-      if (nameExists) {
-        // Si retorna 'true', ya existe la categoria
-        throw new BadRequestException(
-          'Ya existe una categoria con este nombre',
-        );
-      }
+      // const nameExists = await this.findByName(updateTypeProductDto.name); // Buscar producto por nombre
+      // if (nameExists) {
+      //   // Si retorna 'true', ya existe la categoria
+      //   throw new BadRequestException(
+      //     'Ya existe una categoria con este nombre',
+      //   );
+      // }
       // fin de la validación
       return await this.updateTypeProductUseCase.execute(
         id,
@@ -137,6 +137,20 @@ export class TypeProductService {
   async findAll(): Promise<TypeProductResponse[]> {
     try {
       return this.typeProductRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los productos activos.
+   *
+   * @returns {Promise<TypeProductResponse[]>} Una promesa que resuelve con una lista de productos activos.
+   * @throws {Error} Si ocurre un error al obtener los productos activos.
+   */
+  async findAllActive(): Promise<TypeProductResponse[]> {
+    try {
+      return this.typeProductRepository.findManyActive();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

@@ -1,12 +1,7 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Category } from '../entities/category.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { categoryErrorMessages } from '../errors/errors-category';
@@ -21,6 +16,7 @@ import {
   DeleteCategoriesUseCase,
   ReactivateCategoryUseCase,
 } from '../use-cases';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CategoryService {
@@ -51,7 +47,7 @@ export class CategoryService {
   async create(
     createCategoryDto: CreateCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Category>> {
+  ): Promise<BaseApiResponse<Category>> {
     try {
       // Validación de nombre
       const nameExists = await this.findByName(CreateCategoryDto.name); // Buscar producto por nombre
@@ -78,25 +74,26 @@ export class CategoryService {
     id: string,
     updateCategoryDto: UpdateCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Category>> {
+  ): Promise<BaseApiResponse<Category>> {
     try {
       const currentCategory = await this.findById(id);
 
       if (!validateChanges(updateCategoryDto, currentCategory)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en la categoría',
           data: currentCategory,
         };
       }
-      // Validar si existe otro tipo de categoria con el mismo nombre
-      const nameExists = await this.findByName(updateCategoryDto.name); // Buscar producto por nombre
-      if (nameExists) {
-        // Si retorna 'true', ya existe la categoria
-        throw new BadRequestException(
-          'Ya existe una categoria con este nombre',
-        );
-      }
+      //No es necesario al actualizar
+      // // Validar si existe otro tipo de categoria con el mismo nombre
+      // const nameExists = await this.findByName(updateCategoryDto.name); // Buscar producto por nombre
+      // if (nameExists) {
+      //   // Si retorna 'true', ya existe la categoria
+      //   throw new BadRequestException(
+      //     'Ya existe una categoria con este nombre',
+      //   );
+      // }
       // fin de la validación
       return await this.updateCategoryUseCase.execute(
         id,
@@ -136,6 +133,20 @@ export class CategoryService {
   }
 
   /**
+   * Obtiene todas las categorías activas.
+   *
+   * @returns {Promise<Category[]>} Una promesa que resuelve con un arreglo de categorías activas.
+   * @throws {Error} Si ocurre un error al obtener las categorías activas.
+   */
+  async findAllActive(): Promise<Category[]> {
+    try {
+      return this.categoryRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
    * Busca una categoría por su ID
    * @param id - ID de la categoría a buscar
    * @returns Una promesa que resuelve con la categoría encontrada
@@ -159,7 +170,7 @@ export class CategoryService {
   async deleteMany(
     deleteCategoryDto: DeleteCategoryDto,
     user: UserData,
-  ): Promise<HttpResponse<Category[]>> {
+  ): Promise<BaseApiResponse<Category[]>> {
     try {
       validateArray(deleteCategoryDto.ids, 'IDs de categorías');
       return await this.deleteCategoriesUseCase.execute(
@@ -181,7 +192,7 @@ export class CategoryService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Category[]>> {
+  ): Promise<BaseApiResponse<Category[]>> {
     try {
       validateArray(ids, 'IDs de categorías');
       return await this.reactivateCategoryUseCase.execute(ids, user);

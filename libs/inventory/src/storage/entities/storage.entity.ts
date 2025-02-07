@@ -1,3 +1,5 @@
+//import { TypeStorage } from '@inventory/inventory/type-storage/entities/type-storage.entity';
+import { TypeStorage } from '@inventory/inventory/type-storage/entities/type-storage.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class Storage {
@@ -12,4 +14,19 @@ export class Storage {
 
   @ApiProperty()
   typeStorageId: string;
+
+  @ApiProperty()
+  isActive?: boolean;
+}
+
+export class DetailedStorage extends Storage {
+  // @ApiProperty({
+  //   type: TypeStorage,
+  // })
+  // typeStorage: TypeStorage;
+
+  @ApiProperty({
+    type: TypeStorage,
+  })
+  TypeStorage: Pick<TypeStorage, 'name'>;
 }

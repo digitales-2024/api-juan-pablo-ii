@@ -95,7 +95,7 @@ export class ProductPurchaseGenerator extends BaseOrderGenerator {
 
       for (const product of products) {
         // Verificar que el producto exista y esté activo
-        const productInfo = await this.productService.findOne(
+        const productInfo = await this.productService.findById(
           product.productId,
         );
 
@@ -176,7 +176,7 @@ export class ProductPurchaseGenerator extends BaseOrderGenerator {
     const productDetails = [];
 
     for (const product of products) {
-      const productInfo = await this.productService.findOne(product.productId);
+      const productInfo = await this.productService.findById(product.productId);
 
       if (!productInfo) {
         throw new BadRequestException(

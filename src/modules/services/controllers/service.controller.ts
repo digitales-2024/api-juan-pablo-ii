@@ -74,7 +74,7 @@ export class ServiceController {
   })
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Service> {
-    return this.serviceService.findServiceById(id);
+    return this.serviceService.findOne(id);
   }
 
   /**

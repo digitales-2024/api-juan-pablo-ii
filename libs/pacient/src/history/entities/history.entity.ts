@@ -1,19 +1,18 @@
-// history.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 
-export class History {
+export class MedicalHistory {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  pacienteId: string;
+  patientId: string;
 
   @ApiProperty()
-  historiaMedica: any;
-
-  @ApiProperty()
-  date: Date;
+  medicalHistory: any;
 
   @ApiProperty()
   description?: string;
+
+  @ApiProperty()
+  isActive: boolean;
 }

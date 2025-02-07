@@ -5,7 +5,7 @@ import { BaseRepository, PrismaService } from '@prisma/prisma';
 @Injectable()
 export class BranchRepository extends BaseRepository<Branch> {
   constructor(prisma: PrismaService) {
-    super(prisma, 'sucursal'); // Matches the model name in schema.prisma
+    super(prisma, 'branch'); // Matches the model name in schema.prisma
   }
   /**
    * Busca una Sucursal por su ID (método interno)

@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateOutgoingDto } from '../dto/update-outgoing.dto';
-import { Outgoing } from '../entities/outgoing.entity';
+import { DetailedOutgoing } from '../entities/outgoing.entity';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdateOutgoingUseCase {
@@ -17,7 +18,7 @@ export class UpdateOutgoingUseCase {
     id: string,
     updateOutgoingDto: UpdateOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     const updatedOutgoing = await this.outgoingRepository.transaction(
       async () => {
         // Update outgoing
@@ -39,12 +40,14 @@ export class UpdateOutgoingUseCase {
           createdAt: new Date(),
         });
 
-        return outgoing;
+        return await this.outgoingRepository.findDetailedOutgoingById(
+          outgoing.id,
+        );
       },
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Salida actualizada exitosamente',
       data: updatedOutgoing,
     };

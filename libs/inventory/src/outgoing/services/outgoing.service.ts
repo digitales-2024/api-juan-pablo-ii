@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
-import { Outgoing } from '../entities/outgoing.entity';
+import { DetailedOutgoing, Outgoing } from '../entities/outgoing.entity';
 import { CreateOutgoingDto } from '../dto/create-outgoing.dto';
 import { UpdateOutgoingDto } from '../dto/update-outgoing.dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateOutgoingUseCase } from '../use-cases/create-outgoing.use-case';
 import { UpdateOutgoingUseCase } from '../use-cases/update-outgoing.use-case';
@@ -20,6 +15,7 @@ import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
 import { StockService } from '@inventory/inventory/stock/services/stock.service';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class OutgoingService {
@@ -53,7 +49,7 @@ export class OutgoingService {
   async create(
     createOutgoingDto: CreateOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<Outgoing>> {
     try {
       return await this.createOutgoingUseCase.execute(createOutgoingDto, user);
     } catch (error) {
@@ -74,15 +70,15 @@ export class OutgoingService {
     id: string,
     updateOutgoingDto: UpdateOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     try {
       const currentOutgoing = await this.findById(id);
 
       if (!validateChanges(updateOutgoingDto, currentOutgoing)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en la salida',
-          data: currentOutgoing,
+          data: await this.outgoingRepository.findDetailedOutgoingById(id),
         };
       }
 
@@ -150,7 +146,7 @@ export class OutgoingService {
   async deleteMany(
     deleteOutgoingDto: DeleteOutgoingDto,
     user: UserData,
-  ): Promise<HttpResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing[]>> {
     try {
       validateArray(deleteOutgoingDto.ids, 'IDs de salidas');
       return await this.deleteOutgoingUseCase.execute(deleteOutgoingDto, user);
@@ -170,7 +166,7 @@ export class OutgoingService {
   async reactivateMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing[]>> {
     try {
       validateArray(ids, 'IDs de salidas');
       return await this.reactivateOutgoingUseCase.execute(ids, user);
@@ -181,26 +177,31 @@ export class OutgoingService {
   }
 
   //crear ingreso de productos al alamacen
-/**
- * Crea una nueva salida de productos del almacén.
- *
- * @param createOutgoingDtoStorage - DTO que contiene los datos necesarios para crear la salida.
- * @param user - Datos del usuario que realiza la operación.
- * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID de la nueva salida.
- */
+  /**
+   * Crea una nueva salida de productos del almacén.
+   *
+   * @param createOutgoingDtoStorage - DTO que contiene los datos necesarios para crear la salida.
+   * @param user - Datos del usuario que realiza la operación.
+   * @returns Una promesa que resuelve en una respuesta HTTP con un mensaje y el ID de la nueva salida.
+   */
   async createOutgoing(
     createOutgoingDtoStorage: CreateOutgoingDtoStorage,
     user: UserData,
-  ): Promise<HttpResponse<string>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
     try {
       // Extraer los datos necesarios del DTO
-      const { movement, state, name, storageId, date } =
-        createOutgoingDtoStorage;
+      const {
+        movement: movementsList,
+        state,
+        name,
+        storageId,
+        date,
+      } = createOutgoingDtoStorage;
       const isIncoming = false;
 
       console.log('idIncoming', storageId);
       // Llamar a createIncomingUseCase y esperar el ID del registro del nuevo ingreso
-      const outgoingId = await this.createOutgoingUseCase.createOugoingStorage(
+      const outgoing = await this.createOutgoingUseCase.createOugoingStorage(
         createOutgoingDtoStorage,
         user,
       );
@@ -217,11 +218,11 @@ export class OutgoingService {
         );
 
       // Extraer los datos de movement y usarlos en createMovementStorage
-      const movementData = await this.extractProductoIdQuantity(movement);
+      //const movementData = await this.extractProductoIdQuantity(movement);
 
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
-        movementData.map(async (item) => {
+        movementsList.map(async (item) => {
           const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
@@ -229,7 +230,7 @@ export class OutgoingService {
             await this.createMovementUseCase.createMovementStorage(
               {
                 movementTypeId,
-                outgoingId,
+                outgoingId: outgoing.id,
                 productId,
                 quantity,
                 date,
@@ -243,10 +244,10 @@ export class OutgoingService {
       );
       //registra y sumar ingreso al alamacen y al stock
       // Extraer los datos de movement y usarlos en createMovementStorage
-      const stockData = await this.extractProductoIdQuantity(movement);
+      //const stockData = await this.extractProductoIdQuantity(movement);
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
-        stockData.map(async (item) => {
+        movementsList.map(async (item) => {
           const { productId, quantity } = item;
 
           // Llamar a createMovementStorage
@@ -260,36 +261,74 @@ export class OutgoingService {
           console.log(`Movimiento creado con ID: ${idStock}`);
         }),
       );
+      // const data = {
+      //   outgoingId,
+      //   movementTypeId,
+      // };
       return {
-        statusCode: HttpStatus.CREATED, // Código de estado HTTP 201
+        success: true, // Código de estado HTTP 201
         message: 'Salida creada exitosamente',
-        data: `${outgoingId} -  ${movementTypeId}} `, // El ID del nuevo ingreso
+        data: await this.outgoingRepository.findDetailedOutgoingById(
+          outgoing.id,
+        ), // El ID del nuevo ingreso
       };
       //
       //
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
-
-      // Retornar un objeto de error con un código de estado adecuado
-      return {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR, // o el código que consideres apropiado
-        message: 'Error al crear la salida',
-        data: null, // o puedes incluir más información sobre el error si es necesario
-      };
     }
   }
   /**
- * Extrae los IDs de productos y sus cantidades de un array de movimientos.
- *
- * @param movement - Un array de objetos que contienen `productId` y `quantity`.
- * @returns Un array de objetos con `productId` y `quantity`.
- */
-  private extractProductoIdQuantity(
-    movement: Array<{ productId: string; quantity: number }>,
-  ): { productId: string; quantity: number }[] {
-    return movement.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-    }));
+   * Extrae los IDs de productos y sus cantidades de un array de movimientos.
+   *
+   * @param movement - Un array de objetos que contienen `productId` y `quantity`.
+   * @returns Un array de objetos con `productId` y `quantity`.
+   */
+  // private extractProductoIdQuantity(
+  //   movement: Array<{ productId: string; quantity: number }>,
+  // ): { productId: string; quantity: number }[] {
+  //   return movement.map((item) => ({
+  //     productId: item.productId,
+  //     quantity: item.quantity,
+  //   }));
+  // }
+
+  /**
+   * Obtiene una salida por su ID con detalles de sus relaciones.
+   *
+   * @param id - ID de la salida a buscar.
+   * @returns Una promesa que resuelve con la salida encontrado.
+   * @throws {BadRequestException} Si la salida no existe.
+   */
+  async findByIdWithRelations(id: string): Promise<DetailedOutgoing[]> {
+    try {
+      const outgoing =
+        await this.outgoingRepository.findDetailedOutgoingById(id);
+      if (!outgoing) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return [outgoing];
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos las salidas con sus relaciones detalladas.
+   *
+   * @returns Una promesa que resuelve con una lista de salidas detallados.
+   * @throws {Error} Si ocurre un error al obtener los salidas.
+   */
+  async findAllWithRelations(): Promise<DetailedOutgoing[]> {
+    try {
+      const outgoingData =
+        await this.outgoingRepository.getAllDetailedOutgoing();
+      if (!outgoingData) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return outgoingData;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
   }
 }
