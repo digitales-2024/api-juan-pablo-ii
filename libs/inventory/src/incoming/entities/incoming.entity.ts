@@ -202,7 +202,7 @@ export class IncomingMovement {
   @ApiProperty({
     type: IncomingProduct,
   })
-  Product?: IncomingProduct;
+  Producto?: IncomingProduct;
 }
 
 export class DetailedIncoming extends Incoming {
