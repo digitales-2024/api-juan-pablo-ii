@@ -211,12 +211,27 @@ export class MedicalHistoryService {
           medicalHistory.patientId,
         );
 
+      const updatesObject = Array.isArray(updatesWithImages)
+        ? updatesWithImages.reduce(
+            (acc, update) => ({
+              ...acc,
+              [update.id]: {
+                service: update.service,
+                staff: update.staff,
+                branch: update.branch,
+                images: update.images,
+              },
+            }),
+            {},
+          )
+        : {};
+
       return {
         success: true,
         message: 'Historia médica encontrada exitosamente',
         data: {
           ...medicalHistory,
-          updates: updatesWithImages || {},
+          updates: updatesObject,
         },
       };
     } catch (error) {
