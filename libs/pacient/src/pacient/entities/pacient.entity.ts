@@ -14,7 +14,7 @@ export class Patient {
   dni: string;
 
   @ApiProperty()
-  birthDate: Date;
+  birthDate: string;
 
   @ApiProperty()
   gender: string;

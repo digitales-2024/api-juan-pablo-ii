@@ -292,6 +292,15 @@ export class PacientController {
     @UploadedFile() image: Express.Multer.File,
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<Patient>> {
+    // Interceptar y corregir los datos
+    if (Array.isArray(updatePatientDto.patientPhoto)) {
+      updatePatientDto.patientPhoto = updatePatientDto.patientPhoto[0];
+    }
+
+    // Eliminar los campos id e image de updatePatientDto
+    delete updatePatientDto.id;
+    delete updatePatientDto.image;
+
     return this.pacientService.updatePatientWithImage(
       id,
       updatePatientDto,
