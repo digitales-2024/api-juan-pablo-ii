@@ -27,13 +27,11 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { DeleteEventsDto } from '../dto/delete-events.dto';
-import { EventResponseDto } from '../dto/event-response.dto';
-import { plainToClass } from 'class-transformer';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { UseInterceptors } from '@nestjs/common';
 import { EventType } from '../entities/event-type.enum';
-import { EventStatus } from '../entities/event.entity';
 import { FindEventsQueryDto } from '../dto/find-events-query.dto';
+import { EventStatus } from '@prisma/client';
 
 /**
  * Controlador REST para gestionar eventos del calendario.
@@ -86,15 +84,12 @@ export class EventController {
   })
   @ApiOkResponse({
     description: 'Lista de eventos filtrados',
-    type: [EventResponseDto],
+    type: [Event],
   })
   async findEventsByFilter(
     @Query() query: FindEventsQueryDto,
-  ): Promise<EventResponseDto[]> {
-    const { events } = await this.eventService.findEventsByFilter(query);
-    return events.map(event =>
-      plainToClass(EventResponseDto, event, { excludeExtraneousValues: false }),
-    );
+  ): Promise<Event[]> {
+    return this.eventService.findEventsByFilter(query);
   }
 
   /**
@@ -129,11 +124,8 @@ export class EventController {
   @ApiNotFoundResponse({
     description: 'Evento no encontrado',
   })
-  async findOne(@Param('id') id: string): Promise<EventResponseDto> {
-    const event = await this.eventService.findOne(id);
-    return plainToClass(EventResponseDto, event, { 
-      excludeExtraneousValues: false 
-    });
+  async findOne(@Param('id') id: string): Promise<Event> {
+    return this.eventService.findOne(id);
   }
 
   /**
@@ -145,13 +137,8 @@ export class EventController {
     description: 'Lista de todos los eventos',
     type: [Event],
   })
-  async findAll(): Promise<EventResponseDto[]> {
-    const events = await this.eventService.findAll();
-    return events.map(event => 
-      plainToClass(EventResponseDto, event, { 
-        excludeExtraneousValues: false 
-      })
-    );
+  async findAll(): Promise<Event[]> {
+    return this.eventService.findAll();
   }
 
   /**

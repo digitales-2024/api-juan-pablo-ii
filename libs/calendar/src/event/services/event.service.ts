@@ -186,12 +186,27 @@ export class EventService {
    * @param query - DTO con los filtros (staffId, type, branchId, status)
    * @returns Objeto con el arreglo de eventos filtrados.
    */
-  async findEventsByFilter(query: FindEventsQueryDto): Promise<{ events: Event[] }> {
-    
+  async findEventsByFilter(query: FindEventsQueryDto): Promise<Event[]> {
     try {
+      this.logger.debug(`Iniciando búsqueda con filtros: ${JSON.stringify(query)}`);
       const result = await this.findEventsByFilterUseCase.execute(query);
-      return result;
+      this.logger.debug(`Eventos encontrados: ${result.events.length} resultados`);
+      
+      const mappedEvents = result.events.map(event => ({
+        ...event,
+        staff: {
+          name: event.staff?.name || 'No asignado',
+          lastName: event.staff?.lastName || ''
+        },
+        branch: {
+          name: event.branch?.name || 'Sucursal no especificada'
+        }
+      }));
+      
+      this.logger.debug(`Mapeo completado. Datos extendidos: ${mappedEvents.length} eventos`);
+      return mappedEvents;
     } catch (error) {
+      this.logger.error(`Error en findEventsByFilter: ${error.message}`, error.stack);
       this.errorHandler.handleError(error, 'getting');
     }
   }
