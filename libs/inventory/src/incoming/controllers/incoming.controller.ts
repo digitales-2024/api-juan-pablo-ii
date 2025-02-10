@@ -25,8 +25,9 @@ import {
   DeleteIncomingDto,
 } from '../dto';
 import {
+  DetailedIncoming,
   Incoming,
-  IncomingCreateResponseData,
+  IncomingWithStorage,
 } from '../entities/incoming.entity';
 import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
@@ -69,6 +70,76 @@ export class IncomingController {
   }
 
   /**
+   * Obtiene todos los ingresos
+   */
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los ingresos' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los ingresos',
+    type: [Incoming],
+  })
+  findAll(): Promise<Incoming[]> {
+    return this.incomingService.findAll();
+  }
+
+  /**
+   * Obtiene todos los ingresos con detalles de sus relaciones, en especifico el storage
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener los ingresos
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   */
+  @Get('/storage')
+  @ApiOperation({
+    summary: 'Obtener todos los ingresos con detalles de almacen',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los ingresos con detalles de almacen',
+    type: [IncomingWithStorage],
+  })
+  findAllWithStorage(): Promise<IncomingWithStorage[]> {
+    return this.incomingService.getAllWithStorage();
+  }
+
+  /**
+   * Obtiene todos los ingresos con detalles de sus relaciones
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener los ingresos
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   */
+  @Get('/detailed')
+  @ApiOperation({ summary: 'Obtener todos los ingresos' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los ingresos',
+    type: [DetailedIncoming],
+  })
+  findAllWithRelations(): Promise<DetailedIncoming[]> {
+    return this.incomingService.findAllWithRelations();
+  }
+
+  /**
+   * Obtiene un ingreso con detalles de sus relaciones
+   * @param id - ID del ingreso a buscar
+   * @returns Una promesa que resuelve con el ingreso encontrado con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener el ingreso
+   */
+  @Get('/detailed/:id')
+  @ApiOperation({ summary: 'Obtener ingreso por ID' })
+  @ApiParam({ name: 'id', description: 'ID del ingreso' })
+  @ApiOkResponse({
+    description: 'Ingreso encontrado',
+    type: [DetailedIncoming],
+  })
+  @ApiNotFoundResponse({
+    description: 'Ingreso no encontrado',
+  })
+  findOneWithRelations(@Param('id') id: string): Promise<DetailedIncoming[]> {
+    return this.incomingService.findByIdWithRelations(id);
+  }
+
+  /**
    * Obtiene un ingreso por su ID
    */
   @Get(':id')
@@ -86,20 +157,6 @@ export class IncomingController {
   }
 
   /**
-   * Obtiene todos los ingresos
-   */
-  @Get()
-  @ApiOperation({ summary: 'Obtener todos los ingresos' })
-  @ApiOkResponse({
-    status: 200,
-    description: 'Lista de todos los ingresos',
-    type: [Incoming],
-  })
-  findAll(): Promise<Incoming[]> {
-    return this.incomingService.findAll();
-  }
-
-  /**
    * Actualiza un ingreso existente
    */
   @Patch(':id')
@@ -107,13 +164,13 @@ export class IncomingController {
   @ApiOkResponse({
     status: 200,
     description: 'Ingreso actualizado exitosamente',
-    type: Incoming,
+    type: DetailedIncoming,
   })
   update(
     @Param('id') id: string,
     @Body() updateIncomingDto: UpdateIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Incoming>> {
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
     return this.incomingService.update(id, updateIncomingDto, user);
   }
 
@@ -125,7 +182,7 @@ export class IncomingController {
   @ApiOkResponse({
     status: 200,
     description: 'Ingresos desactivados exitosamente',
-    type: [Incoming],
+    type: [DetailedIncoming],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o ingresos no existen',
@@ -133,7 +190,7 @@ export class IncomingController {
   deleteMany(
     @Body() deleteIncomingDto: DeleteIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<DetailedIncoming[]>> {
     return this.incomingService.deleteMany(deleteIncomingDto, user);
   }
 
@@ -144,7 +201,7 @@ export class IncomingController {
   @ApiOperation({ summary: 'Reactivar múltiples ingresos' })
   @ApiOkResponse({
     description: 'Ingresos reactivados exitosamente',
-    type: [Incoming],
+    type: [DetailedIncoming],
   })
   @ApiBadRequestResponse({
     description: 'IDs inválidos o ingresos no existen',
@@ -152,7 +209,7 @@ export class IncomingController {
   reactivateAll(
     @Body() deleteIncomingDto: DeleteIncomingDto,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Incoming[]>> {
+  ): Promise<BaseApiResponse<DetailedIncoming[]>> {
     return this.incomingService.reactivateMany(deleteIncomingDto.ids, user);
   }
 
@@ -164,7 +221,7 @@ export class IncomingController {
   @ApiOkResponse({
     status: 201,
     description: 'Ingreso a almacen creado exitosamente',
-    type: IncomingCreateResponseData,
+    type: DetailedIncoming,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o ingreso ya existe',
@@ -172,7 +229,7 @@ export class IncomingController {
   createIncoming(
     @Body() createIncomingDtoStorage: CreateIncomingDtoStorage,
     @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<IncomingCreateResponseData>> {
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
     return this.incomingService.createIncoming(createIncomingDtoStorage, user);
   }
 }

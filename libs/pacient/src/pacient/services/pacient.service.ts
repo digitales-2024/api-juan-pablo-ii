@@ -195,6 +195,7 @@ export class PacientService {
    * @throws {InternalServerErrorException} Si ocurre un error al subir la imagen
    */
   async uploadImage(image: Express.Multer.File): Promise<HttpResponse<string>> {
+    console.log('la iamgen se creo correctametne');
     if (!image) {
       throw new BadRequestException('Image not provided');
     }
@@ -237,6 +238,7 @@ export class PacientService {
     image: Express.Multer.File,
     existingFileName: string,
   ): Promise<HttpResponse<string>> {
+    console.log('la imgen se creoactualizo correctametne');
     if (!image) {
       throw new BadRequestException('Image not provided');
     }

@@ -18,6 +18,8 @@ import { UpdateEventDto } from '../dto/update-event.dto';
 import { DeleteEventsDto } from '../dto/delete-events.dto';
 import { EventType } from '../entities/event-type.enum';
 import { CreateRecurrentEventsUseCase } from '../use-cases/create-recurrent-events.use-case';
+import { FindEventsQueryDto } from '../dto/find-events-query.dto';
+import { FindEventsByFilterUseCase } from '../use-cases/find-events-by-filter.use-case';
 
 /**
  * Servicio que implementa la lógica de negocio para eventos del calendario.
@@ -36,6 +38,7 @@ export class EventService {
     private readonly deleteEventsUseCase: DeleteEventsUseCase,
     private readonly reactivateEventsUseCase: ReactivateEventsUseCase,
     private readonly createRecurrentEventsUseCase: CreateRecurrentEventsUseCase,
+    private readonly findEventsByFilterUseCase: FindEventsByFilterUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -162,13 +165,10 @@ export class EventService {
     user: UserData,
   ): Promise<BaseApiResponse<Event[]>> {
     try {
-      this.logger.debug(`Iniciando la creación de eventos recurrentes con staffScheduleId: ${staffScheduleId} y usuario: ${JSON.stringify(user)}`);
       const response = await this.createRecurrentEventsUseCase.execute(staffScheduleId, user);
-      this.logger.debug(`Eventos recurrentes creados exitosamente: ${JSON.stringify(response)}`);
       return response;
     } catch (error) {
-      this.logger.error('Error generando eventos recurrentes', error.stack);
-      throw error;
+      this.errorHandler.handleError(error, 'creating')
     }
   }
 
@@ -181,6 +181,34 @@ export class EventService {
     }
   }
 
-
+  /**
+   * Obtiene eventos basados en los filtros definidos en FindEventsQueryDto.
+   * @param query - DTO con los filtros (staffId, type, branchId, status)
+   * @returns Objeto con el arreglo de eventos filtrados.
+   */
+  async findEventsByFilter(query: FindEventsQueryDto): Promise<Event[]> {
+    try {
+      this.logger.debug(`Iniciando búsqueda con filtros: ${JSON.stringify(query)}`);
+      const result = await this.findEventsByFilterUseCase.execute(query);
+      this.logger.debug(`Eventos encontrados: ${result.events.length} resultados`);
+      
+      const mappedEvents = result.events.map(event => ({
+        ...event,
+        staff: {
+          name: event.staff?.name || 'No asignado',
+          lastName: event.staff?.lastName || ''
+        },
+        branch: {
+          name: event.branch?.name || 'Sucursal no especificada'
+        }
+      }));
+      
+      this.logger.debug(`Mapeo completado. Datos extendidos: ${mappedEvents.length} eventos`);
+      return mappedEvents;
+    } catch (error) {
+      this.logger.error(`Error en findEventsByFilter: ${error.message}`, error.stack);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
 
 }

@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from '../dto/create-event.dto';
-import { Event, EventStatus } from '../entities/event.entity';
+import { Event } from '../entities/event.entity';
 import { EventType } from '../entities/event-type.enum';
 import { StaffSchedule } from 'src/modules/staff-schedule/entities/staff-schedule.entity';
 import { RecurrenceParser } from '@calendar/calendar/utils/recurrence-parser';
 import { formatInTimeZone } from 'date-fns-tz';
+import { EventStatus } from '@prisma/client';
 
 @Injectable()
 export class EventFactory {
@@ -38,7 +39,7 @@ export class EventFactory {
     if (!dto.staffScheduleId) throw new Error('StaffScheduleId requerido para TURNO');
     
     event.status = EventStatus.CONFIRMED;
-    event.color = '#FF9900';
+    event.color = 'sky';
     event.staffScheduleId = dto.staffScheduleId;
     return event;
   }

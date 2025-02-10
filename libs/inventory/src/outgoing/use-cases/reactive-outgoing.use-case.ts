@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
-import { Outgoing } from '../entities/outgoing.entity';
+import { DetailedOutgoing } from '../entities/outgoing.entity';
 import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
@@ -16,7 +16,7 @@ export class ReactivateOutgoingUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<BaseApiResponse<Outgoing[]>> {
+  ): Promise<BaseApiResponse<DetailedOutgoing[]>> {
     // Reactivar las salidas y registrar auditoría
     const reactivatedOutgoings = await this.outgoingRepository.transaction(
       async () => {
@@ -35,7 +35,7 @@ export class ReactivateOutgoingUseCase {
           ),
         );
 
-        return outgoings;
+        return await this.outgoingRepository.getAllDetailedOutgoing();
       },
     );
 

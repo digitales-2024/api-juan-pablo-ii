@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { EventService } from '../services/event.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -19,16 +20,18 @@ import {
   ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { Event } from '../entities/event.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { DeleteEventsDto } from '../dto/delete-events.dto';
-import { EventResponseDto } from '../dto/event-response.dto';
-import { plainToClass } from 'class-transformer';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { UseInterceptors } from '@nestjs/common';
+import { EventType } from '../entities/event-type.enum';
+import { FindEventsQueryDto } from '../dto/find-events-query.dto';
+import { EventStatus } from '@prisma/client';
 
 /**
  * Controlador REST para gestionar eventos del calendario.
@@ -47,6 +50,47 @@ import { UseInterceptors } from '@nestjs/common';
 @UseInterceptors(ClassSerializerInterceptor)
 export class EventController {
   constructor(private readonly eventService: EventService) { }
+
+  /**
+   * Obtiene eventos filtrados por staffId, tipo, sucursal y estado.
+   */
+  @Get('filter')
+  @ApiOperation({ summary: 'Obtener eventos filtrados' })
+  @ApiQuery({
+    name: 'staffId',
+    required: false,
+    description: 'ID del personal para filtrar eventos',
+    example: 'uuid-del-personal',
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: EventType,
+    description: 'Tipo del evento (TURNO, CITA, OTRO)',
+    example: EventType.TURNO,
+  })
+  @ApiQuery({
+    name: 'branchId',
+    required: false,
+    description: 'ID de la sucursal para filtrar eventos',
+    example: 'uuid-de-la-sucursal',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: EventStatus,
+    description: 'Estado del evento (PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW)',
+    example: EventStatus.CONFIRMED,
+  })
+  @ApiOkResponse({
+    description: 'Lista de eventos filtrados',
+    type: [Event],
+  })
+  async findEventsByFilter(
+    @Query() query: FindEventsQueryDto,
+  ): Promise<Event[]> {
+    return this.eventService.findEventsByFilter(query);
+  }
 
   /**
    * Crea un nuevo evento.
@@ -70,6 +114,7 @@ export class EventController {
   /**
    * Obtiene un evento por su ID.
    */
+  @Get(':id')
   @ApiOperation({ summary: 'Obtener evento por ID' })
   @ApiParam({ name: 'id', description: 'ID del evento' })
   @ApiOkResponse({
@@ -79,12 +124,8 @@ export class EventController {
   @ApiNotFoundResponse({
     description: 'Evento no encontrado',
   })
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<EventResponseDto> {
-    const event = await this.eventService.findOne(id);
-    return plainToClass(EventResponseDto, event, { 
-      excludeExtraneousValues: false 
-    });
+  async findOne(@Param('id') id: string): Promise<Event> {
+    return this.eventService.findOne(id);
   }
 
   /**
@@ -96,13 +137,8 @@ export class EventController {
     description: 'Lista de todos los eventos',
     type: [Event],
   })
-  async findAll(): Promise<EventResponseDto[]> {
-    const events = await this.eventService.findAll();
-    return events.map(event => 
-      plainToClass(EventResponseDto, event, { 
-        excludeExtraneousValues: false 
-      })
-    );
+  async findAll(): Promise<Event[]> {
+    return this.eventService.findAll();
   }
 
   /**

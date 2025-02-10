@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
-import { Event, EventStatus } from '../entities/event.entity';
+import { Event } from '../entities/event.entity';
 import { EventType } from '../entities/event-type.enum';
-import { CreateEventDto } from '../dto/create-event.dto';
+import { EventStatus } from '@prisma/client';
 
 @Injectable()
 export class EventRepository extends BaseRepository<Event> {
@@ -75,7 +75,21 @@ export class EventRepository extends BaseRepository<Event> {
   async createEvents(events: Event[]): Promise<Event[]> {
     return this.prisma.$transaction(async (tx) => {
       const createdEvents = [];
-      for (const eventData of events) {
+      for (const event of events) {
+        const eventData = {
+          title: event.title,
+          type: event.type,
+          start: event.start,
+          end: event.end,
+          staffId: event.staffId,
+          branchId: event.branchId,
+          status: event.status,
+          color: event.color,
+          staffScheduleId: event.staffScheduleId,
+          isActive: true,
+          isCancelled: event.isCancelled,
+          cancellationReason: event.cancellationReason
+        };
         createdEvents.push(
           await tx.event.create({
             data: eventData,
@@ -99,4 +113,36 @@ export class EventRepository extends BaseRepository<Event> {
     });
   }
   
+  async findMany(params?: {
+    where?: any;
+    orderBy?: any;
+    include?: any;
+  }): Promise<Event[]> {
+    return this.prisma.event.findMany({
+      ...params,
+      include: {
+        staff: {
+          select: {
+            name: true,
+            lastName: true
+          }
+        },
+        branch: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+  }
+
+  async findById(id: string): Promise<Event> {
+    return this.prisma.event.findUnique({
+      where: { id },
+      include: {
+        staff: { select: { name: true, lastName: true } },
+        branch: { select: { name: true } }
+      }
+    });
+  }
 }

@@ -30,7 +30,16 @@ export class EventResponseDto {
     staffId: string;
 
     @Expose()
+    staffName: string;
+
+    @Expose()
+    staffLastName: string;
+
+    @Expose()
     branchId: string;
+
+    @Expose()
+    branchName: string;
 
     @Expose()
     staffScheduleId: string;
