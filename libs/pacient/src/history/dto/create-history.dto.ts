@@ -20,11 +20,11 @@ export class CreateMedicalHistoryDto {
       enfermedadesCronicas: ['Hypertension'],
       cirugiasPrevias: ['Appendectomy 2018'],
     },
-    required: true,
+    required: false,
   })
   @IsObject()
-  @IsNotEmpty()
-  medicalHistory: any;
+  @IsOptional()
+  medicalHistory?: string;
 
   @ApiProperty({
     description: 'Additional description',
