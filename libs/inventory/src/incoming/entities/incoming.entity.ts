@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class Incoming {
   @ApiProperty()
@@ -63,9 +64,40 @@ export class Incoming {
 //   });
 // }
 
-export class IncomingStorage {
+export class IncomingBranch {
+  @ApiProperty()
+  id: string;
+
   @ApiProperty()
   name: string;
+}
+
+export class IncomingStorageType {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({
+    type: IncomingBranch,
+    required: false,
+  })
+  @IsOptional()
+  branch?: IncomingBranch;
+}
+
+export class IncomingStorage {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({
+    type: IncomingStorageType,
+  })
+  TypeStorage: IncomingStorageType;
 }
 
 // model Producto {

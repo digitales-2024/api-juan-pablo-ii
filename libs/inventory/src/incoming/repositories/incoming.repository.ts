@@ -15,7 +15,24 @@ export class IncomingRepository extends BaseRepository<Incoming> {
   async getAllWithStorage(): Promise<IncomingWithStorage[]> {
     return this.prisma.incoming.findMany({
       include: {
-        Storage: true,
+        Storage: {
+          select: {
+            id: true,
+            name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -26,7 +43,24 @@ export class IncomingRepository extends BaseRepository<Incoming> {
         id,
       },
       include: {
-        Storage: true,
+        Storage: {
+          select: {
+            id: true,
+            name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -37,7 +71,20 @@ export class IncomingRepository extends BaseRepository<Incoming> {
       include: {
         Storage: {
           select: {
+            id: true,
             name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
         Movement: {
@@ -57,7 +104,20 @@ export class IncomingRepository extends BaseRepository<Incoming> {
       include: {
         Storage: {
           select: {
+            id: true,
             name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
         Movement: {

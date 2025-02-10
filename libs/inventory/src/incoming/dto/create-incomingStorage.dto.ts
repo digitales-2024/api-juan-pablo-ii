@@ -5,9 +5,10 @@ import {
   IsNotEmpty,
   IsBoolean,
   IsDateString,
-  IsObject,
+  //IsObject,
+  ValidateNested,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { OutgoingIncomingMovementDto } from '@inventory/inventory/movement/dto';
 
 export class CreateIncomingDtoStorage {
@@ -44,6 +45,11 @@ export class CreateIncomingDtoStorage {
     description: 'Fecha del ingreso',
     example: '2023-10-01T00:00:00.000Z',
     required: true,
+  })
+  @Transform(({ value }) => {
+    if (!value) return value;
+    const date = new Date(value);
+    return date.toISOString();
   })
   @IsDateString()
   @IsNotEmpty()
@@ -82,7 +88,9 @@ export class CreateIncomingDtoStorage {
     required: true,
     type: [OutgoingIncomingMovementDto],
   })
-  @IsObject({ each: true })
+  // @IsObject({ each: true })
+  @ValidateNested({ each: true })
+  @Type(() => OutgoingIncomingMovementDto)
   @IsNotEmpty()
   movement: OutgoingIncomingMovementDto[];
 }
