@@ -434,7 +434,7 @@ model MedicalHistory {
   id             String   @id @default(uuid())
   patientId      String
   patient        Patient  @relation(fields: [patientId], references: [id])
-  medicalHistory Json? // Historial médico del paciente
+  medicalHistory String? // Historial médico del paciente
   description    String?
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now()) @db.Timestamptz(6)
