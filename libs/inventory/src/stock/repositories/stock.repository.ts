@@ -103,6 +103,7 @@ export class StockRepository extends BaseRepository<Stock> {
     for (const storage of allStorages) {
       const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
       const branch = await this.fetchBranch(typeStorage.branchId);
+      //This is insecure because the prisma schema determines that staff is related with TypeStorage optionally
       const staff = await this.fetchStaff(typeStorage.staffId);
 
       stockByStorage.push({
@@ -110,7 +111,7 @@ export class StockRepository extends BaseRepository<Stock> {
         name: storage.name,
         location: storage.location,
         address: branch.address,
-        staff: staff.name,
+        staff: `${staff.name} ${staff.lastName}`,
         description: typeStorage.description,
         stock: await this.getStockByStorage(storage.id),
       });
@@ -269,7 +270,10 @@ export class StockRepository extends BaseRepository<Stock> {
   private async fetchStaff(staffId: string) {
     return await this.prisma.staff.findUnique({
       where: { id: staffId },
-      select: { name: true },
+      select: {
+        name: true,
+        lastName: true,
+      },
     });
   }
   //fin funciones privadas
