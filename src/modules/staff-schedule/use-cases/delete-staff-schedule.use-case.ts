@@ -20,7 +20,7 @@ export class DeleteStaffSchedulesUseCase {
   ): Promise<BaseApiResponse<StaffSchedule[]>> {
     const deletedSchedules = await this.staffScheduleRepository.transaction(
       async () => {
-        const schedules = await this.staffScheduleRepository.softDeleteMany(
+        const schedules = await this.staffScheduleRepository.deleteMany(
           deleteStaffSchedulesDto.ids
         );
 

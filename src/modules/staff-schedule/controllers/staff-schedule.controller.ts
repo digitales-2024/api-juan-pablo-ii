@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { StaffScheduleService } from '../services/staff-schedule.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -17,6 +18,7 @@ import {
   ApiUnauthorizedResponse,
   ApiOkResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UserData } from '@login/login/interfaces';
 import { StaffSchedule } from '../entities/staff-schedule.entity';
@@ -24,6 +26,8 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateStaffScheduleDto } from '../dto/create-staff-schedule.dto';
 import { UpdateStaffScheduleDto } from '../dto/update-staff-schedule.dto';
 import { DeleteStaffSchedulesDto } from '../dto/delete-staff-schedule.dto';
+import { FindStaffSchedulesQueryDto } from '../dto/find-staff-schedule-query.dto';
+import { Logger } from '@nestjs/common';
 
 /**
  * Controlador REST para gestionar horarios del personal.
@@ -39,7 +43,9 @@ import { DeleteStaffSchedulesDto } from '../dto/delete-staff-schedule.dto';
 @Controller({ path: 'staff-schedule', version: '1' })
 @Auth()
 export class StaffScheduleController {
-  constructor(private readonly staffScheduleService: StaffScheduleService) {}
+  private readonly logger = new Logger(StaffScheduleController.name);
+
+  constructor(private readonly staffScheduleService: StaffScheduleService) { }
 
   /**
    * Crea un nuevo horario
@@ -56,6 +62,23 @@ export class StaffScheduleController {
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<StaffSchedule>> {
     return this.staffScheduleService.create(createStaffScheduleDto, user);
+  }
+
+  /**
+   * Obtiene horarios filtrados por branch y/o staff
+   */
+  @Get('filter')
+  @ApiOperation({ summary: 'Filtrar horarios por criterios (sucursal, personal y días)' })
+  @ApiQuery({ name: 'branchId', required: false, example: 'uuid-ejemplo' })
+  @ApiQuery({ name: 'staffId', required: false, example: 'uuid-ejemplo' })
+  @ApiQuery({ name: 'daysOfWeek', required: false, example: '[1,3,5]' })
+  @ApiOkResponse({
+    description: 'Horarios encontrados',
+    type: [StaffSchedule],
+  })
+  async findByCriteria(@Query() query: FindStaffSchedulesQueryDto): Promise<StaffSchedule[]> {
+    this.logger.debug(`Solicitud de filtrado - Query: ${JSON.stringify(query)}`);
+    return this.staffScheduleService.findManyByStaffAndBranch(query);
   }
 
   /**
