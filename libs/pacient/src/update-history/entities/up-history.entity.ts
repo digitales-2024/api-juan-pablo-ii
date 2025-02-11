@@ -35,10 +35,10 @@ export class UpdateHistory {
   medicalLeave: boolean;
 
   @ApiProperty()
-  medicalLeaveStartDate?: Date;
+  medicalLeaveStartDate?: string;
 
   @ApiProperty()
-  medicalLeaveEndDate?: Date;
+  medicalLeaveEndDate?: string;
 
   @ApiProperty()
   medicalLeaveDays?: number;
