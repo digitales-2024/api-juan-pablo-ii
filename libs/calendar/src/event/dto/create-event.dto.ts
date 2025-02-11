@@ -18,6 +18,15 @@ export class CreateEventDto {
   title: string;
 
   @ApiProperty({
+    description: 'Color del evento',
+    example: 'sky',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  color: string;
+
+  @ApiProperty({
     description: 'Tipo de evento',
     enum: ['TURNO', 'CITA', 'OTRO'],
     example: 'TURNO',

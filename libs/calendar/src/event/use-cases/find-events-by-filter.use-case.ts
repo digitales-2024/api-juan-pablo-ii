@@ -21,6 +21,8 @@ export class FindEventsByFilterUseCase {
 
     if (query.type) {
       where.type = query.type;
+    } else {
+      where.type = 'turno'; // Valor por defecto si no se especifica el tipo
     }
 
     if (query.branchId) {
@@ -29,6 +31,10 @@ export class FindEventsByFilterUseCase {
 
     if (query.status) {
       where.status = query.status;
+    }
+
+    if (query.staffScheduleId) {
+        where.staffScheduleId = query.staffScheduleId;
     }
 
     this.logger.debug(`Objeto "where" construido: ${JSON.stringify(where)}`);
