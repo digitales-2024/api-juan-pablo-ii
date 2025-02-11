@@ -162,4 +162,66 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
       throw error;
     }
   }
+
+  /**
+   * Obtiene el nombre completo de un paciente por ID
+   * @param patientId - ID del paciente
+   * @returns Nombre completo del paciente
+   */
+  async findPatientFullNameById(patientId: string): Promise<string> {
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: patientId },
+      select: {
+        name: true,
+        lastName: true,
+      },
+    });
+
+    if (!patient) {
+      throw new Error(`Paciente con ID ${patientId} no encontrado`);
+    }
+
+    const { name, lastName } = patient;
+    return `${name} ${lastName ?? ''}`.trim();
+  }
+
+  /**
+   * Actualiza el nombre completo de un paciente en la tabla MedicalHistory
+   * @param medicalHistoryId - ID del registro de la historia médica
+   * @param patientId - ID del paciente
+   * @param fullName - Nuevo nombre completo del paciente
+   * @returns true si la actualización fue exitosa, false si no
+   */
+  async updateMedicalHistoryFullName(
+    medicalHistoryId: string,
+    patientId: string,
+    fullName: string,
+  ): Promise<boolean> {
+    try {
+      const description = 'Paciente con historia medica predeterminada';
+
+      const medicalHistory = await this.prisma.medicalHistory.findUnique({
+        where: { id: medicalHistoryId },
+      });
+
+      if (!medicalHistory || medicalHistory.patientId !== patientId) {
+        throw new Error(
+          `Registro de historia médica no encontrado o el patientId no coincide`,
+        );
+      }
+
+      await this.prisma.medicalHistory.update({
+        where: { id: medicalHistoryId },
+        data: { fullName, description: description },
+      });
+
+      return true;
+    } catch (error) {
+      console.error(
+        `Error actualizando el nombre completo del paciente en la historia médica con ID ${medicalHistoryId}:`,
+        error,
+      );
+      return false;
+    }
+  }
 }
