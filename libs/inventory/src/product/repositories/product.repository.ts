@@ -48,6 +48,8 @@ export class ProductRepository extends BaseRepository<Product> {
         precio: true,
         categoriaId: true,
         tipoProductoId: true,
+        codigoProducto: true,
+        unidadMedida: true,
         categoria: {
           select: {
             name: true,
