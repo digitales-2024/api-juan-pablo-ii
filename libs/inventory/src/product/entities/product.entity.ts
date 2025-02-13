@@ -102,3 +102,11 @@ export class ActiveProduct {
   @ApiProperty()
   tipoProducto: ActiveProductTypeProduct;
 }
+
+export class ProductSearch {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+}
