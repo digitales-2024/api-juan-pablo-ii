@@ -3,7 +3,7 @@ import { EventRepository } from '../repositories/event.repository';
 
 @Injectable()
 export class FindEventsByStaffScheduleUseCase {
-  constructor(private readonly eventRepository: EventRepository) {}
+  constructor(private readonly eventRepository: EventRepository) { }
 
   async execute(
     staffScheduleId: string,
@@ -13,9 +13,9 @@ export class FindEventsByStaffScheduleUseCase {
     const result = await this.eventRepository.findEventsByStaffScheduleId(
       staffScheduleId,
       page,
-      limit
+      Math.min(limit, 50)
     );
-    
+
     return {
       events: result.events.map(event => ({
         ...event,

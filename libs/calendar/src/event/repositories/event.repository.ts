@@ -113,7 +113,7 @@ export class EventRepository extends BaseRepository<Event> {
       return createdEvents;
     });
   }
-  
+
   async findMany(params?: {
     where?: any;
     orderBy?: any;
@@ -152,18 +152,20 @@ export class EventRepository extends BaseRepository<Event> {
     page: number = 1,
     limit: number = 10
   ): Promise<{ events: Event[]; total: number }> {
+    const take = Math.min(limit, 50); // Máximo 50 registros
+    const skip = (page - 1) * take;
+
     const [total, events] = await Promise.all([
-      this.prisma.event.count({
-        where: { staffScheduleId },
-      }),
+      this.prisma.event.count({ where: { staffScheduleId } }),
       this.prisma.event.findMany({
         where: { staffScheduleId },
-        skip: (page - 1) * limit,
-        take: limit,
+        skip,
+        take,
         include: {
           staff: { select: { name: true, lastName: true } },
           branch: { select: { name: true } }
-        }
+        },
+        orderBy: { start: 'asc' } // Ordenar por fecha de inicio
       })
     ]);
 

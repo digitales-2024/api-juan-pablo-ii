@@ -32,6 +32,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventType } from '../entities/event-type.enum';
 import { FindEventsQueryDto } from '../dto/find-events-query.dto';
 import { EventStatus } from '@prisma/client';
+import { PaginationDto } from '../dto/pagination.dto';
 
 /**
  * Controlador REST para gestionar eventos del calendario.
@@ -223,28 +224,25 @@ export class EventController {
     description: 'ID del horario del staff',
     example: 'uuid-del-horario'
   })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    description: 'Página para paginación',
-    example: 1
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    description: 'Límite de resultados por página',
-    example: 10
-  })
   @ApiOkResponse({
     description: 'Eventos encontrados para el horario',
     type: [Event],
+    headers: {
+      'X-Total-Count': {
+        description: 'Número total de registros disponibles',
+        schema: { type: 'integer' }
+      }
+    }
   })
   async findEventsByStaffSchedule(
     @Param('scheduleId') scheduleId: string,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10
+    @Query() pagination: PaginationDto
   ): Promise<{ events: Event[]; total: number }> {
-    return this.eventService.findEventsByStaffSchedule(scheduleId, page, limit);
+    return this.eventService.findEventsByStaffSchedule(
+      scheduleId,
+      pagination.page,
+      Math.min(pagination.limit, 50) // Limitar máximo 50 registros por página
+    );
   }
 
   @Delete('by-schedule/:scheduleId')
