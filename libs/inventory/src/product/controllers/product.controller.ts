@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from '../services/product.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -23,9 +24,11 @@ import { CreateProductDto, UpdateProductDto, DeleteProductDto } from '../dto';
 import {
   ActiveProduct,
   Product,
+  ProductSearch,
   ProductWithRelations,
 } from '../entities/product.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+// import { SearchProductDto } from '../dto/search-product.dto';
 
 /**
  * Controlador REST para gestionar productos.
@@ -127,6 +130,27 @@ export class ProductController {
     @Param('id') id: string,
   ): Promise<ProductWithRelations[]> {
     return this.productService.findByIdWithRelations(id);
+  }
+
+  /**
+   * Obtiene un producto por su ID con detalles de sus relaciones
+   */
+  @Get('search')
+  @ApiOperation({
+    summary: 'Busqueda rápida de producto por su nombre',
+  })
+  @ApiParam({ name: 'id', description: 'ID del producto' })
+  @ApiOkResponse({
+    description: 'Producto encontrado',
+    type: [ProductSearch],
+  })
+  @ApiNotFoundResponse({
+    description: 'Producto no encontrado',
+  })
+  searchProductByIndexedName(
+    @Query('name') name: string,
+  ): Promise<ProductSearch[]> {
+    return this.productService.searchProductByIndexedName(name);
   }
 
   /**
