@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
-import { ActiveProduct, Product } from '../entities/product.entity';
+import {
+  ActiveProduct,
+  Product,
+  ProductSearch,
+} from '../entities/product.entity';
 
 @Injectable()
 export class ProductRepository extends BaseRepository<Product> {
@@ -37,6 +41,11 @@ export class ProductRepository extends BaseRepository<Product> {
     return product ? product.precio : null;
   }
 
+  /**
+   * Obtiene todos los productos activos de la base de datos.
+   *
+   * @returns {Promise<ActiveProduct[]>} Una promesa que resuelve con una lista de productos activos.
+   */
   async findAllActiveProducts(): Promise<ActiveProduct[]> {
     return await this.prisma.producto.findMany({
       where: {
@@ -63,6 +72,42 @@ export class ProductRepository extends BaseRepository<Product> {
           },
         },
       },
+    });
+  }
+
+  /**
+   * Busca productos por su nombre en la base de datos.
+   *
+   * @param name - Nombre del producto a buscar.
+   * @returns {Promise<ProductSearch[]>} Una promesa que resuelve con una lista de productos que coinciden con el nombre proporcionado.
+   */
+  async searchProductByIndexedName(name: string): Promise<ProductSearch[]> {
+    return await this.prisma.producto.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: 'insensitive', //Insensible a mayusculas y minusculas
+        },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      take: 10, //Podemos configurar el numero
+    });
+  }
+
+  async bringFirstProducts(): Promise<ProductSearch[]> {
+    return await this.prisma.producto.findMany({
+      where: {
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      take: 15,
     });
   }
 }

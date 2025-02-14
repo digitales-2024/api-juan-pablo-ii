@@ -288,7 +288,7 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  name                      String  @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
+  name                      String  @unique// Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
   precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
@@ -309,6 +309,9 @@ model Producto {
   // Relación con el inventario (Almacen)
   Movement Movement[]
   Stock    Stock[]
+
+  // @@index([name(ops: raw("gist_trgm_ops"))], type: Gist) // En caso se quiera usar la indexacion Gist
+  @@index([name(ops: raw("gin_trgm_ops"))], type:Gin) //Busquedas rapidas por coincidencias
 }
 
 model TypeStorage {
