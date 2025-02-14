@@ -88,4 +88,33 @@ export class StockController {
   ): Promise<StockByStorage[]> {
     return this.stockService.getStockByStorageProduct(storageId, productId);
   }
-}
+
+//   @Get('/availableProducts')
+//   @ApiOperation({
+//     summary: 'Obtener todos los productos en stock en todos los almacenes.',
+//   })
+//   @ApiOkResponse({
+//     status: 200,
+//     description: 'Productos en stock en todos los almacenes',
+//     type: [StockByStorage],
+//   })
+//   async getProductsStock(): Promise<StockByStorage[]> {
+//     return this.stockService.getProductsStock();
+//   }
+
+//   @Get('/availableProduct/:productId')
+//   @ApiOperation({
+//     summary: 'Obtener un producto en stock en todos los almacenes.',
+//   })
+//   @ApiOkResponse({
+//     status: 200,
+//     description: 'Producto en stock en todos los almacenes',
+//     type: [StockByStorage],
+//   })
+//   @ApiParam({ name: 'productId', description: 'ID del producto' })
+//   async getProductsStockById(
+//     @Param('productId') id: string,
+//   ): Promise<StockByStorage[]> {
+//     return this.stockService.getProductStock(id);
+//   }
+// }

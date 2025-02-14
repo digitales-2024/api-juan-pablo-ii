@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
-import { DetailedOutgoing, Outgoing } from '../entities/outgoing.entity';
+import {
+  DetailedOutgoing,
+  Outgoing,
+  OutgoingWithStorage,
+} from '../entities/outgoing.entity';
 import { CreateOutgoingDto } from '../dto/create-outgoing.dto';
 import { UpdateOutgoingDto } from '../dto/update-outgoing.dto';
 import { UserData } from '@login/login/interfaces';
@@ -199,7 +203,6 @@ export class OutgoingService {
       } = createOutgoingDtoStorage;
       const isIncoming = false;
 
-      console.log('idIncoming', storageId);
       // Llamar a createIncomingUseCase y esperar el ID del registro del nuevo ingreso
       const outgoing = await this.createOutgoingUseCase.createOugoingStorage(
         createOutgoingDtoStorage,
@@ -327,6 +330,44 @@ export class OutgoingService {
         throw new BadRequestException('Ingreso no encontrado');
       }
       return outgoingData;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todos los registros de ingreso con su respectivo almacenamiento.
+   *
+   * @returns {Promise<IncomingWithStorage[]>} Una promesa que resuelve con una lista de objetos IncomingWithStorage.
+   * @throws {BadRequestException} Si no se encuentran datos de ingreso.
+   * @throws {Error} Si ocurre un error al obtener los datos.
+   */
+  async getAllWithStorage(): Promise<OutgoingWithStorage[]> {
+    try {
+      const incomingData = await this.outgoingRepository.getAllWithStorage();
+      if (!incomingData) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return incomingData;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca un ingreso con almacenamiento por su ID.
+   *
+   * @param {string} id - El ID del ingreso a buscar.
+   * @returns {Promise<IncomingWithStorage[]>} Una promesa que resuelve con un array que contiene el ingreso con almacenamiento.
+   * @throws {BadRequestException} Si no se encuentra el ingreso.
+   */
+  async findWithStorageById(id: string): Promise<OutgoingWithStorage[]> {
+    try {
+      const incoming = await this.outgoingRepository.findWithStorageById(id);
+      if (!incoming) {
+        throw new BadRequestException('Ingreso no encontrado');
+      }
+      return [incoming];
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
