@@ -436,6 +436,7 @@ model Outgoing {
 model MedicalHistory {
   id             String   @id @default(uuid())
   patientId      String
+  fullName       String? // Nombre completo del paciente
   patient        Patient  @relation(fields: [patientId], references: [id])
   medicalHistory Json? // Historial médico del paciente
   description    String?
@@ -460,8 +461,8 @@ model UpdateHistory {
   updateHistory         Json? // Historial de actualizaciones
   description           String?
   medicalLeave          Boolean        @default(false) // indica si tiene descanso medico
-  medicalLeaveStartDate DateTime?
-  medicalLeaveEndDate   DateTime?
+  medicalLeaveStartDate String?
+  medicalLeaveEndDate   String?
   medicalLeaveDays      Int? // Cantidad de días de descanso médico
   leaveDescription      String? // Descripción del descanso médico
   isActive              Boolean        @default(true)

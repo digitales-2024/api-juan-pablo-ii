@@ -18,6 +18,10 @@ export class CreateMedicalHistoryUseCase {
     createMedicalHistoryDto: CreateMedicalHistoryDto,
     user: UserData,
   ): Promise<BaseApiResponse<MedicalHistory>> {
+    console.log(
+      'use case de crear historia',
+      createMedicalHistoryDto.medicalHistory,
+    );
     const newMedicalHistory = await this.medicalHistoryRepository.transaction(
       async () => {
         // Create medical history

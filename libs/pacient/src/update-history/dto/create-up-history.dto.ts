@@ -107,21 +107,21 @@ export class CreateUpdateHistoryDto {
 
   @ApiProperty({
     description: 'Fecha de inicio del descanso médico',
-    example: '2024-03-16T10:00:00Z',
+    example: '2024-03-16',
     required: false,
   })
   @IsDateString()
   @IsOptional()
-  medicalLeaveStartDate?: Date;
+  medicalLeaveStartDate?: string;
 
   @ApiProperty({
     description: 'Fecha de fin del descanso médico',
-    example: '2024-03-19T10:00:00Z',
+    example: '2024-03-19',
     required: false,
   })
   @IsDateString()
   @IsOptional()
-  medicalLeaveEndDate?: Date;
+  medicalLeaveEndDate?: string;
 
   @ApiProperty({
     description: 'Cantidad de días de descanso médico',
