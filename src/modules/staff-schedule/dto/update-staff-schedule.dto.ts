@@ -8,6 +8,7 @@ import { ApiProperty } from '@nestjs/swagger';
  */
 export class UpdateStaffScheduleDto extends PartialType(
   PickType(CreateStaffScheduleDto, [
+    'color',
     'staffId',
     'branchId',
     'startTime',

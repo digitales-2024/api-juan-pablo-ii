@@ -108,6 +108,7 @@ export class CreateRecurrentEventsUseCase {
 
     return {
       title: staffSchedule.title,
+      color: staffSchedule.color,
       type: EventType.TURNO,
       start: startDate,
       end: endDate,

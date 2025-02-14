@@ -624,6 +624,7 @@ model StaffSchedule {
   staffId    String
   branchId   String
   title      String      @default("Turno") // Ej: "Turno Mañana"
+  color      String?
   startTime  String // Formato "HH:mm" (08:00)
   endTime    String // Formato "HH:mm" (17:00)
   daysOfWeek DayOfWeek[] // Días de aplicación
@@ -631,8 +632,8 @@ model StaffSchedule {
   exceptions String[] // Cambiar de DateTime[] a String[] para aceptar fechas en formato YYYY-MM-DD
   isActive   Boolean     @default(true)
   events     Event[] // Eventos generados
-  staff      Staff       @relation(fields: [staffId], references: [id])
-  branch     Branch      @relation(fields: [branchId], references: [id])
+  staff      Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 

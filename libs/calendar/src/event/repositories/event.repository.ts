@@ -6,6 +6,7 @@ import { EventStatus } from '@prisma/client';
 
 @Injectable()
 export class EventRepository extends BaseRepository<Event> {
+
   constructor(prisma: PrismaService) {
     super(prisma, 'event');
   }
@@ -112,7 +113,7 @@ export class EventRepository extends BaseRepository<Event> {
       return createdEvents;
     });
   }
-  
+
   async findMany(params?: {
     where?: any;
     orderBy?: any;
@@ -144,5 +145,36 @@ export class EventRepository extends BaseRepository<Event> {
         branch: { select: { name: true } }
       }
     });
+  }
+
+  async findEventsByStaffScheduleId(
+    staffScheduleId: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ events: Event[]; total: number }> {
+    const take = Math.min(limit, 50); // Máximo 50 registros
+    const skip = (page - 1) * take;
+
+    const [total, events] = await Promise.all([
+      this.prisma.event.count({ where: { staffScheduleId } }),
+      this.prisma.event.findMany({
+        where: { staffScheduleId },
+        skip,
+        take,
+        include: {
+          staff: { select: { name: true, lastName: true } },
+          branch: { select: { name: true } }
+        },
+        orderBy: { start: 'asc' } // Ordenar por fecha de inicio
+      })
+    ]);
+
+    return { events, total };
+  }
+
+  async deleteManyByStaffScheduleId(staffScheduleId: string): Promise<number> {
+    return this.prisma.event.deleteMany({
+      where: { staffScheduleId },
+    }).then(result => result.count);
   }
 }

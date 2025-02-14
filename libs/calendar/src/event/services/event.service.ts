@@ -20,6 +20,8 @@ import { EventType } from '../entities/event-type.enum';
 import { CreateRecurrentEventsUseCase } from '../use-cases/create-recurrent-events.use-case';
 import { FindEventsQueryDto } from '../dto/find-events-query.dto';
 import { FindEventsByFilterUseCase } from '../use-cases/find-events-by-filter.use-case';
+import { FindEventsByStaffScheduleUseCase } from '../use-cases/find-events-by-staff-schedule.use-case';
+import { DeleteEventsByStaffScheduleUseCase } from '../use-cases/delete-events-by-staff-schedule.use-case';
 
 /**
  * Servicio que implementa la lógica de negocio para eventos del calendario.
@@ -39,6 +41,8 @@ export class EventService {
     private readonly reactivateEventsUseCase: ReactivateEventsUseCase,
     private readonly createRecurrentEventsUseCase: CreateRecurrentEventsUseCase,
     private readonly findEventsByFilterUseCase: FindEventsByFilterUseCase,
+    private readonly findEventsByStaffScheduleUseCase: FindEventsByStaffScheduleUseCase,
+    private readonly deleteEventsByStaffScheduleUseCase: DeleteEventsByStaffScheduleUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -208,6 +212,33 @@ export class EventService {
     } catch (error) {
       this.logger.error(`Error en findEventsByFilter: ${error.message}`, error.stack);
       this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findEventsByStaffSchedule(
+    staffScheduleId: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ events: Event[]; total: number }> {
+    try {
+      return await this.findEventsByStaffScheduleUseCase.execute(
+        staffScheduleId,
+        page,
+        limit
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async deleteEventsByStaffSchedule(
+    staffScheduleId: string,
+    user: UserData,
+  ): Promise<BaseApiResponse<number>> {
+    try {
+      return await this.deleteEventsByStaffScheduleUseCase.execute(staffScheduleId, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deleting');
     }
   }
 

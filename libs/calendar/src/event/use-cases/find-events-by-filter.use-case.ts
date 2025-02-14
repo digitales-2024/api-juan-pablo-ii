@@ -7,28 +7,26 @@ import { FindEventsQueryDto } from '../dto/find-events-query.dto';
 export class FindEventsByFilterUseCase {
   private readonly logger = new Logger(FindEventsByFilterUseCase.name);
 
-  constructor(private readonly eventRepository: EventRepository) {}
+  constructor(private readonly eventRepository: EventRepository) { }
 
   async execute(query: FindEventsQueryDto): Promise<{ events: Event[] }> {
     this.logger.debug(`Iniciando ejecución de findEventsByFilter con query: ${JSON.stringify(query)}`);
 
-    // Construir el objeto "where" dinámicamente
-    const where: any = { isActive: true };
+    const where: any = {
+      isActive: true,
+      AND: []
+    };
 
-    if (query.staffId) {
-      where.staffId = query.staffId;
-    }
+    // Filtros individuales
+    if (query.type) where.AND.push({ type: query.type });
+    if (query.status) where.AND.push({ status: query.status });
+    if (query.staffScheduleId) where.AND.push({ staffScheduleId: query.staffScheduleId });
+    if (query.staffId) where.AND.push({ staffId: query.staffId });
+    if (query.branchId) where.AND.push({ branchId: query.branchId });
 
-    if (query.type) {
-      where.type = query.type;
-    }
-
-    if (query.branchId) {
-      where.branchId = query.branchId;
-    }
-
-    if (query.status) {
-      where.status = query.status;
+    // Si no hay filtros en el AND, eliminarlo para evitar condiciones vacías
+    if (where.AND.length === 0) {
+      delete where.AND;
     }
 
     this.logger.debug(`Objeto "where" construido: ${JSON.stringify(where)}`);
