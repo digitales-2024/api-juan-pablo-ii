@@ -3,6 +3,7 @@ import { ProductRepository } from '../repositories/product.repository';
 import {
   ActiveProduct,
   Product,
+  ProductSearch,
   ProductWithRelations,
 } from '../entities/product.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
@@ -295,6 +296,19 @@ export class ProductService {
         throw new BadRequestException('Producto no encontrado');
       }
       return products;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async searchProductByIndexedName(name: string): Promise<ProductSearch[]> {
+    try {
+      const results =
+        name === 'None'
+          ? await this.productRepository.bringFirstProducts()
+          : await this.productRepository.searchProductByIndexedName(name);
+
+      return results;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
