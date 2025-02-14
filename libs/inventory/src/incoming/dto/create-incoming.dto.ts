@@ -44,6 +44,11 @@ export class CreateIncomingDto {
     example: '2023-10-01T00:00:00.000Z',
     required: true,
   })
+  @Transform(({ value }) => {
+    if (!value) return value;
+    const date = new Date(value);
+    return date.toISOString();
+  })
   @IsDateString()
   @IsNotEmpty()
   date: Date;

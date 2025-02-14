@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { 
-  IsString, 
-  IsNotEmpty, 
-  IsOptional, 
-  IsArray, 
-  ArrayNotEmpty, 
-  IsEnum, 
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  ArrayNotEmpty,
+  IsEnum,
   IsObject,
   ValidateNested,
   IsPositive,
@@ -13,7 +13,7 @@ import {
   IsInt,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { DayOfWeek } from '../entities/staff-schedule.entity';
+import { DayOfWeek } from '@prisma/client';
 
 class RecurrenceDto {
   @ApiProperty({
@@ -73,6 +73,15 @@ export class CreateStaffScheduleDto {
   @IsNotEmpty()
   @Transform(({ value }) => value.trim())
   title: string;
+
+  @ApiProperty({
+    description: 'Color del horario',
+    example: 'sky',
+  })
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value.trim())
+  color: string;
 
   @ApiProperty({
     description: 'Hora de inicio en formato HH:mm',

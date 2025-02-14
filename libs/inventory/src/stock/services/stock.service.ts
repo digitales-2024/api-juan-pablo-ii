@@ -5,6 +5,7 @@ import { CreateStockUseCase } from '../use-cases/create-storage.use-case';
 import { UserData } from '@login/login/interfaces';
 import { StockByStorage } from '../entities/stock.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
+import { stockErrorMessages } from '../errors/errors-stock';
 
 @Injectable()
 export class StockService {
@@ -15,7 +16,13 @@ export class StockService {
     private readonly stockRepository: StockRepository,
     private readonly updateStockUseCase: UpdateStockUseCase,
     private readonly createStockUseCase: CreateStockUseCase,
-  ) {}
+  ) {
+    this.errorHandler = new BaseErrorHandler(
+      this.logger,
+      'Stock',
+      stockErrorMessages,
+    );
+  }
 
   // Función para obtener el stock de un producto en todos los almacenes
   async getStockByProduct(productId: string): Promise<StockByStorage[]> {

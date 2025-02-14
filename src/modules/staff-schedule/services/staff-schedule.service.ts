@@ -9,7 +9,8 @@ import { UpdateStaffScheduleDto } from '../dto/update-staff-schedule.dto';
 import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { DeleteStaffSchedulesDto } from '../dto/delete-staff-schedule.dto';
-import { CreateStaffScheduleUseCase, DeleteStaffSchedulesUseCase, ReactivateStaffSchedulesUseCase, UpdateStaffScheduleUseCase } from '../use-cases';
+import { CreateStaffScheduleUseCase, DeleteStaffSchedulesUseCase, ReactivateStaffSchedulesUseCase, UpdateStaffScheduleUseCase, FindStaffSchedulesByFilterUseCase } from '../use-cases';
+import { FindStaffSchedulesQueryDto } from '../dto/find-staff-schedule-query.dto';
 
 @Injectable()
 export class StaffScheduleService {
@@ -22,6 +23,7 @@ export class StaffScheduleService {
     private readonly updateStaffScheduleUseCase: UpdateStaffScheduleUseCase,
     private readonly deleteStaffSchedulesUseCase: DeleteStaffSchedulesUseCase,
     private readonly reactivateStaffSchedulesUseCase: ReactivateStaffSchedulesUseCase,
+    private readonly findStaffSchedulesByFilterUseCase: FindStaffSchedulesByFilterUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -132,6 +134,17 @@ export class StaffScheduleService {
       return await this.reactivateStaffSchedulesUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
+    }
+  }
+
+  async findManyByStaffAndBranch(
+    query: FindStaffSchedulesQueryDto,
+  ): Promise<StaffSchedule[]> {
+    try {
+      const result = await this.findStaffSchedulesByFilterUseCase.execute(query);
+      return result;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
     }
   }
 }

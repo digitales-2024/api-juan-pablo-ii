@@ -85,6 +85,12 @@ export class ActiveProduct {
   precio: number;
 
   @ApiProperty()
+  codigoProducto?: string;
+
+  @ApiProperty()
+  unidadMedida?: string;
+
+  @ApiProperty()
   categoriaId: string;
 
   @ApiProperty()
@@ -95,4 +101,12 @@ export class ActiveProduct {
 
   @ApiProperty()
   tipoProducto: ActiveProductTypeProduct;
+}
+
+export class ProductSearch {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
 }

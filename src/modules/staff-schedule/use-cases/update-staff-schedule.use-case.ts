@@ -25,6 +25,7 @@ export class UpdateStaffScheduleUseCase {
     const updatedSchedule = await this.staffScheduleRepository.transaction(async () => {
       // Actualizar el horario del personal
       const schedule = await this.staffScheduleRepository.update(id, {
+        color: updateStaffScheduleDto.color,
         title: updateStaffScheduleDto.title,
         startTime: updateStaffScheduleDto.startTime,
         endTime: updateStaffScheduleDto.endTime,

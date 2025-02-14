@@ -225,6 +225,13 @@ export class PacientController {
     @UploadedFile() image: Express.Multer.File,
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<Patient>> {
+    // Log para verificar los datos que llegan al servidor
+    console.log('Datos recibidos en el servidor:', {
+      createPatientDto,
+      image,
+      user,
+    });
+
     return this.pacientService.createPatientWithImage(
       createPatientDto,
       image,

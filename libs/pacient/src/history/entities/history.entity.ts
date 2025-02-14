@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class MedicalHistory {
   @ApiProperty()
@@ -8,7 +9,8 @@ export class MedicalHistory {
   patientId: string;
 
   @ApiProperty()
-  medicalHistory: any;
+  @IsOptional()
+  medicalHistory?: any;
 
   @ApiProperty()
   description?: string;

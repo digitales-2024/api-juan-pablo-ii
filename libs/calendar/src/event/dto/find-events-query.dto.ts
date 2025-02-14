@@ -40,4 +40,12 @@ export class FindEventsQueryDto {
   @IsOptional()
   @IsString()
   status?: EventStatus;
+
+  @ApiPropertyOptional({
+    description: 'ID del horario del personal para filtrar eventos',
+    example: 'uuid-del-horario-del-personal',
+  })
+  @IsOptional()
+  @IsString()
+  staffScheduleId?: string;
 }
