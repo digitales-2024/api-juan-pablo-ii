@@ -8,7 +8,7 @@ export class StockRepository extends BaseRepository<Stock> {
     super(prisma, 'stock'); // Tabla del esquema de prisma
   }
 
-  async getAllProductsSTock(): Promise<ProductStock[]> {
+  async getAllProductsStock(): Promise<ProductStock[]> {
     return this.prisma.producto.findMany({
       where: { isActive: true },
       select: {
@@ -23,6 +23,32 @@ export class StockRepository extends BaseRepository<Stock> {
             isActive: true,
             Storage: {
               select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getOneProductStock(productId: string): Promise<ProductStock> {
+    return this.prisma.producto.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        Stock: {
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
                 name: true,
               },
             },

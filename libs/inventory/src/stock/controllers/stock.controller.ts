@@ -6,7 +6,7 @@ import {
   ApiParam,
   ApiOkResponse,
 } from '@nestjs/swagger';
-import { StockByStorage } from '../entities/stock.entity';
+import { ProductStock, StockByStorage } from '../entities/stock.entity';
 
 @ApiTags('Stock')
 @Controller({ path: 'stock', version: '1' })
@@ -89,32 +89,32 @@ export class StockController {
     return this.stockService.getStockByStorageProduct(storageId, productId);
   }
 
-//   @Get('/availableProducts')
-//   @ApiOperation({
-//     summary: 'Obtener todos los productos en stock en todos los almacenes.',
-//   })
-//   @ApiOkResponse({
-//     status: 200,
-//     description: 'Productos en stock en todos los almacenes',
-//     type: [StockByStorage],
-//   })
-//   async getProductsStock(): Promise<StockByStorage[]> {
-//     return this.stockService.getProductsStock();
-//   }
+  @Get('/availableProducts')
+  @ApiOperation({
+    summary: 'Obtener todos los productos en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Productos en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  async getProductsStock(): Promise<ProductStock[]> {
+    return this.stockService.getProductsStock();
+  }
 
-//   @Get('/availableProduct/:productId')
-//   @ApiOperation({
-//     summary: 'Obtener un producto en stock en todos los almacenes.',
-//   })
-//   @ApiOkResponse({
-//     status: 200,
-//     description: 'Producto en stock en todos los almacenes',
-//     type: [StockByStorage],
-//   })
-//   @ApiParam({ name: 'productId', description: 'ID del producto' })
-//   async getProductsStockById(
-//     @Param('productId') id: string,
-//   ): Promise<StockByStorage[]> {
-//     return this.stockService.getProductStock(id);
-//   }
-// }
+  @Get('/availableProduct/:productId')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({ name: 'productId', description: 'ID del producto' })
+  async getProductsStockById(
+    @Param('productId') id: string,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductStock(id);
+  }
+}

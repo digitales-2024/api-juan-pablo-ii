@@ -1,4 +1,3 @@
-import { ActiveProduct } from '@inventory/inventory/product/entities/product.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class Stock {
@@ -112,6 +111,9 @@ export class ActiveProductStock {
 
 export class StockStorage {
   @ApiProperty()
+  id: string;
+
+  @ApiProperty()
   name: string;
 }
 
@@ -130,6 +132,8 @@ export class StockProduct {
 
 //Podria ser de active product
 export class ProductStock extends ActiveProductStock {
-  @ApiProperty()
+  @ApiProperty({
+    type: [StockProduct],
+  })
   Stock: StockProduct[];
 }
