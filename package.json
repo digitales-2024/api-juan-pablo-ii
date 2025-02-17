@@ -48,6 +48,7 @@
     "@scalar/nestjs-api-reference": "^0.3.167",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "commitlint": "^19.5.0",
@@ -134,5 +135,13 @@
       "^@schedule/schedule(|/.*)$": "<rootDir>/libs/schedule/src/$1",
       "^@calendar/calendar(|/.*)$": "<rootDir>/libs/calendar/src/$1"
     }
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "bcrypt"
+    ],
+    "onlyBuiltDependencies": [
+      "bcrypt"
+    ]
   }
 }
