@@ -3,6 +3,14 @@ import { IsString, IsNotEmpty, IsDate, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EventType } from '../entities/event-type.enum';
 
+export enum EventStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+  NO_SHOW = 'NO_SHOW'
+}
+
 /**
  * DTO para la creación de eventos
  * @class CreateEventDto
@@ -35,6 +43,16 @@ export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
   type: EventType;
+
+  @ApiProperty({
+    description: 'Estado de evento',
+    enum: EventStatus,
+    enumName: 'EventStatus',
+    example: EventStatus.PENDING
+  })
+  @IsString()
+  @IsNotEmpty()
+  status: EventStatus;
 
   @ApiProperty({
     description: 'Fecha y hora de inicio del evento',
