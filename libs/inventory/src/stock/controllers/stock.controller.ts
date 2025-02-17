@@ -6,7 +6,7 @@ import {
   ApiParam,
   ApiOkResponse,
 } from '@nestjs/swagger';
-import { StockByStorage } from '../entities/stock.entity';
+import { ProductStock, StockByStorage } from '../entities/stock.entity';
 
 @ApiTags('Stock')
 @Controller({ path: 'stock', version: '1' })
@@ -87,5 +87,50 @@ export class StockController {
     @Param('productId') productId: string,
   ): Promise<StockByStorage[]> {
     return this.stockService.getStockByStorageProduct(storageId, productId);
+  }
+
+  @Get('/availableProducts')
+  @ApiOperation({
+    summary: 'Obtener todos los productos en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Productos en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  async getProductsStock(): Promise<ProductStock[]> {
+    return this.stockService.getProductsStock();
+  }
+
+  @Get('/availableProduct/storage/:storageId')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({ name: 'storageId', description: 'ID del producto' })
+  async getProductStockByStorage(
+    @Param('storageId') storageId: string,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductsStockByStorage({ storageId });
+  }
+
+  @Get('/availableProduct/:productId')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({ name: 'productId', description: 'ID del producto' })
+  async getProductsStockById(
+    @Param('productId') id: string,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductStock(id);
   }
 }
