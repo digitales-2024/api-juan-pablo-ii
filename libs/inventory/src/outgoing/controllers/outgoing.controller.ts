@@ -24,7 +24,11 @@ import {
   UpdateOutgoingDto,
   DeleteOutgoingDto,
 } from '../dto';
-import { DetailedOutgoing, Outgoing } from '../entities/outgoing.entity';
+import {
+  DetailedOutgoing,
+  Outgoing,
+  OutgoingWithStorage,
+} from '../entities/outgoing.entity';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
@@ -77,6 +81,25 @@ export class OutgoingController {
   })
   findAll(): Promise<Outgoing[]> {
     return this.outgoingService.findAll();
+  }
+
+  /**
+   * Obtiene todas las con detalles de sus relaciones, en especifico el storage
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   * @throws {Error} Si ocurre un error al obtener los ingresos
+   * @returns Una promesa que resuelve con una lista de todos los ingresos con detalles de sus relaciones
+   */
+  @Get('/storage')
+  @ApiOperation({
+    summary: 'Obtener todos los ingresos con detalles de almacen',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los ingresos con detalles de almacen',
+    type: [OutgoingWithStorage],
+  })
+  findAllWithStorage(): Promise<OutgoingWithStorage[]> {
+    return this.outgoingService.getAllWithStorage();
   }
 
   /**

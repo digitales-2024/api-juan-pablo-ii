@@ -1,11 +1,68 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
-import { DetailedOutgoing, Outgoing } from '../entities/outgoing.entity';
+import {
+  DetailedOutgoing,
+  Outgoing,
+  OutgoingWithStorage,
+} from '../entities/outgoing.entity';
 
 @Injectable()
 export class OutgoingRepository extends BaseRepository<Outgoing> {
   constructor(prisma: PrismaService) {
     super(prisma, 'outgoing'); // Tabla del esquema de prisma
+  }
+
+  async getAllWithStorage(): Promise<OutgoingWithStorage[]> {
+    return this.prisma.incoming.findMany({
+      include: {
+        Storage: {
+          select: {
+            id: true,
+            name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async findWithStorageById(id: string): Promise<OutgoingWithStorage> {
+    return this.prisma.incoming.findFirst({
+      where: {
+        id,
+      },
+      include: {
+        Storage: {
+          select: {
+            id: true,
+            name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   //Evaluar donde seleccionar los registros activos
@@ -14,7 +71,20 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
       include: {
         Storage: {
           select: {
+            id: true,
             name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
         Movement: {
@@ -34,7 +104,20 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
       include: {
         Storage: {
           select: {
+            id: true,
             name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
         Movement: {
