@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.738.0
+        version: 3.738.0
       '@kitajs/html':
         specifier: ^4.2.4
         version: 4.2.6
@@ -111,9 +114,6 @@ importers:
         specifier: ^7.8.1
         version: 7.8.1
     devDependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.738.0
-        version: 3.738.0
       '@commitlint/config-conventional':
         specifier: ^19.5.0
         version: 19.6.0
