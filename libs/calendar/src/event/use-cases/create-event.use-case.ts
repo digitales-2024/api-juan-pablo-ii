@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Event} from '../entities/event.entity';
+import { Event } from '../entities/event.entity';
 import { EventRepository } from '../repositories/event.repository';
 import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
@@ -12,7 +12,7 @@ export class CreateEventUseCase {
   constructor(
     private readonly eventRepository: EventRepository,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async execute(
     createEventDto: CreateEventDto,
@@ -34,7 +34,7 @@ export class CreateEventUseCase {
       // Crear el evento
       const event = await this.eventRepository.create({
         ...createEventDto,
-        status: EventStatus.PENDING,
+        status: EventStatus.CONFIRMED,
         isCancelled: false,
         isActive: true,
       });

@@ -49,6 +49,18 @@ export class CreateStaffDto {
   @Transform(({ value }) => value.trim())
   lastName: string;
 
+
+  @ApiProperty({
+    description: 'Numero de CMP',
+    example: '123456789',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value.trim())
+  cmp?: string;
+
+
   @ApiProperty({
     description: 'Número de DNI del personal médico',
     example: '40506070',
