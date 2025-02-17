@@ -29,6 +29,7 @@ export class StaffRepository extends BaseRepository<Staff> {
           name: true,
         },
       },
+      cmp: true,
     },
   };
 
@@ -45,6 +46,7 @@ export class StaffRepository extends BaseRepository<Staff> {
     phone?: string;
     staffTypeId: string;
     userId?: string;
+    cmp?: string;
   }): Promise<Staff> {
     return this.prisma.measureQuery(`createStaff`, () =>
       this.prisma.staff.create({
@@ -61,6 +63,7 @@ export class StaffRepository extends BaseRepository<Staff> {
               id: data.staffTypeId,
             },
           },
+          cmp: data.cmp,
         },
         select: {
           id: true,
@@ -80,6 +83,7 @@ export class StaffRepository extends BaseRepository<Staff> {
               name: true,
             },
           },
+          cmp: true,
         },
       }),
     );
