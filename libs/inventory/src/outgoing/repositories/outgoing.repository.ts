@@ -13,7 +13,7 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
   }
 
   async getAllWithStorage(): Promise<OutgoingWithStorage[]> {
-    return this.prisma.incoming.findMany({
+    return this.prisma.outgoing.findMany({
       include: {
         Storage: {
           select: {
@@ -38,7 +38,7 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
   }
 
   async findWithStorageById(id: string): Promise<OutgoingWithStorage> {
-    return this.prisma.incoming.findFirst({
+    return this.prisma.outgoing.findFirst({
       where: {
         id,
       },

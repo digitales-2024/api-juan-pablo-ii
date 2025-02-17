@@ -221,7 +221,7 @@ export class IncomingService {
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
         movementsList.map(async (item) => {
-          const { productId, quantity } = item;
+          const { productId, quantity, buyingPrice } = item;
 
           // Llamar a createMovementStorage
           const idMovement =
@@ -231,6 +231,7 @@ export class IncomingService {
                 incomingId: incoming.id,
                 productId,
                 quantity,
+                buyingPrice,
                 date,
                 state,
               },

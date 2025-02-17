@@ -390,6 +390,7 @@ model Movement {
   productId      String
   Producto       Producto      @relation(fields: [productId], references: [id])
   quantity       Float // Cantidad de producto que se movió
+  buyingPrice    Float? // Precio de compra del producto
   date           DateTime      @default(now()) @db.Timestamptz(6)
   state          Boolean       @default(false) // Estado para registrar si el movimiento ha sido procesado o no
   referenceId    String? // Referencia a un registro etc
@@ -407,6 +408,7 @@ model Incoming {
   Storage     Storage  @relation(fields: [storageId], references: [id])
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
+  isTransference Boolean? @default(false) // Indica si el ingreso es por transferencia entre almacenes
   referenceId String? // Referencia a un registro etc
   isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
@@ -424,6 +426,7 @@ model Outgoing {
   Storage     Storage  @relation(fields: [storageId], references: [id])
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
+  isTransference Boolean? @default(false) // Indica si la salida es por transferencia entre almacenes
   referenceId String? // Referencia a un registro etc
   isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
