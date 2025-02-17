@@ -2,7 +2,10 @@ name: Deploy Service
 
 on:
   push:
-    branches: [develop, stage, main]
+    branches:
+      - develop
+      - stage
+      - main
     tags: ["v*.*.*"]
     paths-ignore:
       - "**.md"
