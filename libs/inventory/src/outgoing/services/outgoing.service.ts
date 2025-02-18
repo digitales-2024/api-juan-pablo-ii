@@ -180,7 +180,7 @@ export class OutgoingService {
     }
   }
 
-  //crear ingreso de productos al alamacen
+  //crear ingreso de productos al alamacen: TODO: Replantaer logica para que use los principios ACID por medio de transacciones, para poder hacer transferencias de manera mas segura
   /**
    * Crea una nueva salida de productos del almacén.
    *

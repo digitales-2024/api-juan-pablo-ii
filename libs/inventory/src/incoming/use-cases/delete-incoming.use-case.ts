@@ -38,6 +38,31 @@ export class DeleteIncomingUseCase {
           ),
         );
 
+        // const detailedModifiedIncomings =
+        //   await this.incomingRepository.findManyDetailedIncomingById(
+        //     deleteIncomingDto.ids,
+        //   );
+
+        // const incomingsIds: string[][] = detailedModifiedIncomings.map(
+        //   (incoming) => incoming.Movement.map((movement) => movement.id),
+        // );
+
+        // const totalQuantityInMovements: number[] =
+        //   detailedModifiedIncomings.map((incoming) => {
+        //     const stock = incoming.Movement[0].Producto.
+        //     const totalQuantity = incoming.Movement.reduce(
+        //       (acc, movement) => acc + movement.quantity,
+        //       0,
+        //     );
+        //   });
+
+        //Modificación peligrosa del stock
+        // await Promise.all(
+        //   detailedIncomings.map((incoming) => {
+        //     this.incomingRepository
+        //   }),
+        // );
+
         return await this.incomingRepository.getAllDetailedIncoming();
       },
     );
