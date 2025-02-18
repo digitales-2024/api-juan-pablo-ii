@@ -3,12 +3,8 @@ import { IsString, IsOptional, IsNotEmpty, IsObject } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 // Definimos un tipo genérico que puede ser T, un arreglo de T, un string o un objeto
-export type MedicalHistoryData<T = any> =
-  | T
-  | T[]
-  | string
-  | Record<string, any>;
-export class CreateMedicalHistoryDto<T = any> {
+export type MedicalHistoryData = Record<string, string>;
+export class CreateMedicalHistoryDto {
   @ApiProperty({
     description: 'ID of the patient',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -30,11 +26,11 @@ export class CreateMedicalHistoryDto<T = any> {
   })
   @IsObject()
   @IsOptional()
-  medicalHistory?: MedicalHistoryData<T[]>;
+  medicalHistory?: MedicalHistoryData;
 
   @ApiProperty({
     description: 'Additional description',
-    example: 'First patient consultation',
+    example: 'Historia medica del paciente',
     required: false,
   })
   @IsString()

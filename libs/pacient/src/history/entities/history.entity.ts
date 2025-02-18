@@ -10,7 +10,7 @@ export class MedicalHistory {
 
   @ApiProperty()
   @IsOptional()
-  medicalHistory?: any;
+  medicalHistory?: Record<string, string>;
 
   @ApiProperty()
   description?: string;
