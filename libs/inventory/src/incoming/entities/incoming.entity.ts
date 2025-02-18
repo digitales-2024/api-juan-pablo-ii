@@ -23,6 +23,11 @@ export class Incoming {
   @ApiProperty()
   referenceId?: string;
 
+  @ApiProperty({
+    required: false,
+  })
+  isTransference?: boolean;
+
   @ApiProperty()
   isActive?: boolean;
 }
@@ -154,6 +159,11 @@ export class IncomingMovement {
 
   @ApiProperty()
   state: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  buyingPrice?: number;
 
   @ApiProperty()
   isActive?: boolean;

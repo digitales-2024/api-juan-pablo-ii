@@ -74,6 +74,14 @@ export class CreateIncomingDtoStorage {
   referenceId?: string;
 
   @ApiProperty({
+    description: 'Indica si es un traslado entre almacenes',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isTransference?: boolean;
+
+  @ApiProperty({
     description: 'productos a ingresar al almacen y cantidad',
     example: [
       {

@@ -55,6 +55,14 @@ export class CreateMovementDto {
   quantity: number;
 
   @ApiProperty({
+    description: 'Precio de compra del producto',
+    example: '15.5',
+    required: false,
+  })
+  @IsOptional()
+  buyingPrice?: number;
+
+  @ApiProperty({
     description: 'Fecha en que ocurrió el evento',
     example: '2023-12-01T15:30:00Z',
     required: true,
@@ -118,6 +126,14 @@ export class OutgoingIncomingMovementDto {
   @IsNumber()
   @IsNotEmpty()
   quantity: number;
+
+  @ApiProperty({
+    description: 'Precio de compra del producto',
+    example: '15.5',
+    required: false,
+  })
+  @IsOptional()
+  buyingPrice?: number;
 
   @ApiProperty({
     description: 'Fecha en que ocurrió el evento',

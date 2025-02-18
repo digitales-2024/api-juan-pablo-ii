@@ -266,4 +266,20 @@ export class StockService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
+
+  async getProductsStockByStorage({
+    storageId,
+  }: {
+    storageId: string;
+  }): Promise<ProductStock[]> {
+    try {
+      const productStock = await this.stockRepository.getProductStockByStorage({
+        storageId,
+      });
+      return productStock;
+    } catch (error) {
+      this.logger.error(`Error fetching stock for storage ${storageId}`);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
 }

@@ -26,6 +26,7 @@ export class CreateIncomingUseCase {
         description: createIncomingDto.description,
         storageId: createIncomingDto.storageId,
         state: createIncomingDto.state,
+        isTransference: createIncomingDto?.isTransference,
         referenceId: createIncomingDto.referenceId,
         date: createIncomingDto.date,
       });

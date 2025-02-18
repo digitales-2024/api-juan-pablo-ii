@@ -5,9 +5,9 @@ import {
   IsNotEmpty,
   IsBoolean,
   IsDateString,
-  IsObject,
+  ValidateNested,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { OutgoingIncomingMovementDto } from '@inventory/inventory/movement/dto';
 
 export class CreateOutgoingDtoStorage {
@@ -45,18 +45,31 @@ export class CreateOutgoingDtoStorage {
     example: '2023-10-01T00:00:00.000Z',
     required: true,
   })
+  @Transform(({ value }) => {
+    if (!value) return value;
+    const date = new Date(value);
+    return date.toISOString();
+  })
   @IsDateString()
   @IsNotEmpty()
   date: Date;
 
   @ApiProperty({
-    description: 'Estado del salida',
+    description: 'Estado de salida',
     example: true,
     required: true,
   })
   @IsBoolean()
   @IsNotEmpty()
   state: boolean;
+
+  @ApiProperty({
+    description: 'Indica si es un traslado entre almacenes',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isTransference?: boolean;
 
   @ApiProperty({
     description: 'ID de referencia puede ser un traslado, compra, etc.',
@@ -82,7 +95,8 @@ export class CreateOutgoingDtoStorage {
     type: [OutgoingIncomingMovementDto],
     required: true,
   })
-  @IsObject({ each: true })
+  @ValidateNested({ each: true })
+  @Type(() => OutgoingIncomingMovementDto)
   @IsNotEmpty()
   movement: OutgoingIncomingMovementDto[];
   // movement: Array<{
