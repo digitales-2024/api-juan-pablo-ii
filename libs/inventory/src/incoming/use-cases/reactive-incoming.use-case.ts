@@ -6,7 +6,7 @@ import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { StockRepository } from '@inventory/inventory/stock/repositories/stock.repository';
-import { UpdateStockUseCase } from '@inventory/inventory/stock/use-cases/update-storage.use-case';
+import { UpdateStockUseCase } from '@inventory/inventory/stock/use-cases/update-stock.use-case';
 
 @Injectable()
 export class ReactivateIncomingUseCase {

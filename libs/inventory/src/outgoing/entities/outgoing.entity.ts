@@ -54,13 +54,6 @@ export class OutgoingStorageType {
 
   @ApiProperty()
   name: string;
-
-  @ApiProperty({
-    type: OutgoingBranch,
-    required: false,
-  })
-  @IsOptional()
-  branch?: OutgoingBranch;
 }
 
 export class OutgoingStorage {
@@ -74,6 +67,13 @@ export class OutgoingStorage {
     type: OutgoingStorageType,
   })
   TypeStorage: OutgoingStorageType;
+
+  @ApiProperty({
+    type: OutgoingBranch,
+    required: false,
+  })
+  @IsOptional()
+  branch?: OutgoingBranch;
 }
 
 // export class OutgoingStock {

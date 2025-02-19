@@ -23,12 +23,12 @@ export class IncomingRepository extends BaseRepository<Incoming> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
@@ -51,12 +51,12 @@ export class IncomingRepository extends BaseRepository<Incoming> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
@@ -77,12 +77,12 @@ export class IncomingRepository extends BaseRepository<Incoming> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
@@ -110,12 +110,12 @@ export class IncomingRepository extends BaseRepository<Incoming> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
@@ -147,12 +147,12 @@ export class IncomingRepository extends BaseRepository<Incoming> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },

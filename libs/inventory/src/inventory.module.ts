@@ -86,8 +86,8 @@ import { StockService } from './stock/services/stock.service';
 import { InventoryEventSubscriber } from './events/inventory-event.subscriber';
 import { CompensationService } from './compensation/compensation.service';
 import { StockRepository } from './stock/repositories/stock.repository';
-import { UpdateStockUseCase } from './stock/use-cases/update-storage.use-case';
-import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
+import { UpdateStockUseCase } from './stock/use-cases/update-stock.use-case';
+import { CreateStockUseCase } from './stock/use-cases/create-stock.use-case';
 
 @Module({
   controllers: [

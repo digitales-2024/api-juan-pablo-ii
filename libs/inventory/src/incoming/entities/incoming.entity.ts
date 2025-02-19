@@ -83,13 +83,6 @@ export class IncomingStorageType {
 
   @ApiProperty()
   name: string;
-
-  @ApiProperty({
-    type: IncomingBranch,
-    required: false,
-  })
-  @IsOptional()
-  branch?: IncomingBranch;
 }
 
 export class IncomingStorage {
@@ -103,6 +96,13 @@ export class IncomingStorage {
     type: IncomingStorageType,
   })
   TypeStorage: IncomingStorageType;
+
+  @ApiProperty({
+    type: IncomingBranch,
+    required: false,
+  })
+  @IsOptional()
+  branch?: IncomingBranch;
 }
 
 export class IncomingProduct {

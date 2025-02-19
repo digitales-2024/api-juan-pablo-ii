@@ -119,6 +119,22 @@ export class StorageService {
               name: true,
             },
           },
+          branch: {
+            select: {
+              name: true,
+            },
+          },
+          staff: {
+            select: {
+              name: true,
+              lastName: true,
+              staffType: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
       if (!storage) {
@@ -149,9 +165,36 @@ export class StorageService {
    * @returns {Promise<Storage[]>} Una promesa que resuelve con una lista de elementos de almacenamiento activos.
    * @throws {Error} Si ocurre un error al obtener los elementos de almacenamiento activos.
    */
-  async findAllActive(): Promise<Storage[]> {
+  async findAllActive(): Promise<DetailedStorage[]> {
     try {
-      return this.storageRepository.findManyActive();
+      const storages = await this.storageRepository.findManyActive({
+        include: {
+          TypeStorage: {
+            select: {
+              name: true,
+            },
+          },
+          branch: {
+            select: {
+              name: true,
+            },
+          },
+          staff: {
+            select: {
+              name: true,
+              lastName: true,
+              staffType: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return storages.map((storage) =>
+        this.storageRepository.mapToEntity(storage),
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -170,6 +213,22 @@ export class StorageService {
           TypeStorage: {
             select: {
               name: true,
+            },
+          },
+          branch: {
+            select: {
+              name: true,
+            },
+          },
+          staff: {
+            select: {
+              name: true,
+              lastName: true,
+              staffType: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
         },
