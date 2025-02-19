@@ -98,7 +98,7 @@ export class StockRepository extends BaseRepository<Stock> {
   async getStockByStorageAndProduct(
     storageId: string,
     productId: string,
-  ): Promise<{ stock: number } | null> {
+  ): Promise<{ stock: number; id: string } | null> {
     // Permitir retorno de null
     const stockRecord = await this.prisma.stock.findUnique({
       where: {
@@ -107,7 +107,10 @@ export class StockRepository extends BaseRepository<Stock> {
           productId: productId,
         },
       },
-      select: { stock: true },
+      select: {
+        stock: true,
+        id: true,
+      },
     });
 
     // Si no se encuentra el registro, retornar null
@@ -115,7 +118,7 @@ export class StockRepository extends BaseRepository<Stock> {
       return null; // Retorna null si no se encuentra el stock
     }
 
-    return { stock: stockRecord.stock }; // Retorna el stock encontrado
+    return { stock: stockRecord.stock, id: stockRecord.id }; // Retorna el stock encontrado
   }
 
   //obtener precio del producto

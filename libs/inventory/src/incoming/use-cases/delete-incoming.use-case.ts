@@ -6,71 +6,111 @@ import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { DeleteIncomingDto } from '../dto/delete-incoming.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { StockRepository } from '@inventory/inventory/stock/repositories/stock.repository';
+import { UpdateStockUseCase } from '@inventory/inventory/stock/use-cases/update-storage.use-case';
 
 @Injectable()
 export class DeleteIncomingUseCase {
   constructor(
     private readonly incomingRepository: IncomingRepository,
     private readonly auditService: AuditService,
+    private readonly stockRepository: StockRepository,
+    private readonly updateStockUseCase: UpdateStockUseCase,
   ) {}
 
   async execute(
     deleteIncomingDto: DeleteIncomingDto,
     user: UserData,
   ): Promise<BaseApiResponse<DetailedIncoming[]>> {
-    const deletedIncomings = await this.incomingRepository.transaction(
-      async () => {
-        // Realiza el soft delete y obtiene los ingresos actualizados
-        const incomings = await this.incomingRepository.softDeleteMany(
-          deleteIncomingDto.ids,
-        );
+    try {
+      const deletedIncomings = await this.incomingRepository.transaction(
+        async () => {
+          try {
+            // Realiza el soft delete y obtiene los ingresos actualizados
+            const incomings = await this.incomingRepository.softDeleteMany(
+              deleteIncomingDto.ids,
+            );
 
-        // Registra la auditoría para cada ingreso eliminado
-        await Promise.all(
-          incomings.map((incoming) =>
-            this.auditService.create({
-              entityId: incoming.id,
-              entityType: 'ingreso',
-              action: AuditActionType.DELETE,
-              performedById: user.id,
-              createdAt: new Date(),
-            }),
-          ),
-        );
+            const detailedModifiedIncomings =
+              await this.incomingRepository.findManyDetailedIncomingById(
+                deleteIncomingDto.ids,
+              );
 
-        // const detailedModifiedIncomings =
-        //   await this.incomingRepository.findManyDetailedIncomingById(
-        //     deleteIncomingDto.ids,
-        //   );
+            // Stock updates
+            const newStockList = await Promise.all(
+              detailedModifiedIncomings.flatMap((incoming) =>
+                incoming.Movement.map(async (movement) => {
+                  const currentStock =
+                    await this.stockRepository.getStockByStorageAndProduct(
+                      incoming.Storage.id,
+                      movement.Producto.id,
+                    );
+                  if (!currentStock) {
+                    throw new Error(
+                      `Stock not found for product ${movement.Producto.id} in storage ${incoming.Storage.id}`,
+                    );
+                  }
+                  const newStockQuantity =
+                    currentStock.stock - movement.quantity;
 
-        // const incomingsIds: string[][] = detailedModifiedIncomings.map(
-        //   (incoming) => incoming.Movement.map((movement) => movement.id),
-        // );
+                  //Allow validation for strict inventory control
+                  // if (newStockQuantity < 0) {
+                  //   throw new Error(
+                  //     `Insufficient stock for product ${movement.Producto.id}`,
+                  //   );
+                  // }
+                  return {
+                    id: currentStock.id,
+                    storageId: incoming.Storage.id,
+                    productId: movement.Producto.id,
+                    stock: newStockQuantity,
+                    price: movement?.buyingPrice ?? movement?.Producto.precio,
+                  };
+                }),
+              ),
+            );
 
-        // const totalQuantityInMovements: number[] =
-        //   detailedModifiedIncomings.map((incoming) => {
-        //     const stock = incoming.Movement[0].Producto.
-        //     const totalQuantity = incoming.Movement.reduce(
-        //       (acc, movement) => acc + movement.quantity,
-        //       0,
-        //     );
-        //   });
+            // Update stocks
+            await Promise.all(
+              newStockList.map(async (stock) => {
+                const stockDto = {
+                  storageId: stock.storageId,
+                  productId: stock.productId,
+                  stock: stock.stock,
+                  price: stock.price,
+                };
+                await this.updateStockUseCase.execute(stock.id, stockDto, user);
+              }),
+            );
 
-        //Modificación peligrosa del stock
-        // await Promise.all(
-        //   detailedIncomings.map((incoming) => {
-        //     this.incomingRepository
-        //   }),
-        // );
+            // Create audit logs
+            await Promise.all(
+              incomings.map((incoming) =>
+                this.auditService.create({
+                  entityId: incoming.id,
+                  entityType: 'ingreso',
+                  action: AuditActionType.DELETE,
+                  performedById: user.id,
+                  createdAt: new Date(),
+                }),
+              ),
+            );
 
-        return await this.incomingRepository.getAllDetailedIncoming();
-      },
-    );
+            return await this.incomingRepository.getAllDetailedIncoming();
+          } catch (error) {
+            // This will trigger a rollback
+            throw new Error(`Transaction failed: ${error.message}`);
+          }
+        },
+      );
 
-    return {
-      success: true,
-      message: 'Ingresos eliminados exitosamente',
-      data: deletedIncomings,
-    };
+      return {
+        success: true,
+        message: 'Ingresos eliminados exitosamente',
+        data: deletedIncomings,
+      };
+    } catch (error) {
+      throw new Error(`Error al eliminar ingresos: ${error.message}`);
+    }
   }
 }
