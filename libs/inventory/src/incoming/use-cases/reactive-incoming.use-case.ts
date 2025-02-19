@@ -31,47 +31,40 @@ export class ReactivateIncomingUseCase {
               await this.incomingRepository.findManyDetailedIncomingById(ids);
 
             // Stock updates
-            await Promise.all(
-              detailedModifiedIncomings.flatMap((incoming) =>
-                incoming.Movement.map(async (movement) => {
-                  const currentStock =
-                    await this.stockRepository.getStockByStorageAndProduct(
-                      incoming.Storage.id,
-                      movement.Producto.id,
-                    );
-                  if (!currentStock) {
-                    throw new Error(
-                      `Stock not found for product ${movement.Producto.id} in storage ${incoming.Storage.id}`,
-                    );
-                  }
-
-                  const newStockQuantity =
-                    currentStock.stock + movement.quantity;
-                  //Consider if its necessary to calculate a total price
-                  // const totalPrice =
-                  //   currentStock.price +
-                  //   movement.precioUnitario * movement.cantidad;
-
-                  //Validation not necesary when reactivating
-                  // if (newStockQuantity < 0) {
-                  //   throw new Error(
-                  //     `Insufficient stock for product ${movement.Producto.id}`,
-                  //   );
-                  // }
-
-                  await this.updateStockUseCase.execute(
-                    currentStock.id,
-                    {
-                      storageId: incoming.Storage.id,
-                      productId: movement.Producto.id,
-                      stock: newStockQuantity,
-                      price: movement?.buyingPrice ?? movement?.Producto.precio, //Consider the if total price go here
-                    },
-                    user,
+            for (const incoming of detailedModifiedIncomings) {
+              for (const movement of incoming.Movement) {
+                const currentStock =
+                  await this.stockRepository.getStockByStorageAndProduct(
+                    incoming.Storage.id,
+                    movement.Producto.id,
                   );
-                }),
-              ),
-            );
+
+                if (!currentStock) {
+                  throw new Error(
+                    `Stock no encontrado para producto ${movement.Producto.id} en almacén ${incoming.Storage.id}`,
+                  );
+                }
+
+                const newStockQuantity = currentStock.stock + movement.quantity;
+                //Consider if its necessary to calculate a total price
+                // const totalPrice =
+                //   currentStock.price +
+                //   movement.precioUnitario * movement.cantidad;
+
+                await this.updateStockUseCase.execute(
+                  currentStock.id,
+                  {
+                    storageId: incoming.Storage.id,
+                    productId: movement.Producto.id,
+                    stock: newStockQuantity,
+                    price: movement?.buyingPrice ?? movement?.Producto.precio, //Consider the if total price go here
+                    //updatedAt: new Date(),
+                  },
+                  user,
+                );
+              }
+            }
+
             // Registrar auditoría para cada ingreso reactivado
             await Promise.all(
               incomings.map((incoming) =>

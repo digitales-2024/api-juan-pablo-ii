@@ -37,51 +37,42 @@ export class DeleteIncomingUseCase {
               );
 
             // Stock updates
-            const newStockList = await Promise.all(
-              detailedModifiedIncomings.flatMap((incoming) =>
-                incoming.Movement.map(async (movement) => {
-                  const currentStock =
-                    await this.stockRepository.getStockByStorageAndProduct(
-                      incoming.Storage.id,
-                      movement.Producto.id,
-                    );
-                  if (!currentStock) {
-                    throw new Error(
-                      `Stock not found for product ${movement.Producto.id} in storage ${incoming.Storage.id}`,
-                    );
-                  }
-                  const newStockQuantity =
-                    currentStock.stock - movement.quantity;
+            for (const incoming of detailedModifiedIncomings) {
+              for (const movement of incoming.Movement) {
+                const currentStock =
+                  await this.stockRepository.getStockByStorageAndProduct(
+                    incoming.Storage.id,
+                    movement.Producto.id,
+                  );
 
-                  //Allow validation for strict inventory control
-                  // if (newStockQuantity < 0) {
-                  //   throw new Error(
-                  //     `Insufficient stock for product ${movement.Producto.id}`,
-                  //   );
-                  // }
-                  return {
-                    id: currentStock.id,
+                if (!currentStock) {
+                  throw new Error(
+                    `Stock no encontrado para producto ${movement.Producto.id} en almacén ${incoming.Storage.id}`,
+                  );
+                }
+
+                const newStockQuantity = currentStock.stock - movement.quantity;
+
+                //Validation negatives allowed
+                // if (newStockQuantity < 0) {
+                //   throw new Error(
+                //     `Insufficient stock for product ${movement.Producto.id}`,
+                //   );
+                // }
+
+                await this.updateStockUseCase.execute(
+                  currentStock.id,
+                  {
                     storageId: incoming.Storage.id,
                     productId: movement.Producto.id,
                     stock: newStockQuantity,
                     price: movement?.buyingPrice ?? movement?.Producto.precio,
-                  };
-                }),
-              ),
-            );
-
-            // Update stocks
-            await Promise.all(
-              newStockList.map(async (stock) => {
-                const stockDto = {
-                  storageId: stock.storageId,
-                  productId: stock.productId,
-                  stock: stock.stock,
-                  price: stock.price,
-                };
-                await this.updateStockUseCase.execute(stock.id, stockDto, user);
-              }),
-            );
+                    //updatedAt: new Date(),
+                  },
+                  user,
+                );
+              }
+            }
 
             // Create audit logs
             await Promise.all(

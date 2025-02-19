@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
@@ -152,4 +152,13 @@ export class OutgoingIncomingMovementDto {
   @IsBoolean()
   @IsOptional()
   state?: boolean;
+}
+
+export class OutgoingIncomingUpdateMovementDto extends PartialType(
+  OutgoingIncomingMovementDto,
+) {
+  @ApiProperty({
+    required: false,
+  })
+  id?: string;
 }
