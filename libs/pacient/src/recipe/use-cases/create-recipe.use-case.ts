@@ -18,6 +18,10 @@ export class CreatePrescriptionUseCase {
     createPrescriptionDto: CreatePrescriptionDto,
     user: UserData,
   ): Promise<BaseApiResponse<Prescription>> {
+    console.log(
+      '🚀 ~ CreatePrescriptionUseCase ~ createPrescriptionDto:',
+      createPrescriptionDto,
+    );
     const newPrescription = await this.prescriptionRepository.transaction(
       async () => {
         // Create prescription
