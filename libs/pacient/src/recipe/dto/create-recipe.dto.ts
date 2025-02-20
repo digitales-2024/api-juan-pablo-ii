@@ -8,6 +8,8 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+export type PrescriptionMedicamentsData = Record<string, string>;
+export type PrescriptionServicesData = Record<string, string>;
 export class CreatePrescriptionDto {
   @ApiProperty({
     description: 'ID de la actualización de historia médica',
@@ -47,11 +49,11 @@ export class CreatePrescriptionDto {
 
   @ApiProperty({
     description: 'Fecha de emisión de la receta',
-    example: '2024-03-15T10:00:00Z',
+    example: '2024-03-15',
     required: true,
   })
   @IsDateString()
-  registrationDate: Date;
+  registrationDate: string;
 
   @ApiProperty({
     description: 'Detalle de medicamentos y dosificación',
@@ -61,15 +63,31 @@ export class CreatePrescriptionDto {
           nombre: 'Paracetamol',
           dosis: '500mg',
           frecuencia: 'Cada 8 horas',
-          duracion: '5 días',
         },
       ],
     },
-    required: true,
+    required: false,
   })
   @IsObject()
   @IsNotEmpty()
-  prescription: any;
+  prescriptionMedicaments?: PrescriptionMedicamentsData;
+
+  @ApiProperty({
+    description: 'Detalle de medicamentos y dosificación',
+    example: {
+      medicamentos: [
+        {
+          nombre: 'consulta general',
+          Price: '100',
+          description: 'recomendado para el paciente',
+        },
+      ],
+    },
+    required: false,
+  })
+  @IsObject()
+  @IsNotEmpty()
+  prescriptionServices?: PrescriptionServicesData;
 
   @ApiProperty({
     description: 'Descripción o notas adicionales',
