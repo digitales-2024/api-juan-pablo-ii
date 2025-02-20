@@ -70,6 +70,7 @@ import {
   CreateIncomingUseCase,
   DeleteIncomingUseCase,
   ReactivateIncomingUseCase,
+  UpdateIncomingStorageUseCase,
   UpdateIncomingUseCase,
 } from './incoming/use-cases';
 import { OutgoingController } from './outgoing/controllers/outgoing.controller';
@@ -79,6 +80,7 @@ import {
   CreateOutgoingUseCase,
   DeleteOutgoingUseCase,
   ReactivateOutgoingUseCase,
+  UpdateOutgoingStorageUseCase,
   UpdateOutgoingUseCase,
 } from './outgoing/use-cases';
 import { StockController } from './stock/controllers/stock.controller';
@@ -158,6 +160,7 @@ import { CreateStockUseCase } from './stock/use-cases/create-stock.use-case';
     IncomingRepository,
     CreateIncomingUseCase,
     UpdateIncomingUseCase,
+    UpdateIncomingStorageUseCase,
     DeleteIncomingUseCase,
     ReactivateIncomingUseCase,
     //salidas
@@ -165,6 +168,7 @@ import { CreateStockUseCase } from './stock/use-cases/create-stock.use-case';
     OutgoingRepository,
     CreateOutgoingUseCase,
     UpdateOutgoingUseCase,
+    UpdateOutgoingStorageUseCase,
     DeleteOutgoingUseCase,
     ReactivateOutgoingUseCase,
     //stock
