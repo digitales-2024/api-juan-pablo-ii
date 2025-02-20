@@ -38,7 +38,7 @@ export class AppointmentService {
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
-      'Cita médica',
+      'Appointments',
       appointmentErrorMessages,
     );
   }
