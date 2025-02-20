@@ -27,7 +27,9 @@ export class CreatePrescriptionUseCase {
           staffId: createPrescriptionDto.staffId,
           patientId: createPrescriptionDto.patientId,
           registrationDate: createPrescriptionDto.registrationDate,
-          prescription: createPrescriptionDto.prescription,
+          prescriptionMedicaments:
+            createPrescriptionDto.prescriptionMedicaments,
+          prescriptionServices: createPrescriptionDto.prescriptionServices,
           description: createPrescriptionDto.description,
           purchaseOrderId: createPrescriptionDto.purchaseOrderId,
           isActive: true,
