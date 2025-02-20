@@ -192,7 +192,7 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
     fullName: string,
   ): Promise<boolean> {
     try {
-      const description = 'Paciente con historia medica predeterminada';
+      const description = 'Paciente con historia medica asignada';
 
       const medicalHistory = await this.prisma.medicalHistory.findUnique({
         where: { id: medicalHistoryId },
