@@ -17,10 +17,13 @@ export class Prescription {
   patientId: string;
 
   @ApiProperty()
-  registrationDate: Date;
+  registrationDate: string;
 
   @ApiProperty()
-  prescription: string;
+  prescriptionMedicaments: Record<string, string>;
+
+  @ApiProperty()
+  prescriptionServices: Record<string, string>;
 
   @ApiProperty()
   description?: string;
@@ -30,5 +33,4 @@ export class Prescription {
 
   @ApiProperty()
   isActive: boolean;
-  
 }
