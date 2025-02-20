@@ -227,9 +227,9 @@ export class MedicalHistoryService {
           medicalHistory.patientId,
         );
 
-        console.log(updatesWithImages);
+      //console.log(updatesWithImages);
 
-/*       const updatesObject = Array.isArray(updatesWithImages)
+      /*       const updatesObject = Array.isArray(updatesWithImages)
         ? updatesWithImages.reduce(
             (acc, update) => ({
               ...acc,
