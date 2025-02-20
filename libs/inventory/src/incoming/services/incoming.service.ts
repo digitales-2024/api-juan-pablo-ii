@@ -13,8 +13,12 @@ import { CreateIncomingUseCase } from '../use-cases/create-incoming.use-case';
 import { UpdateIncomingUseCase } from '../use-cases/update-incoming.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { incomingErrorMessages } from '../errors/errors-incoming';
-import { DeleteIncomingDto } from '../dto';
-import { DeleteIncomingUseCase, ReactivateIncomingUseCase } from '../use-cases';
+import { DeleteIncomingDto, UpdateIncomingStorageDto } from '../dto';
+import {
+  DeleteIncomingUseCase,
+  ReactivateIncomingUseCase,
+  UpdateIncomingStorageUseCase,
+} from '../use-cases';
 import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
@@ -30,6 +34,7 @@ export class IncomingService {
     private readonly incomingRepository: IncomingRepository,
     private readonly createIncomingUseCase: CreateIncomingUseCase,
     private readonly updateIncomingUseCase: UpdateIncomingUseCase,
+    private readonly updateIncomingStorageUseCase: UpdateIncomingStorageUseCase,
     private readonly deleteIncomingUseCase: DeleteIncomingUseCase,
     private readonly reactivateIncomingUseCase: ReactivateIncomingUseCase,
     private readonly createTypeMovementUseCase: CreateTypeMovementUseCase,
@@ -88,6 +93,32 @@ export class IncomingService {
       return await this.updateIncomingUseCase.execute(
         id,
         updateIncomingDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  async updateIncomingStorage(
+    id: string,
+    updateIncomingStorageDto: UpdateIncomingStorageDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
+    try {
+      // const currentIncoming = await this.findById(id);
+
+      // if (!validateChanges(updateIncomingDto, currentIncoming)) {
+      //   return {
+      //     success: true,
+      //     message: 'No se detectaron cambios en el ingreso',
+      //     data: await this.incomingRepository.findDetailedIncomingById(id),
+      //   };
+      // }
+
+      return await this.updateIncomingStorageUseCase.execute(
+        id,
+        updateIncomingStorageDto,
         user,
       );
     } catch (error) {
