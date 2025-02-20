@@ -1,4 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
+export class PrescriptionItemResponse {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  quantity: number;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  description?: string;
+}
 
 export class Prescription {
   @ApiProperty()
@@ -19,11 +36,15 @@ export class Prescription {
   @ApiProperty()
   registrationDate: string;
 
-  @ApiProperty()
-  prescriptionMedicaments: Record<string, string>;
+  @ApiProperty({
+    type: [PrescriptionItemResponse],
+  })
+  prescriptionMedicaments: PrescriptionItemResponse[];
 
-  @ApiProperty()
-  prescriptionServices: Record<string, string>;
+  @ApiProperty({
+    type: [PrescriptionItemResponse],
+  })
+  prescriptionServices: PrescriptionItemResponse[];
 
   @ApiProperty()
   description?: string;
