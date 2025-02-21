@@ -23,21 +23,21 @@ export class CreateTypeStorageDto {
   @Transform(({ value }) => value?.trim())
   description?: string;
 
-  @ApiProperty({
-    description: 'ID de la sucursal si es necesario',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  branchId?: string;
+  // @ApiProperty({
+  //   description: 'ID de la sucursal si es necesario',
+  //   example: '123e4567-e89b-12d3-a456-426614174000',
+  //   required: false,
+  // })
+  // @IsString()
+  // @IsOptional()
+  // branchId?: string;
 
-  @ApiProperty({
-    description: 'ID del personal responsable si es necesario',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  staffId?: string;
+  // @ApiProperty({
+  //   description: 'ID del personal responsable si es necesario',
+  //   example: '123e4567-e89b-12d3-a456-426614174000',
+  //   required: false,
+  // })
+  // @IsString()
+  // @IsOptional()
+  // staffId?: string;
 }

@@ -26,6 +26,7 @@ export class CreateOutgoingUseCase {
         description: createOutgoingDto.description,
         storageId: createOutgoingDto.storageId,
         state: createOutgoingDto.state,
+        isTransference: createOutgoingDto?.isTransference,
         referenceId: createOutgoingDto.referenceId,
         date: createOutgoingDto.date,
       });

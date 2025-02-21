@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MedicalHistoryRepository } from '../repositories/history.repository';
-import { MedicalHistory } from '../entities/history.entity';
+import {
+  MedicalHistory,
+  UpdateHistoryResponse,
+} from '../entities/history.entity';
 import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
@@ -209,21 +212,7 @@ export class MedicalHistoryService {
   /**
    * Obtiene una historia médica completa con sus actualizaciones e imágenes
    */
-  async findOneComplete(id: string): Promise<
-    BaseApiResponse<
-      MedicalHistory & {
-        updates: Record<
-          string,
-          {
-            service: string;
-            staff: string;
-            branch: string;
-            images: Array<{ id: string; url: string }>;
-          }
-        >;
-      }
-    >
-  > {
+  async findOneComplete(id: string): Promise<UpdateHistoryResponse> {
     try {
       // Primero obtenemos la historia médica base
       const medicalHistory = await this.findById(id);
@@ -238,7 +227,9 @@ export class MedicalHistoryService {
           medicalHistory.patientId,
         );
 
-      const updatesObject = Array.isArray(updatesWithImages)
+      //console.log(updatesWithImages);
+
+      /*       const updatesObject = Array.isArray(updatesWithImages)
         ? updatesWithImages.reduce(
             (acc, update) => ({
               ...acc,
@@ -252,14 +243,10 @@ export class MedicalHistoryService {
             {},
           )
         : {};
-
+ */
       return {
-        success: true,
-        message: 'Historia médica encontrada exitosamente',
-        data: {
-          ...medicalHistory,
-          updates: updatesObject,
-        },
+        ...medicalHistory,
+        updates: updatesWithImages,
       };
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');

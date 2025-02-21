@@ -67,3 +67,6 @@ commits.sh
 
 # Claude
 .claude*
+
+# Docker override
+docker-compose.override.yml

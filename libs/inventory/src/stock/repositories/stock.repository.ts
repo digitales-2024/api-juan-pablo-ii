@@ -98,7 +98,7 @@ export class StockRepository extends BaseRepository<Stock> {
   async getStockByStorageAndProduct(
     storageId: string,
     productId: string,
-  ): Promise<{ stock: number } | null> {
+  ): Promise<{ stock: number; id: string } | null> {
     // Permitir retorno de null
     const stockRecord = await this.prisma.stock.findUnique({
       where: {
@@ -107,7 +107,10 @@ export class StockRepository extends BaseRepository<Stock> {
           productId: productId,
         },
       },
-      select: { stock: true },
+      select: {
+        stock: true,
+        id: true,
+      },
     });
 
     // Si no se encuentra el registro, retornar null
@@ -115,7 +118,7 @@ export class StockRepository extends BaseRepository<Stock> {
       return null; // Retorna null si no se encuentra el stock
     }
 
-    return { stock: stockRecord.stock }; // Retorna el stock encontrado
+    return { stock: stockRecord.stock, id: stockRecord.id }; // Retorna el stock encontrado
   }
 
   //obtener precio del producto
@@ -181,24 +184,47 @@ export class StockRepository extends BaseRepository<Stock> {
   private async getAllStoragesWithProducts(): Promise<StockByStorage[]> {
     const allStorages = await this.prisma.storage.findMany({
       where: { isActive: true },
-      select: { id: true, name: true, location: true, typeStorageId: true },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        typeStorageId: true,
+        branchId: true,
+        staffId: true,
+        TypeStorage: {
+          select: {
+            description: true,
+          },
+        },
+        branch: {
+          select: {
+            address: true,
+          },
+        },
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+      },
     });
 
     const stockByStorage = [];
 
     for (const storage of allStorages) {
-      const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
-      const branch = await this.fetchBranch(typeStorage.branchId);
-      //This is insecure because the prisma schema determines that staff is related with TypeStorage optionally
-      const staff = await this.fetchStaff(typeStorage.staffId);
+      // const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
+      // const branch = await this.fetchBranch(typeStorage.branchId);
+      // const staff = await this.fetchStaff(typeStorage.staffId);
 
+      // //This is insecure because the prisma schema determines that staff is related with TypeStorage optionally
       stockByStorage.push({
         idStorage: storage.id,
         name: storage.name,
         location: storage.location,
-        address: branch.address,
-        staff: `${staff.name} ${staff.lastName}`,
-        description: typeStorage.description,
+        address: storage.branch.address,
+        staff: `${storage.staff.name} ${storage.staff.lastName}`,
+        description: storage.TypeStorage.description,
         stock: await this.getStockByStorage(storage.id),
       });
     }
@@ -212,23 +238,46 @@ export class StockRepository extends BaseRepository<Stock> {
   ): Promise<StockByStorage[]> {
     const allStorages = await this.prisma.storage.findMany({
       where: { isActive: true },
-      select: { id: true, name: true, location: true, typeStorageId: true },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        typeStorageId: true,
+        branchId: true,
+        staffId: true,
+        TypeStorage: {
+          select: {
+            description: true,
+          },
+        },
+        branch: {
+          select: {
+            address: true,
+          },
+        },
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+      },
     });
 
     const stockByStorage = [];
 
     for (const storage of allStorages) {
-      const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
-      const branch = await this.fetchBranch(typeStorage.branchId);
-      const staff = await this.fetchStaff(typeStorage.staffId);
+      // const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
+      // const branch = await this.fetchBranch(typeStorage.branchId);
+      // const staff = await this.fetchStaff(typeStorage.staffId);
 
       stockByStorage.push({
         idStorage: storage.id,
         name: storage.name,
         location: storage.location,
-        address: branch.address,
-        staff: staff.name,
-        description: typeStorage.description,
+        address: storage.branch.address,
+        staff: storage.staff.name,
+        description: storage.TypeStorage.description,
         stock: await this.getStockByStorage(storage.id, productId),
       });
     }
@@ -241,24 +290,26 @@ export class StockRepository extends BaseRepository<Stock> {
     storageId: string,
     productId?: string,
   ): Promise<StockByStorage[]> {
-    const storage = await this.fetchStorageById(storageId);
-    const stockByStorage = [];
+    try {
+      const storage = await this.fetchStorageById(storageId);
+      const stockByStorage = [];
 
-    const typeStorage = await this.fetchTypeStorage(storage.typeStorageId);
-    const branch = await this.fetchBranch(typeStorage.branchId);
-    const staff = await this.fetchStaff(typeStorage.staffId);
+      stockByStorage.push({
+        idStorage: storage.id,
+        name: storage.name,
+        location: storage.location,
+        address: storage.branch.address,
+        staff: storage.staff.name,
+        description: storage.TypeStorage.description,
+        stock: await this.getStockByStorage(storageId, productId),
+      });
 
-    stockByStorage.push({
-      idStorage: storage.id,
-      name: storage.name,
-      location: storage.location,
-      address: branch.address,
-      staff: staff.name,
-      description: typeStorage.description,
-      stock: await this.getStockByStorage(storageId, productId),
-    });
-
-    return stockByStorage;
+      return stockByStorage;
+    } catch (error) {
+      throw new Error(
+        `Failed to get specific storage with products: ${error.message}`,
+      );
+    }
   }
 
   // Función privada para obtener el stock de un producto en un almacén específico
@@ -332,7 +383,30 @@ export class StockRepository extends BaseRepository<Stock> {
   private async fetchStorageById(storageId: string) {
     return await this.prisma.storage.findUnique({
       where: { id: storageId, isActive: true },
-      select: { id: true, name: true, location: true, typeStorageId: true },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        typeStorageId: true,
+        branchId: true,
+        staffId: true,
+        TypeStorage: {
+          select: {
+            description: true,
+          },
+        },
+        branch: {
+          select: {
+            address: true,
+          },
+        },
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+      },
     });
   }
 
@@ -340,27 +414,27 @@ export class StockRepository extends BaseRepository<Stock> {
   private async fetchTypeStorage(typeStorageId: string) {
     return await this.prisma.typeStorage.findUnique({
       where: { id: typeStorageId },
-      select: { description: true, branchId: true, staffId: true },
+      select: { description: true },
     });
   }
 
-  // Función privada para obtener los datos de Sucursal
-  private async fetchBranch(branchId: string) {
-    return await this.prisma.branch.findUnique({
-      where: { id: branchId },
-      select: { address: true },
-    });
-  }
+  // // Función privada para obtener los datos de Sucursal
+  // private async fetchBranch(branchId: string) {
+  //   return await this.prisma.branch.findUnique({
+  //     where: { id: branchId },
+  //     select: { address: true },
+  //   });
+  // }
 
-  // Función privada para obtener los datos de Personal
-  private async fetchStaff(staffId: string) {
-    return await this.prisma.staff.findUnique({
-      where: { id: staffId },
-      select: {
-        name: true,
-        lastName: true,
-      },
-    });
-  }
-  //fin funciones privadas
+  // // Función privada para obtener los datos de Personal
+  // private async fetchStaff(staffId: string) {
+  //   return await this.prisma.staff.findUnique({
+  //     where: { id: staffId },
+  //     select: {
+  //       name: true,
+  //       lastName: true,
+  //     },
+  //   });
+  // }
+  // //fin funciones privadas
 }

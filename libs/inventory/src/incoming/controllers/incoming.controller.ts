@@ -23,6 +23,7 @@ import {
   CreateIncomingDto,
   UpdateIncomingDto,
   DeleteIncomingDto,
+  UpdateIncomingStorageDto,
 } from '../dto';
 import {
   DetailedIncoming,
@@ -137,6 +138,28 @@ export class IncomingController {
   })
   findOneWithRelations(@Param('id') id: string): Promise<DetailedIncoming[]> {
     return this.incomingService.findByIdWithRelations(id);
+  }
+
+  /**
+   * Actualiza un ingreso existente
+   */
+  @Patch('update/incomingStorage/:id')
+  @ApiOperation({ summary: 'Actualizar ingreso existente' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Ingreso actualizado exitosamente',
+    type: DetailedIncoming,
+  })
+  updateIncomingStorage(
+    @Param('id') id: string,
+    @Body() updateIncomingStorageDto: UpdateIncomingStorageDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
+    return this.incomingService.updateIncomingStorage(
+      id,
+      updateIncomingStorageDto,
+      user,
+    );
   }
 
   /**

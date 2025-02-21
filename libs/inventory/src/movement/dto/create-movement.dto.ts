@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
@@ -53,6 +53,14 @@ export class CreateMovementDto {
   @IsNumber()
   @IsNotEmpty()
   quantity: number;
+
+  @ApiProperty({
+    description: 'Precio de compra del producto',
+    example: '15.5',
+    required: false,
+  })
+  @IsOptional()
+  buyingPrice?: number;
 
   @ApiProperty({
     description: 'Fecha en que ocurrió el evento',
@@ -120,6 +128,14 @@ export class OutgoingIncomingMovementDto {
   quantity: number;
 
   @ApiProperty({
+    description: 'Precio de compra del producto',
+    example: '15.5',
+    required: false,
+  })
+  @IsOptional()
+  buyingPrice?: number;
+
+  @ApiProperty({
     description: 'Fecha en que ocurrió el evento',
     example: '2023-12-01T15:30:00Z',
     required: false,
@@ -136,4 +152,13 @@ export class OutgoingIncomingMovementDto {
   @IsBoolean()
   @IsOptional()
   state?: boolean;
+}
+
+export class OutgoingIncomingUpdateMovementDto extends PartialType(
+  OutgoingIncomingMovementDto,
+) {
+  @ApiProperty({
+    required: false,
+  })
+  id?: string;
 }

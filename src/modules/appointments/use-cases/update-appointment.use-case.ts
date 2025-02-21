@@ -1,9 +1,9 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
 import { UpdateAppointmentDto } from '../dto/update-appointment.dto';
 import { AppointmentRepository } from '../repositories/appointment.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { AuditActionType } from '@prisma/client';
+import { AuditActionType, AppointmentStatus } from '@prisma/client';
 import { Appointment } from '../entities/appointment.entity';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class UpdateAppointmentUseCase {
   constructor(
     private readonly appointmentRepository: AppointmentRepository,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async execute(
     id: string,
@@ -20,22 +20,21 @@ export class UpdateAppointmentUseCase {
   ): Promise<HttpResponse<Appointment>> {
     const updatedAppointment = await this.appointmentRepository.transaction(
       async () => {
-        // Si se está actualizando la fecha, verificar disponibilidad
-        if (updateAppointmentDto.date) {
-          const existingAppointments =
-            await this.appointmentRepository.findMany({
-              where: {
-                personalId: updateAppointmentDto.personalId,
-                date: new Date(updateAppointmentDto.date),
-                isActive: true,
-                NOT: {
-                  id: id,
-                },
+        // Verificar disponibilidad si se actualiza la fecha/hora
+        if (updateAppointmentDto.start && updateAppointmentDto.end) {
+          const existingAppointments = await this.appointmentRepository.findMany({
+            where: {
+              staffId: updateAppointmentDto.staffId,
+              start: new Date(updateAppointmentDto.start),
+              end: new Date(updateAppointmentDto.end),
+              NOT: {
+                id: id,
               },
-            });
+            },
+          });
 
           if (existingAppointments.length > 0) {
-            throw new Error(
+            throw new BadRequestException(
               'Ya existe una cita programada para este doctor en esta fecha y hora',
             );
           }
@@ -43,33 +42,35 @@ export class UpdateAppointmentUseCase {
 
         // Preparar los datos de actualización
         const updateData: Partial<Appointment> = {
-          ...(updateAppointmentDto.tipoCitaMedicaId && {
-            tipoCitaMedicaId: updateAppointmentDto.tipoCitaMedicaId,
+          ...(updateAppointmentDto.staffId && { staffId: updateAppointmentDto.staffId }),
+          ...(updateAppointmentDto.serviceId && { serviceId: updateAppointmentDto.serviceId }),
+          ...(updateAppointmentDto.branchId && { branchId: updateAppointmentDto.branchId }),
+          ...(updateAppointmentDto.patientId && { patientId: updateAppointmentDto.patientId }),
+          ...(updateAppointmentDto.start && { start: new Date(updateAppointmentDto.start) }),
+          ...(updateAppointmentDto.end && { end: new Date(updateAppointmentDto.end) }),
+          ...(updateAppointmentDto.status && { status: updateAppointmentDto.status }),
+          ...(updateAppointmentDto.type && { type: updateAppointmentDto.type }),
+          ...(updateAppointmentDto.notes && { notes: updateAppointmentDto.notes }),
+          ...(updateAppointmentDto.cancellationReason && {
+            cancellationReason: updateAppointmentDto.cancellationReason,
           }),
-          ...(updateAppointmentDto.personalId && {
-            personalId: updateAppointmentDto.personalId,
-          }),
-          ...(updateAppointmentDto.consultaId && {
-            consultaId: updateAppointmentDto.consultaId,
-          }),
-          ...(updateAppointmentDto.date && {
-            date: new Date(updateAppointmentDto.date),
-          }),
-          ...(updateAppointmentDto.description && {
-            description: updateAppointmentDto.description,
+          ...(updateAppointmentDto.rescheduledFromId && {
+            rescheduledFromId: updateAppointmentDto.rescheduledFromId,
           }),
         };
 
         // Actualizar la cita
-        const appointment = await this.appointmentRepository.update(
-          id,
-          updateData,
-        );
+        const appointment = await this.appointmentRepository.update(id, updateData);
+
+        // Si se confirma la cita, crear el evento asociado
+        if (appointment.status === AppointmentStatus.CONFIRMED) {
+          // await this.createEventForAppointment(appointment);
+        }
 
         // Registrar auditoría
         await this.auditService.create({
           entityId: appointment.id,
-          entityType: 'citaMedica',
+          entityType: 'Appointment',
           action: AuditActionType.UPDATE,
           performedById: user.id,
           createdAt: new Date(),
