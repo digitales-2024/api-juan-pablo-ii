@@ -26,6 +26,8 @@ export class UpdateStorageUseCase {
           name: updateStorageDto.name,
           location: updateStorageDto.location,
           typeStorageId: updateStorageDto.typeStorageId,
+          branchId: updateStorageDto.branchId,
+          staffId: updateStorageDto.staffId,
         });
 
         // Register audit

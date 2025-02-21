@@ -25,6 +25,7 @@ export class CreateMovementUseCase {
         outgoingId: createMovementDto.outgoingId,
         productId: createMovementDto.productId,
         quantity: createMovementDto.quantity,
+        buyingPrice: createMovementDto?.buyingPrice,
         date: createMovementDto.date,
         state: createMovementDto.state,
       });

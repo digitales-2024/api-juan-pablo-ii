@@ -273,9 +273,9 @@ export class UpdateHistoryController {
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<UpdateHistory>> {
     // Log para verificar los datos recibidos
-    console.log('Datos recibidos:', createUpdateHistoryDto);
+    /*     console.log('Datos recibidos:', createUpdateHistoryDto);
     console.log('Imágenes recibidas:', images);
-    console.log('Usuario:', user);
+    console.log('Usuario:', user); */
 
     return this.updateHistoryService.createWithImages(
       createUpdateHistoryDto,
@@ -408,14 +408,14 @@ export class UpdateHistoryController {
     @GetUser() user: UserData,
   ): Promise<
     BaseApiResponse<
-      UpdateHistory & { images: Record<string, { id: string; url: string }> }
+      UpdateHistory & { images: Array<{ id: string; url: string }> }
     >
   > {
     try {
       // Log para verificar los datos recibidos
-      console.log('ID a actualizar:', id);
+      /*      console.log('ID a actualizar:', id);
       console.log('Datos recibidos:', updateUpdateHistoryDto);
-      console.log('Archivos recibidos:', files);
+      console.log('Archivos recibidos:', files); */
 
       // Procesamos los datos de actualización de imágenes solo si existen
       let imageUpdates = [];
@@ -461,11 +461,9 @@ export class UpdateHistoryController {
     type: UpdateHistory,
   })
   async findOneWithImages(@Param('id') id: string): Promise<
-    BaseApiResponse<
-      UpdateHistory & {
-        images: Record<string, { id: string; url: string }>;
-      }
-    >
+    UpdateHistory & {
+      images: Array<{ id: string; url: string }>;
+    }
   > {
     return this.updateHistoryService.findOneWithImages(id);
   }

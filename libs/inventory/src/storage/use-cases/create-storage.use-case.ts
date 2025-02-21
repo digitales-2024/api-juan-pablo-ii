@@ -24,6 +24,14 @@ export class CreateStorageUseCase {
         name: createStorageDto.name,
         location: createStorageDto.location,
         typeStorageId: createStorageDto.typeStorageId,
+        branchId:
+          createStorageDto.branchId.length === 0 || !createStorageDto.branchId
+            ? null
+            : createStorageDto.branchId,
+        staffId:
+          createStorageDto.staffId.length === 0 || !createStorageDto.staffId
+            ? null
+            : createStorageDto.staffId,
       });
 
       // Register audit

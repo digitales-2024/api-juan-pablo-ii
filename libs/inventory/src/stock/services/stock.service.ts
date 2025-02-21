@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { StockRepository } from '../repositories/stock.repository';
-import { UpdateStockUseCase } from '../use-cases/update-storage.use-case';
-import { CreateStockUseCase } from '../use-cases/create-storage.use-case';
+import { UpdateStockUseCase } from '../use-cases/update-stock.use-case';
+import { CreateStockUseCase } from '../use-cases/create-stock.use-case';
 import { UserData } from '@login/login/interfaces';
 import { ProductStock, StockByStorage } from '../entities/stock.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';

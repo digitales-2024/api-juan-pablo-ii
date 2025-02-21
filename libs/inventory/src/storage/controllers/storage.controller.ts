@@ -91,9 +91,9 @@ export class StorageController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todos los almacenes',
-    type: [Storage],
+    type: [DetailedStorage],
   })
-  findAllActive(): Promise<Storage[]> {
+  findAllActive(): Promise<DetailedStorage[]> {
     return this.storageService.findAllActive();
   }
 

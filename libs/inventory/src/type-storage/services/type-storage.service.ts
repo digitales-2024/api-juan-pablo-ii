@@ -1,9 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { TypeStorageRepository } from '../repositories/type-storage.repository';
-import {
-  DetailedTypeStorage,
-  TypeStorage,
-} from '../entities/type-storage.entity';
+import { TypeStorage } from '../entities/type-storage.entity';
 import { CreateTypeStorageDto } from '../dto/create-type-storage.dto';
 import { UpdateTypeStorageDto } from '../dto/update-type-storage.dto';
 import { UserData } from '@login/login/interfaces';
@@ -126,33 +123,33 @@ export class TypeStorageService {
     }
   }
 
-  async findONeWIthRelations(id: string): Promise<DetailedTypeStorage[]> {
-    try {
-      const typeStorage = await this.typeStorageRepository.findOneWithRelations(
-        id,
-        {
-          include: {
-            staff: {
-              select: {
-                name: true,
-              },
-            },
-            branch: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-      );
-      if (!typeStorage) {
-        throw new BadRequestException('Tipo de almacenamiento no encontrado');
-      }
-      return this.typeStorageRepository.mapToEntity([typeStorage]);
-    } catch (error) {
-      this.errorHandler.handleError(error, 'getting');
-    }
-  }
+  // async findONeWIthRelations(id: string): Promise<DetailedTypeStorage[]> {
+  //   try {
+  //     const typeStorage = await this.typeStorageRepository.findOneWithRelations(
+  //       id,
+  //       {
+  //         include: {
+  //           staff: {
+  //             select: {
+  //               name: true,
+  //             },
+  //           },
+  //           branch: {
+  //             select: {
+  //               name: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     );
+  //     if (!typeStorage) {
+  //       throw new BadRequestException('Tipo de almacenamiento no encontrado');
+  //     }
+  //     return this.typeStorageRepository.mapToEntity([typeStorage]);
+  //   } catch (error) {
+  //     this.errorHandler.handleError(error, 'getting');
+  //   }
+  // }
 
   /**
    * Obtiene todos los tipos de almacenamiento
@@ -175,30 +172,30 @@ export class TypeStorageService {
     }
   }
 
-  async findAllWithRelations(): Promise<DetailedTypeStorage[]> {
-    try {
-      // const storages = await this.typeStorageRepository.findMany();
-      const storages = await this.typeStorageRepository.findManyWithRelations({
-        include: {
-          staff: {
-            select: {
-              name: true,
-            },
-          },
-          branch: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      });
-      return storages.map((storage) =>
-        this.typeStorageRepository.mapToEntity(storage),
-      );
-    } catch (error) {
-      this.errorHandler.handleError(error, 'getting');
-    }
-  }
+  // async findAllWithRelations(): Promise<DetailedTypeStorage[]> {
+  //   try {
+  //     // const storages = await this.typeStorageRepository.findMany();
+  //     const storages = await this.typeStorageRepository.findManyWithRelations({
+  //       include: {
+  //         staff: {
+  //           select: {
+  //             name: true,
+  //           },
+  //         },
+  //         branch: {
+  //           select: {
+  //             name: true,
+  //           },
+  //         },
+  //       },
+  //     });
+  //     return storages.map((storage) =>
+  //       this.typeStorageRepository.mapToEntity(storage),
+  //     );
+  //   } catch (error) {
+  //     this.errorHandler.handleError(error, 'getting');
+  //   }
+  // }
 
   /**
    * Busca un tipo de almacenamiento por su ID

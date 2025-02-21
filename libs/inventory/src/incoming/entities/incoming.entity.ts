@@ -23,6 +23,11 @@ export class Incoming {
   @ApiProperty()
   referenceId?: string;
 
+  @ApiProperty({
+    required: false,
+  })
+  isTransference?: boolean;
+
   @ApiProperty()
   isActive?: boolean;
 }
@@ -78,13 +83,6 @@ export class IncomingStorageType {
 
   @ApiProperty()
   name: string;
-
-  @ApiProperty({
-    type: IncomingBranch,
-    required: false,
-  })
-  @IsOptional()
-  branch?: IncomingBranch;
 }
 
 export class IncomingStorage {
@@ -98,6 +96,13 @@ export class IncomingStorage {
     type: IncomingStorageType,
   })
   TypeStorage: IncomingStorageType;
+
+  @ApiProperty({
+    type: IncomingBranch,
+    required: false,
+  })
+  @IsOptional()
+  branch?: IncomingBranch;
 }
 
 export class IncomingProduct {
@@ -154,6 +159,11 @@ export class IncomingMovement {
 
   @ApiProperty()
   state: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  buyingPrice?: number;
 
   @ApiProperty()
   isActive?: boolean;

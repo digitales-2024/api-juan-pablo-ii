@@ -25,7 +25,10 @@ import {
   UpdateMedicalHistoryDto,
   DeleteMedicalHistoryDto,
 } from '../dto';
-import { MedicalHistory } from '../entities/history.entity';
+import {
+  MedicalHistory,
+  UpdateHistoryResponse,
+} from '../entities/history.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 /**
  * Controlador REST para gestionar historias médicas.
@@ -164,23 +167,11 @@ export class MedicalHistoryController {
   @ApiResponse({
     status: 200,
     description: 'Historia médica encontrada con actualizaciones e imágenes',
-    type: MedicalHistory,
+    type: UpdateHistoryResponse,
   })
-  async findOneComplete(@Param('id') id: string): Promise<
-    BaseApiResponse<
-      MedicalHistory & {
-        updates: Record<
-          string,
-          {
-            service: string;
-            staff: string;
-            branch: string;
-            images: Array<{ id: string; url: string }>;
-          }
-        >;
-      }
-    >
-  > {
+  async findOneComplete(
+    @Param('id') id: string,
+  ): Promise<UpdateHistoryResponse> {
     return this.medicalHistoryService.findOneComplete(id);
   }
 }
