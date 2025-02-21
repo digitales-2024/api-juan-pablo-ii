@@ -14,12 +14,17 @@ import { UpdateOutgoingUseCase } from '../use-cases/update-outgoing.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { outgoingErrorMessages } from '../errors/errors-outgoing';
 import { DeleteOutgoingDto } from '../dto';
-import { DeleteOutgoingUseCase, ReactivateOutgoingUseCase } from '../use-cases';
+import {
+  DeleteOutgoingUseCase,
+  ReactivateOutgoingUseCase,
+  UpdateOutgoingStorageUseCase,
+} from '../use-cases';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
 import { StockService } from '@inventory/inventory/stock/services/stock.service';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { UpdateOutgoingStorageDto } from '../dto/update-outgoingStorage.dto';
 
 @Injectable()
 export class OutgoingService {
@@ -30,6 +35,7 @@ export class OutgoingService {
     private readonly outgoingRepository: OutgoingRepository,
     private readonly createOutgoingUseCase: CreateOutgoingUseCase,
     private readonly updateOutgoingUseCase: UpdateOutgoingUseCase,
+    private readonly updateOutgoingStorageUseCase: UpdateOutgoingStorageUseCase,
     private readonly deleteOutgoingUseCase: DeleteOutgoingUseCase,
     private readonly reactivateOutgoingUseCase: ReactivateOutgoingUseCase,
     private readonly createTypeMovementUseCase: CreateTypeMovementUseCase,
@@ -89,6 +95,42 @@ export class OutgoingService {
       return await this.updateOutgoingUseCase.execute(
         id,
         updateOutgoingDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+      throw error;
+    }
+  }
+
+  async updateOutgoingStorage(
+    id: string,
+    updateOutgoingStorageDto: UpdateOutgoingStorageDto,
+    user: UserData,
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
+    try {
+      // const currentOutgoing = await this.findById(id);
+      // const updateOutgoingDto: UpdateOutgoingDto = {
+      //   name: updateOutgoingStorageDto?.name,
+      //   description: updateOutgoingStorageDto?.description,
+      //   isTransference: updateOutgoingStorageDto?.isTransference,
+      //   referenceId: updateOutgoingStorageDto?.referenceId,
+      //   storageId: updateOutgoingStorageDto?.storageId,
+      //   state: updateOutgoingStorageDto?.state,
+      //   date: updateOutgoingStorageDto?.date,
+      // };
+
+      // if (!validateChanges(updateOutgoingDto, currentOutgoing)) {
+      //   return {
+      //     success: true,
+      //     message: 'No se detectaron cambios en la salida',
+      //     data: await this.outgoingRepository.findDetailedOutgoingById(id),
+      //   };
+      // }
+
+      return await this.updateOutgoingStorageUseCase.execute(
+        id,
+        updateOutgoingStorageDto,
         user,
       );
     } catch (error) {
@@ -180,7 +222,7 @@ export class OutgoingService {
     }
   }
 
-  //crear ingreso de productos al alamacen
+  //crear ingreso de productos al alamacen: TODO: Replantaer logica para que use los principios ACID por medio de transacciones, para poder hacer transferencias de manera mas segura
   /**
    * Crea una nueva salida de productos del almacén.
    *

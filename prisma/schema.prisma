@@ -245,7 +245,7 @@ model Staff {
   birth        DateTime
   branchId     String?
   branch       Branch?         @relation(fields: [branchId], references: [id])
-  typeStorage  TypeStorage[] // Relación con TypeStorage
+  Storage      Storage[] // Relación con TypeStorage
   schedules    StaffSchedule[] // Relación 1:N con horarios
   timeOffs     TimeOff[] // Relación con ausencias
   appointments Appointment[] // Citas asociadas
@@ -319,14 +319,14 @@ model TypeStorage {
   id          String   @id @default(uuid())
   name        String   @unique // Ejemplo: "Producto Terminado", "Materia Prima", etc.
   description String? // Descripción opcional del tipo de almacén
-  branchId    String? // Clave foránea a Sucursal o local
-  staffId     String? // Clave foránea a Personal empleado responsable del almacén
+  // branchId    String? // Clave foránea a Sucursal o local
+  // staffId     String? // Clave foránea a Personal empleado responsable del almacén
   isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
 
-  branch  Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
-  staff   Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
+  // branch  Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
+  // staff   Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
   Storage Storage[] // Relación con la tabla Almacen
 }
 
@@ -336,12 +336,17 @@ model Storage {
   name          String      @unique // Nombre del almacén
   location      String? // Ubicación física del almacén
   typeStorageId String
-  TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
-  Incoming      Incoming[] // Relación con Ingreso
-  Outgoing      Outgoing[] // Relación con Salida
+  branchId    String? // Clave foránea a Sucursal o local
+  staffId     String? // Clave foránea a Personal empleado responsable del almacén
   isActive      Boolean     @default(true) // Campo para controlar si está activo o no
   createdAt     DateTime    @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime    @updatedAt
+
+  TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
+  branch        Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
+  staff         Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
+  Incoming      Incoming[] // Relación con Ingreso
+  Outgoing      Outgoing[] // Relación con Salida
   Stock         Stock[]
 }
 
@@ -391,6 +396,7 @@ model Movement {
   productId      String
   Producto       Producto      @relation(fields: [productId], references: [id])
   quantity       Float // Cantidad de producto que se movió
+  buyingPrice    Float? // Precio de compra del producto
   date           DateTime      @default(now()) @db.Timestamptz(6)
   state          Boolean       @default(false) // Estado para registrar si el movimiento ha sido procesado o no
   referenceId    String? // Referencia a un registro etc
@@ -408,6 +414,7 @@ model Incoming {
   Storage     Storage  @relation(fields: [storageId], references: [id])
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
+  isTransference Boolean? @default(false) // Indica si el ingreso es por transferencia entre almacenes
   referenceId String? // Referencia a un registro etc
   isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
@@ -425,6 +432,7 @@ model Outgoing {
   Storage     Storage  @relation(fields: [storageId], references: [id])
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
+  isTransference Boolean? @default(false) // Indica si la salida es por transferencia entre almacenes
   referenceId String? // Referencia a un registro etc
   isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
@@ -669,7 +677,7 @@ model Branch {
   events         Event[]
   staff          Staff[]
   timeOffs       TimeOff[]
-  typeStorage    TypeStorage[] // Relación con TypeStorage
+  storage        Storage[] // Relación con TypeStorage
 }
 
 enum OrderType {

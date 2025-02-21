@@ -1,17 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
-  IsString,
-  IsOptional,
-  IsNotEmpty,
   IsBoolean,
   IsDateString,
-  //IsObject,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { OutgoingIncomingMovementDto } from '@inventory/inventory/movement/dto';
+import { OutgoingIncomingUpdateMovementDto } from '@inventory/inventory/movement/dto';
 
-export class CreateIncomingDtoStorage {
+export class UpdateIncomingStorageDtoBase {
   @ApiProperty({
     description: 'Nombre del ingreso a almacen ',
     example: 'Ingreso de regulacion , aumento de stock, etc.',
@@ -38,7 +37,7 @@ export class CreateIncomingDtoStorage {
     required: true,
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   storageId: string;
 
   @ApiProperty({
@@ -94,11 +93,15 @@ export class CreateIncomingDtoStorage {
       },
     ],
     required: true,
-    type: [OutgoingIncomingMovementDto],
+    type: [OutgoingIncomingUpdateMovementDto],
   })
   // @IsObject({ each: true })
   @ValidateNested({ each: true })
-  @Type(() => OutgoingIncomingMovementDto)
+  @Type(() => OutgoingIncomingUpdateMovementDto)
   @IsNotEmpty()
-  movement: OutgoingIncomingMovementDto[];
+  movement: OutgoingIncomingUpdateMovementDto[];
 }
+
+export class UpdateIncomingStorageDto extends PartialType(
+  UpdateIncomingStorageDtoBase,
+) {}

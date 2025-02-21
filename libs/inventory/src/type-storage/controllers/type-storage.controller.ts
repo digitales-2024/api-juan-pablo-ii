@@ -25,10 +25,7 @@ import {
   UpdateTypeStorageDto,
   DeleteTypeStorageDto,
 } from '../dto';
-import {
-  DetailedTypeStorage,
-  TypeStorage,
-} from '../entities/type-storage.entity';
+import { TypeStorage } from '../entities/type-storage.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 /**
@@ -96,37 +93,37 @@ export class TypeStorageController {
     return this.typeStorageService.findAllActive();
   }
 
-  @Get('/detailed')
-  @ApiOperation({
-    summary: 'Obtener todos los tipos de almacenamiento activos',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de todos los tipos de almacenamiento activos',
-    type: [DetailedTypeStorage],
-  })
-  findAllDetailed(): Promise<DetailedTypeStorage[]> {
-    return this.typeStorageService.findAllWithRelations();
-  }
+  // @Get('/detailed')
+  // @ApiOperation({
+  //   summary: 'Obtener todos los tipos de almacenamiento activos',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Lista de todos los tipos de almacenamiento activos',
+  //   type: [DetailedTypeStorage],
+  // })
+  // findAllDetailed(): Promise<DetailedTypeStorage[]> {
+  //   return this.typeStorageService.findAllWithRelations();
+  // }
 
-  /**
-   * Obtiene un tipo de almacenamiento por su ID
-   */
-  @Get('/detailed/:id')
-  @ApiOperation({ summary: 'Obtener tipo detallado de almacenamiento por ID' })
-  @ApiParam({ name: 'id', description: 'ID del tipo de almacenamiento' })
-  @ApiOkResponse({
-    description: 'Tipo de almacenamiento encontrado',
-    type: [DetailedTypeStorage],
-  })
-  @ApiNotFoundResponse({
-    description: 'Tipo de almacenamiento no encontrado',
-  })
-  findOneWithRelations(
-    @Param('id') id: string,
-  ): Promise<DetailedTypeStorage[]> {
-    return this.typeStorageService.findONeWIthRelations(id);
-  }
+  // /**
+  //  * Obtiene un tipo de almacenamiento por su ID
+  //  */
+  // @Get('/detailed/:id')
+  // @ApiOperation({ summary: 'Obtener tipo detallado de almacenamiento por ID' })
+  // @ApiParam({ name: 'id', description: 'ID del tipo de almacenamiento' })
+  // @ApiOkResponse({
+  //   description: 'Tipo de almacenamiento encontrado',
+  //   type: [DetailedTypeStorage],
+  // })
+  // @ApiNotFoundResponse({
+  //   description: 'Tipo de almacenamiento no encontrado',
+  // })
+  // findOneWithRelations(
+  //   @Param('id') id: string,
+  // ): Promise<DetailedTypeStorage[]> {
+  //   return this.typeStorageService.findONeWIthRelations(id);
+  // }
 
   /**
    * Obtiene un tipo de almacenamiento por su ID

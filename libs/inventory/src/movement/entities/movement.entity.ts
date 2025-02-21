@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class Movement {
   @ApiProperty()
@@ -18,6 +19,13 @@ export class Movement {
 
   @ApiProperty()
   quantity: number;
+
+  @ApiProperty({
+    description: 'Precio de compra del producto',
+    required: false,
+  })
+  @IsOptional()
+  buyingPrice?: number;
 
   @ApiProperty()
   date?: Date;

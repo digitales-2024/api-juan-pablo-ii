@@ -25,8 +25,8 @@ export class UpdateTypeStorageUseCase {
         const typeStorage = await this.typeStorageRepository.update(id, {
           name: updateTypeStorageDto.name,
           description: updateTypeStorageDto.description,
-          branchId: updateTypeStorageDto.branchId,
-          staffId: updateTypeStorageDto.staffId,
+          // branchId: updateTypeStorageDto.branchId,
+          // staffId: updateTypeStorageDto.staffId,
         });
 
         // Register audit

@@ -54,6 +54,14 @@ export class CreateIncomingDto {
   date: Date;
 
   @ApiProperty({
+    description: 'Indica si es un traslado entre almacenes',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isTransference?: boolean;
+
+  @ApiProperty({
     description: 'Estado del ingreso',
     example: false,
     required: true,

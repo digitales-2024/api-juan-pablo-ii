@@ -1,20 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
   IsNotEmpty,
   IsBoolean,
   IsDateString,
-  //IsObject,
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { OutgoingIncomingMovementDto } from '@inventory/inventory/movement/dto';
+import { OutgoingIncomingUpdateMovementDto } from '@inventory/inventory/movement/dto';
 
-export class CreateIncomingDtoStorage {
+export class UpdateOutgoingStorageDtoBase {
   @ApiProperty({
-    description: 'Nombre del ingreso a almacen ',
-    example: 'Ingreso de regulacion , aumento de stock, etc.',
+    description: 'Nombre de la salida de almacen ',
+    example: 'salida de transferencia , correcion de stock, etc.',
     required: false,
   })
   @IsString()
@@ -23,8 +22,8 @@ export class CreateIncomingDtoStorage {
   name?: string;
 
   @ApiProperty({
-    description: 'Descripción del ingreso',
-    example: 'Descripción opcional del ingreso a alamacen',
+    description: 'Descripción de salida',
+    example: 'Descripción opcional del salida de alamacen',
     required: false,
   })
   @IsString()
@@ -33,16 +32,16 @@ export class CreateIncomingDtoStorage {
   description?: string;
 
   @ApiProperty({
-    description: 'ID del almacén al que va ser ingresado',
+    description: 'ID del almacén del que va ser retirado',
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: true,
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   storageId: string;
 
   @ApiProperty({
-    description: 'Fecha del ingreso',
+    description: 'Fecha de salida',
     example: '2023-10-01T00:00:00.000Z',
     required: true,
   })
@@ -56,13 +55,21 @@ export class CreateIncomingDtoStorage {
   date: Date;
 
   @ApiProperty({
-    description: 'Estado del ingreso',
+    description: 'Estado de salida',
     example: true,
     required: true,
   })
   @IsBoolean()
   @IsNotEmpty()
   state: boolean;
+
+  @ApiProperty({
+    description: 'Indica si es un traslado entre almacenes',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isTransference?: boolean;
 
   @ApiProperty({
     description: 'ID de referencia puede ser un traslado, compra, etc.',
@@ -74,15 +81,7 @@ export class CreateIncomingDtoStorage {
   referenceId?: string;
 
   @ApiProperty({
-    description: 'Indica si es un traslado entre almacenes',
-    required: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isTransference?: boolean;
-
-  @ApiProperty({
-    description: 'productos a ingresar al almacen y cantidad',
+    description: 'productos a retirar del almacen y cantidad',
     example: [
       {
         productId: '123e4567-e89b-12d3-a456-426614174000',
@@ -93,12 +92,15 @@ export class CreateIncomingDtoStorage {
         quantity: 10,
       },
     ],
+    type: [OutgoingIncomingUpdateMovementDto],
     required: true,
-    type: [OutgoingIncomingMovementDto],
   })
-  // @IsObject({ each: true })
   @ValidateNested({ each: true })
-  @Type(() => OutgoingIncomingMovementDto)
+  @Type(() => OutgoingIncomingUpdateMovementDto)
   @IsNotEmpty()
-  movement: OutgoingIncomingMovementDto[];
+  movement: OutgoingIncomingUpdateMovementDto[];
 }
+
+export class UpdateOutgoingStorageDto extends PartialType(
+  UpdateOutgoingStorageDtoBase,
+) {}
