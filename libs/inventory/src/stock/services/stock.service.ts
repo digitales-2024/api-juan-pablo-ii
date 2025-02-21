@@ -3,7 +3,7 @@ import { StockRepository } from '../repositories/stock.repository';
 import { UpdateStockUseCase } from '../use-cases/update-storage.use-case';
 import { CreateStockUseCase } from '../use-cases/create-storage.use-case';
 import { UserData } from '@login/login/interfaces';
-import { StockByStorage } from '../entities/stock.entity';
+import { ProductStock, StockByStorage } from '../entities/stock.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { stockErrorMessages } from '../errors/errors-stock';
 
@@ -241,6 +241,45 @@ export class StockService {
       );
       this.errorHandler.handleError(error, 'updating');
       throw error;
+    }
+  }
+
+  //funcion para obtener el stock de un producto en todos los almacenes
+  async getProductStock(productId: string): Promise<ProductStock[]> {
+    try {
+      const productStock =
+        await this.stockRepository.getOneProductStock(productId);
+      return [productStock];
+    } catch (error) {
+      this.logger.error(`Error fetching stock for product ${productId}`, error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  //funcion para obtener todos los productos en stock en todos los almacenes
+  async getProductsStock(): Promise<ProductStock[]> {
+    try {
+      const productsStock = await this.stockRepository.getAllProductsStock();
+      return productsStock;
+    } catch (error) {
+      this.logger.error('Error fetching products stock', error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async getProductsStockByStorage({
+    storageId,
+  }: {
+    storageId: string;
+  }): Promise<ProductStock[]> {
+    try {
+      const productStock = await this.stockRepository.getProductStockByStorage({
+        storageId,
+      });
+      return productStock;
+    } catch (error) {
+      this.logger.error(`Error fetching stock for storage ${storageId}`);
+      this.errorHandler.handleError(error, 'getting');
     }
   }
 }

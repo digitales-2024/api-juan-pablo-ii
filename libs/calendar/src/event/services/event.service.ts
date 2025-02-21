@@ -20,6 +20,8 @@ import { EventType } from '../entities/event-type.enum';
 import { CreateRecurrentEventsUseCase } from '../use-cases/create-recurrent-events.use-case';
 import { FindEventsQueryDto } from '../dto/find-events-query.dto';
 import { FindEventsByFilterUseCase } from '../use-cases/find-events-by-filter.use-case';
+import { FindEventsByStaffScheduleUseCase } from '../use-cases/find-events-by-staff-schedule.use-case';
+import { DeleteEventsByStaffScheduleUseCase } from '../use-cases/delete-events-by-staff-schedule.use-case';
 
 /**
  * Servicio que implementa la lógica de negocio para eventos del calendario.
@@ -39,6 +41,8 @@ export class EventService {
     private readonly reactivateEventsUseCase: ReactivateEventsUseCase,
     private readonly createRecurrentEventsUseCase: CreateRecurrentEventsUseCase,
     private readonly findEventsByFilterUseCase: FindEventsByFilterUseCase,
+    private readonly findEventsByStaffScheduleUseCase: FindEventsByStaffScheduleUseCase,
+    private readonly deleteEventsByStaffScheduleUseCase: DeleteEventsByStaffScheduleUseCase,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -191,7 +195,7 @@ export class EventService {
       this.logger.debug(`Iniciando búsqueda con filtros: ${JSON.stringify(query)}`);
       const result = await this.findEventsByFilterUseCase.execute(query);
       this.logger.debug(`Eventos encontrados: ${result.events.length} resultados`);
-      
+
       const mappedEvents = result.events.map(event => ({
         ...event,
         staff: {
@@ -202,11 +206,60 @@ export class EventService {
           name: event.branch?.name || 'Sucursal no especificada'
         }
       }));
-      
+
       this.logger.debug(`Mapeo completado. Datos extendidos: ${mappedEvents.length} eventos`);
       return mappedEvents;
     } catch (error) {
       this.logger.error(`Error en findEventsByFilter: ${error.message}`, error.stack);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findEventsByStaffSchedule(
+    staffScheduleId: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ events: Event[]; total: number }> {
+    try {
+      return await this.findEventsByStaffScheduleUseCase.execute(
+        staffScheduleId,
+        page,
+        limit
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async deleteEventsByStaffSchedule(
+    staffScheduleId: string,
+    user: UserData,
+  ): Promise<BaseApiResponse<number>> {
+    try {
+      return await this.deleteEventsByStaffScheduleUseCase.execute(staffScheduleId, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'deleting');
+    }
+  }
+
+  /**
+   * Busca un TURNO disponible para un staff en un rango de tiempo específico
+   * @param staffId - ID del staff
+   * @param start - Fecha de inicio
+   * @param end - Fecha de fin
+   * @returns Evento TURNO si existe, null si no
+   */
+  async findAvailableTurn(
+    staffId: string,
+    start: Date,
+    end: Date
+  ): Promise<Event | null> {
+    try {
+      this.logger.debug(`Buscando TURNO para staff: ${staffId}`);
+      const turn = await this.eventRepository.findAvailableTurn(staffId, start, end);
+      this.logger.debug(`Resultado de búsqueda de TURNO: ${JSON.stringify(turn)}`);
+      return turn;
+    } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
   }

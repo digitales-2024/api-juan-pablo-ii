@@ -3,7 +3,7 @@ import { StaffScheduleService } from './services/staff-schedule.service';
 import { StaffScheduleRepository } from './repositories/staff-schedule.repository';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { StaffScheduleController } from './controllers/staff-schedule.controller';
-import { CreateStaffScheduleUseCase, DeleteStaffSchedulesUseCase, ReactivateStaffSchedulesUseCase, UpdateStaffScheduleUseCase } from './use-cases';
+import { CreateStaffScheduleUseCase, DeleteStaffSchedulesUseCase, FindStaffSchedulesByFilterUseCase, ReactivateStaffSchedulesUseCase, UpdateStaffScheduleUseCase } from './use-cases';
 
 @Module({
     imports: [AuditModule],
@@ -15,6 +15,7 @@ import { CreateStaffScheduleUseCase, DeleteStaffSchedulesUseCase, ReactivateStaf
         UpdateStaffScheduleUseCase,
         DeleteStaffSchedulesUseCase,
         ReactivateStaffSchedulesUseCase,
+        FindStaffSchedulesByFilterUseCase
     ],
     exports: [StaffScheduleService],
 })

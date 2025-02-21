@@ -235,6 +235,7 @@ model Staff {
   staffTypeId  String
   staffType    StaffType       @relation(fields: [staffTypeId], references: [id])
   userId       String?
+  cmp          String?
   isActive     Boolean         @default(true)
   name         String
   email        String
@@ -309,6 +310,9 @@ model Producto {
   // Relación con el inventario (Almacen)
   Movement Movement[]
   Stock    Stock[]
+
+  // @@index([name(ops: raw("gist_trgm_ops"))], type: Gist) // En caso se quiera usar la indexacion Gist
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin) //Busquedas rapidas por coincidencias
 }
 
 model TypeStorage {
@@ -433,6 +437,7 @@ model Outgoing {
 model MedicalHistory {
   id             String   @id @default(uuid())
   patientId      String
+  fullName       String? // Nombre completo del paciente
   patient        Patient  @relation(fields: [patientId], references: [id])
   medicalHistory Json? // Historial médico del paciente
   description    String?
@@ -457,8 +462,8 @@ model UpdateHistory {
   updateHistory         Json? // Historial de actualizaciones
   description           String?
   medicalLeave          Boolean        @default(false) // indica si tiene descanso medico
-  medicalLeaveStartDate DateTime?
-  medicalLeaveEndDate   DateTime?
+  medicalLeaveStartDate String?
+  medicalLeaveEndDate   String?
   medicalLeaveDays      Int? // Cantidad de días de descanso médico
   leaveDescription      String? // Descripción del descanso médico
   isActive              Boolean        @default(true)
@@ -501,9 +506,12 @@ model Prescription {
 }
 
 enum AppointmentStatus {
-  PENDING
-
-  //TODO: ver que estados tendran las citas
+  PENDING // Generada pero no pagada (WhatsApp/digital)
+  CONFIRMED // Pagada y confirmada (genera evento CITA)
+  COMPLETED // El paciente asistió y se completó
+  CANCELLED // Cancelada antes de la fecha
+  NO_SHOW // Paciente no asistió sin avisar
+  RESCHEDULED // Cita reprogramada (nuevo registro)
 }
 
 // Audit fields
@@ -524,18 +532,24 @@ enum AppointmentType {
 }
 
 model Appointment {
-  id        String            @id @default(uuid())
-  eventId   String?           @unique
-  event     Event?            @relation(name: "AppointmentToEvent", fields: [eventId], references: [id])
-  staffId   String
-  serviceId String
-  branchId  String
-  patientId String
-  start     DateTime
-  end       DateTime
-  status    AppointmentStatus @default(PENDING)
-  type      AppointmentType   @default(CONSULTA)
-  notes     String?
+  id                 String            @id @default(uuid())
+  eventId            String?           @unique
+  event              Event?            @relation(name: "AppointmentToEvent", fields: [eventId], references: [id])
+  staffId            String
+  serviceId          String
+  branchId           String
+  patientId          String
+  start              DateTime
+  end                DateTime
+  status             AppointmentStatus @default(PENDING)
+  cancellationReason String?
+  rescheduledFrom    Appointment?      @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
+  rescheduledFromId  String?
+  rescheduledTo      Appointment[]     @relation("RescheduledAppointments")
+  appointmentId      String?
+
+  type  AppointmentType @default(CONSULTA)
+  notes String?
 
   // Relaciones
   staff   Staff   @relation(fields: [staffId], references: [id])
@@ -620,6 +634,7 @@ model StaffSchedule {
   staffId    String
   branchId   String
   title      String      @default("Turno") // Ej: "Turno Mañana"
+  color      String?
   startTime  String // Formato "HH:mm" (08:00)
   endTime    String // Formato "HH:mm" (17:00)
   daysOfWeek DayOfWeek[] // Días de aplicación
@@ -627,8 +642,8 @@ model StaffSchedule {
   exceptions String[] // Cambiar de DateTime[] a String[] para aceptar fechas en formato YYYY-MM-DD
   isActive   Boolean     @default(true)
   events     Event[] // Eventos generados
-  staff      Staff       @relation(fields: [staffId], references: [id])
-  branch     Branch      @relation(fields: [branchId], references: [id])
+  staff      Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 

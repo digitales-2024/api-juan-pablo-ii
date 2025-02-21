@@ -19,7 +19,7 @@ export class CreateStaffUseCase {
     private readonly staffRepository: StaffRepository,
     private readonly auditService: AuditService,
     private readonly staffTypeRepository: StaffTypeRepository,
-  ) {}
+  ) { }
 
   /**
    * Valida si ya existe personal con el DNI proporcionado
@@ -66,6 +66,7 @@ export class CreateStaffUseCase {
         phone: createStaffDto.phone,
         userId: createStaffDto.userId,
         staffTypeId: createStaffDto.staffTypeId,
+        cmp: createStaffDto.cmp,
       });
 
       await this.auditService.create({

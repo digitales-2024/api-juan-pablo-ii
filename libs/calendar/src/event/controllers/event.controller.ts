@@ -32,6 +32,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventType } from '../entities/event-type.enum';
 import { FindEventsQueryDto } from '../dto/find-events-query.dto';
 import { EventStatus } from '@prisma/client';
+import { PaginationDto } from '../dto/pagination.dto';
 
 /**
  * Controlador REST para gestionar eventos del calendario.
@@ -49,6 +50,7 @@ import { EventStatus } from '@prisma/client';
 @Auth()
 @UseInterceptors(ClassSerializerInterceptor)
 export class EventController {
+
   constructor(private readonly eventService: EventService) { }
 
   /**
@@ -81,6 +83,12 @@ export class EventController {
     enum: EventStatus,
     description: 'Estado del evento (PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW)',
     example: EventStatus.CONFIRMED,
+  })
+  @ApiQuery({
+    name: 'staffScheduleId',
+    required: false,
+    description: 'ID del horario del personal para filtrar eventos',
+    example: 'uuid-del-horario-del-personal',
   })
   @ApiOkResponse({
     description: 'Lista de eventos filtrados',
@@ -208,4 +216,51 @@ export class EventController {
   ): Promise<BaseApiResponse<Event[]>> {
     return this.eventService.createRecurrentEvents(staffScheduleId, user);
   }
+
+  @Get('by-schedule/:scheduleId')
+  @ApiOperation({ summary: 'Obtener eventos por ID de horario de staff' })
+  @ApiParam({
+    name: 'scheduleId',
+    description: 'ID del horario del staff',
+    example: 'uuid-del-horario'
+  })
+  @ApiOkResponse({
+    description: 'Eventos encontrados para el horario',
+    type: [Event],
+    headers: {
+      'X-Total-Count': {
+        description: 'Número total de registros disponibles',
+        schema: { type: 'integer' }
+      }
+    }
+  })
+  async findEventsByStaffSchedule(
+    @Param('scheduleId') scheduleId: string,
+    @Query() pagination: PaginationDto
+  ): Promise<{ events: Event[]; total: number }> {
+    return this.eventService.findEventsByStaffSchedule(
+      scheduleId,
+      pagination.page,
+      Math.min(pagination.limit, 50) // Limitar máximo 50 registros por página
+    );
+  }
+
+  @Delete('by-schedule/:scheduleId')
+  @ApiOperation({ summary: 'Eliminar todos los eventos por ID de horario de staff' })
+  @ApiParam({
+    name: 'scheduleId',
+    description: 'ID del horario del staff',
+    example: 'uuid-del-horario'
+  })
+  @ApiOkResponse({
+    description: 'Eventos eliminados exitosamente',
+    type: BaseApiResponse,
+  })
+  async deleteEventsByStaffSchedule(
+    @Param('scheduleId') scheduleId: string,
+    @GetUser() user: UserData
+  ): Promise<BaseApiResponse<number>> {
+    return this.eventService.deleteEventsByStaffSchedule(scheduleId, user);
+  }
+
 }

@@ -79,3 +79,61 @@ export class StockByStorage {
   @ApiProperty({ type: [ProductStockResponse] })
   stock: ProductStockResponse[];
 }
+
+export class ActiveProductStock {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  precio: number;
+
+  @ApiProperty()
+  codigoProducto?: string;
+
+  @ApiProperty()
+  unidadMedida?: string;
+
+  // @ApiProperty()
+  // categoriaId: string;
+
+  // @ApiProperty()
+  // tipoProductoId: string;
+
+  // @ApiProperty()
+  // categoria: ActiveProductCategory;
+
+  // @ApiProperty()
+  // tipoProducto: ActiveProductTypeProduct;
+}
+
+export class StockStorage {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+}
+
+export class StockProduct {
+  @ApiProperty()
+  stock: number;
+
+  @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty({
+    type: StockStorage,
+  })
+  Storage: StockStorage;
+}
+
+//Podria ser de active product
+export class ProductStock extends ActiveProductStock {
+  @ApiProperty({
+    type: [StockProduct],
+  })
+  Stock: StockProduct[];
+}

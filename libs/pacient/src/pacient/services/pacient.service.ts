@@ -19,6 +19,8 @@ import { DeletePatientDto } from '../dto';
 import { DeletePatientsUseCase, ReactivatePacientUseCase } from '../use-cases';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CloudflareService } from 'src/cloudflare/cloudflare.service';
+import { MedicalHistoryService } from '@pacient/pacient/history/services/history.service';
+import { CreateMedicalHistoryDto } from '@pacient/pacient/history/dto/create-history.dto';
 
 @Injectable()
 export class PacientService {
@@ -32,6 +34,7 @@ export class PacientService {
     private readonly deletePatientsUseCase: DeletePatientsUseCase,
     private readonly reactivatePatientUseCase: ReactivatePacientUseCase,
     private readonly cloudflareService: CloudflareService,
+    private readonly createMedicalHistory: MedicalHistoryService,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -294,23 +297,29 @@ export class PacientService {
       throw new BadRequestException('Ya existe un paciente con este DNI');
     }
 
-    // Si no hay imagen, solo creamos el paciente
+    let patientResponse: BaseApiResponse<Patient>;
+
+    // Si no hay imagen, creamos el paciente
     if (!image) {
-      return await this.create(createPatientDto, user);
+      patientResponse = await this.create(createPatientDto, user);
+    } else {
+      // Si hay imagen, primero la subimos, luego creamos y actualizamos al paciente
+      const imageResponse = await this.uploadImage(image);
+      const createdPatientResponse = await this.create(createPatientDto, user);
+      patientResponse = await this.update(
+        createdPatientResponse.data.id,
+        { patientPhoto: imageResponse.data },
+        user,
+      );
     }
 
-    // Si hay imagen, primero la subimos
-    const imageResponse = await this.uploadImage(image);
-
-    // Creamos el paciente
-    const createdPatientResponse = await this.create(createPatientDto, user);
-
-    // Actualizamos el paciente con la URL de la imagen
-    return await this.update(
-      createdPatientResponse.data.id,
-      { patientPhoto: imageResponse.data },
+    // Creamos la historia médica utilizando el id del paciente registrado  sin datos de historia médica
+    await this.createMedicalHistory.create(
+      { patientId: patientResponse.data.id } as CreateMedicalHistoryDto, // Asegúrate de tipar correctamente el objeto conforme a tu DTO
       user,
     );
+
+    return patientResponse;
   }
 
   /**

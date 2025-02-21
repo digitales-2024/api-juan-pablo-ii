@@ -6,8 +6,21 @@
 
 
 ```
+## Se usa indexacion en el nombre de tipo Gin para busquedas rapidas por nombre
+Asegurarse que el archivo de migraciòn contenga esta linea que no añade prisma por defecto
+```bash
+-- CreateIndex
+CREATE EXTENSION IF NOT EXISTS pg_trgm; --Esta linea
+CREATE INDEX "Producto_name_idx" ON "Producto" USING GIN ("name" gin_trgm_ops);
+```
 
-#tabla
+Revisar los siguientes enlaces:
+- [Resolución del problema de la extensión pg_trgm en el algoritmo Gin](https://github.com/prisma/prisma/issues/7515)
+- [Documentación de tipos de indexación en prisma](https://www.prisma.io/docs/orm/prisma-schema/data-model/indexes)
+- [Si se usa el algoritmo Gist](https://www.prisma.io/docs/orm/prisma-schema/data-model/indexes)
+- [Video explicativo de la indexación en Prisma](https://www.youtube.com/watch?v=OzCYQzEYAXE&pp=ygURUFJJU01BIElOREVYQVRJT04%3D)
+
+# tabla
 
 // Tabla Categoria
 model Categoria {
