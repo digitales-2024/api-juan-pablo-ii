@@ -2,7 +2,7 @@
 CREATE TYPE "AuditActionType" AS ENUM ('CREATE', 'UPDATE', 'DELETE');
 
 -- CreateEnum
-CREATE TYPE "AppointmentStatus" AS ENUM ('PENDING');
+CREATE TYPE "AppointmentStatus" AS ENUM ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED');
 
 -- CreateEnum
 CREATE TYPE "DayOfWeek" AS ENUM ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY');
@@ -227,6 +227,7 @@ CREATE TABLE "Staff" (
     "id" TEXT NOT NULL,
     "staffTypeId" TEXT NOT NULL,
     "userId" TEXT,
+    "cmp" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -294,8 +295,6 @@ CREATE TABLE "TypeStorage" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "branchId" TEXT,
-    "staffId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -309,6 +308,8 @@ CREATE TABLE "Storage" (
     "name" TEXT NOT NULL,
     "location" TEXT,
     "typeStorageId" TEXT NOT NULL,
+    "branchId" TEXT,
+    "staffId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -355,6 +356,7 @@ CREATE TABLE "Movement" (
     "outgoingId" TEXT,
     "productId" TEXT NOT NULL,
     "quantity" DOUBLE PRECISION NOT NULL,
+    "buyingPrice" DOUBLE PRECISION,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "state" BOOLEAN NOT NULL DEFAULT false,
     "referenceId" TEXT,
@@ -373,6 +375,7 @@ CREATE TABLE "Incoming" (
     "storageId" TEXT NOT NULL,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "state" BOOLEAN NOT NULL DEFAULT false,
+    "isTransference" BOOLEAN DEFAULT false,
     "referenceId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -389,6 +392,7 @@ CREATE TABLE "Outgoing" (
     "storageId" TEXT NOT NULL,
     "date" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "state" BOOLEAN NOT NULL DEFAULT false,
+    "isTransference" BOOLEAN DEFAULT false,
     "referenceId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -401,6 +405,7 @@ CREATE TABLE "Outgoing" (
 CREATE TABLE "MedicalHistory" (
     "id" TEXT NOT NULL,
     "patientId" TEXT NOT NULL,
+    "fullName" TEXT,
     "medicalHistory" JSONB,
     "description" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -423,8 +428,8 @@ CREATE TABLE "UpdateHistory" (
     "updateHistory" JSONB,
     "description" TEXT,
     "medicalLeave" BOOLEAN NOT NULL DEFAULT false,
-    "medicalLeaveStartDate" TIMESTAMP(3),
-    "medicalLeaveEndDate" TIMESTAMP(3),
+    "medicalLeaveStartDate" TEXT,
+    "medicalLeaveEndDate" TEXT,
     "medicalLeaveDays" INTEGER,
     "leaveDescription" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -455,10 +460,14 @@ CREATE TABLE "Prescription" (
     "branchId" TEXT NOT NULL,
     "staffId" TEXT NOT NULL,
     "patientId" TEXT NOT NULL,
-    "registrationDate" TIMESTAMP(3) NOT NULL,
-    "prescription" JSONB NOT NULL,
+    "registrationDate" TEXT NOT NULL,
+    "prescriptionMedicaments" JSONB,
+    "prescriptionServices" JSONB,
     "description" TEXT,
     "purchaseOrderId" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Prescription_pkey" PRIMARY KEY ("id")
 );
@@ -474,6 +483,9 @@ CREATE TABLE "Appointment" (
     "start" TIMESTAMP(3) NOT NULL,
     "end" TIMESTAMP(3) NOT NULL,
     "status" "AppointmentStatus" NOT NULL DEFAULT 'PENDING',
+    "cancellationReason" TEXT,
+    "rescheduledFromId" TEXT,
+    "appointmentId" TEXT,
     "type" "AppointmentType" NOT NULL DEFAULT 'CONSULTA',
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -527,11 +539,12 @@ CREATE TABLE "StaffSchedule" (
     "staffId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
     "title" TEXT NOT NULL DEFAULT 'Turno',
+    "color" TEXT,
     "startTime" TEXT NOT NULL,
     "endTime" TEXT NOT NULL,
     "daysOfWeek" "DayOfWeek"[],
     "recurrence" JSONB NOT NULL,
-    "exceptions" TIMESTAMP(3)[],
+    "exceptions" TEXT[],
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -675,6 +688,10 @@ CREATE UNIQUE INDEX "TipoProducto_name_key" ON "TipoProducto"("name");
 CREATE UNIQUE INDEX "Producto_name_key" ON "Producto"("name");
 
 -- CreateIndex
+CREATE EXTENSION IF NOT EXISTS pg_trgm; 
+CREATE INDEX "Producto_name_idx" ON "Producto" USING GIN ("name" gin_trgm_ops);
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TypeStorage_name_key" ON "TypeStorage"("name");
 
 -- CreateIndex
@@ -741,6 +758,12 @@ ALTER TABLE "Producto" ADD CONSTRAINT "Producto_tipoProductoId_fkey" FOREIGN KEY
 ALTER TABLE "Storage" ADD CONSTRAINT "Storage_typeStorageId_fkey" FOREIGN KEY ("typeStorageId") REFERENCES "TypeStorage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Storage" ADD CONSTRAINT "Storage_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Storage" ADD CONSTRAINT "Storage_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Stock" ADD CONSTRAINT "Stock_storageId_fkey" FOREIGN KEY ("storageId") REFERENCES "Storage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -783,6 +806,9 @@ ALTER TABLE "Prescription" ADD CONSTRAINT "Prescription_updateHistoryId_fkey" FO
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_rescheduledFromId_fkey" FOREIGN KEY ("rescheduledFromId") REFERENCES "Appointment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -810,10 +836,10 @@ ALTER TABLE "TimeOff" ADD CONSTRAINT "TimeOff_staffId_fkey" FOREIGN KEY ("staffI
 ALTER TABLE "TimeOff" ADD CONSTRAINT "TimeOff_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StaffSchedule" ADD CONSTRAINT "StaffSchedule_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StaffSchedule" ADD CONSTRAINT "StaffSchedule_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StaffSchedule" ADD CONSTRAINT "StaffSchedule_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StaffSchedule" ADD CONSTRAINT "StaffSchedule_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
