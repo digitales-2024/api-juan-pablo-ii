@@ -62,8 +62,8 @@ export class UpdateIncomingStorageUseCase {
           const newMovements: OutgoingIncomingUpdateMovementDto[] = [];
           const remainingMovements: OutgoingIncomingUpdateMovementDto[] = [];
           movements.forEach((m) => {
-            if (m.id || m.id.length > 0) remainingMovements.push(m);
-            if (!m.id || m.id.length === 0) newMovements.push(m);
+            if (m.id) remainingMovements.push(m);
+            if (!m.id) newMovements.push(m);
           });
 
           const movementIds = remainingMovements
