@@ -74,8 +74,11 @@ export class AppointmentService {
 
       const dtoToCompare = {
         ...updateAppointmentDto,
-        ...(updateAppointmentDto.date && {
-          date: new Date(updateAppointmentDto.date),
+        ...(updateAppointmentDto.start && {
+          start: new Date(updateAppointmentDto.start),
+        }),
+        ...(updateAppointmentDto.end && {
+          end: new Date(updateAppointmentDto.end),
         }),
       };
 

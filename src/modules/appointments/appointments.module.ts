@@ -10,7 +10,6 @@ import { AppointmentController } from './controllers/appointment.controller';
 import { DeleteAppointmentsUseCase } from './use-cases/delete-appointments.use-case';
 import { ReactivateAppointmentsUseCase } from './use-cases/reactive-appointments.use-case';
 import { EventsModule } from '@calendar/calendar/event/events.module';
-import { EventRepository } from '@calendar/calendar/event/repositories/event.repository';
 
 @Module({
   imports: [AuditModule, EventsModule],
