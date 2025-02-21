@@ -9,9 +9,10 @@ import { AppointmentRepository } from './repositories/appointment.repository';
 import { AppointmentController } from './controllers/appointment.controller';
 import { DeleteAppointmentsUseCase } from './use-cases/delete-appointments.use-case';
 import { ReactivateAppointmentsUseCase } from './use-cases/reactive-appointments.use-case';
+import { EventsModule } from '@calendar/calendar/event/events.module';
 
 @Module({
-  imports: [AuditModule],
+  imports: [AuditModule, EventsModule],
   controllers: [AppointmentController],
   providers: [
     AppointmentService,
@@ -23,4 +24,4 @@ import { ReactivateAppointmentsUseCase } from './use-cases/reactive-appointments
   ],
   exports: [AppointmentService],
 })
-export class AppointmentsModule {}
+export class AppointmentsModule { }
