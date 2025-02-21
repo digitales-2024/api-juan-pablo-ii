@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class Outgoing {
   @ApiProperty()
@@ -34,9 +35,40 @@ export class OutgoingCreateResponseData {
   movementTypeId: string;
 }
 
-export class OutgoingStorage {
+export class OutgoingBranch {
+  @ApiProperty()
+  id: string;
+
   @ApiProperty()
   name: string;
+}
+
+export class OutgoingStorageType {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({
+    type: OutgoingBranch,
+    required: false,
+  })
+  @IsOptional()
+  branch?: OutgoingBranch;
+}
+
+export class OutgoingStorage {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({
+    type: OutgoingStorageType,
+  })
+  TypeStorage: OutgoingStorageType;
 }
 
 // export class OutgoingStock {

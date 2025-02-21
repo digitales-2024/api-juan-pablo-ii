@@ -1,11 +1,97 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
-import { Stock, StockByStorage } from '../entities/stock.entity';
+import { ProductStock, Stock, StockByStorage } from '../entities/stock.entity';
 
 @Injectable()
 export class StockRepository extends BaseRepository<Stock> {
   constructor(prisma: PrismaService) {
     super(prisma, 'stock'); // Tabla del esquema de prisma
+  }
+
+  async getAllProductsStock(): Promise<ProductStock[]> {
+    return this.prisma.producto.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        Stock: {
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getProductStockByStorage({
+    storageId,
+  }: {
+    storageId: string;
+  }): Promise<ProductStock[]> {
+    return this.prisma.producto.findMany({
+      where: {
+        isActive: true,
+        Stock: {
+          some: {
+            storageId: storageId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        Stock: {
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getOneProductStock(productId: string): Promise<ProductStock> {
+    return this.prisma.producto.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        Stock: {
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   // Función principal para obtener el stock de un producto en un almacén específico o todos los productos en un almacén

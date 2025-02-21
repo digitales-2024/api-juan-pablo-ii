@@ -1,27 +1,47 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AppointmentStatus, AppointmentType } from '@prisma/client';
 
 export class Appointment {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  tipoCitaMedicaId: string;
+  eventId?: string;
 
   @ApiProperty()
-  personalId: string;
+  staffId: string;
 
   @ApiProperty()
-  consultaId: string;
+  serviceId: string;
 
   @ApiProperty()
-  date: Date;
+  branchId: string;
 
   @ApiProperty()
-  description: string;
+  patientId: string;
 
   @ApiProperty()
-  isActive: boolean;
+  start: Date;
 
+  @ApiProperty()
+  end: Date;
+
+  @ApiProperty({ enum: AppointmentStatus })
+  status: AppointmentStatus;
+
+  @ApiProperty({ enum: AppointmentType })
+  type: AppointmentType;
+
+  @ApiProperty()
+  notes?: string;
+
+  @ApiProperty()
+  cancellationReason?: string;
+
+  @ApiProperty()
+  rescheduledFromId?: string;
+
+  // Campos de auditoría
   @ApiProperty()
   createdAt: Date;
 
@@ -30,14 +50,17 @@ export class Appointment {
 
   // Relaciones
   @ApiProperty({ required: false })
-  TipoCitaMedica?: any;
+  staff?: any;
 
   @ApiProperty({ required: false })
-  personal?: any;
+  service?: any;
 
   @ApiProperty({ required: false })
-  ConsultaMedica?: any;
+  branch?: any;
 
   @ApiProperty({ required: false })
-  ProcedimientoMedico?: any[];
+  patient?: any;
+
+  @ApiProperty({ required: false })
+  event?: any;
 }
