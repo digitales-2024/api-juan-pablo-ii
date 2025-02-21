@@ -322,7 +322,7 @@ export class UpdateHistoryService {
     user: UserData,
   ): Promise<
     BaseApiResponse<
-      UpdateHistory & { images: Record<string, { id: string; url: string }> }
+      UpdateHistory & { images: Array<{ id: string; url: string }> }
     >
   > {
     try {
@@ -331,7 +331,7 @@ export class UpdateHistoryService {
       if (!images?.length) {
         return {
           ...historyResponse,
-          data: { ...historyResponse.data, images: {} },
+          data: { ...historyResponse.data, images: [] },
         };
       }
 
@@ -379,7 +379,7 @@ export class UpdateHistoryService {
     imageUpdates?: { imageId: string; file: Express.Multer.File }[],
   ): Promise<
     BaseApiResponse<
-      UpdateHistory & { images: Record<string, { id: string; url: string }> }
+      UpdateHistory & { images: Array<{ id: string; url: string }> }
     >
   > {
     try {
@@ -473,11 +473,9 @@ export class UpdateHistoryService {
    * Busca una actualización de historia médica por su ID incluyendo sus imágenes
    */
   async findOneWithImages(id: string): Promise<
-    BaseApiResponse<
-      UpdateHistory & {
-        images: Record<string, { id: string; url: string }>;
-      }
-    >
+    UpdateHistory & {
+      images: Array<{ id: string; url: string }>;
+    }
   > {
     try {
       // Obtenemos la historia médica
@@ -488,12 +486,8 @@ export class UpdateHistoryService {
         await this.updateHistoryRepository.findImagesByHistoryId(id);
 
       return {
-        success: true,
-        message: 'Historia médica encontrada exitosamente',
-        data: {
-          ...updateHistory,
-          images: imagesData,
-        },
+        ...updateHistory,
+        images: imagesData,
       };
     } catch (error) {
       this.logger.error(`Error en findOneWithImages: ${error.message}`);

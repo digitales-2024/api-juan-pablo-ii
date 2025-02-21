@@ -25,10 +25,10 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 // Constantes para nombres de tablas
 const TABLE_NAMES = {
-  UPDATE_HISTORIA: 'updateHistoria',
-  SUCURSAL: 'sucursal',
-  PERSONAL: 'personal',
-  PACIENTE: 'paciente',
+  UPDATE_HISTORIA: 'updateHistory',
+  SUCURSAL: 'branch',
+  PERSONAL: 'staff',
+  PACIENTE: 'patient',
 } as const;
 
 @Injectable()
@@ -89,8 +89,9 @@ export class PrescriptionService {
     // Validar Paciente
     const pacienteExists = await this.prescriptionRepository.findByIdValidate(
       TABLE_NAMES.PACIENTE,
-      dto.staffId,
+      dto.patientId,
     );
+
     if (!pacienteExists) {
       throw new BadRequestException(`Registro de Paciente no encontrado`);
     }
@@ -106,6 +107,10 @@ export class PrescriptionService {
     try {
       // Validar referencias antes de crear
       await this.validateReferences(createPrescriptionDto);
+      console.log(
+        '🚀 ~ PrescriptionService ~ createPrescriptionDto:',
+        createPrescriptionDto,
+      );
       return await this.createPrescriptionUseCase.execute(
         createPrescriptionDto,
         user,

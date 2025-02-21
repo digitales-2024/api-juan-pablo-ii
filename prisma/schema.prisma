@@ -492,17 +492,20 @@ model Prescription {
   id String @id @default(uuid()) // Unique ID of the prescription
 
   // Relationships and references
-  updateHistoryId String // ID of the medical history update
-  updateHistory   UpdateHistory @relation(fields: [updateHistoryId], references: [id])
-  branchId        String // ID of the branch where it is issued
-  staffId         String // ID of the medical staff issuing it
-  patientId       String // ID of the patient
-
+  updateHistoryId         String // ID of the medical history update
+  updateHistory           UpdateHistory @relation(fields: [updateHistoryId], references: [id])
+  branchId                String // ID of the branch where it is issued
+  staffId                 String // ID of the medical staff issuing it
+  patientId               String // ID of the patient
   // Main data
-  registrationDate DateTime // Date of prescription issuance
-  prescription     Json // detalles de la prescripción (medicamentos, dosis, etc.)
-  description      String? // Additional description or notes (optional)
-  purchaseOrderId  String? // referecia a orden de compra (optional)
+  registrationDate        String // Date of prescription issuance
+  prescriptionMedicaments Json?
+  prescriptionServices    Json?
+  description             String? // Additional description or notes (optional)
+  purchaseOrderId         String? // referecia a orden de compra (optional)
+  isActive                Boolean       @default(true)
+  createdAt               DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime      @updatedAt
 }
 
 enum AppointmentStatus {
