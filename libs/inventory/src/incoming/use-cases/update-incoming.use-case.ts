@@ -27,6 +27,7 @@ export class UpdateIncomingUseCase {
           name: updateIncomingDto.name,
           description: updateIncomingDto.description,
           storageId: updateIncomingDto.storageId,
+          outgoingId: updateIncomingDto?.outgoingId,
           state: updateIncomingDto.state,
           referenceId: updateIncomingDto.referenceId,
           date: updateIncomingDto.date,

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { DetailedIncoming } from '../entities/incoming.entity';
 import { IncomingRepository } from '../repositories/incoming.repository';
 import { UserData } from '@login/login/interfaces';
@@ -15,6 +15,7 @@ import { StockRepository } from '@inventory/inventory/stock/repositories/stock.r
 import { UpdateStockUseCase } from '@inventory/inventory/stock/use-cases/update-stock.use-case';
 import { UpdateIncomingStorageDto } from '../dto';
 import { OutgoingIncomingUpdateMovementDto } from '@inventory/inventory/movement/dto';
+import { UpdateOutgoingStorageUseCase } from '@inventory/inventory/outgoing/use-cases/update-outgoingStorage.use-case';
 
 export type StockAction = {
   type: 'increase' | 'decrease' | 'adjust';
@@ -31,39 +32,79 @@ export class UpdateIncomingStorageUseCase {
     private readonly movementRepository: MovementRepository,
     private readonly stockRepository: StockRepository,
     private readonly updateStockUseCase: UpdateStockUseCase,
+
+    @Inject(forwardRef(() => UpdateOutgoingStorageUseCase))
+    private readonly updateOutgoingStorageUseCase: UpdateOutgoingStorageUseCase, // Inyección
   ) {}
 
   async execute(
     id: string,
     updateIncomingStorageDto: UpdateIncomingStorageDto,
     user: UserData,
+    firstTransferOperation = false,
   ): Promise<BaseApiResponse<DetailedIncoming>> {
     const updatedIncoming = await this.incomingRepository.transaction(
       async () => {
         try {
           // Update incoming
+          Logger.log('dto recibidox:', updateIncomingStorageDto);
           const incoming = await this.incomingRepository.update(id, {
             name: updateIncomingStorageDto.name,
             description: updateIncomingStorageDto.description,
-            storageId: updateIncomingStorageDto.storageId,
+            //storageId: updateIncomingStorageDto.storageId,
             state: updateIncomingStorageDto.state,
-            referenceId: updateIncomingStorageDto.referenceId,
+            //referenceId: updateIncomingStorageDto.referenceId,
+            outgoingId: updateIncomingStorageDto?.outgoingId,
             date: updateIncomingStorageDto.date,
           });
+
+          // if (updateIncomingStorageDto?.outgoingId) {
+          //   await this.updateOutgoingStorageUseCase.execute(
+          //     updateIncomingStorageDto.outgoingId,
+          //     {
+          //       incomingId: incoming.id,
+          //     },
+          //     user,
+          //   );
+          // }
 
           //Actaulizacion de cada movimiento
           const movements = updateIncomingStorageDto.movement;
           const originalMovements = await this.movementRepository.findMany({
             where: {
               incomingId: incoming.id,
+              // OR: [
+              //   { incomingId: incoming.id }, // Movimientos locales
+              //   { outgoingId: incoming.outgoingId }, // Movimientos de transferencia vinculados
+              // ],
             },
           });
+
+          console.log('original movements', originalMovements);
 
           const newMovements: OutgoingIncomingUpdateMovementDto[] = [];
           const remainingMovements: OutgoingIncomingUpdateMovementDto[] = [];
           movements.forEach((m) => {
-            if (m.id || m.id.length > 0) remainingMovements.push(m);
-            if (!m.id || m.id.length === 0) newMovements.push(m);
+            if (
+              m.id &&
+              !firstTransferOperation &&
+              updateIncomingStorageDto.isTransference
+            ) {
+              //Buscar aqui el id de la transferencia. CRear nuevo campo id transferencia.
+              //O formular otro mecanismo
+              const originalMovement = originalMovements.find(
+                (om) => om.productId === m.productId,
+              );
+
+              console.log('original movement incoming', originalMovement);
+              remainingMovements.push({
+                ...m,
+                id: originalMovement.id,
+              });
+            } else {
+              remainingMovements.push(m);
+            }
+            if (!m.id) newMovements.push(m);
           });
 
           const movementIds = remainingMovements
@@ -157,6 +198,29 @@ export class UpdateIncomingStorageUseCase {
                 price: movement.buyingPrice, //Take a close look to this data
               },
             });
+          }
+
+          // Lógica de transferencia
+          if (
+            updateIncomingStorageDto.isTransference &&
+            updateIncomingStorageDto.referenceId &&
+            incoming.outgoingId &&
+            firstTransferOperation
+          ) {
+            await this.updateOutgoingStorageUseCase.execute(
+              incoming.outgoingId,
+              {
+                name: updateIncomingStorageDto.name,
+                description: updateIncomingStorageDto.description,
+                storageId: updateIncomingStorageDto.referenceId,
+                isTransference: updateIncomingStorageDto.isTransference,
+                state: updateIncomingStorageDto.state,
+                referenceId: updateIncomingStorageDto.storageId,
+                date: updateIncomingStorageDto.date,
+                movement: updateIncomingStorageDto.movement,
+              },
+              user,
+            );
           }
 
           // Register audit

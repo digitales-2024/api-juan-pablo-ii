@@ -72,13 +72,22 @@ export class CreateOutgoingDtoStorage {
   isTransference?: boolean;
 
   @ApiProperty({
-    description: 'ID de referencia puede ser un traslado, compra, etc.',
+    description: 'ID de referencia pra el almacén en caso de transferencia',
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })
   @IsString()
   @IsOptional()
   referenceId?: string;
+
+  @ApiProperty({
+    description: 'ID de referencia para la entrada en caso de transferencia',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  incomingId?: string;
 
   @ApiProperty({
     description: 'productos a retirar del almacen y cantidad',
