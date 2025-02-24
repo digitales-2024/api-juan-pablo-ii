@@ -107,31 +107,16 @@ export class OutgoingService {
     id: string,
     updateOutgoingStorageDto: UpdateOutgoingStorageDto,
     user: UserData,
+    firstTransferOperation: boolean,
   ): Promise<BaseApiResponse<DetailedOutgoing>> {
     try {
-      // const currentOutgoing = await this.findById(id);
-      // const updateOutgoingDto: UpdateOutgoingDto = {
-      //   name: updateOutgoingStorageDto?.name,
-      //   description: updateOutgoingStorageDto?.description,
-      //   isTransference: updateOutgoingStorageDto?.isTransference,
-      //   referenceId: updateOutgoingStorageDto?.referenceId,
-      //   storageId: updateOutgoingStorageDto?.storageId,
-      //   state: updateOutgoingStorageDto?.state,
-      //   date: updateOutgoingStorageDto?.date,
-      // };
-
-      // if (!validateChanges(updateOutgoingDto, currentOutgoing)) {
-      //   return {
-      //     success: true,
-      //     message: 'No se detectaron cambios en la salida',
-      //     data: await this.outgoingRepository.findDetailedOutgoingById(id),
-      //   };
-      // }
+      this.logger.log('isTransference Outgoing: ', firstTransferOperation);
 
       return await this.updateOutgoingStorageUseCase.execute(
         id,
         updateOutgoingStorageDto,
         user,
+        firstTransferOperation,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');

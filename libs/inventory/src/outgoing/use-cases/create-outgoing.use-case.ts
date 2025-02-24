@@ -7,12 +7,14 @@ import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { UpdateIncomingUseCase } from '@inventory/inventory/incoming/use-cases';
 
 @Injectable()
 export class CreateOutgoingUseCase {
   constructor(
     private readonly outgoingRepository: OutgoingRepository,
     private readonly auditService: AuditService,
+    private readonly updateIncomingUseCase: UpdateIncomingUseCase,
   ) {}
 
   async execute(
@@ -26,10 +28,21 @@ export class CreateOutgoingUseCase {
         description: createOutgoingDto.description,
         storageId: createOutgoingDto.storageId,
         state: createOutgoingDto.state,
+        incomingId: createOutgoingDto?.incomingId,
         isTransference: createOutgoingDto?.isTransference,
-        referenceId: createOutgoingDto.referenceId,
+        referenceId: createOutgoingDto?.referenceId,
         date: createOutgoingDto.date,
       });
+
+      if (createOutgoingDto?.incomingId) {
+        await this.updateIncomingUseCase.execute(
+          createOutgoingDto.incomingId,
+          {
+            outgoingId: outgoing.id,
+          },
+          user,
+        );
+      }
 
       // Register audit
       await this.auditService.create({

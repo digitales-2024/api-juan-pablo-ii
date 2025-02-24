@@ -414,7 +414,8 @@ model Incoming {
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
   isTransference Boolean? @default(false) // Indica si el ingreso es por transferencia entre almacenes
-  referenceId String? // Referencia a un registro etc
+  referenceId String? // Referencia a un registro para el storage etc
+  outgoingId  String? // Referencia a una salida
   isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt
@@ -432,7 +433,8 @@ model Outgoing {
   date        DateTime @default(now()) @db.Timestamptz(6)
   state       Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
   isTransference Boolean? @default(false) // Indica si la salida es por transferencia entre almacenes
-  referenceId String? // Referencia a un registro etc
+  referenceId String? // Referencia a un registro PARA EL STORAGE etc
+  incomingId  String? // Referencia a un ingreso
   isActive    Boolean  @default(true) // Campo para controlar si está activo o no
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt

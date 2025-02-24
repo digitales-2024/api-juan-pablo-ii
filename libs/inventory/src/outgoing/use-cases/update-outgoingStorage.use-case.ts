@@ -14,6 +14,7 @@ import { StockRepository } from '@inventory/inventory/stock/repositories/stock.r
 import { UpdateStockUseCase } from '@inventory/inventory/stock/use-cases/update-stock.use-case';
 import { UpdateOutgoingStorageDto } from '../dto/update-outgoingStorage.dto';
 import { UpdateIncomingStorageUseCase } from '@inventory/inventory/incoming/use-cases';
+import { OutgoingIncomingUpdateMovementDto } from '@inventory/inventory/movement/dto';
 
 export type StockAction = {
   type: 'increase' | 'decrease' | 'adjust';
@@ -58,10 +59,41 @@ export class UpdateOutgoingStorageUseCase {
             where: { outgoingId: outgoing.id },
           });
 
-          const newMovements = movements.filter((m) => !m.id);
-          const remainingMovements = movements.filter((m) => m.id);
+          // const newMovements = movements.filter((m) => !m.id);
+          // const remainingMovements = movements.filter((m) => m.id);
+          // const movementsToDelete = originalMovements.filter(
+          //   (om) => !remainingMovements.find((rm) => rm.id === om.id),
+          // );
+
+          const newMovements: OutgoingIncomingUpdateMovementDto[] = [];
+          const remainingMovements: OutgoingIncomingUpdateMovementDto[] = [];
+          movements.forEach((m) => {
+            if (
+              m.id &&
+              !firstTransferOperation &&
+              updateOutgoingStorageDto.isTransference
+            ) {
+              const originalMovement = originalMovements.find(
+                (om) => om.productId === m.productId,
+              );
+
+              console.log('original movement incoming', originalMovement);
+              remainingMovements.push({
+                ...m,
+                id: originalMovement.id,
+              });
+            } else {
+              remainingMovements.push(m);
+            }
+            if (!m.id) newMovements.push(m);
+          });
+
+          const movementIds = remainingMovements
+            .map((m) => m.id)
+            .filter((id) => id);
+
           const movementsToDelete = originalMovements.filter(
-            (om) => !remainingMovements.find((rm) => rm.id === om.id),
+            (om) => !movementIds.includes(om.id),
           );
 
           // Handle remaining movements
@@ -163,21 +195,34 @@ export class UpdateOutgoingStorageUseCase {
           if (
             updateOutgoingStorageDto.isTransference &&
             updateOutgoingStorageDto.referenceId &&
+            outgoing.incomingId &&
             firstTransferOperation
           ) {
+            // Filtrar solo movimientos de transferencia válidos
+            // const transferMovements = originalMovements
+            //   .filter((m) => m.outgoingId !== null)
+            //   .map((m) => ({
+            //     productId: m.productId,
+            //     quantity: m.quantity,
+            //     buyingPrice: m.buyingPrice,
+            //     date: m.date,
+            //     state: m.state,
+            //   }));
+
             await this.updateIncominStorageUseCase.execute(
-              updateOutgoingStorageDto.referenceId,
+              outgoing.incomingId,
               {
                 name: updateOutgoingStorageDto.name,
                 description: updateOutgoingStorageDto.description,
-                storageId: updateOutgoingStorageDto.storageId,
+                //storageId: updateOutgoingStorageDto.referenceId,
                 date: updateOutgoingStorageDto.date,
                 state: updateOutgoingStorageDto.state,
-                referenceId: id,
+                //referenceId: updateOutgoingStorageDto.storageId,
                 isTransference: updateOutgoingStorageDto.isTransference,
                 movement: updateOutgoingStorageDto.movement,
               },
               user,
+              false,
             );
           }
 

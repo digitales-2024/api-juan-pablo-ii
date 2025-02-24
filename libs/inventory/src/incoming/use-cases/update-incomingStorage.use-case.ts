@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { DetailedIncoming } from '../entities/incoming.entity';
 import { IncomingRepository } from '../repositories/incoming.repository';
 import { UserData } from '@login/login/interfaces';
@@ -47,27 +47,63 @@ export class UpdateIncomingStorageUseCase {
       async () => {
         try {
           // Update incoming
+          Logger.log('dto recibidox:', updateIncomingStorageDto);
           const incoming = await this.incomingRepository.update(id, {
             name: updateIncomingStorageDto.name,
             description: updateIncomingStorageDto.description,
-            storageId: updateIncomingStorageDto.storageId,
+            //storageId: updateIncomingStorageDto.storageId,
             state: updateIncomingStorageDto.state,
-            referenceId: updateIncomingStorageDto.referenceId,
+            //referenceId: updateIncomingStorageDto.referenceId,
+            outgoingId: updateIncomingStorageDto?.outgoingId,
             date: updateIncomingStorageDto.date,
           });
+
+          // if (updateIncomingStorageDto?.outgoingId) {
+          //   await this.updateOutgoingStorageUseCase.execute(
+          //     updateIncomingStorageDto.outgoingId,
+          //     {
+          //       incomingId: incoming.id,
+          //     },
+          //     user,
+          //   );
+          // }
 
           //Actaulizacion de cada movimiento
           const movements = updateIncomingStorageDto.movement;
           const originalMovements = await this.movementRepository.findMany({
             where: {
               incomingId: incoming.id,
+              // OR: [
+              //   { incomingId: incoming.id }, // Movimientos locales
+              //   { outgoingId: incoming.outgoingId }, // Movimientos de transferencia vinculados
+              // ],
             },
           });
+
+          console.log('original movements', originalMovements);
 
           const newMovements: OutgoingIncomingUpdateMovementDto[] = [];
           const remainingMovements: OutgoingIncomingUpdateMovementDto[] = [];
           movements.forEach((m) => {
-            if (m.id) remainingMovements.push(m);
+            if (
+              m.id &&
+              !firstTransferOperation &&
+              updateIncomingStorageDto.isTransference
+            ) {
+              //Buscar aqui el id de la transferencia. CRear nuevo campo id transferencia.
+              //O formular otro mecanismo
+              const originalMovement = originalMovements.find(
+                (om) => om.productId === m.productId,
+              );
+
+              console.log('original movement incoming', originalMovement);
+              remainingMovements.push({
+                ...m,
+                id: originalMovement.id,
+              });
+            } else {
+              remainingMovements.push(m);
+            }
             if (!m.id) newMovements.push(m);
           });
 
@@ -168,17 +204,18 @@ export class UpdateIncomingStorageUseCase {
           if (
             updateIncomingStorageDto.isTransference &&
             updateIncomingStorageDto.referenceId &&
+            incoming.outgoingId &&
             firstTransferOperation
           ) {
             await this.updateOutgoingStorageUseCase.execute(
-              updateIncomingStorageDto.referenceId,
+              incoming.outgoingId,
               {
                 name: updateIncomingStorageDto.name,
                 description: updateIncomingStorageDto.description,
-                storageId: updateIncomingStorageDto.storageId,
+                storageId: updateIncomingStorageDto.referenceId,
                 isTransference: updateIncomingStorageDto.isTransference,
                 state: updateIncomingStorageDto.state,
-                referenceId: id,
+                referenceId: updateIncomingStorageDto.storageId,
                 date: updateIncomingStorageDto.date,
                 movement: updateIncomingStorageDto.movement,
               },

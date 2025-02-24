@@ -104,6 +104,7 @@ export class IncomingService {
     id: string,
     updateIncomingStorageDto: UpdateIncomingStorageDto,
     user: UserData,
+    firstTransferOperation: boolean,
   ): Promise<BaseApiResponse<DetailedIncoming>> {
     try {
       // const currentIncoming = await this.findById(id);
@@ -116,10 +117,13 @@ export class IncomingService {
       //   };
       // }
 
+      this.logger.log('isTransference Incoming', firstTransferOperation);
+
       return await this.updateIncomingStorageUseCase.execute(
         id,
         updateIncomingStorageDto,
         user,
+        firstTransferOperation,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
