@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DetailedOutgoing } from '../entities/outgoing.entity';
 import { OutgoingRepository } from '../repositories/outgoing.repository';
 import { UserData } from '@login/login/interfaces';
@@ -13,6 +13,7 @@ import { MovementRepository } from '@inventory/inventory/movement/repositories/m
 import { StockRepository } from '@inventory/inventory/stock/repositories/stock.repository';
 import { UpdateStockUseCase } from '@inventory/inventory/stock/use-cases/update-stock.use-case';
 import { UpdateOutgoingStorageDto } from '../dto/update-outgoingStorage.dto';
+import { UpdateIncomingStorageUseCase } from '@inventory/inventory/incoming/use-cases';
 
 export type StockAction = {
   type: 'increase' | 'decrease' | 'adjust';
@@ -29,12 +30,16 @@ export class UpdateOutgoingStorageUseCase {
     private readonly movementRepository: MovementRepository,
     private readonly stockRepository: StockRepository,
     private readonly updateStockUseCase: UpdateStockUseCase,
+
+    @Inject(forwardRef(() => UpdateIncomingStorageUseCase))
+    private readonly updateIncominStorageUseCase: UpdateIncomingStorageUseCase,
   ) {}
 
   async execute(
     id: string,
     updateOutgoingStorageDto: UpdateOutgoingStorageDto,
     user: UserData,
+    firstTransferOperation = false,
   ): Promise<BaseApiResponse<DetailedOutgoing>> {
     const updatedOutgoing = await this.outgoingRepository.transaction(
       async () => {
@@ -53,12 +58,8 @@ export class UpdateOutgoingStorageUseCase {
             where: { outgoingId: outgoing.id },
           });
 
-          const newMovements = movements.filter(
-            (m) => !m.id || m.id.length === 0,
-          );
-          const remainingMovements = movements.filter(
-            (m) => m.id && m.id.length > 0,
-          );
+          const newMovements = movements.filter((m) => !m.id);
+          const remainingMovements = movements.filter((m) => m.id);
           const movementsToDelete = originalMovements.filter(
             (om) => !remainingMovements.find((rm) => rm.id === om.id),
           );
@@ -156,6 +157,28 @@ export class UpdateOutgoingStorageUseCase {
                 price: movement.buyingPrice,
               },
             });
+          }
+
+          //Logica de transferencia:
+          if (
+            updateOutgoingStorageDto.isTransference &&
+            updateOutgoingStorageDto.referenceId &&
+            firstTransferOperation
+          ) {
+            await this.updateIncominStorageUseCase.execute(
+              updateOutgoingStorageDto.referenceId,
+              {
+                name: updateOutgoingStorageDto.name,
+                description: updateOutgoingStorageDto.description,
+                storageId: updateOutgoingStorageDto.storageId,
+                date: updateOutgoingStorageDto.date,
+                state: updateOutgoingStorageDto.state,
+                referenceId: id,
+                isTransference: updateOutgoingStorageDto.isTransference,
+                movement: updateOutgoingStorageDto.movement,
+              },
+              user,
+            );
           }
 
           await this.auditService.create({
