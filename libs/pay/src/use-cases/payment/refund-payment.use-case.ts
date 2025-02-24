@@ -1,13 +1,14 @@
-import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PaymentRepository } from '../../repositories/payment.repository';
 import { OrderRepository } from '../../repositories/order.repository';
 import { Payment } from '../../entities/payment.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { PaymentStatus, PaymentType } from '../../interfaces/payment.types';
 import { OrderStatus } from '../../interfaces/order.types';
 import { RefundPaymentDto } from '@pay/pay/interfaces/dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class RefundPaymentUseCase {
@@ -21,7 +22,7 @@ export class RefundPaymentUseCase {
     id: string,
     refundPaymentDto: RefundPaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     return await this.paymentRepository.transaction(async () => {
       // Validar que el pago existe y está completado
 
@@ -78,7 +79,7 @@ export class RefundPaymentUseCase {
       });
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'Pago reembolsado exitosamente',
         data: refundedPayment,
       };

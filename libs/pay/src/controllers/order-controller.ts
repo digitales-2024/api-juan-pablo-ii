@@ -18,7 +18,7 @@ import {
   ApiOkResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Order } from '../entities/order.entity';
 import {
   CreateOrderDto,
@@ -27,6 +27,7 @@ import {
   UpdateOrderDto,
 } from '../interfaces/dto';
 import { OrderStatus, OrderType } from '../interfaces/order.types';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @ApiTags('Order')
 @ApiBadRequestResponse({
@@ -54,7 +55,7 @@ export class OrderController {
   create(
     @Body() createOrderDto: CreateOrderDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return this.orderService.create(createOrderDto, user);
   }
 
@@ -94,7 +95,7 @@ export class OrderController {
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return this.orderService.update(id, updateOrderDto, user);
   }
 
@@ -111,7 +112,7 @@ export class OrderController {
   deleteMany(
     @Body() deleteOrdersDto: DeleteOrdersDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order[]>> {
+  ): Promise<BaseApiResponse<Order[]>> {
     return this.orderService.deleteMany(deleteOrdersDto, user);
   }
 
@@ -127,7 +128,7 @@ export class OrderController {
   reactivateAll(
     @Body() deleteOrdersDto: DeleteOrdersDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order[]>> {
+  ): Promise<BaseApiResponse<Order[]>> {
     return this.orderService.reactiveMany(deleteOrdersDto.ids, user);
   }
   @Post(':id/submit-draft')
@@ -149,7 +150,7 @@ export class OrderController {
     @Param('id') id: string,
     @Body() submitDto: SubmitDraftOrderDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return this.orderService.submitDraftOrder(id, submitDto, user);
   }
   @Get('type/:type') // Cambiado de ':type' a 'type/:type'

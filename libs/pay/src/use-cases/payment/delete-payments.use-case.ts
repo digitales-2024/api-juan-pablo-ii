@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PaymentRepository } from '../../repositories/payment.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Payment } from '../../entities/payment.entity';
 import { AuditActionType } from '@prisma/client';
 import { DeletePaymentsDto } from '../../interfaces/dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeletePaymentsUseCase {
@@ -16,7 +17,7 @@ export class DeletePaymentsUseCase {
   async execute(
     deletePaymentsDto: DeletePaymentsDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment[]>> {
+  ): Promise<BaseApiResponse<Payment[]>> {
     const deletedPayments = await this.paymentRepository.transaction(
       async () => {
         // Perform soft delete and get updated payments
@@ -42,7 +43,7 @@ export class DeletePaymentsUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Pagos eliminados exitosamente',
       data: deletedPayments,
     };

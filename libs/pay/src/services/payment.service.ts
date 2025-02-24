@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Payment } from '../entities/payment.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import {
@@ -33,6 +28,7 @@ import {
   VerifyPaymentUseCase,
 } from '../use-cases';
 import { PaymentStatus, PaymentType } from '../interfaces/payment.types';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class PaymentService {
@@ -69,7 +65,7 @@ export class PaymentService {
   async create(
     createPaymentDto: CreatePaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     try {
       return await this.createPaymentUseCase.execute(createPaymentDto, user);
     } catch (error) {
@@ -89,13 +85,13 @@ export class PaymentService {
     id: string,
     updatePaymentDto: UpdatePaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     try {
       const currentPayment = await this.findPaymentById(id);
 
       if (!validateChanges(updatePaymentDto, currentPayment)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en la sucursal',
           data: currentPayment,
         };
@@ -121,7 +117,7 @@ export class PaymentService {
   async deleteMany(
     deletePaymentsDto: DeletePaymentsDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment[]>> {
+  ): Promise<BaseApiResponse<Payment[]>> {
     try {
       validateArray(deletePaymentsDto.ids, 'IDs de pagos');
       return await this.deletePaymentsUseCase.execute(deletePaymentsDto, user);
@@ -140,7 +136,7 @@ export class PaymentService {
   async reactiveMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Payment[]>> {
+  ): Promise<BaseApiResponse<Payment[]>> {
     try {
       validateArray(ids, 'IDs de pagos');
       return await this.reactivatePaymentsUseCase.execute(ids, user);
@@ -188,7 +184,7 @@ export class PaymentService {
     id: string,
     processPaymentDto: ProcessPaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     try {
       return await this.processPaymentUseCase.execute(
         id,
@@ -212,7 +208,7 @@ export class PaymentService {
     id: string,
     verifyPaymentDto: VerifyPaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     try {
       return await this.verifyPaymentUseCase.execute(
         id,
@@ -236,7 +232,7 @@ export class PaymentService {
     id: string,
     rejectPaymentDto: RejectPaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     try {
       return await this.rejectPaymentUseCase.execute(
         id,
@@ -290,7 +286,7 @@ export class PaymentService {
     id: string,
     refundPaymentDto: RefundPaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     try {
       return await this.refundPaymentUseCase.execute(
         id,

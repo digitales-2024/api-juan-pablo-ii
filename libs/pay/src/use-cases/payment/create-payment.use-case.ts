@@ -1,11 +1,12 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreatePaymentDto } from '../../interfaces/dto';
 import { Payment } from '../../entities/payment.entity';
 import { PaymentRepository } from '../../repositories/payment.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { PaymentStatus } from '../../interfaces/payment.types';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreatePaymentUseCase {
@@ -17,7 +18,7 @@ export class CreatePaymentUseCase {
   async execute(
     createPaymentDto: CreatePaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     const newPayment = await this.paymentRepository.transaction(async () => {
       // Create payment
       const payment = await this.paymentRepository.create({
@@ -45,7 +46,7 @@ export class CreatePaymentUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Pago creado exitosamente',
       data: newPayment,
     };

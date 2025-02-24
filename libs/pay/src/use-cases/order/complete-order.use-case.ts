@@ -1,12 +1,13 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderEvents } from '../../events/order.events';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CompleteOrderUseCase {
@@ -18,7 +19,7 @@ export class CompleteOrderUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(id: string, user: UserData): Promise<HttpResponse<Order>> {
+  async execute(id: string, user: UserData): Promise<BaseApiResponse<Order>> {
     try {
       this.logger.log(`Completing order ${id}`);
 
@@ -51,7 +52,7 @@ export class CompleteOrderUseCase {
       }
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'Order completed successfully',
         data: order,
       };
