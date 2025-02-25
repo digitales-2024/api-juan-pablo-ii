@@ -100,25 +100,44 @@ export class PrescriptionService {
   /**
    * Crea una nueva receta médica
    */
+  // ... existing code ...
+
   async create(
     createPrescriptionDto: CreatePrescriptionDto,
     user: UserData,
   ): Promise<BaseApiResponse<Prescription>> {
+    console.log(
+      '🚀 ~ PrescriptionService en el bakend con el id  ~ createPrescriptionDto:',
+      createPrescriptionDto,
+    );
     try {
-      // Validar referencias antes de crear
       await this.validateReferences(createPrescriptionDto);
-      console.log(
-        '🚀 ~ PrescriptionService ~ createPrescriptionDto:',
-        createPrescriptionDto,
-      );
-      return await this.createPrescriptionUseCase.execute(
+
+      // Crear la receta y obtener la respuesta
+      const prescriptionResponse = await this.createPrescriptionUseCase.execute(
         createPrescriptionDto,
         user,
       );
+
+      // Extraer los IDs necesarios
+      const prescriptionId = prescriptionResponse.data.id;
+      const updateHistoryId = createPrescriptionDto.updateHistoryId;
+
+      // Actualizar el historial
+      if (updateHistoryId) {
+        await this.prescriptionRepository.updatePrescriptionInHistory(
+          updateHistoryId,
+          prescriptionId,
+        );
+      }
+
+      return prescriptionResponse;
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
     }
   }
+
+  // ... existing code ...
 
   /**
    * Actualiza una receta médica existente
