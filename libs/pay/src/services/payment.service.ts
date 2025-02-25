@@ -11,7 +11,7 @@ import {
   UpdatePaymentDto,
   VerifyPaymentDto,
 } from '../interfaces/dto';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { paymentErrorMessages } from '../errors/errors-payment';
 import { PaymentRepository } from '../repositories/payment.repository';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
@@ -256,7 +256,7 @@ export class PaymentService {
     id: string,
     cancelPaymentDto: CancelPaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     try {
       const payment = await this.findPaymentById(id);
       if (payment.status !== PaymentStatus.PENDING) {

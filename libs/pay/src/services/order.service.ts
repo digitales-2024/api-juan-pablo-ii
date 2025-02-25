@@ -212,6 +212,19 @@ export class OrderService {
   }
 
   /**
+   * Obtiene todas las órdenes activas
+   * @returns Arreglo de órdenes
+   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   */
+  async findAllActive(): Promise<Order[]> {
+    try {
+      return await this.orderRepository.findManyActive();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
    * Busca órdenes por tipo
    * @param type - Tipo de orden
    * @returns Arreglo de órdenes del tipo especificado
@@ -287,6 +300,7 @@ export class OrderService {
       this.errorHandler.handleError(error, 'submitting');
     }
   }
+
   async completeOrder(
     id: string,
     user: UserData,

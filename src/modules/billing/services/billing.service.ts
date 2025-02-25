@@ -1,7 +1,7 @@
 // src/modules/billing/services/billing.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { OrderService } from '@pay/pay/services/order.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Order } from '@pay/pay/entities/order.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { billingErrorMessages } from '../errors/errors-billing';
@@ -11,6 +11,7 @@ import { CreateProductSaleOrderUseCase } from '../use-cases/create-product-sale-
 import { ProductPurchaseGenerator } from '../generators/product-purchase-generator';
 import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
 import { CreateProductPurchaseOrderUseCase } from '../use-cases/create-product-purchase-billing.use-case';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class BillingService {
@@ -85,7 +86,7 @@ export class BillingService {
   async createProductSale(
     createDto: CreateProductSaleBillingDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     try {
       return await this.createProductSaleUseCase.execute(createDto, user);
     } catch (error) {
@@ -103,7 +104,7 @@ export class BillingService {
   async createProductPurchase(
     createDto: CreateProductPurchaseBillingDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     try {
       return await this.createProductPurchaseUseCase.execute(createDto, user);
     } catch (error) {

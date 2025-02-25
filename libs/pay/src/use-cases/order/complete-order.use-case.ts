@@ -42,11 +42,11 @@ export class CompleteOrderUseCase {
       // Emitir evento específico según el tipo de orden
       switch (order.type) {
         case OrderType.MEDICAL_CONSULTATION_ORDER:
-          await this.eventEmitter.emit('consultation.completed', { order });
+          this.eventEmitter.emit('consultation.completed', { order });
           break;
         case OrderType.PRODUCT_SALE_ORDER:
         case OrderType.PRODUCT_PURCHASE_ORDER:
-          await this.eventEmitter.emit(OrderEvents.ORDER_COMPLETED, { order });
+          this.eventEmitter.emit(OrderEvents.ORDER_COMPLETED, { order });
           break;
         // Agregar más casos según necesidad
       }
@@ -58,7 +58,7 @@ export class CompleteOrderUseCase {
       };
     } catch (error) {
       this.logger.error(`Failed to complete order ${id}:`, error.message);
-      await this.eventEmitter.emit(OrderEvents.ORDER_FAILED, {
+      this.eventEmitter.emit(OrderEvents.ORDER_FAILED, {
         orderId: id,
         error: error.message,
       });
