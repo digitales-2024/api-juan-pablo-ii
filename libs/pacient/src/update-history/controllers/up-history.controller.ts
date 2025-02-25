@@ -262,7 +262,6 @@ export class UpdateHistoryController {
         'staffId',
         'branchId',
         'medicalHistoryId',
-        'updateHistory',
       ],
     },
   })

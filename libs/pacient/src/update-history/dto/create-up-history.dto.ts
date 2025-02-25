@@ -80,10 +80,10 @@ export class CreateUpdateHistoryDto {
       tratamiento: 'Reposo y medicamentos',
       observaciones: 'Seguimiento en 7 días',
     },
-    required: true,
+    required: false,
   })
   @IsObject()
-  @IsNotEmpty()
+  @IsOptional()
   updateHistory: any;
 
   @ApiProperty({
