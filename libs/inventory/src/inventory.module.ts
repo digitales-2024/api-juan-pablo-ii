@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CategoryController } from './category/controllers/category.controller';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { CategoryService } from './category/services/category.service';
@@ -104,7 +104,7 @@ import { CreateStockUseCase } from './stock/use-cases/create-stock.use-case';
     OutgoingController,
     StockController,
   ],
-  imports: [AuditModule],
+  imports: [forwardRef(() => InventoryModule), AuditModule],
   providers: [
     // categoria
     CategoryService,
@@ -197,6 +197,8 @@ import { CreateStockUseCase } from './stock/use-cases/create-stock.use-case';
     StockRepository,
     UpdateStockUseCase,
     CreateStockUseCase,
+    UpdateOutgoingStorageUseCase,
+    UpdateIncomingStorageUseCase,
   ],
 })
 export class InventoryModule {}
