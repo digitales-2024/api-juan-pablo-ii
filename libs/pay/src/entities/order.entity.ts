@@ -37,14 +37,16 @@ export class Order implements IOrder {
   referenceId: string;
 
   @ApiProperty({
-    description: 'ID del origen de fondos',
+    description:
+      'ID del origen de fondos. Por lo general, se refiere al proveeder. No existe entidad proveedor',
     required: false,
     example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
   })
   sourceId?: string;
 
   @ApiProperty({
-    description: 'ID del destino de fondos',
+    description:
+      'ID del destino de fondos, por lo general se refiere al almacén de destino',
     required: false,
     example: 'b2c3d4e5-f6g7-8h9i-0j1k-l2m3n4o5p6q7',
   })
@@ -98,6 +100,11 @@ export class Order implements IOrder {
     example: 'Orden creada para paciente Juan Pérez',
   })
   notes?: string;
+
+  @ApiProperty({
+    description: 'Estado de eliminación lógica.',
+  })
+  isActive: boolean;
 
   @ApiProperty({
     description: 'Metadatos adicionales en formato JSON',
