@@ -132,22 +132,22 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
       const updates = [];
 
       for (const update of updateHistories) {
-        const [service, staff, branch, images] = await Promise.all([
+        const [service, staff, branch /*, images */] = await Promise.all([
           this.findServiceById(update.serviceId),
           this.findStaffById(update.staffId),
           this.findBranchById(update.branchId),
-          this.findImagesByUpdateHistoryId(update.id),
+          //this.findImagesByUpdateHistoryId(update.id),
         ]);
 
-        if (images.length > 0) {
-          updates.push({
-            id: update.id,
-            service: service.name,
-            staff: `${staff.name} ${staff.lastName}`,
-            branch: branch.name,
-            images,
-          });
-        }
+        /*  if (images.length > 0) { */
+        updates.push({
+          id: update.id,
+          service: service.name,
+          staff: `${staff.name} ${staff.lastName}`,
+          branch: branch.name,
+          //images,
+        });
+        /*   } */
       }
 
       return updates;

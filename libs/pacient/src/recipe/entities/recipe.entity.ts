@@ -1,14 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 export class PrescriptionItemResponse {
-  @ApiProperty()
-  id: string;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  id?: string;
 
-  @ApiProperty()
-  name: string;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  name?: string;
 
-  @ApiProperty()
-  quantity: number;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  quantity?: number;
 
   @ApiProperty({
     required: false,
