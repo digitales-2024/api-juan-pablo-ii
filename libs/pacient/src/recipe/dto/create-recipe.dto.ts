@@ -5,7 +5,6 @@ import {
   IsNotEmpty,
   IsDateString,
   ValidateNested,
-  ArrayNotEmpty,
   IsArray,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
@@ -97,7 +96,7 @@ export class CreatePrescriptionDto {
   @ValidateNested({ each: true })
   @Type(() => PrescriptionItemDto)
   @IsArray()
-  @ArrayNotEmpty()
+  @IsOptional()
   prescriptionMedicaments?: PrescriptionItemDto[];
 
   @ApiProperty({
@@ -116,7 +115,7 @@ export class CreatePrescriptionDto {
   @ValidateNested({ each: true })
   @Type(() => PrescriptionItemDto)
   @IsArray()
-  @ArrayNotEmpty()
+  @IsOptional()
   prescriptionServices?: PrescriptionItemDto[];
 
   @ApiProperty({
