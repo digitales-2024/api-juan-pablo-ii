@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { Prescription } from '../entities/recipe.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  Prescription,
+  PrescriptionItemResponse,
+  PrescriptionWithPatient,
+} from '../entities/recipe.entity';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class PrescriptionRepository extends BaseRepository<Prescription> {
@@ -36,6 +41,70 @@ export class PrescriptionRepository extends BaseRepository<Prescription> {
       return true;
     } catch (error) {
       throw error;
+    }
+  }
+
+  async findPrescriptionsWithPatient(
+    limit: number = 10,
+    offset: number = 0,
+  ): Promise<PrescriptionWithPatient[]> {
+    const prescriptions = await this.prisma.prescription.findMany({
+      take: limit,
+      skip: offset,
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            dni: true,
+            birthDate: true,
+            gender: true,
+            address: true,
+            phone: true,
+            email: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    return prescriptions.map((prescription) => {
+      // Convertir los JSON a arrays tipados
+      const medicaments = this.parseJsonToType<PrescriptionItemResponse[]>(
+        prescription.prescriptionMedicaments,
+        [],
+      );
+
+      const services = this.parseJsonToType<PrescriptionItemResponse[]>(
+        prescription.prescriptionServices,
+        [],
+      );
+
+      // Crear una instancia de PrescriptionWithPatient con los datos transformados
+      return plainToInstance(PrescriptionWithPatient, {
+        ...prescription,
+        prescriptionMedicaments: medicaments.map((med) =>
+          plainToInstance(PrescriptionItemResponse, med),
+        ),
+        prescriptionServices: services.map((svc) =>
+          plainToInstance(PrescriptionItemResponse, svc),
+        ),
+      });
+    });
+  }
+
+  // Función auxiliar para parsear JSON a tipos específicos
+  private parseJsonToType<T>(jsonValue: any, defaultValue: T): T {
+    if (!jsonValue) return defaultValue;
+    try {
+      if (typeof jsonValue === 'string') {
+        return JSON.parse(jsonValue);
+      }
+      return jsonValue as T;
+    } catch (error) {
+      Logger.error('Error parsing JSON:', error);
+      return defaultValue;
     }
   }
 }

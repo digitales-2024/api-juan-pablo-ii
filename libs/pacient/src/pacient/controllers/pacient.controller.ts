@@ -85,6 +85,21 @@ export class PacientController {
   }
 
   /**
+   * Obtiene todos los pacientes
+   */
+  @Get('dni/:dni')
+  @ApiOperation({ summary: 'Obtenerun pacinete por su dni' })
+  @ApiParam({ name: 'dni', description: 'DNI del paciente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los pacientes',
+    type: [Patient],
+  })
+  findByDni(@Param('dni') dni: string): Promise<Patient[]> {
+    return this.pacientService.findPatientByDni(dni);
+  }
+
+  /**
    * Obtiene un paciente por su ID
    */
   @ApiOperation({ summary: 'Obtener paciente por ID' })

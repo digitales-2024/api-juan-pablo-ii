@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrescriptionRepository } from '../repositories/recipe.repository';
-import { Prescription } from '../entities/recipe.entity';
+import {
+  Prescription,
+  PrescriptionWithPatient,
+} from '../entities/recipe.entity';
 import {
   CreatePrescriptionDto,
   UpdatePrescriptionDto,
@@ -22,6 +25,8 @@ import {
   ReactivatePrescriptionUseCase,
 } from '../use-cases';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { PacientRepository } from '@pacient/pacient/pacient/repositories/pacient.repository';
+import { PatientPrescriptions } from '@pacient/pacient/pacient/entities/pacient.entity';
 
 // Constantes para nombres de tablas
 const TABLE_NAMES = {
@@ -42,6 +47,7 @@ export class PrescriptionService {
     private readonly updatePrescriptionUseCase: UpdatePrescriptionUseCase,
     private readonly deletePrescriptionsUseCase: DeletePrescriptionsUseCase,
     private readonly reactivatePrescriptionUseCase: ReactivatePrescriptionUseCase,
+    private readonly patientRepository: PacientRepository,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -192,6 +198,50 @@ export class PrescriptionService {
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
       throw error;
+    }
+  }
+
+  /**
+   * Obtiene una receta médica por DNI del paciente
+   */
+  async findPrescriptionsByPatientIdCard(
+    dni: string,
+  ): Promise<PatientPrescriptions> {
+    try {
+      return await this.patientRepository.findPrescriptionsByPatientDNI(dni);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene una receta médica por paciente
+   */
+  async findPatientsPrescriptions(
+    limit = 10,
+    offset = 0,
+  ): Promise<PatientPrescriptions[]> {
+    try {
+      return await this.patientRepository.findPatientPrescriptions(
+        limit,
+        offset,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findPrescriptionsWithPatient(
+    limit = 10,
+    offset = 0,
+  ): Promise<PrescriptionWithPatient[]> {
+    try {
+      return await this.prescriptionRepository.findPrescriptionsWithPatient(
+        limit,
+        offset,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
     }
   }
 
