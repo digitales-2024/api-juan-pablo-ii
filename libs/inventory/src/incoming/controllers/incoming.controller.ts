@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { IncomingService } from '../services/incoming.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -23,6 +24,7 @@ import {
   CreateIncomingDto,
   UpdateIncomingDto,
   DeleteIncomingDto,
+  UpdateIncomingStorageDto,
 } from '../dto';
 import {
   DetailedIncoming,
@@ -137,6 +139,30 @@ export class IncomingController {
   })
   findOneWithRelations(@Param('id') id: string): Promise<DetailedIncoming[]> {
     return this.incomingService.findByIdWithRelations(id);
+  }
+
+  /**
+   * Actualiza un ingreso existente
+   */
+  @Patch('update/incomingStorage/:id')
+  @ApiOperation({ summary: 'Actualizar ingreso existente' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Ingreso actualizado exitosamente',
+    type: DetailedIncoming,
+  })
+  updateIncomingStorage(
+    @Param('id') id: string,
+    @Query('isTransference') isTransference: boolean = false,
+    @Body() updateIncomingStorageDto: UpdateIncomingStorageDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
+    return this.incomingService.updateIncomingStorage(
+      id,
+      updateIncomingStorageDto,
+      user,
+      isTransference,
+    );
   }
 
   /**

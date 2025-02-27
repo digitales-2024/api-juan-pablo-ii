@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CategoryController } from './category/controllers/category.controller';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import { CategoryService } from './category/services/category.service';
@@ -70,6 +70,7 @@ import {
   CreateIncomingUseCase,
   DeleteIncomingUseCase,
   ReactivateIncomingUseCase,
+  UpdateIncomingStorageUseCase,
   UpdateIncomingUseCase,
 } from './incoming/use-cases';
 import { OutgoingController } from './outgoing/controllers/outgoing.controller';
@@ -79,6 +80,7 @@ import {
   CreateOutgoingUseCase,
   DeleteOutgoingUseCase,
   ReactivateOutgoingUseCase,
+  UpdateOutgoingStorageUseCase,
   UpdateOutgoingUseCase,
 } from './outgoing/use-cases';
 import { StockController } from './stock/controllers/stock.controller';
@@ -86,8 +88,8 @@ import { StockService } from './stock/services/stock.service';
 import { InventoryEventSubscriber } from './events/inventory-event.subscriber';
 import { CompensationService } from './compensation/compensation.service';
 import { StockRepository } from './stock/repositories/stock.repository';
-import { UpdateStockUseCase } from './stock/use-cases/update-storage.use-case';
-import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
+import { UpdateStockUseCase } from './stock/use-cases/update-stock.use-case';
+import { CreateStockUseCase } from './stock/use-cases/create-stock.use-case';
 
 @Module({
   controllers: [
@@ -102,7 +104,7 @@ import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
     OutgoingController,
     StockController,
   ],
-  imports: [AuditModule],
+  imports: [forwardRef(() => InventoryModule), AuditModule],
   providers: [
     // categoria
     CategoryService,
@@ -158,6 +160,7 @@ import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
     IncomingRepository,
     CreateIncomingUseCase,
     UpdateIncomingUseCase,
+    UpdateIncomingStorageUseCase,
     DeleteIncomingUseCase,
     ReactivateIncomingUseCase,
     //salidas
@@ -165,6 +168,7 @@ import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
     OutgoingRepository,
     CreateOutgoingUseCase,
     UpdateOutgoingUseCase,
+    UpdateOutgoingStorageUseCase,
     DeleteOutgoingUseCase,
     ReactivateOutgoingUseCase,
     //stock
@@ -193,6 +197,8 @@ import { CreateStockUseCase } from './stock/use-cases/create-storage.use-case';
     StockRepository,
     UpdateStockUseCase,
     CreateStockUseCase,
+    UpdateOutgoingStorageUseCase,
+    UpdateIncomingStorageUseCase,
   ],
 })
 export class InventoryModule {}

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MedicalHistory } from '../entities/history.entity';
+import { MedicalHistory, UpdateHistoryData } from '../entities/history.entity';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
@@ -108,15 +108,9 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
   /**
    * Obtiene las actualizaciones e imágenes para una historia médica
    */
-  async findOneWithUpdatesAndImages(patientId: string): Promise<
-    Array<{
-      id: string;
-      service: string;
-      staff: string;
-      branch: string;
-      images: Array<{ id: string; url: string }>;
-    }>
-  > {
+  async findOneWithUpdatesAndImages(
+    patientId: string,
+  ): Promise<UpdateHistoryData[]> {
     try {
       // 1. Obtenemos todas las actualizaciones del paciente
       const updateHistories = await this.prisma.updateHistory.findMany({
@@ -138,22 +132,22 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
       const updates = [];
 
       for (const update of updateHistories) {
-        const [service, staff, branch, images] = await Promise.all([
+        const [service, staff, branch /*, images */] = await Promise.all([
           this.findServiceById(update.serviceId),
           this.findStaffById(update.staffId),
           this.findBranchById(update.branchId),
-          this.findImagesByUpdateHistoryId(update.id),
+          //this.findImagesByUpdateHistoryId(update.id),
         ]);
 
-        if (images.length > 0) {
-          updates.push({
-            id: update.id,
-            service: service.name,
-            staff: `${staff.name} ${staff.lastName}`,
-            branch: branch.name,
-            images,
-          });
-        }
+        /*  if (images.length > 0) { */
+        updates.push({
+          id: update.id,
+          service: service.name,
+          staff: `${staff.name} ${staff.lastName}`,
+          branch: branch.name,
+          //images,
+        });
+        /*   } */
       }
 
       return updates;
@@ -198,7 +192,7 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
     fullName: string,
   ): Promise<boolean> {
     try {
-      const description = 'Paciente con historia medica predeterminada';
+      const description = 'Paciente con historia medica asignada';
 
       const medicalHistory = await this.prisma.medicalHistory.findUnique({
         where: { id: medicalHistoryId },

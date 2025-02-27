@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { OutgoingService } from '../services/outgoing.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -31,6 +32,7 @@ import {
 } from '../entities/outgoing.entity';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { UpdateOutgoingStorageDto } from '../dto/update-outgoingStorage.dto';
 
 /**
  * Controlador REST para gestionar salidas.
@@ -137,6 +139,30 @@ export class OutgoingController {
   })
   findOneWithRelations(@Param('id') id: string): Promise<DetailedOutgoing[]> {
     return this.outgoingService.findByIdWithRelations(id);
+  }
+
+  /**
+   * Actualiza una salida existente
+   */
+  @Patch('update/outgoingStorage/:id')
+  @ApiOperation({ summary: 'Actualizar salida existente' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Salida actualizada exitosamente',
+    type: DetailedOutgoing,
+  })
+  updateOutgoingStorage(
+    @Param('id') id: string,
+    @Query('isTransference') isTransference: boolean = false,
+    @Body() updateOutgoingStorageDto: UpdateOutgoingStorageDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
+    return this.outgoingService.updateOutgoingStorage(
+      id,
+      updateOutgoingStorageDto,
+      user,
+      isTransference,
+    );
   }
 
   /**

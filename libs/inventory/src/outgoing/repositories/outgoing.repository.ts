@@ -13,7 +13,7 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
   }
 
   async getAllWithStorage(): Promise<OutgoingWithStorage[]> {
-    return this.prisma.incoming.findMany({
+    return this.prisma.outgoing.findMany({
       include: {
         Storage: {
           select: {
@@ -23,12 +23,12 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
@@ -38,7 +38,7 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
   }
 
   async findWithStorageById(id: string): Promise<OutgoingWithStorage> {
-    return this.prisma.incoming.findFirst({
+    return this.prisma.outgoing.findFirst({
       where: {
         id,
       },
@@ -51,12 +51,12 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
@@ -77,12 +77,12 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
@@ -110,12 +110,49 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
               select: {
                 id: true,
                 name: true,
-                branch: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        Movement: {
+          include: {
+            Producto: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findManyDetailedOutgoingById(
+    ids: string[],
+  ): Promise<DetailedOutgoing[]> {
+    return this.prisma.outgoing.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      include: {
+        Storage: {
+          select: {
+            id: true,
+            name: true,
+            TypeStorage: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            branch: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },

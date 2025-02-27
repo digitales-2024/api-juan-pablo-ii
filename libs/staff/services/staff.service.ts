@@ -105,7 +105,12 @@ export class StaffService {
    */
   async findAllActive(): Promise<Staff[]> {
     try {
-      return await this.staffRepository.findManyActive();
+      return await this.staffRepository.findManyActive({
+        include: {
+          staffType: true,
+          branch: true,
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

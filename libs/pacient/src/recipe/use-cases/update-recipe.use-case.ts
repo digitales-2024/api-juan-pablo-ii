@@ -28,7 +28,9 @@ export class UpdatePrescriptionUseCase {
           staffId: updatePrescriptionDto.staffId,
           patientId: updatePrescriptionDto.patientId,
           registrationDate: updatePrescriptionDto.registrationDate,
-          prescription: updatePrescriptionDto.prescription,
+          prescriptionMedicaments:
+            updatePrescriptionDto.prescriptionMedicaments,
+          prescriptionServices: updatePrescriptionDto.prescriptionServices,
           description: updatePrescriptionDto.description,
           purchaseOrderId: updatePrescriptionDto.purchaseOrderId,
           isActive: true,

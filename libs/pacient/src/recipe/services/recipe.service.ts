@@ -25,10 +25,10 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 // Constantes para nombres de tablas
 const TABLE_NAMES = {
-  UPDATE_HISTORIA: 'updateHistoria',
-  SUCURSAL: 'sucursal',
-  PERSONAL: 'personal',
-  PACIENTE: 'paciente',
+  UPDATE_HISTORIA: 'updateHistory',
+  SUCURSAL: 'branch',
+  PERSONAL: 'staff',
+  PACIENTE: 'patient',
 } as const;
 
 @Injectable()
@@ -89,8 +89,9 @@ export class PrescriptionService {
     // Validar Paciente
     const pacienteExists = await this.prescriptionRepository.findByIdValidate(
       TABLE_NAMES.PACIENTE,
-      dto.staffId,
+      dto.patientId,
     );
+
     if (!pacienteExists) {
       throw new BadRequestException(`Registro de Paciente no encontrado`);
     }
@@ -99,21 +100,44 @@ export class PrescriptionService {
   /**
    * Crea una nueva receta médica
    */
+  // ... existing code ...
+
   async create(
     createPrescriptionDto: CreatePrescriptionDto,
     user: UserData,
   ): Promise<BaseApiResponse<Prescription>> {
+    console.log(
+      '🚀 ~ PrescriptionService en el bakend con el id  ~ createPrescriptionDto:',
+      createPrescriptionDto,
+    );
     try {
-      // Validar referencias antes de crear
       await this.validateReferences(createPrescriptionDto);
-      return await this.createPrescriptionUseCase.execute(
+
+      // Crear la receta y obtener la respuesta
+      const prescriptionResponse = await this.createPrescriptionUseCase.execute(
         createPrescriptionDto,
         user,
       );
+
+      // Extraer los IDs necesarios
+      const prescriptionId = prescriptionResponse.data.id;
+      const updateHistoryId = createPrescriptionDto.updateHistoryId;
+
+      // Actualizar el historial
+      if (updateHistoryId) {
+        await this.prescriptionRepository.updatePrescriptionInHistory(
+          updateHistoryId,
+          prescriptionId,
+        );
+      }
+
+      return prescriptionResponse;
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
     }
   }
+
+  // ... existing code ...
 
   /**
    * Actualiza una receta médica existente

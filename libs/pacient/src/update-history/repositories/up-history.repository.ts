@@ -61,7 +61,7 @@ export class UpdateHistoryRepository extends BaseRepository<UpdateHistory> {
    */
   async findImagesByHistoryId(
     updateHistoryId: string,
-  ): Promise<Record<string, { id: string; url: string }>> {
+  ): Promise<Array<{ id: string; url: string }>> {
     try {
       const images = await this.prisma.imagePatient.findMany({
         where: {
@@ -74,21 +74,16 @@ export class UpdateHistoryRepository extends BaseRepository<UpdateHistory> {
         },
       });
 
-      return images.reduce(
-        (acc, img, index) => {
-          if (img.imageUrl) {
-            acc[`imageUrl${index + 1}`] = {
-              id: img.id,
-              url: img.imageUrl,
-            };
-          }
-          return acc;
-        },
-        {} as Record<string, { id: string; url: string }>,
-      );
+      // Transformar directamente a un array de objetos
+      return images
+        .map((img) => ({
+          id: img.id,
+          url: img.imageUrl,
+        }))
+        .filter((img) => img.url);
     } catch (error) {
       console.error(error);
-      return {};
+      return [];
     }
   }
 

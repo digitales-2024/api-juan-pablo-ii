@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsNotEmpty,
   IsBoolean,
-  IsDateString,
   IsObject,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -80,10 +79,10 @@ export class CreateUpdateHistoryDto {
       tratamiento: 'Reposo y medicamentos',
       observaciones: 'Seguimiento en 7 días',
     },
-    required: true,
+    required: false,
   })
   @IsObject()
-  @IsNotEmpty()
+  @IsOptional()
   updateHistory: any;
 
   @ApiProperty({
@@ -110,7 +109,7 @@ export class CreateUpdateHistoryDto {
     example: '2024-03-16',
     required: false,
   })
-  @IsDateString()
+  @IsString()
   @IsOptional()
   medicalLeaveStartDate?: string;
 
@@ -119,7 +118,7 @@ export class CreateUpdateHistoryDto {
     example: '2024-03-19',
     required: false,
   })
-  @IsDateString()
+  @IsString()
   @IsOptional()
   medicalLeaveEndDate?: string;
 

@@ -27,6 +27,7 @@ export class UpdateOutgoingUseCase {
           description: updateOutgoingDto.description,
           storageId: updateOutgoingDto.storageId,
           state: updateOutgoingDto.state,
+          incomingId: updateOutgoingDto?.incomingId,
           referenceId: updateOutgoingDto.referenceId,
           date: updateOutgoingDto.date,
         });

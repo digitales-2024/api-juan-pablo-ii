@@ -11,10 +11,10 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { UserData } from '@login/login/interfaces';
 import { BillingService } from '../services/billing.service';
 import { Order } from '@pay/pay/entities/order.entity';
-import { HttpResponse } from '@login/login/interfaces';
 // import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
 import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @ApiTags('Billing')
 @ApiBadRequestResponse({
@@ -71,7 +71,7 @@ export class BillingController {
   async createProductSaleOrder(
     @Body() createDto: CreateProductSaleBillingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return this.billingService.createProductSale(createDto, user);
   }
   @Post('product-purchase')
@@ -83,7 +83,7 @@ export class BillingController {
   async createProductPurchaseOrder(
     @Body() createDto: CreateProductPurchaseBillingDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return this.billingService.createProductPurchase(createDto, user);
   }
 }

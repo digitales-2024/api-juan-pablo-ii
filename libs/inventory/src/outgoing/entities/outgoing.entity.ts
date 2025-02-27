@@ -23,6 +23,16 @@ export class Outgoing {
   @ApiProperty()
   referenceId?: string;
 
+  @ApiProperty({
+    required: false,
+  })
+  isTransference?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  incomingId?: string;
+
   @ApiProperty()
   isActive?: boolean;
 }
@@ -49,13 +59,6 @@ export class OutgoingStorageType {
 
   @ApiProperty()
   name: string;
-
-  @ApiProperty({
-    type: OutgoingBranch,
-    required: false,
-  })
-  @IsOptional()
-  branch?: OutgoingBranch;
 }
 
 export class OutgoingStorage {
@@ -69,6 +72,13 @@ export class OutgoingStorage {
     type: OutgoingStorageType,
   })
   TypeStorage: OutgoingStorageType;
+
+  @ApiProperty({
+    type: OutgoingBranch,
+    required: false,
+  })
+  @IsOptional()
+  branch?: OutgoingBranch;
 }
 
 // export class OutgoingStock {
@@ -148,6 +158,11 @@ export class OutgoingMovement {
 
   @ApiProperty()
   state: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  buyingPrice?: number;
 
   @ApiProperty()
   isActive?: boolean;

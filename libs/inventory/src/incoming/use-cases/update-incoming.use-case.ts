@@ -6,6 +6,7 @@ import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+//import { UpdateMovementDto } from '@inventory/inventory/movement/dto';
 
 @Injectable()
 export class UpdateIncomingUseCase {
@@ -26,6 +27,7 @@ export class UpdateIncomingUseCase {
           name: updateIncomingDto.name,
           description: updateIncomingDto.description,
           storageId: updateIncomingDto.storageId,
+          outgoingId: updateIncomingDto?.outgoingId,
           state: updateIncomingDto.state,
           referenceId: updateIncomingDto.referenceId,
           date: updateIncomingDto.date,

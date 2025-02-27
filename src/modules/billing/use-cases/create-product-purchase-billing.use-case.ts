@@ -1,6 +1,6 @@
-import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditActionType } from '@prisma/client';
 import { OrderService } from '@pay/pay/services/order.service';
 import { OrderType, OrderStatus } from '@pay/pay/interfaces/order.types';
@@ -15,6 +15,7 @@ import {
 } from '@pay/pay/interfaces/payment.types';
 import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
 import { ProductPurchaseMetadata } from '../interfaces/metadata.interfaces';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateProductPurchaseOrderUseCase {
@@ -29,7 +30,7 @@ export class CreateProductPurchaseOrderUseCase {
   async execute(
     createDto: CreateProductPurchaseBillingDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return await this.orderRepository.transaction(async () => {
       // Validate product details
       await this.validateProducts(createDto);
@@ -116,7 +117,7 @@ export class CreateProductPurchaseOrderUseCase {
           amount: total,
           status: PaymentStatus.PENDING,
           type: PaymentType.REGULAR,
-          description: `Payment pending for product purchase - ${order.code}`,
+          description: `Pago pendiente para la compra de producto - ${order.code}`,
           date: new Date(),
           paymentMethod: createDto.paymentMethod ?? PaymentMethod.CASH,
         },
@@ -133,7 +134,7 @@ export class CreateProductPurchaseOrderUseCase {
       });
 
       return {
-        statusCode: HttpStatus.CREATED,
+        success: true,
         message: 'Product purchase order created successfully',
         data: order,
       };

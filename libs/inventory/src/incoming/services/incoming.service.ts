@@ -13,8 +13,12 @@ import { CreateIncomingUseCase } from '../use-cases/create-incoming.use-case';
 import { UpdateIncomingUseCase } from '../use-cases/update-incoming.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { incomingErrorMessages } from '../errors/errors-incoming';
-import { DeleteIncomingDto } from '../dto';
-import { DeleteIncomingUseCase, ReactivateIncomingUseCase } from '../use-cases';
+import { DeleteIncomingDto, UpdateIncomingStorageDto } from '../dto';
+import {
+  DeleteIncomingUseCase,
+  ReactivateIncomingUseCase,
+  UpdateIncomingStorageUseCase,
+} from '../use-cases';
 import { CreateIncomingDtoStorage } from '../dto/create-incomingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
@@ -30,6 +34,7 @@ export class IncomingService {
     private readonly incomingRepository: IncomingRepository,
     private readonly createIncomingUseCase: CreateIncomingUseCase,
     private readonly updateIncomingUseCase: UpdateIncomingUseCase,
+    private readonly updateIncomingStorageUseCase: UpdateIncomingStorageUseCase,
     private readonly deleteIncomingUseCase: DeleteIncomingUseCase,
     private readonly reactivateIncomingUseCase: ReactivateIncomingUseCase,
     private readonly createTypeMovementUseCase: CreateTypeMovementUseCase,
@@ -89,6 +94,36 @@ export class IncomingService {
         id,
         updateIncomingDto,
         user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  async updateIncomingStorage(
+    id: string,
+    updateIncomingStorageDto: UpdateIncomingStorageDto,
+    user: UserData,
+    firstTransferOperation: boolean,
+  ): Promise<BaseApiResponse<DetailedIncoming>> {
+    try {
+      // const currentIncoming = await this.findById(id);
+
+      // if (!validateChanges(updateIncomingDto, currentIncoming)) {
+      //   return {
+      //     success: true,
+      //     message: 'No se detectaron cambios en el ingreso',
+      //     data: await this.incomingRepository.findDetailedIncomingById(id),
+      //   };
+      // }
+
+      this.logger.log('isTransference Incoming', firstTransferOperation);
+
+      return await this.updateIncomingStorageUseCase.execute(
+        id,
+        updateIncomingStorageDto,
+        user,
+        firstTransferOperation,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
@@ -221,7 +256,7 @@ export class IncomingService {
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
       await Promise.all(
         movementsList.map(async (item) => {
-          const { productId, quantity } = item;
+          const { productId, quantity, buyingPrice } = item;
 
           // Llamar a createMovementStorage
           const idMovement =
@@ -231,6 +266,7 @@ export class IncomingService {
                 incomingId: incoming.id,
                 productId,
                 quantity,
+                buyingPrice,
                 date,
                 state,
               },
@@ -244,21 +280,32 @@ export class IncomingService {
       // Extraer los datos de movement y usarlos en createMovementStorage
       //const stockData = this.extractProductoIdQuantity(movement);
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
-      await Promise.all(
-        movementsList.map(async (item) => {
-          const { productId, quantity } = item;
+      // await Promise.all(
+      //   movementsList.map(async (item) => {
+      //     const { productId, quantity } = item;
 
-          // Llamar a createMovementStorage
-          const idStock = await this.stockService.createOrUpdateStockIncoming(
-            storageId,
-            productId,
-            quantity,
-            user,
-          );
+      //     // Llamar a createMovementStorage
+      //     const idStock = await this.stockService.createOrUpdateStockIncoming(
+      //       storageId,
+      //       productId,
+      //       quantity,
+      //       user,
+      //     );
 
-          console.log(`Movimiento creado con ID: ${idStock}`);
-        }),
-      );
+      //     console.log(`Movimiento creado con ID: ${idStock}`);
+      //   }),
+      // );
+      //Para evitar condiciones de carrera
+      for (const item of movementsList) {
+        const { productId, quantity } = item;
+        const idStock = await this.stockService.createOrUpdateStockIncoming(
+          storageId,
+          productId,
+          quantity,
+          user,
+        );
+        console.log(`Movimiento creado con ID: ${idStock}`);
+      }
 
       // const data: IncomingCreateResponseData = {
       //   incomingId,

@@ -45,9 +45,9 @@ export class Staff {
       name: {
         type: 'string',
         example: 'doctor',
-        description: 'Nombre del tipo de personal'
-      }
-    }
+        description: 'Nombre del tipo de personal',
+      },
+    },
   })
   staffType?: {
     name: string;
@@ -64,7 +64,10 @@ export class StaffType {
   @ApiProperty({ description: 'Nombre del tipo de personal' })
   name: string;
 
-  @ApiProperty({ description: 'Descripción del tipo de personal', required: false })
+  @ApiProperty({
+    description: 'Descripción del tipo de personal',
+    required: false,
+  })
   description?: string;
 
   @ApiProperty({ description: 'Estado activo/inactivo del tipo de personal' })

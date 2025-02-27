@@ -1,12 +1,13 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderEvents } from '../../events/order.events';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CompleteOrderUseCase {
@@ -18,7 +19,7 @@ export class CompleteOrderUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(id: string, user: UserData): Promise<HttpResponse<Order>> {
+  async execute(id: string, user: UserData): Promise<BaseApiResponse<Order>> {
     try {
       this.logger.log(`Completing order ${id}`);
 
@@ -41,23 +42,23 @@ export class CompleteOrderUseCase {
       // Emitir evento específico según el tipo de orden
       switch (order.type) {
         case OrderType.MEDICAL_CONSULTATION_ORDER:
-          await this.eventEmitter.emit('consultation.completed', { order });
+          this.eventEmitter.emit('consultation.completed', { order });
           break;
         case OrderType.PRODUCT_SALE_ORDER:
         case OrderType.PRODUCT_PURCHASE_ORDER:
-          await this.eventEmitter.emit(OrderEvents.ORDER_COMPLETED, { order });
+          this.eventEmitter.emit(OrderEvents.ORDER_COMPLETED, { order });
           break;
         // Agregar más casos según necesidad
       }
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'Order completed successfully',
         data: order,
       };
     } catch (error) {
       this.logger.error(`Failed to complete order ${id}:`, error.message);
-      await this.eventEmitter.emit(OrderEvents.ORDER_FAILED, {
+      this.eventEmitter.emit(OrderEvents.ORDER_FAILED, {
         orderId: id,
         error: error.message,
       });

@@ -14,12 +14,17 @@ import { UpdateOutgoingUseCase } from '../use-cases/update-outgoing.use-case';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { outgoingErrorMessages } from '../errors/errors-outgoing';
 import { DeleteOutgoingDto } from '../dto';
-import { DeleteOutgoingUseCase, ReactivateOutgoingUseCase } from '../use-cases';
+import {
+  DeleteOutgoingUseCase,
+  ReactivateOutgoingUseCase,
+  UpdateOutgoingStorageUseCase,
+} from '../use-cases';
 import { CreateOutgoingDtoStorage } from '../dto/create-outgoingStorage.dto';
 import { CreateTypeMovementUseCase } from '@inventory/inventory/type-movement/use-cases';
 import { CreateMovementUseCase } from '@inventory/inventory/movement/use-cases';
 import { StockService } from '@inventory/inventory/stock/services/stock.service';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { UpdateOutgoingStorageDto } from '../dto/update-outgoingStorage.dto';
 
 @Injectable()
 export class OutgoingService {
@@ -30,6 +35,7 @@ export class OutgoingService {
     private readonly outgoingRepository: OutgoingRepository,
     private readonly createOutgoingUseCase: CreateOutgoingUseCase,
     private readonly updateOutgoingUseCase: UpdateOutgoingUseCase,
+    private readonly updateOutgoingStorageUseCase: UpdateOutgoingStorageUseCase,
     private readonly deleteOutgoingUseCase: DeleteOutgoingUseCase,
     private readonly reactivateOutgoingUseCase: ReactivateOutgoingUseCase,
     private readonly createTypeMovementUseCase: CreateTypeMovementUseCase,
@@ -90,6 +96,27 @@ export class OutgoingService {
         id,
         updateOutgoingDto,
         user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+      throw error;
+    }
+  }
+
+  async updateOutgoingStorage(
+    id: string,
+    updateOutgoingStorageDto: UpdateOutgoingStorageDto,
+    user: UserData,
+    firstTransferOperation: boolean,
+  ): Promise<BaseApiResponse<DetailedOutgoing>> {
+    try {
+      this.logger.log('isTransference Outgoing: ', firstTransferOperation);
+
+      return await this.updateOutgoingStorageUseCase.execute(
+        id,
+        updateOutgoingStorageDto,
+        user,
+        firstTransferOperation,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
@@ -180,7 +207,7 @@ export class OutgoingService {
     }
   }
 
-  //crear ingreso de productos al alamacen
+  //crear ingreso de productos al alamacen: TODO: Replantaer logica para que use los principios ACID por medio de transacciones, para poder hacer transferencias de manera mas segura
   /**
    * Crea una nueva salida de productos del almacén.
    *
@@ -249,21 +276,34 @@ export class OutgoingService {
       // Extraer los datos de movement y usarlos en createMovementStorage
       //const stockData = await this.extractProductoIdQuantity(movement);
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
-      await Promise.all(
-        movementsList.map(async (item) => {
-          const { productId, quantity } = item;
+      // await Promise.all(
+      //   movementsList.map(async (item) => {
+      //     const { productId, quantity } = item;
 
-          // Llamar a createMovementStorage
-          const idStock = await this.stockService.updateStockOutgoing(
-            storageId,
-            productId,
-            quantity,
-            user,
-          );
+      //     // Llamar a createMovementStorage
+      //     const idStock = await this.stockService.updateStockOutgoing(
+      //       storageId,
+      //       productId,
+      //       quantity,
+      //       user,
+      //     );
 
-          console.log(`Movimiento creado con ID: ${idStock}`);
-        }),
-      );
+      //     console.log(`Movimiento creado con ID: ${idStock}`);
+      //   }),
+      // );
+      //Para evitar las condiciones de carrera
+      for (const item of movementsList) {
+        const { productId, quantity } = item;
+
+        const idStock = await this.stockService.updateStockOutgoing(
+          storageId,
+          productId,
+          quantity,
+          user,
+        );
+
+        console.log(`Movimiento creado con ID: ${idStock}`);
+      }
       // const data = {
       //   outgoingId,
       //   movementTypeId,

@@ -1,6 +1,6 @@
-import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditActionType } from '@prisma/client';
 import { OrderService } from '@pay/pay/services/order.service';
 import { OrderType, OrderStatus } from '@pay/pay/interfaces/order.types';
@@ -16,6 +16,7 @@ import {
 import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
 import { ProductSaleMetadata } from '../interfaces/metadata.interfaces';
 import { StockRepository } from '@inventory/inventory/stock/repositories/stock.repository';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateProductSaleOrderUseCase {
@@ -31,7 +32,7 @@ export class CreateProductSaleOrderUseCase {
   async execute(
     createDto: CreateProductSaleBillingDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return await this.orderRepository.transaction(async () => {
       // Validate stock availability
       await this.validateStock(createDto);
@@ -124,7 +125,7 @@ export class CreateProductSaleOrderUseCase {
       });
 
       return {
-        statusCode: HttpStatus.CREATED,
+        success: true,
         message: 'Product sale order created successfully',
         data: order,
       };

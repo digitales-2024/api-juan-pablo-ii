@@ -49,6 +49,23 @@ export class CreateOutgoingDto {
   date: Date;
 
   @ApiProperty({
+    description: 'Indica si es un traslado entre almacenes',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isTransference?: boolean;
+
+  @ApiProperty({
+    description: 'ID de referencia para la entrada en caso de transferencia',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  incomingId?: string;
+
+  @ApiProperty({
     description: 'Estado de la salida',
     example: false,
     required: true,

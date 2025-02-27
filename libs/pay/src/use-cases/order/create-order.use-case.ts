@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Order } from '../../entities/order.entity';
 import { OrderRepository } from '../../repositories/order.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { CreateOrderDto } from '@pay/pay/interfaces/dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class CreateOrderUseCase {
@@ -16,7 +17,7 @@ export class CreateOrderUseCase {
   async execute(
     createOrderDto: CreateOrderDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     const newOrder = await this.orderRepository.transaction(async () => {
       // Create order
       const order = await this.orderRepository.create({
@@ -48,7 +49,7 @@ export class CreateOrderUseCase {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
+      success: true,
       message: 'Orden creada exitosamente',
       data: newOrder,
     };
