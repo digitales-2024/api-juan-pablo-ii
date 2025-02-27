@@ -52,6 +52,9 @@ export class Staff {
   staffType?: {
     name: string;
   };
+
+  @ApiProperty({ description: 'Número de Colegiatura Médica (CMP)' })
+  cmp: string;
 }
 
 export class StaffType {

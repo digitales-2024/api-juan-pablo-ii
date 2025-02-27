@@ -22,15 +22,17 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-
-  app.useGlobalInterceptors(new DateTransformInterceptor)
+  app.useGlobalInterceptors(new DateTransformInterceptor());
 
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,
+        excludeExtraneousValues: false,
       },
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
 

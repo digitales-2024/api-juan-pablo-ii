@@ -3,9 +3,12 @@ import { BaseRepository, PrismaService } from '@prisma/prisma';
 import { Event } from '../entities/event.entity';
 import { EventType } from '../entities/event-type.enum';
 import { EventStatus } from '@prisma/client';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class EventRepository extends BaseRepository<Event> {
+  private readonly timeZone = 'America/Lima';
+
   constructor(prisma: PrismaService) {
     super(prisma, 'event');
   }
@@ -112,7 +115,7 @@ export class EventRepository extends BaseRepository<Event> {
       return createdEvents;
     });
   }
-  
+
   async findMany(params?: {
     where?: any;
     orderBy?: any;
@@ -142,6 +145,78 @@ export class EventRepository extends BaseRepository<Event> {
       include: {
         staff: { select: { name: true, lastName: true } },
         branch: { select: { name: true } }
+      }
+    });
+  }
+
+  async findEventsByStaffScheduleId(
+    staffScheduleId: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ events: Event[]; total: number }> {
+    const take = Math.min(limit, 50); // Máximo 50 registros
+    const skip = (page - 1) * take;
+
+    const [total, events] = await Promise.all([
+      this.prisma.event.count({ where: { staffScheduleId } }),
+      this.prisma.event.findMany({
+        where: { staffScheduleId },
+        skip,
+        take,
+        include: {
+          staff: { select: { name: true, lastName: true } },
+          branch: { select: { name: true } }
+        },
+        orderBy: { start: 'asc' } // Ordenar por fecha de inicio
+      })
+    ]);
+
+    return { events, total };
+  }
+
+  async deleteManyByStaffScheduleId(staffScheduleId: string): Promise<number> {
+    return this.prisma.event.deleteMany({
+      where: { staffScheduleId },
+    }).then(result => result.count);
+  }
+
+  /**
+   * Busca un TURNO disponible para un staff en un rango de tiempo específico
+   * @param staffId - ID del staff
+   * @param start - Fecha de inicio
+   * @param end - Fecha de fin
+   * @returns Evento TURNO si existe, null si no
+   */
+  async findAvailableTurn(
+    staffId: string,
+    start: Date,
+    end: Date
+  ): Promise<Event | null> {
+    // Convertir fechas a UTC para la búsqueda en la base de datos
+    const startUTC = moment.tz(start, this.timeZone).utc().toDate();
+    const endUTC = moment.tz(end, this.timeZone).utc().toDate();
+
+    return this.prisma.event.findFirst({
+      where: {
+        staffId,
+        type: 'TURNO',
+        status: 'CONFIRMED',
+        start: { lte: startUTC },
+        end: { gte: endUTC },
+        isActive: true
+      },
+      include: {
+        staff: {
+          select: {
+            name: true,
+            lastName: true
+          }
+        },
+        branch: {
+          select: {
+            name: true
+          }
+        }
       }
     });
   }

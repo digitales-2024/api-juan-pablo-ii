@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsNotEmpty, IsObject } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+// Definimos un tipo genérico que puede ser T, un arreglo de T, un string o un objeto
+export type MedicalHistoryData = Record<string, string>;
 export class CreateMedicalHistoryDto {
   @ApiProperty({
     description: 'ID of the patient',
@@ -20,15 +22,15 @@ export class CreateMedicalHistoryDto {
       enfermedadesCronicas: ['Hypertension'],
       cirugiasPrevias: ['Appendectomy 2018'],
     },
-    required: true,
+    required: false,
   })
   @IsObject()
-  @IsNotEmpty()
-  medicalHistory: any;
+  @IsOptional()
+  medicalHistory?: MedicalHistoryData;
 
   @ApiProperty({
     description: 'Additional description',
-    example: 'First patient consultation',
+    example: 'Historia medica del paciente',
     required: false,
   })
   @IsString()

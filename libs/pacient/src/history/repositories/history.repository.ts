@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MedicalHistory } from '../entities/history.entity';
+import { MedicalHistory, UpdateHistoryData } from '../entities/history.entity';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
@@ -108,15 +108,9 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
   /**
    * Obtiene las actualizaciones e imágenes para una historia médica
    */
-  async findOneWithUpdatesAndImages(patientId: string): Promise<
-    Array<{
-      id: string;
-      service: string;
-      staff: string;
-      branch: string;
-      images: Array<{ id: string; url: string }>;
-    }>
-  > {
+  async findOneWithUpdatesAndImages(
+    patientId: string,
+  ): Promise<UpdateHistoryData[]> {
     try {
       // 1. Obtenemos todas las actualizaciones del paciente
       const updateHistories = await this.prisma.updateHistory.findMany({
@@ -138,28 +132,90 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
       const updates = [];
 
       for (const update of updateHistories) {
-        const [service, staff, branch, images] = await Promise.all([
+        const [service, staff, branch /*, images */] = await Promise.all([
           this.findServiceById(update.serviceId),
           this.findStaffById(update.staffId),
           this.findBranchById(update.branchId),
-          this.findImagesByUpdateHistoryId(update.id),
+          //this.findImagesByUpdateHistoryId(update.id),
         ]);
 
-        if (images.length > 0) {
-          updates.push({
-            id: update.id,
-            service: service.name,
-            staff: `${staff.name} ${staff.lastName}`,
-            branch: branch.name,
-            images,
-          });
-        }
+        /*  if (images.length > 0) { */
+        updates.push({
+          id: update.id,
+          service: service.name,
+          staff: `${staff.name} ${staff.lastName}`,
+          branch: branch.name,
+          //images,
+        });
+        /*   } */
       }
 
       return updates;
     } catch (error) {
       console.log(error);
       throw error;
+    }
+  }
+
+  /**
+   * Obtiene el nombre completo de un paciente por ID
+   * @param patientId - ID del paciente
+   * @returns Nombre completo del paciente
+   */
+  async findPatientFullNameById(patientId: string): Promise<string> {
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: patientId },
+      select: {
+        name: true,
+        lastName: true,
+      },
+    });
+
+    if (!patient) {
+      throw new Error(`Paciente con ID ${patientId} no encontrado`);
+    }
+
+    const { name, lastName } = patient;
+    return `${name} ${lastName ?? ''}`.trim();
+  }
+
+  /**
+   * Actualiza el nombre completo de un paciente en la tabla MedicalHistory
+   * @param medicalHistoryId - ID del registro de la historia médica
+   * @param patientId - ID del paciente
+   * @param fullName - Nuevo nombre completo del paciente
+   * @returns true si la actualización fue exitosa, false si no
+   */
+  async updateMedicalHistoryFullName(
+    medicalHistoryId: string,
+    patientId: string,
+    fullName: string,
+  ): Promise<boolean> {
+    try {
+      const description = 'Paciente con historia medica asignada';
+
+      const medicalHistory = await this.prisma.medicalHistory.findUnique({
+        where: { id: medicalHistoryId },
+      });
+
+      if (!medicalHistory || medicalHistory.patientId !== patientId) {
+        throw new Error(
+          `Registro de historia médica no encontrado o el patientId no coincide`,
+        );
+      }
+
+      await this.prisma.medicalHistory.update({
+        where: { id: medicalHistoryId },
+        data: { fullName, description: description },
+      });
+
+      return true;
+    } catch (error) {
+      console.error(
+        `Error actualizando el nombre completo del paciente en la historia médica con ID ${medicalHistoryId}:`,
+        error,
+      );
+      return false;
     }
   }
 }

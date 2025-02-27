@@ -1,6 +1,14 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { MedicalHistoryRepository } from '../repositories/history.repository';
-import { MedicalHistory } from '../entities/history.entity';
+import {
+  MedicalHistory,
+  UpdateHistoryResponse,
+} from '../entities/history.entity';
 import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
@@ -67,10 +75,32 @@ export class MedicalHistoryService {
   ): Promise<BaseApiResponse<MedicalHistory>> {
     try {
       await this.validateReferences(createMedicalHistoryDto);
-      return await this.createMedicalHistoryUseCase.execute(
+      const medicalHistory = await this.createMedicalHistoryUseCase.execute(
         createMedicalHistoryDto,
         user,
       );
+
+      // Obtener el nombre completo del paciente por su patientId
+      const fullName =
+        await this.medicalHistoryRepository.findPatientFullNameById(
+          createMedicalHistoryDto.patientId,
+        );
+
+      // Actualizar el campo fullName del paciente en la tabla MedicalHistory
+      const updateSuccess =
+        await this.medicalHistoryRepository.updateMedicalHistoryFullName(
+          medicalHistory.data.id,
+          createMedicalHistoryDto.patientId,
+          fullName,
+        );
+
+      if (!updateSuccess) {
+        throw new Error(
+          'Error al actualizar el nombre completo del paciente en la historia médica',
+        );
+      }
+
+      return medicalHistory;
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
       throw error;
@@ -182,21 +212,7 @@ export class MedicalHistoryService {
   /**
    * Obtiene una historia médica completa con sus actualizaciones e imágenes
    */
-  async findOneComplete(id: string): Promise<
-    BaseApiResponse<
-      MedicalHistory & {
-        updates: Record<
-          string,
-          {
-            service: string;
-            staff: string;
-            branch: string;
-            images: Array<{ id: string; url: string }>;
-          }
-        >;
-      }
-    >
-  > {
+  async findOneComplete(id: string): Promise<UpdateHistoryResponse> {
     try {
       // Primero obtenemos la historia médica base
       const medicalHistory = await this.findById(id);
@@ -211,7 +227,9 @@ export class MedicalHistoryService {
           medicalHistory.patientId,
         );
 
-      const updatesObject = Array.isArray(updatesWithImages)
+      //console.log(updatesWithImages);
+
+      /*       const updatesObject = Array.isArray(updatesWithImages)
         ? updatesWithImages.reduce(
             (acc, update) => ({
               ...acc,
@@ -225,18 +243,28 @@ export class MedicalHistoryService {
             {},
           )
         : {};
-
+ */
       return {
-        success: true,
-        message: 'Historia médica encontrada exitosamente',
-        data: {
-          ...medicalHistory,
-          updates: updatesObject,
-        },
+        ...medicalHistory,
+        updates: updatesWithImages,
       };
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
       throw error;
     }
+  }
+
+  /**
+   * Función para obtener el nombre completo del paciente por su ID
+   * @param id - ID del paciente
+   * @returns Objeto JSON con el nombre completo del paciente
+   */
+  async getPatientFullName(id: string): Promise<{ fullName: string }> {
+    const fullName =
+      await this.medicalHistoryRepository.findPatientFullNameById(id);
+    if (!fullName) {
+      throw new NotFoundException(`Paciente con ID ${id} no encontrado`);
+    }
+    return { fullName };
   }
 }

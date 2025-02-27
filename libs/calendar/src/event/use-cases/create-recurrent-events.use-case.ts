@@ -6,7 +6,7 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType, StaffSchedule } from '@prisma/client';
 import { EventType } from '../entities/event-type.enum';
-import { CreateEventDto } from '../dto/create-event.dto';
+import { CreateEventDto, EventStatus } from '../dto/create-event.dto';
 import { StaffScheduleService } from 'src/modules/staff-schedule/services/staff-schedule.service';
 import { Event } from '../entities/event.entity';
 import { setMinutes, setHours, startOfDay } from 'date-fns';
@@ -22,7 +22,7 @@ export class CreateRecurrentEventsUseCase {
     private readonly staffScheduleService: StaffScheduleService,
     private readonly eventFactory: EventFactory,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async execute(
     staffScheduleId: string,
@@ -44,7 +44,7 @@ export class CreateRecurrentEventsUseCase {
       // Generar eventos recurrentes
       const baseEvent = this.eventFactory.createBaseEvent(baseEventDto);
       const recurrentEvents = await this.eventFactory.generateRecurrentEvents(baseEvent, staffSchedule);
-      
+
       // Remover la validación de ID ya que los eventos nuevos no tienen ID
       this.logger.debug(`Eventos recurrentes generados: ${JSON.stringify(recurrentEvents)}`);
 
@@ -75,17 +75,17 @@ export class CreateRecurrentEventsUseCase {
   private mapScheduleToEventDto(staffSchedule: StaffSchedule): CreateEventDto {
     const today = new Date();
     this.logger.debug('Fecha base:', today.toISOString());
-    
+
     // Crear la fecha con la hora local correcta
     const [startHours, startMinutes] = staffSchedule.startTime.split(':').map(Number);
     const [endHours, endMinutes] = staffSchedule.endTime.split(':').map(Number);
-    
+
     // Crear fechas base usando date-fns-tz
     const startDate = setMinutes(
       setHours(startOfDay(today), startHours),
       startMinutes
     );
-    
+
     const endDate = setMinutes(
       setHours(startOfDay(today), endHours),
       endMinutes
@@ -108,12 +108,14 @@ export class CreateRecurrentEventsUseCase {
 
     return {
       title: staffSchedule.title,
+      color: staffSchedule.color,
       type: EventType.TURNO,
       start: startDate,
       end: endDate,
       staffId: staffSchedule.staffId,
       branchId: staffSchedule.branchId,
       staffScheduleId: staffSchedule.id,
+      status: EventStatus.CONFIRMED
     };
   }
 }

@@ -20,8 +20,8 @@ export class DeleteEventsUseCase {
   ): Promise<BaseApiResponse<Event[]>> {
     const deletedEvents = await this.eventRepository.transaction(
       async () => {
-        // Realiza el soft delete y obtiene los eventos actualizados
-        const events = await this.eventRepository.softDeleteMany(
+        // Cambiar softDeleteMany por deleteMany para eliminación permanente
+        const events = await this.eventRepository.deleteMany(
           deleteEventsDto.ids,
         );
 
@@ -44,7 +44,7 @@ export class DeleteEventsUseCase {
 
     return {
       success: true,
-      message: 'Eventos desactivados exitosamente',
+      message: 'Eventos eliminados permanentemente',
       data: deletedEvents,
     };
   }

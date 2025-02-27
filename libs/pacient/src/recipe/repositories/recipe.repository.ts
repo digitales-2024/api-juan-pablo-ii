@@ -23,4 +23,19 @@ export class PrescriptionRepository extends BaseRepository<Prescription> {
 
     return !!result; // Convierte el resultado en booleano
   }
+
+  async updatePrescriptionInHistory(
+    updateHistoryId: string,
+    prescriptionId: string,
+  ): Promise<boolean> {
+    try {
+      await this.prisma.updateHistory.update({
+        where: { id: updateHistoryId },
+        data: { prescriptionId },
+      });
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

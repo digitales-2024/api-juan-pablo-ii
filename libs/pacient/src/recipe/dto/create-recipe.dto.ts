@@ -4,9 +4,36 @@ import {
   IsOptional,
   IsNotEmpty,
   IsDateString,
-  IsObject,
+  ValidateNested,
+  IsArray,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+
+export class PrescriptionItemDto {
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  id?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  name?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  quantity?: number;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  description?: string;
+}
 
 export class CreatePrescriptionDto {
   @ApiProperty({
@@ -47,29 +74,49 @@ export class CreatePrescriptionDto {
 
   @ApiProperty({
     description: 'Fecha de emisión de la receta',
-    example: '2024-03-15T10:00:00Z',
+    example: '2024-03-15',
     required: true,
   })
   @IsDateString()
-  registrationDate: Date;
+  registrationDate: string;
 
   @ApiProperty({
+    type: [PrescriptionItemDto],
     description: 'Detalle de medicamentos y dosificación',
-    example: {
-      medicamentos: [
-        {
-          nombre: 'Paracetamol',
-          dosis: '500mg',
-          frecuencia: 'Cada 8 horas',
-          duracion: '5 días',
-        },
-      ],
-    },
-    required: true,
+    example: [
+      {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Paracetamol',
+        quantity: 1,
+        description: 'Recomendado para el paciente',
+      },
+    ],
+    required: false,
   })
-  @IsObject()
-  @IsNotEmpty()
-  prescription: any;
+  @ValidateNested({ each: true })
+  @Type(() => PrescriptionItemDto)
+  @IsArray()
+  @IsOptional()
+  prescriptionMedicaments?: PrescriptionItemDto[];
+
+  @ApiProperty({
+    type: [PrescriptionItemDto],
+    description: 'Detalle de servicios y dosificación',
+    example: [
+      {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Consulta general',
+        quantity: 1,
+        description: 'Recomendado para el paciente',
+      },
+    ],
+    required: false,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => PrescriptionItemDto)
+  @IsArray()
+  @IsOptional()
+  prescriptionServices?: PrescriptionItemDto[];
 
   @ApiProperty({
     description: 'Descripción o notas adicionales',
