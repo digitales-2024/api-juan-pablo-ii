@@ -2,34 +2,37 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { OrderType } from '@pay/pay/interfaces/order.types';
 import { TypeMovementRepository } from '../type-movement/repositories/type-movement.repository';
-import { MovementRepository } from '../movement/repositories/movement.repository';
 import { Order } from '@pay/pay/entities/order.entity';
 import { CompensationService } from '../compensation/compensation.service';
-import { IncomingRepository } from '../incoming/repositories/incoming.repository';
-import { OutgoingRepository } from '../outgoing/repositories/outgoing.repository';
+// import { MovementRepository } from '../movement/repositories/movement.repository';
+// import { IncomingRepository } from '../incoming/repositories/incoming.repository';
+// import { OutgoingRepository } from '../outgoing/repositories/outgoing.repository';
+// import { StockService } from '../stock/services/stock.service';
 import {
   ProductSaleMetadata,
   ProductPurchaseMetadata,
 } from 'src/modules/billing/interfaces/metadata.interfaces';
 import { StockRepository } from '../stock/repositories/stock.repository';
-import { StockService } from '../stock/services/stock.service';
 import { UserData } from '@login/login/interfaces';
 import { CreateIncomingDtoStorage } from '../incoming/dto/create-incomingStorage.dto';
 import { IncomingService } from '../incoming/services/incoming.service';
+import { CreateOutgoingDtoStorage } from '../outgoing/dto/create-outgoingStorage.dto';
+import { OutgoingService } from '../outgoing/services/outgoing.service';
 
 @Injectable()
 export class InventoryEventSubscriber {
   private readonly logger = new Logger(InventoryEventSubscriber.name);
 
   constructor(
-    private readonly movementRepository: MovementRepository,
     private readonly typeMovementRepository: TypeMovementRepository,
     private readonly stockRepository: StockRepository,
     private readonly compensationService: CompensationService,
-    private readonly incomingRepository: IncomingRepository,
     private readonly incomingService: IncomingService,
-    private readonly outgoingRepository: OutgoingRepository,
-    private readonly stockService: StockService,
+    private readonly outgoingService: OutgoingService,
+    // private readonly movementRepository: MovementRepository,
+    // private readonly outgoingRepository: OutgoingRepository,
+    // private readonly incomingRepository: IncomingRepository,
+    // private readonly stockService: StockService,
   ) {}
 
   @OnEvent('order.completed')
@@ -125,23 +128,23 @@ export class InventoryEventSubscriber {
       `Creating ${isIncoming ? 'incoming' : 'outgoing'} record for storage ${storageId}`,
     );
 
-    const record = isIncoming
-      ? await this.incomingRepository.create({
-          name: `Purchase Order ${order.code}`,
-          description: `Purchase incoming for order ${order.id}`,
-          storageId: storageId,
-          date: new Date(),
-          state: true,
-          referenceId: order.id,
-        })
-      : await this.outgoingRepository.create({
-          name: `Sale Order ${order.code}`,
-          description: `Sale outgoing for order ${order.id}`,
-          storageId: storageId,
-          date: new Date(),
-          state: true,
-          referenceId: order.id,
-        });
+    // const record = isIncoming
+    //   ? await this.incomingRepository.create({
+    //       name: `Purchase Order ${order.code}`,
+    //       description: `Purchase incoming for order ${order.id}`,
+    //       storageId: storageId,
+    //       date: new Date(),
+    //       state: true,
+    //       referenceId: order.id,
+    //     })
+    //   : await this.outgoingRepository.create({
+    //       name: `Sale Order ${order.code}`,
+    //       description: `Sale outgoing for order ${order.id}`,
+    //       storageId: storageId,
+    //       date: new Date(),
+    //       state: true,
+    //       referenceId: order.id,
+    //     });
 
     const products = metadata?.orderDetails?.products;
     if (!Array.isArray(products) || products.length === 0) {
@@ -177,65 +180,96 @@ export class InventoryEventSubscriber {
       await this.incomingService.createIncoming(createIncomingDto, userData);
     }
 
-    await Promise.all(
-      products.map(async (product) => {
-        try {
-          this.logger.debug('Processing product:', {
-            productId: product.productId,
-            quantity: product.quantity,
-            orderId: order.id,
-            storageId,
-          });
+    // await Promise.all(
+    //   products.map(async (product) => {
+    //     try {
+    //       this.logger.debug('Processing product:', {
+    //         productId: product.productId,
+    //         quantity: product.quantity,
+    //         orderId: order.id,
+    //         storageId,
+    //       });
 
-          await this.createMovement(order, product, isIncoming, record.id);
+    //       await this.createMovement(order, product, isIncoming, record.id);
 
-          if (!isIncoming) {
-            await this.stockService.updateStockOutgoing(
-              storageId,
-              product.productId,
-              product.quantity,
-              userData,
-            );
+    //       if (!isIncoming) {
+    //         await this.stockService.updateStockOutgoing(
+    //           storageId,
+    //           product.productId,
+    //           product.quantity,
+    //           userData,
+    //         );
 
-            this.logger.log(
-              `Stock updated for product ${product.productId} - Quantity: ${product.quantity}`,
-            );
-          }
+    //         this.logger.log(
+    //           `Stock updated for product ${product.productId} - Quantity: ${product.quantity}`,
+    //         );
+    //       }
 
-          if (order.type === OrderType.PRODUCT_SALE_ORDER) {
+    //       if (order.type === OrderType.PRODUCT_SALE_ORDER) {
+    //         await this.validateStock(order, product);
+    //       }
+    //     } catch (error) {
+    //       this.logger.error('Error processing product:', {
+    //         productId: product.productId,
+    //         error: error.message,
+    //       });
+    //       throw error;
+    //     }
+    //   }),
+    // );
+
+    if (!isIncoming && order.type === OrderType.PRODUCT_SALE_ORDER) {
+      this.logger.log('Processing outgoing operations');
+
+      try {
+        const outgoingProductMovements = await Promise.all(
+          products.map(async (product) => {
             await this.validateStock(order, product);
-          }
-        } catch (error) {
-          this.logger.error('Error processing product:', {
-            productId: product.productId,
-            error: error.message,
-          });
-          throw error;
-        }
-      }),
-    );
+            return {
+              productId: product.productId,
+              quantity: product.quantity,
+            };
+          }),
+        );
+
+        const createOutgoingDto: CreateOutgoingDtoStorage = {
+          name: `Órden de venta ${order.code}`,
+          storageId: storageId,
+          date: new Date(),
+          state: true,
+          movement: outgoingProductMovements,
+        };
+
+        await this.outgoingService.createOutgoing(createOutgoingDto, userData);
+      } catch (error) {
+        this.logger.error('Error processing outgoing products in order: ', {
+          error: error.message,
+        });
+        throw error;
+      }
+    }
 
     this.logger.log(
       `Successfully processed all ${products.length} products for order ${order.id}`,
     );
   }
 
-  private async createMovement(
-    order: Order,
-    product: { productId: string; quantity: number },
-    isIncoming: boolean,
-    recordId: string,
-  ) {
-    await this.movementRepository.create({
-      movementTypeId: order.movementTypeId,
-      productId: product.productId,
-      quantity: isIncoming ? product.quantity : -product.quantity,
-      date: new Date(),
-      state: true,
-      incomingId: isIncoming ? recordId : null,
-      outgoingId: !isIncoming ? recordId : null,
-    });
-  }
+  // private async createMovement(
+  //   order: Order,
+  //   product: { productId: string; quantity: number },
+  //   isIncoming: boolean,
+  //   recordId: string,
+  // ) {
+  //   await this.movementRepository.create({
+  //     movementTypeId: order.movementTypeId,
+  //     productId: product.productId,
+  //     quantity: isIncoming ? product.quantity : -product.quantity,
+  //     date: new Date(),
+  //     state: true,
+  //     incomingId: isIncoming ? recordId : null,
+  //     outgoingId: !isIncoming ? recordId : null,
+  //   });
+  // }
 
   private async validateStock(
     order: Order,
