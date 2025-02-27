@@ -1,17 +1,12 @@
 // libs/pay/src/services/order.service.ts
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-  HttpStatus,
-} from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { OrderRepository } from '../repositories/order.repository';
 import { Order } from '../entities/order.entity';
 import { IOrderGenerator } from '../interfaces';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { orderErrorMessages } from '../errors/errors-order';
 import { OrderStatus, OrderType } from '../interfaces/order.types';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import {
   CreateOrderDto,
   DeleteOrdersDto,
@@ -28,6 +23,7 @@ import {
   CompleteOrderUseCase,
 } from '../use-cases';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class OrderService {
@@ -112,7 +108,7 @@ export class OrderService {
   async create(
     createOrderDto: CreateOrderDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     try {
       return await this.createOrderUseCase.execute(createOrderDto, user);
     } catch (error) {
@@ -132,13 +128,13 @@ export class OrderService {
     id: string,
     updateOrderDto: UpdateOrderDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     try {
       const currentOrder = await this.findOrderById(id);
 
       if (!validateChanges(updateOrderDto, currentOrder)) {
         return {
-          statusCode: HttpStatus.OK,
+          success: true,
           message: 'No se detectaron cambios en la sucursal',
           data: currentOrder,
         };
@@ -160,7 +156,7 @@ export class OrderService {
   async deleteMany(
     deleteOrdersDto: DeleteOrdersDto,
     user: UserData,
-  ): Promise<HttpResponse<Order[]>> {
+  ): Promise<BaseApiResponse<Order[]>> {
     try {
       validateArray(deleteOrdersDto.ids, 'IDs de ordenes');
       return await this.deleteOrdersUseCase.execute(deleteOrdersDto, user);
@@ -179,7 +175,7 @@ export class OrderService {
   async reactiveMany(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Order[]>> {
+  ): Promise<BaseApiResponse<Order[]>> {
     try {
       validateArray(ids, 'IDs de ordenes');
       return await this.reactivateOrdersUseCase.execute(ids, user);
@@ -210,6 +206,19 @@ export class OrderService {
   async findAll(): Promise<Order[]> {
     try {
       return await this.orderRepository.findMany();
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene todas las órdenes activas
+   * @returns Arreglo de órdenes
+   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   */
+  async findAllActive(): Promise<Order[]> {
+    try {
+      return await this.orderRepository.findManyActive();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -284,17 +293,18 @@ export class OrderService {
     id: string,
     submitDto: SubmitDraftOrderDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     try {
       return await this.submitDraftOrderUseCase.execute(id, submitDto, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'submitting');
     }
   }
+
   async completeOrder(
     id: string,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     try {
       return await this.completeOrderUseCase.execute(id, user);
     } catch (error) {

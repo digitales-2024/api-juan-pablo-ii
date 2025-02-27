@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OrderRepository } from '../../repositories/order.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Order } from '../../entities/order.entity';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivateOrdersUseCase {
@@ -12,7 +13,10 @@ export class ReactivateOrdersUseCase {
     private readonly auditService: AuditService,
   ) {}
 
-  async execute(ids: string[], user: UserData): Promise<HttpResponse<Order[]>> {
+  async execute(
+    ids: string[],
+    user: UserData,
+  ): Promise<BaseApiResponse<Order[]>> {
     // Reactivate orders and register audit
     const reactivatedOrders = await this.orderRepository.transaction(
       async () => {
@@ -36,7 +40,7 @@ export class ReactivateOrdersUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Órdenes reactivadas exitosamente',
       data: reactivatedOrders,
     };
