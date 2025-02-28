@@ -74,6 +74,7 @@ export class BillingController {
   ): Promise<BaseApiResponse<Order>> {
     return this.billingService.createProductSale(createDto, user);
   }
+
   @Post('product-purchase')
   @ApiOperation({ summary: 'Create product purchase order' })
   @ApiCreatedResponse({
