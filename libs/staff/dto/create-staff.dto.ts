@@ -57,7 +57,12 @@ export class CreateStaffDto {
   })
   @IsOptional()
   @IsString()
-  @Transform(({ value }) => value.trim())
+  @Transform(({ value }) => {
+    if (value.trim() === '') {
+      return undefined;
+    }
+    return value.trim();
+  })
   cmp?: string;
 
 
