@@ -178,7 +178,7 @@ model Patient {
   lifestyleHabits        String? @db.Text
   vaccinations           Json?
   primaryDoctor          String? @db.VarChar(100)
-  language               String? @db.VarChar(50)
+  sucursal               String? @db.VarChar(50)
   treatmentAuthorization String? @db.VarChar(255)
   notes                  String? @db.Text
   patientPhoto           String? @db.Text
