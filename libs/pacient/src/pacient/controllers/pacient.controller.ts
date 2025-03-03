@@ -205,7 +205,7 @@ export class PacientController {
           type: 'string',
           example: 'Dr. Juan Pérez, +51999999999',
         },
-        language: { type: 'string', example: 'Español' },
+        sucursal: { type: 'string', example: 'Español' },
         notes: {
           type: 'string',
           example: 'Paciente con antecedentes de alergias severas',
@@ -273,7 +273,7 @@ export class PacientController {
           type: 'string',
           example: 'Dr. Juan Pérez, +51999999999',
         },
-        language: { type: 'string', example: 'Español' },
+        sucursal: { type: 'string', example: 'Español' },
         notes: {
           type: 'string',
           example: 'Paciente con antecedentes de alergias severas',
