@@ -53,7 +53,7 @@ export class Patient {
   primaryDoctor?: string;
 
   @ApiProperty()
-  language?: string;
+  sucursal?: string;
 
   @ApiProperty()
   notes?: string;
