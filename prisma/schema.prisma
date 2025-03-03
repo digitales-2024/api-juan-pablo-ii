@@ -454,7 +454,7 @@ model MedicalHistory {
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime @updatedAt
-
+  dni         String?  // Asegúrate de que este campo exista
   UpdateHistory UpdateHistory[]
 }
 

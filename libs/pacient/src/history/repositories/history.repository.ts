@@ -190,6 +190,7 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
     medicalHistoryId: string,
     patientId: string,
     fullName: string,
+    dni: string, // Añadir este parámetro para el DNI
   ): Promise<boolean> {
     try {
       const description = 'Paciente con historia medica asignada';
@@ -206,16 +207,46 @@ export class MedicalHistoryRepository extends BaseRepository<MedicalHistory> {
 
       await this.prisma.medicalHistory.update({
         where: { id: medicalHistoryId },
-        data: { fullName, description: description },
+        data: {
+          fullName,
+          dni, // Agregar el DNI en la actualización
+          description: description,
+        },
       });
 
       return true;
     } catch (error) {
       console.error(
-        `Error actualizando el nombre completo del paciente en la historia médica con ID ${medicalHistoryId}:`,
+        `Error actualizando los datos del paciente en la historia médica con ID ${medicalHistoryId}:`,
         error,
       );
       return false;
     }
+  }
+
+  async findPatientFullNameByIdDni(
+    patientId: string,
+  ): Promise<{ fullName: string; dni: string }> {
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: patientId },
+      select: {
+        name: true,
+        lastName: true,
+        dni: true, // Añadimos el DNI a la selección
+      },
+    });
+
+    if (!patient) {
+      throw new Error(`Paciente con ID ${patientId} no encontrado`);
+    }
+
+    const { name, lastName, dni } = patient;
+    const fullName = `${name} ${lastName ?? ''}`.trim();
+
+    // Retornamos un objeto con el nombre completo y el DNI
+    return {
+      fullName,
+      dni: dni || '', // Aseguramos que si el DNI es null, retornamos una cadena vacía
+    };
   }
 }
