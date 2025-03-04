@@ -307,7 +307,7 @@ export class PacientController {
       updatePatientDto.patientPhoto = updatePatientDto.patientPhoto[0];
     }
 
-    // Eliminar los campos id e image de updatePatientDto
+    // Eliminar los campos id e image de updatePatientDto 
     delete updatePatientDto.id;
     delete updatePatientDto.image;
 
