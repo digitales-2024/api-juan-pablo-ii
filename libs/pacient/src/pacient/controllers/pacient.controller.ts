@@ -9,6 +9,8 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { PacientService } from '../services/pacient.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -23,6 +25,7 @@ import {
   ApiNotFoundResponse,
   ApiConsumes,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UserData } from '@login/login/interfaces';
 import { CreatePatientDto } from '../dto/create-pacient.dto';
@@ -205,7 +208,7 @@ export class PacientController {
           type: 'string',
           example: 'Dr. Juan Pérez, +51999999999',
         },
-        language: { type: 'string', example: 'Español' },
+        sucursal: { type: 'string', example: 'Español' },
         notes: {
           type: 'string',
           example: 'Paciente con antecedentes de alergias severas',
@@ -273,7 +276,7 @@ export class PacientController {
           type: 'string',
           example: 'Dr. Juan Pérez, +51999999999',
         },
-        language: { type: 'string', example: 'Español' },
+        sucursal: { type: 'string', example: 'Español' },
         notes: {
           type: 'string',
           example: 'Paciente con antecedentes de alergias severas',
@@ -304,7 +307,7 @@ export class PacientController {
       updatePatientDto.patientPhoto = updatePatientDto.patientPhoto[0];
     }
 
-    // Eliminar los campos id e image de updatePatientDto
+    // Eliminar los campos id e image de updatePatientDto 
     delete updatePatientDto.id;
     delete updatePatientDto.image;
 
@@ -314,5 +317,62 @@ export class PacientController {
       image,
       user,
     );
+  }
+
+  //funcion endpoint para traer la data de los pacientes registrados por las sucursales
+  /**
+   * Obtiene datos de pacientes por sucursal para el dashboard
+   * @param year Año para filtrar (opcional, por query param)
+   * @returns Datos agrupados por mes y sucursal
+   */
+  @Get('dashboard/pacientes-por-sucursal')
+  @ApiOperation({
+    summary: 'Obtener datos de pacientes por sucursal para el dashboard',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Datos obtenidos exitosamente',
+    schema: {
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Datos de pacientes por sucursal obtenidos con éxito',
+        },
+        data: {
+          type: 'array',
+          items: {
+            properties: {
+              month: { type: 'string', example: 'Enero' },
+              JLBYR: { type: 'number', example: 12 },
+              Yanahuara: { type: 'number', example: 8 },
+            },
+          },
+          example: [
+            { month: 'Enero', JLBYR: 12, Yanahuara: 8 },
+            { month: 'Febrero', JLBYR: 15, Yanahuara: 10 },
+          ],
+        },
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    description: 'Año para filtrar los datos (formato: YYYY)',
+    type: Number,
+  })
+  async getPacientesPorSucursal(@Query('year') yearParam?: string) {
+    // Convertir el parámetro year a número si existe
+    const year = yearParam ? parseInt(yearParam, 10) : undefined;
+
+    // Validar el formato del año si se proporciona
+    if (year && (isNaN(year) || year < 2000 || year > 2100)) {
+      throw new BadRequestException(
+        'El año debe ser un número válido entre 2000 y 2100',
+      );
+    }
+
+    return this.pacientService.getPacientesPorSucursal(year);
   }
 }

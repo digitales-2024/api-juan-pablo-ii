@@ -80,18 +80,19 @@ export class MedicalHistoryService {
         user,
       );
 
-      // Obtener el nombre completo del paciente por su patientId
-      const fullName =
-        await this.medicalHistoryRepository.findPatientFullNameById(
+      // Obtener el nombre completo y DNI del paciente por su patientId
+      const { fullName, dni } =
+        await this.medicalHistoryRepository.findPatientFullNameByIdDni(
           createMedicalHistoryDto.patientId,
         );
 
-      // Actualizar el campo fullName del paciente en la tabla MedicalHistory
+      // Actualizar los campos fullName y dni del paciente en la tabla MedicalHistory
       const updateSuccess =
         await this.medicalHistoryRepository.updateMedicalHistoryFullName(
           medicalHistory.data.id,
           createMedicalHistoryDto.patientId,
           fullName,
+          dni,
         );
 
       if (!updateSuccess) {

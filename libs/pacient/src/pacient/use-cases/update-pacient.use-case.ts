@@ -39,7 +39,7 @@ export class UpdatePatientUseCase {
           workplace: updatePatientDto.workplace,
           bloodType: updatePatientDto.bloodType,
           primaryDoctor: updatePatientDto.primaryDoctor,
-          language: updatePatientDto.language,
+          sucursal: updatePatientDto.sucursal,
           notes: updatePatientDto.notes,
           patientPhoto: updatePatientDto.patientPhoto,
           isActive: true,

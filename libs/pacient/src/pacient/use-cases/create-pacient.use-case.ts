@@ -37,7 +37,7 @@ export class CreatePatientUseCase {
         workplace: createPatientDto.workplace,
         bloodType: createPatientDto.bloodType,
         primaryDoctor: createPatientDto.primaryDoctor,
-        language: createPatientDto.language,
+        sucursal: createPatientDto.sucursal,
         notes: createPatientDto.notes,
         patientPhoto: null,
         isActive: true,
