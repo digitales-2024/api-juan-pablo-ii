@@ -8,6 +8,7 @@ import {
   ProductSaleItemDto,
 } from '../dto/create-product-sale-billing.dto';
 import { ProductSaleMetadata } from '../interfaces/metadata.interfaces';
+import { Patient } from '@pacient/pacient/pacient/entities/pacient.entity';
 
 /**
  * Generador para órdenes de venta de productos.
@@ -25,36 +26,26 @@ export class ProductSaleGenerator extends BaseOrderGenerator {
   }
 
   async generate(input: CreateProductSaleBillingDto): Promise<IOrder> {
-    await this.validateProducts(input.products);
-
-    // Calcular subtotal y obtener detalles de productos
-    const { subtotal, productDetails } = await this.calculateProductTotals(
-      input.products,
-    );
-    const tax = subtotal * 0.18; // 18% IGV
-    const total = subtotal + tax;
+    // await this.validateProducts(input.products);
 
     const metadata: ProductSaleMetadata = {
-      services: productDetails, // Ahora incluye nombre y subtotal por producto
+      patientDetails: {
+        fullName: '', // Se llenará más tarde
+        dni: '',
+        address: '',
+        phone: '',
+      },
       orderDetails: {
         transactionType: 'SALE',
-        storageId: input.storageId,
+        // storageId: input.storageId,
         branchId: input.branchId,
-        products: input.products.map((product) => ({
-          productId: product.productId,
-          quantity: product.quantity,
-        })),
+        products: [],
+        transactionDetails: {
+          subtotal: 0, // Se llenará más tarde
+          tax: 1, // Se llenará más tarde
+          total: 0, // Se llenará más tarde
+        },
       },
-      inventory: {
-        location: input.storageLocation || '',
-        batch: input.batchNumber,
-      },
-      transactionDetails: {
-        subtotal,
-        tax,
-        total,
-      },
-      customFields: input.metadata,
     };
 
     return {
@@ -64,15 +55,15 @@ export class ProductSaleGenerator extends BaseOrderGenerator {
       status: OrderStatus.PENDING,
       movementTypeId: '', // Este se genera en el use case
       referenceId: input.referenceId || '',
-      sourceId: input.storageId, // Almacén de origen
+      sourceId: '', // Almacén de origen
       targetId: '', // No aplica para ventas de productos
-      subtotal,
-      tax,
-      total,
+      subtotal: 0,
+      tax: 0,
+      total: 0,
       currency: input.currency || 'PEN',
       date: new Date(),
       notes: input.notes,
-      metadata,
+      metadata
     };
   }
 
@@ -106,45 +97,31 @@ export class ProductSaleGenerator extends BaseOrderGenerator {
     }
   }
 
-  /**
-   * Calcula el total basado en los productos
-   */
-  async calculateTotal(input: CreateProductSaleBillingDto): Promise<number> {
-    // Si viene un total preestablecido, lo usamos
-    if (input.metadata?.totalAmount) {
-      return input.metadata.totalAmount;
-    }
+  async calculateTotal() {
+    return 0
 
-    return 0;
   }
 
-  private async calculateProductTotals(products: ProductSaleItemDto[]) {
-    let subtotal = 0;
-    const productDetails = [];
 
-    for (const product of products) {
-      const price = await this.productService.getProductPriceById(
-        product.productId,
-      );
-      if (!price) {
-        throw new BadRequestException(
-          `No se pudo obtener el precio del producto ${product.productId}`,
-        );
-      }
-
-      const productSubtotal = price * product.quantity;
-      subtotal += productSubtotal;
-
-      const productInfo = await this.productService.findById(product.productId);
-      productDetails.push({
-        id: product.productId,
-        name: productInfo.name,
-        quantity: product.quantity,
-        price,
-        subtotal: productSubtotal,
-      });
-    }
-
-    return { subtotal, productDetails };
+  public createEmptyMetadata(createDto: CreateProductSaleBillingDto, patient: Patient): ProductSaleMetadata {
+    return {
+      patientDetails: {
+        fullName: '', // Se llenará más tarde
+        dni: '',
+        address: '',
+        phone: '',
+      },
+      orderDetails: {
+        transactionType: 'SALE',
+        // storageId: createDto.storageId,
+        branchId: createDto.branchId,
+        products: [],
+        transactionDetails: {
+          subtotal: 0, // Se llenará más tarde
+          tax: 2, // Se llenará más tarde
+          total: 0, // Se llenará más tarde
+        },
+      },
+    };
   }
 }
