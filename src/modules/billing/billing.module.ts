@@ -12,6 +12,7 @@ import { StockService } from '@inventory/inventory/stock/services/stock.service'
 import { StorageRepository } from '@inventory/inventory/storage/repositories/storage.repository';
 import { ServiceModule } from '../services/service.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
+import { PacientModule } from '@pacient/pacient/pacient.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AppointmentsModule } from '../appointments/appointments.module';
     AuditModule,
     ServiceModule,
     AppointmentsModule,
+    PacientModule
   ],
   controllers: [BillingController],
   providers: [
@@ -32,4 +34,4 @@ import { AppointmentsModule } from '../appointments/appointments.module';
     CreateProductPurchaseOrderUseCase,
   ],
 })
-export class BillingModule {}
+export class BillingModule { }
