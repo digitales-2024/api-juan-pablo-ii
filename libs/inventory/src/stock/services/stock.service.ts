@@ -282,4 +282,30 @@ export class StockService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
+
+  // Función para validar si hay suficiente stock en todos los almacenes
+  async validateStockAvailability(productId: string, requiredQuantity: number): Promise<boolean> {
+    try {
+      const stockData = await this.getStockByProduct(productId);
+      let totalAvailableStock = 0;
+
+      // Sumar el stock disponible en todos los almacenes
+      stockData.forEach(storage => {
+        storage.stock.forEach(item => {
+          if (item.idProduct === productId) {
+            totalAvailableStock += item.stock;
+          }
+        });
+      });
+
+      this.logger.warn("A", totalAvailableStock, requiredQuantity);
+
+      // Verificar si hay suficiente stock
+      return totalAvailableStock >= requiredQuantity;
+    } catch (error) {
+      this.logger.error(`Error validating stock for product ${productId}`, error);
+      this.errorHandler.handleError(error, 'getting');
+      throw error;
+    }
+  }
 }

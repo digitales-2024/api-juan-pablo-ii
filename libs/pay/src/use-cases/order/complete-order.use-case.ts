@@ -17,7 +17,7 @@ export class CompleteOrderUseCase {
     private readonly orderRepository: OrderRepository,
     private readonly auditService: AuditService,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   async execute(id: string, user: UserData): Promise<BaseApiResponse<Order>> {
     try {
@@ -41,14 +41,15 @@ export class CompleteOrderUseCase {
 
       // Emitir evento específico según el tipo de orden
       switch (order.type) {
-        case OrderType.MEDICAL_CONSULTATION_ORDER:
-          this.eventEmitter.emit('consultation.completed', { order });
+        case OrderType.MEDICAL_APPOINTMENT_ORDER:
+          this.eventEmitter.emit('appointment.completed', { order });
           break;
         case OrderType.PRODUCT_SALE_ORDER:
+          this.eventEmitter.emit(OrderEvents.ORDER_COMPLETED, { order });
+          break;
         case OrderType.PRODUCT_PURCHASE_ORDER:
           this.eventEmitter.emit(OrderEvents.ORDER_COMPLETED, { order });
           break;
-        // Agregar más casos según necesidad
       }
 
       return {
