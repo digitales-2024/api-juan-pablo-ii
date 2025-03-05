@@ -5,16 +5,17 @@ import {
   IsEnum,
   IsString,
   IsObject,
+  IsNumber,
 } from 'class-validator';
 import { PaymentMethod } from '@pay/pay/interfaces/payment.types';
 
-export class CreateMedicalConsultationBillingDto {
+export class CreateMedicalAppointmentBillingDto {
   @ApiProperty({
     description: 'ID de la consulta médica',
     example: '29c5e5b8-1835-42f9-ae34-217a3791ba22',
   })
   @IsUUID()
-  consultaId: string;
+  appointmentId: string;
 
   @ApiProperty({
     description: 'Método de pago a utilizar',
@@ -27,13 +28,30 @@ export class CreateMedicalConsultationBillingDto {
   paymentMethod?: PaymentMethod;
 
   @ApiProperty({
-    description: 'Moneda de la transacción',
+    description: 'Monto pagado',
+    example: 150.00,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  amountPaid?: number;
+
+  @ApiProperty({
+    description: 'Moneda utilizada para el pago',
     default: 'PEN',
     required: false,
   })
   @IsString()
   @IsOptional()
   currency?: string;
+
+  @ApiProperty({
+    description: 'Número de voucher o referencia del pago',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  voucherNumber?: string;
 
   @ApiProperty({
     description: 'Notas adicionales sobre la consulta',
@@ -48,7 +66,7 @@ export class CreateMedicalConsultationBillingDto {
     required: false,
     type: 'object',
     example: {
-      additionalNotes: 'Paciente requiere atención especial',
+      additionalNotes: 'Social no pagante',
       preferences: {
         language: 'español',
         communicationMethod: 'email',

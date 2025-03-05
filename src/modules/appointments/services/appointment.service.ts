@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
@@ -18,6 +19,7 @@ import {
   UpdateAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
+import { ServiceService } from 'src/modules/services/services/service.service';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -35,6 +37,7 @@ export class AppointmentService {
     private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
     private readonly deleteAppointmentsUseCase: DeleteAppointmentsUseCase,
     private readonly reactivateAppointmentsUseCase: ReactivateAppointmentsUseCase,
+    private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -51,7 +54,6 @@ export class AppointmentService {
     user: UserData,
   ): Promise<HttpResponse<Appointment>> {
     try {
-      console.log('estoy en el service aqui no es', createAppointmentDto);
       return await this.createAppointmentUseCase.execute(
         createAppointmentDto,
         user,
@@ -178,6 +180,44 @@ export class AppointmentService {
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
     }
+  }
+
+  /**
+   * Obtiene el precio del servicio asociado a una cita médica.
+   * @param appointmentId - ID de la cita médica
+   * @returns El precio del servicio
+   * @throws {BadRequestException} Si la cita médica o el servicio no se encuentran
+   */
+  async getServicePriceByAppointmentId(appointmentId: string): Promise<number> {
+    const appointment = await this.findById(appointmentId);
+    if (!appointment) {
+      throw new BadRequestException(`Cita médica con ID ${appointmentId} no encontrada`);
+    }
+
+    const serviceId = appointment.serviceId;
+    const service = await this.serviceService.findOne(serviceId);
+    if (!service) {
+      throw new BadRequestException(`Servicio con ID ${serviceId} no encontrado`);
+    }
+    return service.price;
+  }
+
+
+  async getStaffByAppointmentId(appointmentId: string): Promise<string> {
+    const appointment = await this.findById(appointmentId);
+
+    if (!appointment) {
+      throw new BadRequestException(`Cita médica con ID ${appointmentId} no encontrada`);
+    }
+
+    const staffId = appointment.staffId
+
+    const staff = await this.serviceService.findOne(staffId);
+
+
+
+
+    return staff.name
   }
 
   /**
