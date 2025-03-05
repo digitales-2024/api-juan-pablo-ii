@@ -15,7 +15,7 @@ export abstract class BaseRepository<T extends { id: string }> {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly modelName: keyof PrismaService,
-  ) {}
+  ) { }
 
   /**
    * Crea una nueva entidad en la base de datos
@@ -302,7 +302,11 @@ export abstract class BaseRepository<T extends { id: string }> {
    * @returns La entidad mapeada.
    */
   protected mapDtoToEntity<D>(dto: D): any {
-    return dto;
+    const mappedDto = dto as any;
+    if (mappedDto.metadata && typeof mappedDto.metadata !== 'string') {
+      mappedDto.metadata = mappedDto.metadata;
+    }
+    return mappedDto;
   }
 
   mapToEntity<E, F>(baseEntity: E): F {

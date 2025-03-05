@@ -77,9 +77,7 @@ export class Patient {
   })
   primaryDoctor?: string;
 
-  @ApiProperty({
-    required: false,
-  })
+  @ApiProperty()
   language?: string;
 
   @ApiProperty({

@@ -178,7 +178,7 @@ model Patient {
   lifestyleHabits        String? @db.Text
   vaccinations           Json?
   primaryDoctor          String? @db.VarChar(100)
-  language               String? @db.VarChar(50)
+  sucursal               String? @db.VarChar(50)
   treatmentAuthorization String? @db.VarChar(255)
   notes                  String? @db.Text
   patientPhoto           String? @db.Text
@@ -333,22 +333,22 @@ model TypeStorage {
 
 //tabla almacen
 model Storage {
-  id            String      @id @default(uuid())
-  name          String      @unique // Nombre del almacén
+  id            String   @id @default(uuid())
+  name          String   @unique // Nombre del almacén
   location      String? // Ubicación física del almacén
   typeStorageId String
-  branchId    String? // Clave foránea a Sucursal o local
-  staffId     String? // Clave foránea a Personal empleado responsable del almacén
-  isActive      Boolean     @default(true) // Campo para controlar si está activo o no
-  createdAt     DateTime    @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime    @updatedAt
+  branchId      String? // Clave foránea a Sucursal o local
+  staffId       String? // Clave foránea a Personal empleado responsable del almacén
+  isActive      Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt
 
-  TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
-  branch        Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
-  staff         Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
-  Incoming      Incoming[] // Relación con Ingreso
-  Outgoing      Outgoing[] // Relación con Salida
-  Stock         Stock[]
+  TypeStorage TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
+  branch      Branch?     @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
+  staff       Staff?      @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
+  Incoming    Incoming[] // Relación con Ingreso
+  Outgoing    Outgoing[] // Relación con Salida
+  Stock       Stock[]
 }
 
 model Stock {
@@ -408,38 +408,38 @@ model Movement {
 
 //tabla ingresos 
 model Incoming {
-  id          String   @id @default(uuid())
-  name        String?
-  description String?
-  storageId   String
-  Storage     Storage  @relation(fields: [storageId], references: [id])
-  date        DateTime @default(now()) @db.Timestamptz(6)
-  state       Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
+  id             String   @id @default(uuid())
+  name           String?
+  description    String?
+  storageId      String
+  Storage        Storage  @relation(fields: [storageId], references: [id])
+  date           DateTime @default(now()) @db.Timestamptz(6)
+  state          Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
   isTransference Boolean? @default(false) // Indica si el ingreso es por transferencia entre almacenes
-  referenceId String? // Referencia a un registro para el storage etc
-  outgoingId  String? // Referencia a una salida
-  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt
+  referenceId    String? // Referencia a un registro para el storage etc
+  outgoingId     String? // Referencia a una salida
+  isActive       Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt
 
   Movement Movement[] // Relación con Movimiento
 }
 
 //tabla salidas
 model Outgoing {
-  id          String   @id @default(uuid())
-  name        String?
-  description String?
-  storageId   String
-  Storage     Storage  @relation(fields: [storageId], references: [id])
-  date        DateTime @default(now()) @db.Timestamptz(6)
-  state       Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
+  id             String   @id @default(uuid())
+  name           String?
+  description    String?
+  storageId      String
+  Storage        Storage  @relation(fields: [storageId], references: [id])
+  date           DateTime @default(now()) @db.Timestamptz(6)
+  state          Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
   isTransference Boolean? @default(false) // Indica si la salida es por transferencia entre almacenes
-  referenceId String? // Referencia a un registro PARA EL STORAGE etc
-  incomingId  String? // Referencia a un ingreso
-  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt
+  referenceId    String? // Referencia a un registro PARA EL STORAGE etc
+  incomingId     String? // Referencia a un ingreso
+  isActive       Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt
 
   Movement Movement[] // Relación con Movimiento
 }
@@ -455,7 +455,7 @@ model MedicalHistory {
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime @updatedAt
-
+  dni         String?  // Asegúrate de que este campo exista
   UpdateHistory UpdateHistory[]
 }
 
@@ -521,7 +521,7 @@ model Prescription {
 }
 
 enum AppointmentStatus {
-  PENDING // Generada pero no pagada (WhatsApp/digital)
+  PENDING // Generada pero no pagada 
   CONFIRMED // Pagada y confirmada (genera evento CITA)
   COMPLETED // El paciente asistió y se completó
   CANCELLED // Cancelada antes de la fecha
@@ -686,7 +686,7 @@ model Branch {
 
 enum OrderType {
   MEDICAL_PRESCRIPTION_ORDER
-  MEDICAL_CONSULTATION_ORDER
+  MEDICAL_APPOINTMENt_ORDER
   PRODUCT_SALE_ORDER
   PRODUCT_PURCHASE_ORDER
 }

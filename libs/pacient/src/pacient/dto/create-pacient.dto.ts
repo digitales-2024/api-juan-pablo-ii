@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsNotEmpty,
-  IsEmail,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreatePatientDto {
@@ -189,7 +183,7 @@ export class CreatePatientDto {
   @IsOptional()
   @MaxLength(50)
   @Transform(({ value }) => value?.trim())
-  language?: string;
+  sucursal?: string;
 
   @ApiProperty({
     description: 'Cualquier otra observación relevante',
