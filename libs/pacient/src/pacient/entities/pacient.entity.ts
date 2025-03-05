@@ -77,8 +77,10 @@ export class Patient {
   })
   primaryDoctor?: string;
 
-  @ApiProperty()
-  language?: string;
+  @ApiProperty({
+    required: false,
+  })
+  sucursal?: string;
 
   @ApiProperty({
     required: false,
