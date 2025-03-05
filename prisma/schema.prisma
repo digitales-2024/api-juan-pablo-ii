@@ -189,6 +189,7 @@ model Patient {
   updatedAt      DateTime         @updatedAt
   MedicalHistory MedicalHistory[]
   Appointment    Appointment[]
+  Prescription   Prescription[]
 }
 
 //tabla tipo de servicio
@@ -507,6 +508,7 @@ model Prescription {
   branchId                String // ID of the branch where it is issued
   staffId                 String // ID of the medical staff issuing it
   patientId               String // ID of the patient
+  patient                Patient @relation(fields: [patientId], references: [id])
   // Main data
   registrationDate        String // Date of prescription issuance
   prescriptionMedicaments Json?

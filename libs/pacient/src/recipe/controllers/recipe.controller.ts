@@ -6,6 +6,9 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PrescriptionService } from '../services/recipe.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -25,8 +28,12 @@ import {
   UpdatePrescriptionDto,
   DeletePrescriptionDto,
 } from '../dto';
-import { Prescription } from '../entities/recipe.entity';
+import {
+  Prescription,
+  PrescriptionWithPatient,
+} from '../entities/recipe.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { PatientPrescriptions } from '@pacient/pacient/pacient/entities/pacient.entity';
 
 /**
  * Controlador REST para gestionar recetas médicas.
@@ -77,6 +84,69 @@ export class PrescriptionController {
   })
   findAll(): Promise<Prescription[]> {
     return this.prescriptionService.findAll();
+  }
+
+  /**
+   * Obtiene una recetas médicas por DNI del paciente
+   */
+  @Get('/patients')
+  @ApiOperation({ summary: 'Obtener receta médica de los pacientes' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Recetas médicas encontrada',
+    type: [PatientPrescriptions],
+  })
+  @ApiNotFoundResponse({
+    description: 'Recetas médicas no encontrada',
+  })
+  findByPatientsPrescriptions(
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+  ): Promise<PatientPrescriptions[]> {
+    return this.prescriptionService.findPatientsPrescriptions(limit, offset);
+  }
+
+  /**
+   * Obtiene una recetas médicas por DNI del paciente
+   */
+  @Get('/withPatient')
+  @ApiOperation({ summary: 'Obtener receta médica de los pacientes' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Recetas médicas encontrada',
+    type: [PrescriptionWithPatient],
+  })
+  @ApiNotFoundResponse({
+    description: 'Recetas médicas no encontrada',
+  })
+  findByPrescriptionsWithPatients(
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+  ): Promise<PrescriptionWithPatient[]> {
+    return this.prescriptionService.findPrescriptionsWithPatient(limit, offset);
+  }
+
+  /**
+   * Obtiene una recetas médicas por DNI del paciente
+   */
+  @Get('/patient/:dni')
+  @ApiOperation({ summary: 'Obtener receta médica por ID' })
+  @ApiParam({
+    name: 'dni',
+    description: 'Número de DNI y deberia tambien el CE',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Recetas médicas encontrada',
+    type: PatientPrescriptions,
+  })
+  @ApiNotFoundResponse({
+    description: 'Recetas médicas no encontrada',
+  })
+  findByPatientIdCard(
+    @Param('dni') dni: string,
+  ): Promise<PatientPrescriptions> {
+    return this.prescriptionService.findPrescriptionsByPatientIdCard(dni);
   }
 
   /**
