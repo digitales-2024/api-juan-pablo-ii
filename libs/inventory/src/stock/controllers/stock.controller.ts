@@ -133,4 +133,21 @@ export class StockController {
   ): Promise<ProductStock[]> {
     return this.stockService.getProductStock(id);
   }
+
+  @Get('/availableProduct/:productId/storage/:storageId')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({ name: 'productId', description: 'ID del producto' })
+  async getOneProductStockByStorage(
+    @Param('productId') id: string,
+    @Param('storageId') storageId: string,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getOneProductStockByStorage(id, storageId);
+  }
 }

@@ -94,6 +94,37 @@ export class StockRepository extends BaseRepository<Stock> {
     });
   }
 
+  async getOneProductStockByStorage(
+    productId: string,
+    storageId: string,
+  ): Promise<ProductStock> {
+    return this.prisma.producto.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        Stock: {
+          where: {
+            storageId: storageId,
+          },
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   // Función principal para obtener el stock de un producto en un almacén específico o todos los productos en un almacén
   async getStockByStorageAndProduct(
     storageId: string,
