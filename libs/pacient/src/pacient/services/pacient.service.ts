@@ -148,6 +148,10 @@ export class PacientService {
     return existingPacients.length > 0;
   }
 
+  async findPatientByDni(dni: string): Promise<Patient[]> {
+    return this.pacientRepository.findPatientByDNI(dni);
+  }
+
   /**
    * Desactiva múltiples pacientes
    * @param deletePacientDto - DTO con los IDs de los pacientes a desactivar

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Prescription } from '@pacient/pacient/recipe/entities/recipe.entity';
 
 export class Patient {
   @ApiProperty()
@@ -7,7 +8,9 @@ export class Patient {
   @ApiProperty()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   lastName?: string;
 
   @ApiProperty()
@@ -19,48 +22,121 @@ export class Patient {
   @ApiProperty()
   gender: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   address?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   phone?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   email?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   emergencyContact?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   emergencyPhone?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   healthInsurance?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   maritalStatus?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   occupation?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   workplace?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   bloodType?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   primaryDoctor?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   sucursal?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   notes?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   patientPhoto?: string;
 
   @ApiProperty()
   isActive: boolean;
+}
+
+export class PatientPrescriptions {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  lastName?: string;
+
+  @ApiProperty()
+  dni: string;
+
+  @ApiProperty()
+  birthDate: string;
+
+  @ApiProperty()
+  gender: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  address?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  phone?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  email?: string;
+
+  @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty({
+    type: [Prescription],
+  })
+  Prescription: Prescription[];
 }

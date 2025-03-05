@@ -61,6 +61,19 @@ export class ServiceController {
   }
 
   /**
+   * Obtiene todos los servicios
+   */
+  @ApiOperation({ summary: 'Obtener todos los servicios' })
+  @ApiOkResponse({
+    description: 'Lista de todos los servicios',
+    type: [Service],
+  })
+  @Get()
+  findAll(): Promise<Service[]> {
+    return this.serviceService.findAll();
+  }
+
+  /**
    * Obtiene un servicio por su ID
    */
   @ApiOperation({ summary: 'Obtener servicio por ID' })
@@ -75,19 +88,6 @@ export class ServiceController {
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Service> {
     return this.serviceService.findOne(id);
-  }
-
-  /**
-   * Obtiene todos los servicios
-   */
-  @ApiOperation({ summary: 'Obtener todos los servicios' })
-  @ApiOkResponse({
-    description: 'Lista de todos los servicios',
-    type: [Service],
-  })
-  @Get()
-  findAll(): Promise<Service[]> {
-    return this.serviceService.findAll();
   }
 
   /**
