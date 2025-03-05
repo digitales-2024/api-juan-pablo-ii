@@ -45,7 +45,7 @@ export class CreateUserDto {
   @MaxLength(50)
   @Matches(/(?:(?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message:
-      'the password is too weak, it must contain at least one uppercase letter, one lowercase letter, one number',
+      'La contraseña es demasiado débil, debe contener al menos una letra mayúscula, una letra minúscula y un número',
   })
   @Transform(({ value }) => value.trim())
   password: string;
