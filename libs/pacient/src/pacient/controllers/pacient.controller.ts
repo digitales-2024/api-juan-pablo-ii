@@ -51,7 +51,7 @@ import { RemoveImageInterceptor } from './remove-image.interceptor';
 @Controller({ path: 'paciente', version: '1' })
 @Auth()
 export class PacientController {
-  constructor(private readonly pacientService: PacientService) {}
+  constructor(private readonly pacientService: PacientService) { }
 
   /**
    * Crea un nuevo paciente
@@ -388,6 +388,6 @@ export class PacientController {
       );
     }
 
-    return this.pacientService.getPacientesPorSucursal(year);
+    return this.pacientService.getPacientesPorSucursal();
   }
 }
