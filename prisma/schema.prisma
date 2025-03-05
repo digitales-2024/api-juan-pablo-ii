@@ -446,17 +446,17 @@ model Outgoing {
 
 // MedicalHistory table
 model MedicalHistory {
-  id             String   @id @default(uuid())
+  id             String          @id @default(uuid())
   patientId      String
   fullName       String? // Nombre completo del paciente
-  patient        Patient  @relation(fields: [patientId], references: [id])
+  patient        Patient         @relation(fields: [patientId], references: [id])
   medicalHistory Json? // Historial médico del paciente
   description    String?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime @updatedAt
-  dni         String?  // Asegúrate de que este campo exista
-  UpdateHistory UpdateHistory[]
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt
+  dni            String? // Asegúrate de que este campo exista
+  UpdateHistory  UpdateHistory[]
 }
 
 // UpdateHistory table
@@ -686,7 +686,7 @@ model Branch {
 
 enum OrderType {
   MEDICAL_PRESCRIPTION_ORDER
-  MEDICAL_APPOINTMENt_ORDER
+  MEDICAL_APPOINTMENT_ORDER
   PRODUCT_SALE_ORDER
   PRODUCT_PURCHASE_ORDER
 }
