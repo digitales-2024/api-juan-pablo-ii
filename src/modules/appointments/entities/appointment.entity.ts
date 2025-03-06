@@ -41,6 +41,9 @@ export class Appointment {
   @ApiProperty()
   rescheduledFromId?: string;
 
+  @ApiProperty()
+  isActive: boolean;
+
   // Campos de auditoría
   @ApiProperty()
   createdAt: Date;

@@ -100,4 +100,6 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsString()
   rescheduledFromId?: string;
+
+
 }

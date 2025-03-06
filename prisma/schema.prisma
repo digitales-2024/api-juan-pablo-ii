@@ -508,7 +508,7 @@ model Prescription {
   branchId                String // ID of the branch where it is issued
   staffId                 String // ID of the medical staff issuing it
   patientId               String // ID of the patient
-  patient                Patient @relation(fields: [patientId], references: [id])
+  patient                 Patient       @relation(fields: [patientId], references: [id])
   // Main data
   registrationDate        String // Date of prescription issuance
   prescriptionMedicaments Json?
@@ -558,10 +558,12 @@ model Appointment {
   end                DateTime
   status             AppointmentStatus @default(PENDING)
   cancellationReason String?
-  rescheduledFrom    Appointment?      @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
-  rescheduledFromId  String?
-  rescheduledTo      Appointment[]     @relation("RescheduledAppointments")
-  appointmentId      String?
+  isActive           Boolean           @default(true)
+
+  rescheduledFrom   Appointment?  @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
+  rescheduledFromId String?
+  rescheduledTo     Appointment[] @relation("RescheduledAppointments")
+  appointmentId     String?
 
   type  AppointmentType @default(CONSULTA)
   notes String?
