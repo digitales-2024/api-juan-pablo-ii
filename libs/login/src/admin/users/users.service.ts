@@ -64,7 +64,7 @@ export class UsersService {
 
           if (rolIsSuperAdmin) {
             throw new BadRequestException(
-              'No puedes crear una usuario con el rol de superadmin',
+              'Solo puede existir un SUPER_ADMIN, No puedes crear un usuario con este rol selecione otro',
             );
           }
         }
@@ -73,7 +73,9 @@ export class UsersService {
         const existEmail = await this.checkEmailExist(email);
 
         if (existEmail) {
-          throw new BadRequestException('El correo electrónico ya existe');
+          throw new BadRequestException(
+            'El correo electrónico ya esta en uso, intente con otro correo',
+          );
         }
 
         // Verificamos si el email ya existe y esta inactivo
@@ -754,73 +756,38 @@ export class UsersService {
   }
 
   /**
-   * Buscar todos los usuarios activos en la base de datos
+   * Buscar todos los usuarios activos e inactivos en la base de datos
    * @param user Usuario que busca los usuarios
    * @returns Retorna un array con los datos de los usuarios
    */
-  async findAll(user: UserPayload): Promise<UserResponseDto[]> {
-    // Verificar que el usuario tenga permisos para listar usuarios
-    const canListUsers = user.roles.some(
-      (role) => role.name === ValidRols.SUPER_ADMIN,
-    );
-
-    let usersDB = [];
-    if (!canListUsers) {
-      usersDB = await this.prisma.user.findMany({
-        where: {
-          isActive: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          lastLogin: true,
-          isActive: true,
-          isSuperAdmin: true,
-          mustChangePassword: true,
-          userRols: {
-            select: {
-              rol: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+  async findAll(): Promise<UserResponseDto[]> {
+    // Traer todos los usuarios sin importar el rol del solicitante
+    const usersDB = await this.prisma.user.findMany({
+      // No filtramos por isActive para obtener tanto activos como inactivos
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        lastLogin: true,
+        isActive: true,
+        isSuperAdmin: true,
+        mustChangePassword: true,
+        userRols: {
+          select: {
+            rol: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-    } else {
-      usersDB = await this.prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          lastLogin: true,
-          isActive: true,
-          isSuperAdmin: true,
-          mustChangePassword: true,
-          userRols: {
-            select: {
-              rol: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-    }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
     return usersDB.map((user) => {
       return {
