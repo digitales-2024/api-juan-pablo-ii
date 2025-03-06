@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import {
   CreateAppointmentUseCase,
+  FindAppointmentsPaginatedUseCase,
   UpdateAppointmentUseCase,
 } from './use-cases';
 import { AppointmentService } from './services/appointment.service';
@@ -22,6 +23,7 @@ import { ServiceModule } from '../services/service.module';
     UpdateAppointmentUseCase,
     DeleteAppointmentsUseCase,
     ReactivateAppointmentsUseCase,
+    FindAppointmentsPaginatedUseCase
   ],
   exports: [AppointmentService],
 })
