@@ -40,7 +40,6 @@ export const rolAdminSeed = {
   description: 'Administrador del Sistema',
 };
 
-
 export const rolDoctorSeed = {
   name: 'MEDICO',
   description: 'Doctor del Sistema',
