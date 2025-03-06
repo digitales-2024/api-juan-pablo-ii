@@ -17,6 +17,7 @@ export const adminSeed = {
 export const doctorSeed = {
   name: 'Doctor',
   email: 'doctor@admin.com',
+  
   password: 'doctoradmin',
   phone: '+51945876132',
   mustChangePassword: false,
