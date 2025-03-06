@@ -274,6 +274,35 @@ export class StockService {
     }
   }
 
+  getProductsStockByProductsIds(
+    productsIds: string[],
+  ): Promise<ProductStock[]> {
+    try {
+      return this.stockRepository.getProductsStock(productsIds);
+    } catch (error) {
+      this.logger.error('Error fetching stock for products', error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async getManyProductsStockByStorageAndProduct(
+    params: {
+      productId: string;
+      storageId: string;
+    }[],
+  ): Promise<ProductStock[]> {
+    try {
+      const productStock =
+        await this.stockRepository.getManyProductsStockByStorageAndProduct(
+          params,
+        );
+      return productStock;
+    } catch (error) {
+      this.logger.error(`Error fetching stock for products stock`, error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   //funcion para obtener todos los productos en stock en todos los almacenes
   async getProductsStock(): Promise<ProductStock[]> {
     try {

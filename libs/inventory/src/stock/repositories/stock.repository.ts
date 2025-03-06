@@ -94,6 +94,34 @@ export class StockRepository extends BaseRepository<Stock> {
     });
   }
 
+  async getProductsStock(productsIds: string[]): Promise<ProductStock[]> {
+    return this.prisma.producto.findMany({
+      where: {
+        id: { in: productsIds },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        Stock: {
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   async getOneProductStockByStorage(
     productId: string,
     storageId: string,
@@ -123,6 +151,93 @@ export class StockRepository extends BaseRepository<Stock> {
         },
       },
     });
+  }
+
+  async getVariousProductsStockByStorage(params: {
+    storageIds: string[];
+    productIds: string[];
+  }): Promise<ProductStock[]> {
+    // Create combinations of all storageIds with all productIds
+    const combinations = [];
+    for (const storageId of params.storageIds) {
+      for (const productId of params.productIds) {
+        combinations.push({ storageId, productId });
+      }
+    }
+
+    return this.prisma.producto.findMany({
+      where: {
+        id: { in: params.productIds },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        Stock: {
+          where: {
+            OR: combinations,
+          },
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getManyProductsStockByStorageAndProduct(
+    params: {
+      storageId: string;
+      productId: string;
+    }[],
+  ): Promise<ProductStock[]> {
+    const results = await Promise.all(
+      params.map(async (ele) => {
+        const product = await this.prisma.producto.findUnique({
+          where: {
+            id: ele.productId,
+          },
+          select: {
+            id: true,
+            name: true,
+            precio: true,
+            codigoProducto: true,
+            unidadMedida: true,
+            Stock: {
+              where: {
+                storageId: ele.storageId,
+              },
+              select: {
+                stock: true,
+                isActive: true,
+                Storage: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        // Only return products that have stock records for the specified storage
+        return product && product.Stock.length > 0 ? product : null;
+      }),
+    );
+
+    // Filter out null results (products without related stock)
+    return results.filter((product) => product !== null) as ProductStock[];
   }
 
   // Función principal para obtener el stock de un producto en un almacén específico o todos los productos en un almacén

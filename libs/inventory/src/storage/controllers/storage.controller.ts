@@ -114,6 +114,19 @@ export class StorageController {
     return this.storageService.finOneWithRelations(id);
   }
 
+  @Get('/active/branch/:branchId')
+  @ApiOperation({ summary: 'Obtener todos los almacenes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todos los almacenes',
+    type: [DetailedStorage],
+  })
+  findAllActiveByBranch(
+    @Param('branchId') branchId: string,
+  ): Promise<DetailedStorage[]> {
+    return this.storageService.findAllActiveByBranch(branchId);
+  }
+
   /**
    * Obtiene un almacén por su ID
    */
