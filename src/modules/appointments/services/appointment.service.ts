@@ -3,7 +3,6 @@ import {
   HttpStatus,
   Injectable,
   Logger,
-  Inject,
 } from '@nestjs/common';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
@@ -17,6 +16,7 @@ import {
   DeleteAppointmentsUseCase,
   ReactivateAppointmentsUseCase,
   UpdateAppointmentUseCase,
+  FindAppointmentsPaginatedUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { ServiceService } from 'src/modules/services/services/service.service';
@@ -37,6 +37,7 @@ export class AppointmentService {
     private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
     private readonly deleteAppointmentsUseCase: DeleteAppointmentsUseCase,
     private readonly reactivateAppointmentsUseCase: ReactivateAppointmentsUseCase,
+    private readonly findAppointmentsPaginatedUseCase: FindAppointmentsPaginatedUseCase,
     private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -106,11 +107,16 @@ export class AppointmentService {
    * Obtiene todas las citas médicas
    */
   async findAll(startDate?: Date, endDate?: Date): Promise<Appointment[]> {
+    this.logger.log(`findAll called with startDate: ${startDate}, endDate: ${endDate}`);
     try {
       if (startDate && endDate) {
-        return this.appointmentRepository.findByDateRange(startDate, endDate);
+        const appointments = await this.appointmentRepository.findByDateRange(startDate, endDate);
+        this.logger.log(`Appointments found: ${JSON.stringify(appointments)}`);
+        return appointments;
       }
-      return this.appointmentRepository.findMany();
+      const allAppointments = await this.appointmentRepository.findMany();
+      this.logger.log(`All appointments found: ${JSON.stringify(allAppointments)}`);
+      return allAppointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -131,8 +137,11 @@ export class AppointmentService {
    * Busca citas por paciente
    */
   async findByPatient(pacienteId: string): Promise<Appointment[]> {
+    this.logger.log(`findByPatient called with pacienteId: ${pacienteId}`);
     try {
-      return await this.appointmentRepository.findByPatient(pacienteId);
+      const appointments = await this.appointmentRepository.findByPatient(pacienteId);
+      this.logger.log(`Appointments found for patient ${pacienteId}: ${JSON.stringify(appointments)}`);
+      return appointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -142,8 +151,11 @@ export class AppointmentService {
    * Busca citas por personal médico
    */
   async findByStaff(personalId: string): Promise<Appointment[]> {
+    this.logger.log(`findByStaff called with personalId: ${personalId}`);
     try {
-      return await this.appointmentRepository.findByStaff(personalId);
+      const appointments = await this.appointmentRepository.findByStaff(personalId);
+      this.logger.log(`Appointments found for staff ${personalId}: ${JSON.stringify(appointments)}`);
+      return appointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -182,6 +194,23 @@ export class AppointmentService {
     }
   }
 
+
+
+  /**
+  * Obtiene todas las citas médicas de forma paginada
+  */
+  async findAllPaginated(page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
+    try {
+      return await this.findAppointmentsPaginatedUseCase.execute(page, limit);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+
+
+
+
   /**
    * Obtiene el precio del servicio asociado a una cita médica.
    * @param appointmentId - ID de la cita médica
@@ -201,6 +230,7 @@ export class AppointmentService {
     }
     return service.price;
   }
+
 
 
   async getStaffByAppointmentId(appointmentId: string): Promise<string> {
@@ -230,4 +260,6 @@ export class AppointmentService {
     }
     return appointment;
   }
+
+
 }
