@@ -256,6 +256,53 @@ export class StockService {
     }
   }
 
+  //funcion para obtener el stock de un producto en todos los almacenes
+  async getOneProductStockByStorage(
+    productId: string,
+    storageId: string,
+  ): Promise<ProductStock[]> {
+    try {
+      const productStock =
+        await this.stockRepository.getOneProductStockByStorage(
+          productId,
+          storageId,
+        );
+      return [productStock];
+    } catch (error) {
+      this.logger.error(`Error fetching stock for product ${productId}`, error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  getProductsStockByProductsIds(
+    productsIds: string[],
+  ): Promise<ProductStock[]> {
+    try {
+      return this.stockRepository.getProductsStock(productsIds);
+    } catch (error) {
+      this.logger.error('Error fetching stock for products', error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async getManyProductsStockByStorageAndProduct(
+    params: {
+      productId: string;
+      storageId: string;
+    }[],
+  ): Promise<ProductStock[]> {
+    try {
+      const productStock =
+        await this.stockRepository.getManyProductsStockByStorageAndProduct(
+          params,
+        );
+      return productStock;
+    } catch (error) {
+      this.logger.error(`Error fetching stock for products stock`, error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   //funcion para obtener todos los productos en stock en todos los almacenes
   async getProductsStock(): Promise<ProductStock[]> {
     try {
@@ -284,26 +331,32 @@ export class StockService {
   }
 
   // Función para validar si hay suficiente stock en todos los almacenes
-  async validateStockAvailability(productId: string, requiredQuantity: number): Promise<boolean> {
+  async validateStockAvailability(
+    productId: string,
+    requiredQuantity: number,
+  ): Promise<boolean> {
     try {
       const stockData = await this.getStockByProduct(productId);
       let totalAvailableStock = 0;
 
       // Sumar el stock disponible en todos los almacenes
-      stockData.forEach(storage => {
-        storage.stock.forEach(item => {
+      stockData.forEach((storage) => {
+        storage.stock.forEach((item) => {
           if (item.idProduct === productId) {
             totalAvailableStock += item.stock;
           }
         });
       });
 
-      this.logger.warn("A", totalAvailableStock, requiredQuantity);
+      this.logger.warn('A', totalAvailableStock, requiredQuantity);
 
       // Verificar si hay suficiente stock
       return totalAvailableStock >= requiredQuantity;
     } catch (error) {
-      this.logger.error(`Error validating stock for product ${productId}`, error);
+      this.logger.error(
+        `Error validating stock for product ${productId}`,
+        error,
+      );
       this.errorHandler.handleError(error, 'getting');
       throw error;
     }

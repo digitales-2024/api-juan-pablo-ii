@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
-import { Storage } from '../entities/storage.entity';
+import { DetailedStorage, Storage } from '../entities/storage.entity';
 
 @Injectable()
 export class StorageRepository extends BaseRepository<Storage> {
@@ -72,6 +72,38 @@ export class StorageRepository extends BaseRepository<Storage> {
         products.flatMap((p) => p.Movement.map((m) => ({ id: m.productId }))),
       ),
     ];
+  }
+
+  async getStoragesByBranchId(branchId: string): Promise<DetailedStorage[]> {
+    return this.prisma.storage.findMany({
+      where: {
+        branchId: branchId,
+        isActive: true,
+      },
+      include: {
+        TypeStorage: {
+          select: {
+            name: true,
+          },
+        },
+        branch: {
+          select: {
+            name: true,
+          },
+        },
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+            staffType: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   /**

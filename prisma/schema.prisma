@@ -201,6 +201,7 @@ model ServiceType {
   services    Service[] // Relación inversa con Service
   createdAt   DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt
+  @@unique([name, isActive])
 }
 
 //tabla servicios
@@ -229,6 +230,7 @@ model StaffType {
   staff     Staff[] // Relación con Staff
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+   @@unique([name, isActive])
 }
 
 model Staff {
@@ -265,6 +267,7 @@ model Categoria {
   createdAt DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt DateTime   @updatedAt
   Producto  Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a una categoría.
+   @@unique([name, isActive])
 }
 
 // Tabla TipoProducto
@@ -277,6 +280,7 @@ model TipoProducto {
   createdAt DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt DateTime   @updatedAt
   Producto  Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a un tipo de producto específico.
+   @@unique([name, isActive])
 }
 
 // Tabla Producto
@@ -329,6 +333,7 @@ model TypeStorage {
   // branch  Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
   // staff   Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
   Storage Storage[] // Relación con la tabla Almacen
+  @@unique([name, isActive])
 }
 
 //tabla almacen
@@ -685,6 +690,8 @@ model Branch {
   staff          Staff[]
   timeOffs       TimeOff[]
   storage        Storage[] // Relación con TypeStorage
+  
+  @@unique([name, isActive])
 }
 
 enum OrderType {
