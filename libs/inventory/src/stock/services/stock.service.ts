@@ -6,6 +6,7 @@ import { UserData } from '@login/login/interfaces';
 import { ProductStock, StockByStorage } from '../entities/stock.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { stockErrorMessages } from '../errors/errors-stock';
+import { ProductUse } from '@prisma/client';
 
 @Injectable()
 export class StockService {
@@ -307,6 +308,26 @@ export class StockService {
   async getProductsStock(): Promise<ProductStock[]> {
     try {
       const productsStock = await this.stockRepository.getAllProductsStock();
+      return productsStock;
+    } catch (error) {
+      this.logger.error('Error fetching products stock', error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async getProductsForSaleStock(use: ProductUse): Promise<ProductStock[]> {
+    try {
+      const productsStock = await this.stockRepository.getAllForSaleProductsStock(use);
+      return productsStock;
+    } catch (error) {
+      this.logger.error('Error fetching products stock', error);
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async getProductsForSaleStockAndBranch(use: ProductUse, branchId: string): Promise<ProductStock[]> {
+    try {
+      const productsStock = await this.stockRepository.getAllForSaleProductsStockAndBranch(use, branchId);
       return productsStock;
     } catch (error) {
       this.logger.error('Error fetching products stock', error);

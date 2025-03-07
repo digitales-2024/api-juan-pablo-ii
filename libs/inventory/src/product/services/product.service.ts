@@ -313,4 +313,16 @@ export class ProductService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
+
+  async getForSaleProducts() {
+    try {
+      const products = await this.productRepository.bringForSaleProducts();
+      if (!products) {
+        throw new BadRequestException('Producto no encontrado');
+      }
+      return products;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
 }

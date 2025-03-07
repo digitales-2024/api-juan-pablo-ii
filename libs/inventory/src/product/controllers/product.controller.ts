@@ -95,6 +95,20 @@ export class ProductController {
     return this.productService.findAllActive();
   }
 
+  @Get('/active/for-sale')
+  @ApiOperation({
+    summary:
+      'Obtener todos los productos activos con informaciòn detallada relevante',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Lista de todos los productos',
+    type: [ActiveProduct],
+  })
+  findAllActiveForSale(): Promise<ActiveProduct[]> {
+    return this.productService.getForSaleProducts();
+  }
+
   /**
    * Obtiene todos los productos con detalles de sus relaciones
    */

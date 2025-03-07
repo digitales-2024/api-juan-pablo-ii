@@ -117,4 +117,35 @@ export class ProductRepository extends BaseRepository<Product> {
       take: 15,
     });
   }
+
+  async bringForSaleProducts(): Promise<ActiveProduct[]> {
+    return await this.prisma.producto.findMany({
+      where: {
+        isActive: true,
+        uso: 'VENTA',
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        categoriaId: true,
+        tipoProductoId: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        uso: true,
+        categoria: {
+          select: {
+            name: true,
+            isActive: true,
+          },
+        },
+        tipoProducto: {
+          select: {
+            name: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+  }
 }
