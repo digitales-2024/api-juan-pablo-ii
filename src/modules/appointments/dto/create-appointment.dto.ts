@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsDateString, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { AppointmentType, AppointmentStatus } from '@prisma/client';
+import { AppointmentType, AppointmentStatus, PaymentMethod } from '@prisma/client';
 
 export class CreateAppointmentDto {
   @ApiProperty({
@@ -101,5 +101,12 @@ export class CreateAppointmentDto {
   @IsString()
   rescheduledFromId?: string;
 
-
+  @ApiProperty({
+    description: 'Método de pago',
+    enum: PaymentMethod,
+    example: 'CASH',
+  })
+  @IsString()
+  @IsNotEmpty()
+  paymentMethod: PaymentMethod;
 }
