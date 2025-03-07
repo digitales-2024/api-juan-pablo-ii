@@ -15,6 +15,7 @@ import { Order } from '@pay/pay/entities/order.entity';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
 import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { CreateMedicalAppointmentBillingDto } from '../dto';
 
 @ApiTags('Billing')
 @ApiBadRequestResponse({
@@ -35,20 +36,20 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 })
 @Auth()
 export class BillingController {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(private readonly billingService: BillingService) { }
 
-  // @Post('medical-consultation')
-  // @ApiOperation({ summary: 'Create medical consultation order' })
-  // @ApiCreatedResponse({
-  //   description: 'Medical consultation order created successfully',
-  //   type: Order,
-  // })
-  // async createMedicalConsultationOrder(
-  //   @Body() createDto: CreateMedicalConsultationBillingDto,
-  //   @GetUser() user: UserData,
-  // ): Promise<HttpResponse<Order>> {
-  //   return this.billingService.createMedicalConsultation(createDto, user);
-  // }
+  @Post('medical-appointment')
+  @ApiOperation({ summary: 'Create medical consultation order' })
+  @ApiCreatedResponse({
+    description: 'Medical appointment order created successfully',
+    type: Order,
+  })
+  async createMedicalConsultationOrder(
+    @Body() createDto: CreateMedicalAppointmentBillingDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.billingService.createMedicalAppointment(createDto, user);
+  }
   // @Post('medical-prescription')
   // @ApiOperation({ summary: 'Create medical prescription order' })
   // @ApiCreatedResponse({
@@ -74,17 +75,16 @@ export class BillingController {
   ): Promise<BaseApiResponse<Order>> {
     return this.billingService.createProductSale(createDto, user);
   }
-
-  @Post('product-purchase')
-  @ApiOperation({ summary: 'Create product purchase order' })
-  @ApiCreatedResponse({
-    description: 'Product purchase order created successfully',
-    type: Order,
-  })
-  async createProductPurchaseOrder(
-    @Body() createDto: CreateProductPurchaseBillingDto,
-    @GetUser() user: UserData,
-  ): Promise<BaseApiResponse<Order>> {
-    return this.billingService.createProductPurchase(createDto, user);
-  }
+  // @Post('product-purchase')
+  // @ApiOperation({ summary: 'Create product purchase order' })
+  // @ApiCreatedResponse({
+  //   description: 'Product purchase order created successfully',
+  //   type: Order,
+  // })
+  // async createProductPurchaseOrder(
+  //   @Body() createDto: CreateProductPurchaseBillingDto,
+  //   @GetUser() user: UserData,
+  // ): Promise<BaseApiResponse<Order>> {
+  //   return this.billingService.createProductPurchase(createDto, user);
+  // }
 }

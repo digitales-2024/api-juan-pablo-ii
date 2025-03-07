@@ -374,10 +374,10 @@ export class PacientService {
    * @param year Año para filtrar los datos (opcional)
    * @returns Datos de pacientes agrupados por mes y sucursal
    */
-  async getPacientesPorSucursal(year?: number): Promise<any> {
+  async getPacientesPorSucursal(): Promise<any> {
     try {
       const pacientesData =
-        await this.pacientRepository.getPacientesPorSucursal(year);
+        await this.pacientRepository.getPacientesPorSucursal();
 
       return {
         statusCode: HttpStatus.OK,

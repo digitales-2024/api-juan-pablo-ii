@@ -201,6 +201,7 @@ model ServiceType {
   services    Service[] // Relación inversa con Service
   createdAt   DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt
+  @@unique([name, isActive])
 }
 
 //tabla servicios
@@ -229,6 +230,7 @@ model StaffType {
   staff     Staff[] // Relación con Staff
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+   @@unique([name, isActive])
 }
 
 model Staff {
@@ -265,6 +267,7 @@ model Categoria {
   createdAt DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt DateTime   @updatedAt
   Producto  Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a una categoría.
+   @@unique([name, isActive])
 }
 
 // Tabla TipoProducto
@@ -277,6 +280,7 @@ model TipoProducto {
   createdAt DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt DateTime   @updatedAt
   Producto  Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a un tipo de producto específico.
+   @@unique([name, isActive])
 }
 
 // Tabla Producto
@@ -329,6 +333,7 @@ model TypeStorage {
   // branch  Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
   // staff   Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
   Storage Storage[] // Relación con la tabla Almacen
+  @@unique([name, isActive])
 }
 
 //tabla almacen
@@ -446,17 +451,17 @@ model Outgoing {
 
 // MedicalHistory table
 model MedicalHistory {
-  id             String   @id @default(uuid())
+  id             String          @id @default(uuid())
   patientId      String
   fullName       String? // Nombre completo del paciente
-  patient        Patient  @relation(fields: [patientId], references: [id])
+  patient        Patient         @relation(fields: [patientId], references: [id])
   medicalHistory Json? // Historial médico del paciente
   description    String?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime @updatedAt
-  dni         String?  // Asegúrate de que este campo exista
-  UpdateHistory UpdateHistory[]
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt
+  dni            String? // Asegúrate de que este campo exista
+  UpdateHistory  UpdateHistory[]
 }
 
 // UpdateHistory table
@@ -508,7 +513,7 @@ model Prescription {
   branchId                String // ID of the branch where it is issued
   staffId                 String // ID of the medical staff issuing it
   patientId               String // ID of the patient
-  patient                Patient @relation(fields: [patientId], references: [id])
+  patient                 Patient       @relation(fields: [patientId], references: [id])
   // Main data
   registrationDate        String // Date of prescription issuance
   prescriptionMedicaments Json?
@@ -558,10 +563,12 @@ model Appointment {
   end                DateTime
   status             AppointmentStatus @default(PENDING)
   cancellationReason String?
-  rescheduledFrom    Appointment?      @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
-  rescheduledFromId  String?
-  rescheduledTo      Appointment[]     @relation("RescheduledAppointments")
-  appointmentId      String?
+  isActive           Boolean           @default(true)
+
+  rescheduledFrom   Appointment?  @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
+  rescheduledFromId String?
+  rescheduledTo     Appointment[] @relation("RescheduledAppointments")
+  appointmentId     String?
 
   type  AppointmentType @default(CONSULTA)
   notes String?
@@ -682,11 +689,13 @@ model Branch {
   staff          Staff[]
   timeOffs       TimeOff[]
   storage        Storage[] // Relación con TypeStorage
+  
+  @@unique([name, isActive])
 }
 
 enum OrderType {
   MEDICAL_PRESCRIPTION_ORDER
-  MEDICAL_APPOINTMENt_ORDER
+  MEDICAL_APPOINTMENT_ORDER
   PRODUCT_SALE_ORDER
   PRODUCT_PURCHASE_ORDER
 }

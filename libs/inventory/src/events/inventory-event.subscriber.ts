@@ -33,7 +33,7 @@ export class InventoryEventSubscriber {
     // private readonly outgoingRepository: OutgoingRepository,
     // private readonly incomingRepository: IncomingRepository,
     // private readonly stockService: StockService,
-  ) {}
+  ) { }
 
   @OnEvent('order.completed')
   async handleOrderCompleted(payload: {
@@ -107,15 +107,9 @@ export class InventoryEventSubscriber {
       );
     }
 
-    const storageId = metadata?.orderDetails?.storageId;
     this.logger.debug('Metadata structure:', JSON.stringify(metadata, null, 2));
-    this.logger.debug('Storage ID found:', storageId);
 
-    if (!storageId) {
-      throw new Error(
-        `Missing required storageId in order ${order.id}. Metadata: ${JSON.stringify(metadata)}`,
-      );
-    }
+
 
     this.logger.log(
       `Updating movement type ${order.movementTypeId} to active state`,
@@ -124,9 +118,6 @@ export class InventoryEventSubscriber {
       state: true,
     });
 
-    this.logger.log(
-      `Creating ${isIncoming ? 'incoming' : 'outgoing'} record for storage ${storageId}`,
-    );
 
     // const record = isIncoming
     //   ? await this.incomingRepository.create({
@@ -168,7 +159,7 @@ export class InventoryEventSubscriber {
       );
       const createIncomingDto: CreateIncomingDtoStorage = {
         name: `Purchase Order ${order.code}`,
-        storageId: storageId,
+        storageId: '',
         date: new Date(),
         state: true,
         movement: products.map((product) => ({
@@ -234,7 +225,7 @@ export class InventoryEventSubscriber {
 
         const createOutgoingDto: CreateOutgoingDtoStorage = {
           name: `Órden de venta ${order.code}`,
-          storageId: storageId,
+          storageId: '',
           date: new Date(),
           state: true,
           movement: outgoingProductMovements,
@@ -281,28 +272,28 @@ export class InventoryEventSubscriber {
         typeof order.metadata === 'string'
           ? JSON.parse(order.metadata)
           : order.metadata;
-      const storageId = metadata?.orderDetails?.storageId;
-      if (!storageId) {
-        throw new Error(`Missing storageId in metadata for order ${order.id}`);
-      }
+      // const storageId = metadata?.orderDetails?.storageId;
+      // if (!storageId) {
+      //   throw new Error(`Missing storageId in metadata for order ${order.id}`);
+      // }
 
-      this.logger.debug('Validating stock for:', {
-        storageId,
-        productId: product.productId,
-        quantity: product.quantity,
-      });
+      // this.logger.debug('Validating stock for:', {
+      //   storageId,
+      //   productId: product.productId,
+      //   quantity: product.quantity,
+      // });
 
-      const stockActual =
-        await this.stockRepository.getStockByStorageAndProduct(
-          storageId,
-          product.productId,
-        );
-      this.logger.log('stockActual:', stockActual);
-      if (stockActual.stock < 0) {
-        throw new Error(
-          `Invalid stock movement: Negative stock for product ${product.productId} in storage ${storageId}`,
-        );
-      }
+      // const stockActual =
+      //   await this.stockRepository.getStockByStorageAndProduct(
+      //     storageId,
+      //     product.productId,
+      //   );
+      // this.logger.log('stockActual:', stockActual);
+      // if (stockActual.stock < 0) {
+      //   throw new Error(
+      //     `Invalid stock movement: Negative stock for product ${product.productId} in storage ${storageId}`,
+      //   );
+      // }
     } catch (error) {
       this.logger.error('Error validating stock:', {
         orderId: order.id,

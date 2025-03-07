@@ -95,6 +95,7 @@ export class CreateAppointmentUseCase {
         notes: createAppointmentDto.notes,
         cancellationReason: createAppointmentDto.cancellationReason,
         rescheduledFromId: createAppointmentDto.rescheduledFromId,
+        isActive: true
       });
 
       this.logger.debug(`Cita creada: ${JSON.stringify(appointment)}`);

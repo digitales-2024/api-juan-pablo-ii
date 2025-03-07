@@ -147,10 +147,7 @@ export class CreateProductSaleOrderUseCase {
 
     this.logger.log(`Order: ${JSON.stringify(metadata)}`);
 
-    // Update the order with movementTypeId
-    await this.orderRepository.update(order.id, {
-      movementTypeId: order.movementTypeId,
-    });
+
     // Update the order with calculated totals and metadata
     const updatedOrder = await this.orderRepository.update(order.id, {
       subtotal: subtotal,
