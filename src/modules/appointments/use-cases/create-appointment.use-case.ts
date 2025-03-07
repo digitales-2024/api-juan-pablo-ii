@@ -24,14 +24,17 @@ export class CreateAppointmentUseCase {
     user: UserData,
   ): Promise<HttpResponse<Appointment>> {
     try {
-      // Convertir a Lima time
-      const start = moment.tz(createAppointmentDto.start, this.timeZone).toDate();
-      const end = moment.tz(createAppointmentDto.end, this.timeZone).toDate();
+      // Las fechas ya vienen en UTC desde el frontend
+      // No necesitamos convertirlas a Lima time, solo necesitamos parsearlas correctamente
+      const start = new Date(createAppointmentDto.start);
+      const end = new Date(createAppointmentDto.end);
 
-      this.logger.debug(`Fecha inicio recibida: ${createAppointmentDto.start}`);
-      this.logger.debug(`Fecha fin recibida: ${createAppointmentDto.end}`);
-      this.logger.debug(`Fecha inicio Lima: ${start}`);
-      this.logger.debug(`Fecha fin Lima: ${end}`);
+      this.logger.debug(`Fecha inicio recibida (UTC): ${createAppointmentDto.start}`);
+      this.logger.debug(`Fecha fin recibida (UTC): ${createAppointmentDto.end}`);
+      this.logger.debug(`Fecha inicio parseada (UTC): ${start.toISOString()}`);
+      this.logger.debug(`Fecha fin parseada (UTC): ${end.toISOString()}`);
+      this.logger.debug(`Fecha inicio Lima: ${moment(start).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
+      this.logger.debug(`Fecha fin Lima: ${moment(end).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
 
       // 1. Validar intervalo de 15 minutos exactos
       const duration = end.getTime() - start.getTime();
@@ -41,7 +44,9 @@ export class CreateAppointmentUseCase {
       }
 
       // 2. Validar alineación a slots de 15 mins (00, 15, 30, 45)
-      if (start.getMinutes() % 15 !== 0 || start.getSeconds() !== 0 || start.getMilliseconds() !== 0) {
+      // Convertir a hora local para validar los minutos
+      const startLima = moment(start).tz(this.timeZone);
+      if (startLima.minutes() % 15 !== 0 || startLima.seconds() !== 0 || startLima.milliseconds() !== 0) {
         throw new BadRequestException('La hora de inicio debe estar alineada a intervalos de 15 minutos');
       }
 
@@ -55,7 +60,8 @@ export class CreateAppointmentUseCase {
 
       if (!validTurn) {
         this.logger.warn(`No se encontró TURNO disponible para el staff ${createAppointmentDto.staffId}`);
-        this.logger.warn(`Rango buscado: ${start} - ${end}`);
+        this.logger.warn(`Rango buscado (UTC): ${start.toISOString()} - ${end.toISOString()}`);
+        this.logger.warn(`Rango buscado (Lima): ${moment(start).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')} - ${moment(end).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
         throw new BadRequestException('No hay turnos disponibles para este horario');
       }
 
@@ -65,6 +71,8 @@ export class CreateAppointmentUseCase {
       const overlappingAppointments = await this.appointmentRepository.findMany({
         where: {
           staffId: createAppointmentDto.staffId,
+          status: 'CONFIRMED',
+          isActive: true,
           OR: [
             {
               AND: [
@@ -78,8 +86,10 @@ export class CreateAppointmentUseCase {
       });
 
       if (overlappingAppointments.length > 0) {
-        this.logger.warn(`Citas solapadas encontradas: ${JSON.stringify(overlappingAppointments)}`);
-        throw new BadRequestException('Ya existe una cita programada para este doctor en esta fecha y hora');
+        this.logger.warn(`Citas CONFIRMADAS solapadas encontradas: ${JSON.stringify(overlappingAppointments)}`);
+        this.logger.warn(`Total de citas solapadas: ${overlappingAppointments.length}`);
+        this.logger.warn(`Horarios de citas solapadas: ${overlappingAppointments.map(a => `${a.start.toISOString()} - ${a.end.toISOString()}`).join(', ')}`);
+        throw new BadRequestException('Ya existe una cita confirmada para este doctor en esta fecha y hora');
       }
 
       // Crear la cita
