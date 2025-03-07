@@ -105,6 +105,7 @@ export class CreateAppointmentUseCase {
         notes: createAppointmentDto.notes,
         cancellationReason: createAppointmentDto.cancellationReason,
         rescheduledFromId: createAppointmentDto.rescheduledFromId,
+        paymentMethod: createAppointmentDto.paymentMethod,
         isActive: true
       });
 

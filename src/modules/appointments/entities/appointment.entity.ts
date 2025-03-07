@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AppointmentStatus, AppointmentType } from '@prisma/client';
+import { AppointmentStatus, AppointmentType, PaymentMethod } from '@prisma/client';
 
 export class Appointment {
   @ApiProperty()
@@ -25,6 +25,9 @@ export class Appointment {
 
   @ApiProperty()
   end: Date;
+
+  @ApiProperty({ enum: PaymentMethod })
+  paymentMethod: PaymentMethod;
 
   @ApiProperty({ enum: AppointmentStatus })
   status: AppointmentStatus;
