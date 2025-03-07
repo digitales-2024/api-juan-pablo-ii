@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsDateString, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { AppointmentType, AppointmentStatus, PaymentMethod } from '@prisma/client';
+import { AppointmentStatus, AppointmentType, PaymentMethod } from '@prisma/client';
 
 export class CreateAppointmentDto {
   @ApiProperty({
