@@ -256,10 +256,21 @@ export class EventService {
   ): Promise<Event | null> {
     try {
       this.logger.debug(`Buscando TURNO para staff: ${staffId}`);
+      this.logger.debug(`Fecha inicio (UTC): ${start.toISOString()}`);
+      this.logger.debug(`Fecha fin (UTC): ${end.toISOString()}`);
+
       const turn = await this.eventRepository.findAvailableTurn(staffId, start, end);
-      this.logger.debug(`Resultado de búsqueda de TURNO: ${JSON.stringify(turn)}`);
+
+      if (turn) {
+        this.logger.debug(`TURNO encontrado: ${turn.id}`);
+        this.logger.debug(`TURNO horario: ${turn.start.toISOString()} - ${turn.end.toISOString()}`);
+      } else {
+        this.logger.debug(`No se encontró TURNO para el horario solicitado`);
+      }
+
       return turn;
     } catch (error) {
+      this.logger.error(`Error al buscar TURNO: ${error.message}`);
       this.errorHandler.handleError(error, 'getting');
     }
   }
