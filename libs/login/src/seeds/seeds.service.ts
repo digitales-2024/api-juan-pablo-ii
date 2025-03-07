@@ -19,6 +19,14 @@ import * as bcrypt from 'bcrypt';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { modulesSeed } from './data/modules.seed';
 import { permissionsSeed } from './data/permissions.seed';
+import {
+  BranchSeed,
+  StorageTypeSeed,
+  ServiceTypeSeed,
+  CategoriaSeed,
+  TipoProductoSeed,
+  StaffTypeSeed,
+} from './data/juanpablo.seed';
 
 @Injectable()
 export class SeedsService {
@@ -281,6 +289,172 @@ export class SeedsService {
             },
           },
         });
+
+        // Crear las sucursales/branches desde el seed
+        for (const branchData of BranchSeed) {
+          // Primero buscar si existe la sucursal
+          const existingBranch = await prisma.branch.findFirst({
+            where: {
+              name: branchData.name,
+              isActive: true,
+            },
+          });
+
+          if (existingBranch) {
+            // Actualizar si existe
+            await prisma.branch.update({
+              where: { id: existingBranch.id },
+              data: {
+                address: branchData.address,
+                phone: branchData.phone,
+              },
+            });
+          } else {
+            // Crear si no existe
+            await prisma.branch.create({
+              data: {
+                ...branchData,
+                isActive: true,
+              },
+            });
+          }
+        }
+        this.logger.log('Branches created successfully');
+
+        // Crear tipos de almacenamiento (Storage Types)
+        for (const typeData of StorageTypeSeed) {
+          const existingType = await prisma.typeStorage.findFirst({
+            where: {
+              name: typeData.name,
+              isActive: true,
+            },
+          });
+
+          if (existingType) {
+            await prisma.typeStorage.update({
+              where: { id: existingType.id },
+              data: {
+                description: typeData.description,
+              },
+            });
+          } else {
+            await prisma.typeStorage.create({
+              data: {
+                ...typeData,
+                isActive: true,
+              },
+            });
+          }
+        }
+        this.logger.log('Storage Types created successfully');
+
+        // Crear tipos de servicio (Service Types)
+        for (const typeData of ServiceTypeSeed) {
+          const existingType = await prisma.serviceType.findFirst({
+            where: {
+              name: typeData.name,
+              isActive: true,
+            },
+          });
+
+          if (existingType) {
+            await prisma.serviceType.update({
+              where: { id: existingType.id },
+              data: {
+                description: typeData.description,
+              },
+            });
+          } else {
+            await prisma.serviceType.create({
+              data: {
+                ...typeData,
+                isActive: true,
+              },
+            });
+          }
+        }
+        this.logger.log('Service Types created successfully');
+
+        // Crear categorías de productos
+        for (const catData of CategoriaSeed) {
+          const existingCat = await prisma.categoria.findFirst({
+            where: {
+              name: catData.name,
+              isActive: true,
+            },
+          });
+
+          if (existingCat) {
+            await prisma.categoria.update({
+              where: { id: existingCat.id },
+              data: {
+                description: catData.description,
+              },
+            });
+          } else {
+            await prisma.categoria.create({
+              data: {
+                ...catData,
+                isActive: true,
+              },
+            });
+          }
+        }
+        this.logger.log('Categories created successfully');
+
+        // Crear tipos de productos
+        for (const typeData of TipoProductoSeed) {
+          const existingType = await prisma.tipoProducto.findFirst({
+            where: {
+              name: typeData.name,
+              isActive: true,
+            },
+          });
+
+          if (existingType) {
+            await prisma.tipoProducto.update({
+              where: { id: existingType.id },
+              data: {
+                description: typeData.description,
+              },
+            });
+          } else {
+            await prisma.tipoProducto.create({
+              data: {
+                ...typeData,
+                isActive: true,
+              },
+            });
+          }
+        }
+        this.logger.log('Product Types created successfully');
+
+        // Crear tipos de personal (Staff Types)
+        for (const typeData of StaffTypeSeed) {
+          const existingType = await prisma.staffType.findFirst({
+            where: {
+              name: typeData.name,
+              isActive: true,
+            },
+          });
+
+          if (existingType) {
+            await prisma.staffType.update({
+              where: { id: existingType.id },
+              data: {
+                description: typeData.description,
+              },
+            });
+          } else {
+            await prisma.staffType.create({
+              data: {
+                ...typeData,
+                isActive: true,
+              },
+            });
+          }
+        }
+        this.logger.log('Staff Types created successfully');
 
         return {
           message: 'Super admin created successfully',
