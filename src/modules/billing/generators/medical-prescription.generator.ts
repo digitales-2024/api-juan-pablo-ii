@@ -1,6 +1,8 @@
 import { BaseOrderGenerator } from '@pay/pay/generators/base-order.generator';
 import { IOrder } from '@pay/pay/interfaces';
 import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
+import { Injectable } from '@nestjs/common';
+import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
 
 // Interfaces para simular respuestas de otros servicios
 interface RecetaData {
@@ -137,6 +139,46 @@ export class MedicalPrescriptionGenerator extends BaseOrderGenerator {
     const receta = await this.mockRecetaService(input.recetaId);
     // Aquí iría la lógica real para obtener el precio de los medicamentos
     return receta.total || 0;
+  }
+
+  /**
+   * Crea una estructura de metadata vacía para una orden de receta médica
+   */
+  createEmptyMetadata(createDto: CreateMedicalPrescriptionBillingDto, patient: any) {
+    // Estructura base de la metadata
+    const metadata = {
+      // Detalles del paciente
+      patientDetails: {
+        id: patient?.id || '',
+        fullName: '',
+        dni: '',
+        address: '',
+        phone: '',
+      },
+      // Detalles de la orden
+      orderDetails: {
+        // Detalles de la transacción (se llenarán después)
+        transactionDetails: {
+          subtotal: 0,
+          tax: 0,
+          total: 0,
+        },
+        // Detalles de las citas (se llenarán después)
+        appointments: [],
+        // Detalles de los productos (se llenarán después)
+        products: [],
+      },
+      // Detalles adicionales
+      additionalDetails: {
+        notes: createDto.notes || '',
+        voucherNumber: createDto.voucherNumber || '',
+        paymentMethod: createDto.paymentMethod || 'CASH',
+        // Cualquier metadata adicional proporcionada
+        ...createDto.metadata,
+      },
+    };
+
+    return metadata;
   }
 }
 
