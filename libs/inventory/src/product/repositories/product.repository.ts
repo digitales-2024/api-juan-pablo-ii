@@ -59,6 +59,7 @@ export class ProductRepository extends BaseRepository<Product> {
         tipoProductoId: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         categoria: {
           select: {
             name: true,
@@ -73,6 +74,12 @@ export class ProductRepository extends BaseRepository<Product> {
         },
       },
     });
+
+    // // Map products to ActiveProduct type to ensure compatibility with the enum
+    // return products.map((product) => ({
+    //   ...product,
+    //   uso: product.uso as unknown as ProductUse,
+    // })) as ActiveProduct[];
   }
 
   /**

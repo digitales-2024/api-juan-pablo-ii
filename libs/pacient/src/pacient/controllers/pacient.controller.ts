@@ -51,7 +51,7 @@ import { RemoveImageInterceptor } from './remove-image.interceptor';
 @Controller({ path: 'paciente', version: '1' })
 @Auth()
 export class PacientController {
-  constructor(private readonly pacientService: PacientService) { }
+  constructor(private readonly pacientService: PacientService) {}
 
   /**
    * Crea un nuevo paciente
@@ -91,7 +91,7 @@ export class PacientController {
    * Obtiene todos los pacientes
    */
   @Get('dni/:dni')
-  @ApiOperation({ summary: 'Obtenerun pacinete por su dni' })
+  @ApiOperation({ summary: 'Obtenerun paciente por su dni' })
   @ApiParam({ name: 'dni', description: 'DNI del paciente' })
   @ApiResponse({
     status: 200,
@@ -322,7 +322,7 @@ export class PacientController {
       updatePatientDto.patientPhoto = updatePatientDto.patientPhoto[0];
     }
 
-    // Eliminar los campos id e image de updatePatientDto 
+    // Eliminar los campos id e image de updatePatientDto
     delete updatePatientDto.id;
     delete updatePatientDto.image;
 

@@ -36,7 +36,7 @@ import { CreateMedicalAppointmentBillingDto } from '../dto';
 })
 @Auth()
 export class BillingController {
-  constructor(private readonly billingService: BillingService) { }
+  constructor(private readonly billingService: BillingService) {}
 
   @Post('medical-appointment')
   @ApiOperation({ summary: 'Create medical consultation order' })
