@@ -56,6 +56,12 @@ export class StockRepository extends BaseRepository<Stock> {
               select: {
                 id: true,
                 name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },

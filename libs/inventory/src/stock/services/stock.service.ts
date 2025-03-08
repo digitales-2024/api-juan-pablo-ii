@@ -317,7 +317,8 @@ export class StockService {
 
   async getProductsForSaleStock(use: ProductUse): Promise<ProductStock[]> {
     try {
-      const productsStock = await this.stockRepository.getAllForSaleProductsStock(use);
+      const productsStock =
+        await this.stockRepository.getAllForSaleProductsStock(use);
       return productsStock;
     } catch (error) {
       this.logger.error('Error fetching products stock', error);
@@ -325,9 +326,16 @@ export class StockService {
     }
   }
 
-  async getProductsForSaleStockAndBranch(use: ProductUse, branchId: string): Promise<ProductStock[]> {
+  async getProductsForSaleStockAndBranch(
+    use: ProductUse,
+    branchId: string,
+  ): Promise<ProductStock[]> {
     try {
-      const productsStock = await this.stockRepository.getAllForSaleProductsStockAndBranch(use, branchId);
+      const productsStock =
+        await this.stockRepository.getAllForSaleProductsStockAndBranch(
+          use,
+          branchId,
+        );
       return productsStock;
     } catch (error) {
       this.logger.error('Error fetching products stock', error);
