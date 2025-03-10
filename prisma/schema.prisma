@@ -561,6 +561,7 @@ model Appointment {
   patientId          String
   start              DateTime
   end                DateTime
+  paymentMethod      PaymentMethod
   status             AppointmentStatus @default(PENDING)
   cancellationReason String?
   isActive           Boolean           @default(true)
@@ -745,7 +746,7 @@ model Payment {
   type          PaymentType   @default(REGULAR)
   amount        Float
   description   String?
-  paymentMethod PaymentMethod // CASH, TRANSFER, YAPE
+  paymentMethod PaymentMethod // CASH, BANK_TRANSFER, DIGITAL_WALLET
   voucherNumber String? // Número de comprobante/operación
   verifiedBy    String? // ID del usuario que verificó
   verifiedAt    DateTime? // Cuándo se verificó
@@ -758,7 +759,7 @@ model Payment {
 enum PaymentMethod {
   CASH
   BANK_TRANSFER
-  YAPE
+  DIGITAL_WALLET
 }
 
 enum PaymentStatus {

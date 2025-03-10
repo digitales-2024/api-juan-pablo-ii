@@ -16,6 +16,7 @@ import { CloudflareModule } from './cloudflare/cloudflare.module';
 import { CalendarModule } from '@calendar/calendar/calendar.module';
 import { StaffScheduleModule } from './modules/staff-schedule/staff-schedule.module';
 import { PacientModule } from '@pacient/pacient/pacient.module';
+import { DocAppointmentModule } from '@doc-appointment/doc-appointment';
 
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { PacientModule } from '@pacient/pacient/pacient.module';
     CalendarModule,
     StaffScheduleModule,
     PacientModule,
-
+    DocAppointmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

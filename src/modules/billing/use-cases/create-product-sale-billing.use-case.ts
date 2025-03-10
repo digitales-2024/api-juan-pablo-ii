@@ -16,8 +16,6 @@ import {
   PaymentStatus,
   PaymentType,
 } from '@pay/pay/interfaces/payment.types';
-import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
-import { StockRepository } from '@inventory/inventory/stock/repositories/stock.repository';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { PacientService } from '@pacient/pacient/pacient/services/pacient.service';
 import { ProductSaleGenerator } from '../generators/product-sale-generator';
@@ -37,7 +35,7 @@ export class CreateProductSaleOrderUseCase {
     private readonly stockService: StockService,
     private readonly patientService: PacientService,
     private readonly productSaleGenerator: ProductSaleGenerator,
-  ) {}
+  ) { }
 
   async execute(
     createDto: CreateProductSaleBillingDto,
@@ -224,6 +222,7 @@ export class CreateProductSaleOrderUseCase {
         quantity: product.quantity,
         price: priceWithTax, // Mostrar el precio con impuesto al usuario
         subtotal: productSubtotal, // Subtotal sin impuesto para cálculos internos
+        storageId: product.storageId, // Añadir el storageId para el procesamiento de inventario
       });
     }
 

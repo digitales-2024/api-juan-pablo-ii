@@ -205,9 +205,19 @@ export class OrderService {
    */
   async findAll(): Promise<Order[]> {
     try {
-      return await this.orderRepository.findMany({
+      return this.orderRepository.findMany({
         orderBy: {
           date: 'desc',
+        },
+      }{
+        where: {
+          isActive: true,
+        },
+        include: {
+          payments: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
         },
       });
     } catch (error) {
