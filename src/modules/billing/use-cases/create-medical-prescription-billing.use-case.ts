@@ -66,7 +66,7 @@ export class CreateMedicalPrescriptionUseCase {
             const appointmentsData = await this.validateAndGetAppointments(createDto.appointmentIds);
 
             // Crear metadata vacía usando el generador
-            const metadata = this.prescriptionGenerator.createEmptyMetadata(createDto, patient);
+            const metadata = this.prescriptionGenerator.createEmptyMetadata(createDto);
 
             // Llenar los detalles del paciente
             metadata.patientDetails.fullName = `${patient.name} ${patient.lastName || ''}`.trim();
@@ -92,11 +92,26 @@ export class CreateMedicalPrescriptionUseCase {
                 total,
             };
 
-            // Añadir los detalles de los productos a metadata
-            metadata.orderDetails.products = productTotals.productDetails;
+            // Agregar productos al metadata
+            metadata.orderDetails.products = productTotals.productDetails.map(product => ({
+                productId: product.id,
+                name: product.name,
+                quantity: product.quantity,
+                price: product.price,
+                subtotal: product.subtotal,
+            }));
 
-            // Añadir los detalles de las citas a metadata
-            metadata.orderDetails.appointments = appointmentTotals.appointmentDetails;
+            // Agregar servicios (citas) al metadata
+            metadata.orderDetails.services = appointmentsData.map(appointment => ({
+                id: appointment.id,
+                name: appointment.serviceName || 'Consulta médica',
+                quantity: 1,
+            }));
+
+            // Agregar información del médico
+            if (appointmentsData.length > 0 && appointmentsData[0].doctor) {
+                metadata.orderDetails.staffId = appointmentsData[0].doctor.id;
+            }
 
             // Log de la metadata completa
             this.logger.log(`Metadata: ${JSON.stringify(metadata)}`);

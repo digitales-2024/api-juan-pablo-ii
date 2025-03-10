@@ -71,6 +71,16 @@ export class CreateMedicalPrescriptionBillingDto {
   @IsUUID()
   patientId: string;
 
+
+  @ApiProperty({
+    description: 'ID de la receta',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsUUID()
+  recipeId: string;
+
+
+
   @ApiProperty({
     description: 'ID de la sucursal',
     example: '123e4567-e89b-12d3-a456-426614174000',

@@ -38,8 +38,8 @@ export class BillingService {
       'Billing',
       billingErrorMessages
     );
-    this.orderService.registerGenerator(this.productSaleGenerator);
     // this.orderService.registerGenerator(this.productPurchaseGenerator);
+    this.orderService.registerGenerator(this.productSaleGenerator);
     this.orderService.registerGenerator(this.appointmentGenerator);
     this.orderService.registerGenerator(this.medicalPrescriptionGenerator);
   }

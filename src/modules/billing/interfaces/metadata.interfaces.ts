@@ -19,6 +19,9 @@ export class ProductMovement {
   @ApiProperty({ description: 'Identificador único del producto' })
   productId: string;
 
+  @ApiProperty({ description: 'Identificador único del almacén' })
+  storageId: string;
+
   @ApiProperty({ description: 'Nombre del producto' })
   name: string;
 
