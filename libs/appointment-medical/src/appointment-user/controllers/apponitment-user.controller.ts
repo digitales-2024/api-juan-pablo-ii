@@ -17,7 +17,7 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
  * Controlador REST para gestionar recetas médicas.
  * Expone endpoints para operaciones CRUD sobre recetas.
  */
-@ApiTags('Appointment-user')
+@ApiTags('Appointment-userº')
 @ApiBadRequestResponse({
   description:
     'Bad Request - Error en la validación de datos o solicitud incorrecta',
