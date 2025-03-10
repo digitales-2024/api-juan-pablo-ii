@@ -19,7 +19,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { UserData } from '@login/login/interfaces';
-import { Order } from '../entities/order.entity';
+import { DetailedOrder, Order } from '../entities/order.entity';
 import {
   CreateOrderDto,
   DeleteOrdersDto,
@@ -64,9 +64,9 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todas las órdenes',
-    type: [Order],
+    type: [DetailedOrder],
   })
-  findAll(): Promise<Order[]> {
+  findAll(): Promise<DetailedOrder[]> {
     return this.orderService.findAll();
   }
 

@@ -1,7 +1,7 @@
 // libs/pay/src/services/order.service.ts
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { OrderRepository } from '../repositories/order.repository';
-import { Order } from '../entities/order.entity';
+import { DetailedOrder, Order } from '../entities/order.entity';
 import { IOrderGenerator } from '../interfaces';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { orderErrorMessages } from '../errors/errors-order';
@@ -203,19 +203,19 @@ export class OrderService {
    * @returns Arreglo de órdenes
    * @throws {BadRequestException} Si hay un error al obtener las órdenes
    */
-  async findAll(): Promise<Order[]> {
+  async findAll(): Promise<DetailedOrder[]> {
     try {
       return this.orderRepository.findMany({
-        where: {
-          isActive: true,
-        },
+        // where: {
+        //   isActive: true,
+        // },
         include: {
           payments: true,
         },
         orderBy: {
           date: 'desc',
         },
-      });
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -244,14 +244,17 @@ export class OrderService {
    * @returns Arreglo de órdenes del tipo especificado
    * @throws {BadRequestException} Si hay un error al obtener las órdenes
    */
-  async findByType(type: OrderType): Promise<Order[]> {
+  async findByType(type: OrderType): Promise<DetailedOrder[]> {
     try {
       return this.orderRepository.findMany({
         where: { type, isActive: true },
         orderBy: {
           date: 'desc',
         },
-      });
+        include: {
+          payments: true,
+        },
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -263,14 +266,17 @@ export class OrderService {
    * @returns Arreglo de órdenes con el estado especificado
    * @throws {BadRequestException} Si hay un error al obtener las órdenes
    */
-  async findByStatus(status: OrderStatus): Promise<Order[]> {
+  async findByStatus(status: OrderStatus): Promise<DetailedOrder[]> {
     try {
       return this.orderRepository.findMany({
         where: { status, isActive: true },
         orderBy: {
           date: 'desc',
         },
-      });
+        include: {
+          payments: true,
+        },
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -300,7 +306,7 @@ export class OrderService {
   async findOrderByStatusType(
     type: OrderType,
     status: OrderStatus,
-  ): Promise<Order[]> {
+  ): Promise<DetailedOrder[]> {
     try {
       // const orders = await this.findByStatus(status);
       // return orders.filter((order) => order.type === type);
@@ -309,7 +315,10 @@ export class OrderService {
         orderBy: {
           date: 'desc',
         },
-      });
+        include: {
+          payments: true,
+        },
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
