@@ -15,7 +15,8 @@ import { AppointmentsModule } from '../appointments/appointments.module';
 import { PacientModule } from '@pacient/pacient/pacient.module';
 import { CreateAppointmentOrderUseCase } from './use-cases/create-appointment-billing.use-case';
 import { AppointmentGenerator } from './generators/appointment.generator';
-
+import { CreateMedicalPrescriptionUseCase } from './use-cases/create-medical-prescription-billing.use-case';
+import { MedicalPrescriptionGenerator } from './generators/medical-prescription.generator';
 @Module({
   imports: [
     PayModule,
@@ -28,6 +29,7 @@ import { AppointmentGenerator } from './generators/appointment.generator';
   controllers: [BillingController],
   providers: [
     ProductSaleGenerator,
+    MedicalPrescriptionGenerator,
     // ProductPurchaseGenerator,
     AppointmentGenerator,
     StorageRepository,
@@ -36,6 +38,7 @@ import { AppointmentGenerator } from './generators/appointment.generator';
     CreateProductSaleOrderUseCase,
     // CreateProductPurchaseOrderUseCase,
     CreateAppointmentOrderUseCase,
+    CreateMedicalPrescriptionUseCase,
   ],
 })
 export class BillingModule { }
