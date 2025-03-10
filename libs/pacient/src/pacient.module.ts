@@ -77,4 +77,4 @@ import { CloudflareModule } from 'src/cloudflare/cloudflare.module';
   ],
   exports: [PacientService],
 })
-export class PacientModule { }
+export class PacientModule {}
