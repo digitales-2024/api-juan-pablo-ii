@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { AppointmentMedicalResponse } from '../entities/apponitment-user..entity';
+import {
+  AppointmentMedicalResponse,
+  AppointmentResponse,
+} from '../entities/apponitment-user..entity';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
 
 @Injectable()
@@ -9,7 +12,9 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
   }
 
   // Función para obtener todas las citas médicas CONFIRMADAS asociadas a un staff (usuario)
-  async getConfirmedAppointmentsByUserId(userId: string) {
+  async getConfirmedAppointmentsByUserId(
+    userId: string,
+  ): Promise<AppointmentResponse[]> {
     // 1. Primero verificamos que el usuario está asociado a un staff
     const staff = await this.prisma.staff.findFirst({
       where: { userId, isActive: true },
@@ -80,7 +85,9 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
   }
 
   // Función para obtener todas las citas médicas COMPLETADAS asociadas a un staff (usuario)
-  async getCompletedAppointmentsByUserId(userId: string) {
+  async getCompletedAppointmentsByUserId(
+    userId: string,
+  ): Promise<AppointmentResponse[]> {
     // 1. Primero verificamos que el usuario está asociado a un staff
     const staff = await this.prisma.staff.findFirst({
       where: { userId, isActive: true },
@@ -151,7 +158,7 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
   }
 
   // Función para obtener todas las citas médicas CONFIRMADAS (para super admin)
-  async getAllConfirmedAppointmentsAdmin() {
+  async getAllConfirmedAppointmentsAdmin(): Promise<AppointmentResponse[]> {
     // Obtenemos todas las citas confirmadas con sus relaciones
     const appointments = await this.prisma.appointment.findMany({
       where: {
@@ -211,7 +218,7 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
   }
 
   // Función para obtener todas las citas médicas COMPLETADAS (para super admin)
-  async getAllCompletedAppointmentsAdmin() {
+  async getAllCompletedAppointmentsAdmin(): Promise<AppointmentResponse[]> {
     // Obtenemos todas las citas completadas con sus relaciones
     const appointments = await this.prisma.appointment.findMany({
       where: {
@@ -271,7 +278,9 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
   }
 
   // Función para obtener citas CONFIRMADAS filtradas por sucursal del personal de l meson
-  async getBranchConfirmedAppointmentsByUserId(userId: string) {
+  async getBranchConfirmedAppointmentsByUserId(
+    userId: string,
+  ): Promise<AppointmentResponse[]> {
     // 1. Verificamos que el usuario está asociado a un staff y obtenemos su sucursal
     const staff = await this.prisma.staff.findFirst({
       where: { userId, isActive: true },
@@ -346,7 +355,9 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
   }
 
   // Función para obtener citas COMPLETADAS filtradas por sucursal del personal del meson
-  async getBranchCompletedAppointmentsByUserId(userId: string) {
+  async getBranchCompletedAppointmentsByUserId(
+    userId: string,
+  ): Promise<AppointmentResponse[]> {
     // 1. Verificamos que el usuario está asociado a un staff y obtenemos su sucursal
     const staff = await this.prisma.staff.findFirst({
       where: { userId, isActive: true },
@@ -429,7 +440,7 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
   async updateAppointmentStatus(
     appointmentId: string,
     status: 'COMPLETED' | 'NO_SHOW',
-  ) {
+  ): Promise<AppointmentResponse> {
     // 1. Validar que el estado sea permitido
     if (status !== 'COMPLETED' && status !== 'NO_SHOW') {
       throw new Error(
@@ -478,8 +489,16 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
         },
         patient: {
           select: {
+            id: true,
             name: true,
             lastName: true,
+            MedicalHistory: {
+              where: { isActive: true },
+              select: {
+                id: true,
+              },
+              take: 1,
+            },
           },
         },
       },
@@ -495,6 +514,8 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
       start: updatedAppointment.start,
       end: updatedAppointment.end,
       status: updatedAppointment.status,
+      medicalHistoryId:
+        updatedAppointment.patient.MedicalHistory[0]?.id || null,
     };
   }
 }
