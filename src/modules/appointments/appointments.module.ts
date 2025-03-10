@@ -12,6 +12,7 @@ import { DeleteAppointmentsUseCase } from './use-cases/delete-appointments.use-c
 import { ReactivateAppointmentsUseCase } from './use-cases/reactive-appointments.use-case';
 import { EventsModule } from '@calendar/calendar/event/events.module';
 import { ServiceModule } from '../services/service.module';
+import { AppointmentEventSubscriber } from './events/appointment-event.subscriber';
 
 @Module({
   imports: [AuditModule, EventsModule, ServiceModule],
@@ -23,7 +24,8 @@ import { ServiceModule } from '../services/service.module';
     UpdateAppointmentUseCase,
     DeleteAppointmentsUseCase,
     ReactivateAppointmentsUseCase,
-    FindAppointmentsPaginatedUseCase
+    FindAppointmentsPaginatedUseCase,
+    AppointmentEventSubscriber
   ],
   exports: [AppointmentService],
 })
