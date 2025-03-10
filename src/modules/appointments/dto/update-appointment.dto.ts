@@ -61,4 +61,9 @@ export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
   @IsString()
   @IsOptional()
   rescheduledFromId?: string;
+
+  @ApiProperty({ required: false, description: 'ID del evento asociado en el calendario' })
+  @IsString()
+  @IsOptional()
+  eventId?: string;
 }

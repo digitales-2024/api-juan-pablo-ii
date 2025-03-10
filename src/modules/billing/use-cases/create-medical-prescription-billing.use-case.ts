@@ -99,6 +99,7 @@ export class CreateMedicalPrescriptionUseCase {
                 quantity: product.quantity,
                 price: product.price,
                 subtotal: product.subtotal,
+                storageId: product.storageId,
             }));
 
             // Agregar servicios (citas) al metadata
