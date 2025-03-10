@@ -66,7 +66,13 @@ export class StaffRepository extends BaseRepository<Staff> {
             },
           },
           cmp: data.cmp,
-          branchId: data.branchId,
+          ...(data.branchId ? {
+            branch: {
+              connect: {
+                id: data.branchId
+              }
+            }
+          } : {}),
         },
         select: {
           id: true,
