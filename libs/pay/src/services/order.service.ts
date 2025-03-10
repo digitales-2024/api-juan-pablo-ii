@@ -206,10 +206,6 @@ export class OrderService {
   async findAll(): Promise<Order[]> {
     try {
       return this.orderRepository.findMany({
-        orderBy: {
-          date: 'desc',
-        },
-      }{
         where: {
           isActive: true,
         },
@@ -217,7 +213,7 @@ export class OrderService {
           payments: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          date: 'desc',
         },
       });
     } catch (error) {
