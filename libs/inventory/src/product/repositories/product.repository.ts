@@ -48,6 +48,9 @@ export class ProductRepository extends BaseRepository<Product> {
    */
   async findAllActiveProducts(): Promise<ActiveProduct[]> {
     return await this.prisma.producto.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
       where: {
         isActive: true,
       },

@@ -205,7 +205,11 @@ export class OrderService {
    */
   async findAll(): Promise<Order[]> {
     try {
-      return await this.orderRepository.findMany();
+      return await this.orderRepository.findMany({
+        orderBy: {
+          date: 'desc',
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -218,7 +222,11 @@ export class OrderService {
    */
   async findAllActive(): Promise<Order[]> {
     try {
-      return await this.orderRepository.findManyActive();
+      return await this.orderRepository.findManyActive({
+        orderBy: {
+          date: 'desc',
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -234,6 +242,9 @@ export class OrderService {
     try {
       return this.orderRepository.findMany({
         where: { type, isActive: true },
+        orderBy: {
+          date: 'desc',
+        },
       });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
@@ -250,6 +261,9 @@ export class OrderService {
     try {
       return this.orderRepository.findMany({
         where: { status, isActive: true },
+        orderBy: {
+          date: 'desc',
+        },
       });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
@@ -282,8 +296,14 @@ export class OrderService {
     status: OrderStatus,
   ): Promise<Order[]> {
     try {
-      const orders = await this.findByStatus(status);
-      return orders.filter((order) => order.type === type);
+      // const orders = await this.findByStatus(status);
+      // return orders.filter((order) => order.type === type);
+      return this.orderRepository.findMany({
+        where: { type, status, isActive: true },
+        orderBy: {
+          date: 'desc',
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

@@ -151,7 +151,11 @@ export class ProductService {
    */
   async findAll(): Promise<Product[]> {
     try {
-      return this.productRepository.findMany();
+      return this.productRepository.findMany({
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -166,6 +170,9 @@ export class ProductService {
   async findAllWithRelations(): Promise<ProductWithRelations[]> {
     try {
       const products = await this.productRepository.findManyWithRelations({
+        orderBy: {
+          createdAt: 'desc',
+        },
         include: {
           categoria: {
             select: {

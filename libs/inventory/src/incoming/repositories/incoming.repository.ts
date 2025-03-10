@@ -68,6 +68,9 @@ export class IncomingRepository extends BaseRepository<Incoming> {
   //Evaluar donde seleccionar los registros activos
   async getAllDetailedIncoming(): Promise<DetailedIncoming[]> {
     return this.prisma.incoming.findMany({
+      orderBy: {
+        createdAt: 'desc', // Sort from newest to oldest
+      },
       include: {
         Storage: {
           select: {
