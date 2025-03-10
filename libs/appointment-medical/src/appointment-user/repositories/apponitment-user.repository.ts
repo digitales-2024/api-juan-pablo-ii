@@ -149,6 +149,126 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
       medicalHistoryId: appointment.patient.MedicalHistory[0]?.id || null,
     }));
   }
+
+  // Función para obtener todas las citas médicas CONFIRMADAS (para administrativos)
+  async getAllConfirmedAppointmentsAdmin() {
+    // Obtenemos todas las citas confirmadas con sus relaciones
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        status: 'CONFIRMED',
+        isActive: true,
+      },
+      select: {
+        id: true,
+        start: true,
+        end: true,
+        status: true,
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+        service: {
+          select: {
+            name: true,
+          },
+        },
+        branch: {
+          select: {
+            name: true,
+          },
+        },
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            MedicalHistory: {
+              where: { isActive: true },
+              select: {
+                id: true,
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    // Formateamos los resultados según el formato solicitado
+    return appointments.map((appointment) => ({
+      id: appointment.id,
+      staff: `${appointment.staff.name} ${appointment.staff.lastName}`,
+      service: appointment.service.name,
+      branch: appointment.branch.name,
+      patient: `${appointment.patient.name} ${appointment.patient.lastName || ''}`,
+      start: appointment.start,
+      end: appointment.end,
+      status: appointment.status,
+      medicalHistoryId: appointment.patient.MedicalHistory[0]?.id || null,
+    }));
+  }
+
+  // Función para obtener todas las citas médicas COMPLETADAS (para administrativos)
+  async getAllCompletedAppointmentsAdmin() {
+    // Obtenemos todas las citas completadas con sus relaciones
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        status: 'COMPLETED',
+        isActive: true,
+      },
+      select: {
+        id: true,
+        start: true,
+        end: true,
+        status: true,
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+        service: {
+          select: {
+            name: true,
+          },
+        },
+        branch: {
+          select: {
+            name: true,
+          },
+        },
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            MedicalHistory: {
+              where: { isActive: true },
+              select: {
+                id: true,
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    // Formateamos los resultados según el formato solicitado
+    return appointments.map((appointment) => ({
+      id: appointment.id,
+      staff: `${appointment.staff.name} ${appointment.staff.lastName}`,
+      service: appointment.service.name,
+      branch: appointment.branch.name,
+      patient: `${appointment.patient.name} ${appointment.patient.lastName || ''}`,
+      start: appointment.start,
+      end: appointment.end,
+      status: appointment.status,
+      medicalHistoryId: appointment.patient.MedicalHistory[0]?.id || null,
+    }));
+  }
 }
 
 /* 
