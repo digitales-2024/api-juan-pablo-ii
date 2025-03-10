@@ -62,10 +62,10 @@
         "libs/prescription/src/*"
       ],
       "@doc-appointment/doc-appointment": [
-        "libs/doc-appointment/src"
+        "libs/appointment-medical/src"
       ],
       "@doc-appointment/doc-appointment/*": [
-        "libs/doc-appointment/src/*"
+        "libs/appointment-medical/src/*"
       ],
       "@working-hours/working-hours": [
         "libs/working-hours/src"
