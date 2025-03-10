@@ -116,6 +116,7 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
           patientId: true,
           start: true,
           end: true,
+          paymentMethod: true,
           status: true,
           cancellationReason: true,
           isActive: true,
