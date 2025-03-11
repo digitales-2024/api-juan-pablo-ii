@@ -185,7 +185,7 @@ export class OrderService {
   }
 
   /**
-   * Busca una orden por su identificador
+   * Busca una orden detallada por su identificador
    * @param id - Identificador de la orden
    * @returns La orden encontrada
    * @throws {BadRequestException} Si la orden no se encuentra
@@ -193,6 +193,65 @@ export class OrderService {
   async findOrderById(id: string): Promise<Order> {
     try {
       return await this.orderRepository.findById(id);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca una orden por su identificador
+   * @param id - Identificador de la orden
+   * @returns La orden encontrada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+  async findDetailedOrderById(id: string): Promise<DetailedOrder> {
+    try {
+      const response = (await this.orderRepository.findById(id, {
+        payments: true,
+      })) as DetailedOrder;
+      return response;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca una orden por su identificador
+   * @param id - Identificador de la orden
+   * @returns La orden encontrada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+  async searchDetailedOrderById(id: string): Promise<DetailedOrder[]> {
+    try {
+      const results =
+        id === 'None'
+          ? ((await this.orderRepository.findMany({
+              where: {
+                isActive: true,
+              },
+              orderBy: {
+                date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
+              },
+              include: {
+                payments: true,
+              },
+              take: 10,
+            })) as DetailedOrder[])
+          : [
+              (await this.orderRepository.findOne({
+                where: {
+                  id: {
+                    contains: id,
+                    mode: 'insensitive',
+                  },
+                },
+                include: {
+                  payments: true,
+                },
+              })) as DetailedOrder,
+            ];
+
+      return results;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

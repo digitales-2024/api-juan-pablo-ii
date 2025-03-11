@@ -112,6 +112,34 @@ export class OrderController {
     return this.orderService.findOrderByStatus(status);
   }
 
+  @Get('/detailed/:id')
+  @ApiOperation({ summary: 'Obtener orden por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la orden' })
+  @ApiOkResponse({
+    description: 'Orden encontrada',
+    type: DetailedOrder,
+  })
+  @ApiBadRequestResponse({
+    description: 'ID de orden inválido',
+  })
+  findOneDetailed(@Param('id') id: string): Promise<DetailedOrder> {
+    return this.orderService.findDetailedOrderById(id);
+  }
+
+  @Get('/search/detailed/:id')
+  @ApiOperation({ summary: 'Obtener orden por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la orden' })
+  @ApiOkResponse({
+    description: 'Orden encontrada',
+    type: [DetailedOrder],
+  })
+  @ApiBadRequestResponse({
+    description: 'ID de orden inválido',
+  })
+  searchOneDetailed(@Param('id') id: string): Promise<DetailedOrder[]> {
+    return this.orderService.searchDetailedOrderById(id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener orden por ID' })
   @ApiParam({ name: 'id', description: 'ID de la orden' })
