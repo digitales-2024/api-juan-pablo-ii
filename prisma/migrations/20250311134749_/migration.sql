@@ -701,15 +701,10 @@ CREATE UNIQUE INDEX "TipoProducto_name_key" ON "TipoProducto"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "TipoProducto_name_isActive_key" ON "TipoProducto"("name", "isActive");
 
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 -- CreateIndex
 CREATE UNIQUE INDEX "Producto_name_key" ON "Producto"("name");
-
-<<<<<<<< HEAD:prisma/migrations/20250310163759_init/migration.sql
-
-========
--- CreateIndex
->>>>>>>> 37e222c90ba41319f80707cf0a1b7e10a8db094b:prisma/migrations/20250310143524_/migration.sql
-CREATE EXTENSION IF NOT EXISTS pg_trgm; --Esta linea
 
 -- CreateIndex
 CREATE INDEX "Producto_name_idx" ON "Producto" USING GIN ("name" gin_trgm_ops);

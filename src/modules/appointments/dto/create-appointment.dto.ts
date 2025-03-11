@@ -109,4 +109,13 @@ export class CreateAppointmentDto {
   @IsString()
   @IsNotEmpty()
   paymentMethod: PaymentMethod;
+
+  @ApiProperty({
+    description: 'ID del evento asociado a la cita',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  eventId?: string;
 }

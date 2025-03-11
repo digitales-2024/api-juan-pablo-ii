@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuditModule } from '@login/login/admin/audit/audit.module';
 import {
+  CancelAppointmentUseCase,
   CreateAppointmentUseCase,
   FindAppointmentsPaginatedUseCase,
   UpdateAppointmentUseCase,
@@ -13,9 +14,11 @@ import { ReactivateAppointmentsUseCase } from './use-cases/reactive-appointments
 import { EventsModule } from '@calendar/calendar/event/events.module';
 import { ServiceModule } from '../services/service.module';
 import { AppointmentEventSubscriber } from './events/appointment-event.subscriber';
+import { InventoryModule } from 'libs/inventory/src/inventory.module';
+import { PayModule } from '@pay/pay/pay.module';
 
 @Module({
-  imports: [AuditModule, EventsModule, ServiceModule],
+  imports: [AuditModule, EventsModule, ServiceModule, InventoryModule, PayModule],
   controllers: [AppointmentController],
   providers: [
     AppointmentService,
@@ -25,6 +28,7 @@ import { AppointmentEventSubscriber } from './events/appointment-event.subscribe
     DeleteAppointmentsUseCase,
     ReactivateAppointmentsUseCase,
     FindAppointmentsPaginatedUseCase,
+    CancelAppointmentUseCase,
     AppointmentEventSubscriber
   ],
   exports: [AppointmentService],

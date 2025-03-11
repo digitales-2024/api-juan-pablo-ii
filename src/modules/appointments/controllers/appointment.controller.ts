@@ -24,6 +24,7 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Appointment } from '../entities/appointment.entity';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
+import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 
 @ApiTags('Appointments')
 @ApiBadRequestResponse({
@@ -217,5 +218,24 @@ export class AppointmentController {
     );
   }
 
+  /**
+   * Cancela una cita médica
+   */
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica cancelada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  cancel(
+    @Param('id') id: string,
+    @Body() cancelAppointmentDto: CancelAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.cancel(id, cancelAppointmentDto, user);
+  }
 
 }

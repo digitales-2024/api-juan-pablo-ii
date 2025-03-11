@@ -8,6 +8,10 @@ import { AppointmentStatus } from '@prisma/client';
 import { EventService } from 'libs/calendar/src/event/services/event.service';
 import { CreateEventDto, EventStatus } from 'libs/calendar/src/event/dto/create-event.dto';
 import { EventType } from 'libs/calendar/src/event/entities/event-type.enum';
+import { StockRepository } from 'libs/inventory/src/stock/repositories/stock.repository';
+import { OutgoingService } from 'libs/inventory/src/outgoing/services/outgoing.service';
+import { CompensationService } from 'libs/inventory/src/compensation/compensation.service';
+import { CreateOutgoingDtoStorage } from 'libs/inventory/src/outgoing/dto/create-outgoingStorage.dto';
 
 // Interfaz para los datos de cita en el metadata de la orden
 interface AppointmentOrderData {
@@ -30,6 +34,7 @@ interface PrescriptionOrderData {
         name: string;
         quantity: number;
         instructions: string;
+        storageId?: string;
     }[];
 }
 
@@ -40,6 +45,9 @@ export class AppointmentEventSubscriber {
     constructor(
         private readonly appointmentService: AppointmentService,
         private readonly eventService: EventService,
+        private readonly stockRepository: StockRepository,
+        private readonly outgoingService: OutgoingService,
+        private readonly compensationService: CompensationService,
     ) { }
 
     @OnEvent('order.completed')
@@ -88,6 +96,21 @@ export class AppointmentEventSubscriber {
                 `Error processing appointment for order ${payload.order.id}:`,
                 error.stack,
             );
+
+            // Si es una orden de prescripción médica, iniciamos el flujo de compensación
+            if (payload.order.type === OrderType.MEDICAL_PRESCRIPTION_ORDER) {
+                this.logger.log(
+                    `Initiating compensation flow for failed prescription order ${payload.order.id}`,
+                );
+                try {
+                    await this.compensationService.compensateFailedMovements(payload.order);
+                } catch (compError) {
+                    this.logger.error(
+                        `Error during compensation for order ${payload.order.id}:`,
+                        compError.stack,
+                    );
+                }
+            }
         }
     }
 
@@ -235,7 +258,7 @@ export class AppointmentEventSubscriber {
     }
 
     /**
-     * Crea un evento de tipo CITA en el calendario para una cita médica confirmada
+     * Crea o actualiza un evento de tipo CITA en el calendario para una cita médica confirmada
      * @param order - Orden de pago
      * @param appointmentData - Datos de la cita
      * @param userData - Datos del usuario
@@ -248,6 +271,46 @@ export class AppointmentEventSubscriber {
         this.logger.log(`Starting createAppointmentEvent for appointment ${appointmentData.appointmentId}`);
 
         try {
+            // Primero verificar si la cita ya tiene un evento asociado
+            const appointment = await this.appointmentService.findOne(appointmentData.appointmentId);
+
+            if (appointment && appointment.eventId) {
+                this.logger.log(`Found existing event ID ${appointment.eventId} for appointment ${appointmentData.appointmentId}`);
+
+                // Obtener los datos del paciente para el título del evento
+                let metadata: any;
+                try {
+                    metadata = typeof order.metadata === 'string'
+                        ? JSON.parse(order.metadata)
+                        : order.metadata;
+                } catch (error) {
+                    this.logger.error(`Error parsing metadata for order ${order.id}: ${error.message}`);
+                    metadata = {};
+                }
+
+                const patientDetails = metadata?.patientDetails || {};
+
+                // Actualizar el evento existente
+                try {
+                    const updateResult = await this.eventService.update(
+                        appointment.eventId,
+                        {
+                            color: 'sky',
+                            status: EventStatus.CONFIRMED,
+                            title: `Cita: ${patientDetails.fullName}   DNI: ${patientDetails.dni}`
+                        },
+                        userData
+                    );
+
+                    this.logger.log(`Successfully updated existing event to sky color`);
+                    return updateResult;
+                } catch (updateError) {
+                    this.logger.error(`Error updating existing event: ${updateError.message}`);
+                    // Si falla la actualización, continuamos con el flujo normal para crear uno nuevo
+                }
+            }
+
+            // Si no hay evento existente o falló la actualización, continuamos con el flujo normal
             let metadata: any;
             try {
                 metadata = typeof order.metadata === 'string'
@@ -307,7 +370,6 @@ export class AppointmentEventSubscriber {
             // Si aún no tenemos staffId o branchId, intentamos obtenerlos directamente de la cita
             if (!staffId || !branchId) {
                 try {
-                    const appointment = await this.appointmentService.findOne(appointmentData.appointmentId);
                     if (appointment) {
                         this.logger.log(`Retrieved appointment details: ${JSON.stringify(appointment)}`);
 
@@ -340,7 +402,7 @@ export class AppointmentEventSubscriber {
             // Crear el DTO para el evento
             const createEventDto: CreateEventDto = {
                 title: `Cita: ${patientDetails.fullName || 'Paciente'}`,
-                color: 'blue',
+                color: 'sky',
                 type: EventType.CITA,
                 status: EventStatus.CONFIRMED,
                 start: startDate,
@@ -381,7 +443,6 @@ export class AppointmentEventSubscriber {
             this.logger.debug('Event data:', createEventDto);
 
             // Crear el evento en el calendario
-            this.logger.log(`Calling eventService.create with data:`, createEventDto);
             try {
                 const result = await this.eventService.create(createEventDto, userData);
                 this.logger.log(`Successfully created calendar event for appointment ${appointmentData.appointmentId}`);
@@ -465,10 +526,10 @@ export class AppointmentEventSubscriber {
 
         this.logger.debug('Metadata structure:', JSON.stringify(metadata, null, 2));
 
-        // Extraer datos de la prescripción del metadata
-        const prescriptionData = metadata?.prescriptionData as PrescriptionOrderData;
-        if (!prescriptionData || !prescriptionData.prescriptionId) {
-            throw new Error(`No valid prescription data found in order ${order.id}`);
+        // Extraer datos de la prescripción del metadata usando el nuevo formato
+        const orderDetails = metadata?.orderDetails;
+        if (!orderDetails || !orderDetails.products || orderDetails.products.length === 0) {
+            throw new Error(`No valid products found in order ${order.id}`);
         }
 
         // Preparar userData
@@ -482,20 +543,105 @@ export class AppointmentEventSubscriber {
         };
 
         try {
-            // Aquí iría la lógica para actualizar el estado de la prescripción médica
-            // Por ejemplo, marcarla como pagada o dispensada
-            this.logger.log(
-                `Successfully processed prescription ${prescriptionData.prescriptionId}`,
+            // Obtener el branchId del metadata como fallback
+            const defaultBranchId = orderDetails.branchId;
+            if (!defaultBranchId) {
+                throw new Error(`Missing branchId in order ${order.id}`);
+            }
+
+            this.logger.log(`Processing outgoing operations for prescription medications`);
+
+            // Agrupar productos por storageId
+            const productsByStorage: Record<string, { productId: string; quantity: number }[]> = {};
+
+            // Validar stock para todos los productos
+            for (const product of orderDetails.products) {
+                // Usar el storageId del producto si está disponible, de lo contrario usar el branchId
+                const storageId = product.storageId || defaultBranchId;
+
+                await this.validateMedicationStock(order, {
+                    productId: product.productId,
+                    quantity: product.quantity,
+                    storageId: storageId
+                });
+
+                // Agrupar productos por storageId para crear outgoings separados
+                if (!productsByStorage[storageId]) {
+                    productsByStorage[storageId] = [];
+                }
+
+                productsByStorage[storageId].push({
+                    productId: product.productId,
+                    quantity: product.quantity,
+                });
+            }
+
+            // Crear un outgoing para cada almacén
+            await Promise.all(
+                Object.entries(productsByStorage).map(async ([storageId, products]) => {
+                    const createOutgoingDto: CreateOutgoingDtoStorage = {
+                        name: `Prescripción médica ${order.code}`,
+                        storageId: storageId,
+                        date: new Date(),
+                        state: true,
+                        movement: products,
+                    };
+
+                    await this.outgoingService.createOutgoing(createOutgoingDto, userData);
+                })
             );
 
-            // Nota: Aquí se debería implementar la lógica específica para prescripciones médicas
-            // cuando esté disponible en el sistema
+            this.logger.log(
+                `Successfully processed all ${orderDetails.products.length} products for prescription order ${order.id}`,
+            );
 
             return { success: true };
         } catch (error) {
             this.logger.error('Error processing prescription:', {
                 orderId: order.id,
-                prescriptionId: prescriptionData.prescriptionId,
+                error: error.message,
+            });
+
+            throw error;
+        }
+    }
+
+    /**
+     * Valida el stock disponible para un medicamento
+     */
+    private async validateMedicationStock(
+        order: Order,
+        medication: { productId: string; quantity: number; storageId?: string },
+    ) {
+        try {
+            // Verificar que el medicamento tenga storageId
+            const storageId = medication.storageId;
+            if (!storageId) {
+                throw new Error(`Missing storageId for medication ${medication.productId} in order ${order.id}`);
+            }
+
+            this.logger.debug('Validating stock for medication:', {
+                storageId,
+                productId: medication.productId,
+                quantity: medication.quantity,
+            });
+
+            const stockActual = await this.stockRepository.getStockByStorageAndProduct(
+                storageId,
+                medication.productId,
+            );
+
+            this.logger.log('stockActual:', stockActual);
+
+            if (!stockActual || stockActual.stock < medication.quantity) {
+                throw new Error(
+                    `Insufficient stock for medication ${medication.productId} in storage ${storageId}. Required: ${medication.quantity}, Available: ${stockActual ? stockActual.stock : 0}`,
+                );
+            }
+        } catch (error) {
+            this.logger.error('Error validating medication stock:', {
+                orderId: order.id,
+                medicationId: medication.productId,
                 error: error.message,
             });
             throw error;

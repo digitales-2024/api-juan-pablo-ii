@@ -94,6 +94,7 @@ export class CreateAppointmentUseCase {
 
       // Crear la cita
       const appointment = await this.appointmentRepository.create({
+        eventId: createAppointmentDto.eventId || undefined,
         staffId: createAppointmentDto.staffId,
         serviceId: createAppointmentDto.serviceId,
         branchId: createAppointmentDto.branchId,

@@ -17,9 +17,11 @@ import {
   ReactivateAppointmentsUseCase,
   UpdateAppointmentUseCase,
   FindAppointmentsPaginatedUseCase,
+  CancelAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { ServiceService } from 'src/modules/services/services/service.service';
+import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -38,6 +40,7 @@ export class AppointmentService {
     private readonly deleteAppointmentsUseCase: DeleteAppointmentsUseCase,
     private readonly reactivateAppointmentsUseCase: ReactivateAppointmentsUseCase,
     private readonly findAppointmentsPaginatedUseCase: FindAppointmentsPaginatedUseCase,
+    private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
     private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -187,18 +190,39 @@ export class AppointmentService {
     user: UserData,
   ): Promise<HttpResponse<Appointment[]>> {
     try {
-      validateArray(ids, 'IDs de citas médicas');
       return await this.reactivateAppointmentsUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
     }
   }
 
-
+  /**
+   * Cancela una cita médica y sus órdenes asociadas
+   * @param id - ID de la cita a cancelar
+   * @param cancelAppointmentDto - DTO con los datos de cancelación
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la cita cancelada
+   * @throws {BadRequestException} Si hay un error al cancelar la cita
+   */
+  async cancel(
+    id: string,
+    cancelAppointmentDto: CancelAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.cancelAppointmentUseCase.execute(
+        id,
+        cancelAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
 
   /**
-  * Obtiene todas las citas médicas de forma paginada
-  */
+   * Obtiene todas las citas médicas de forma paginada
+   */
   async findAllPaginated(page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
     try {
       return await this.findAppointmentsPaginatedUseCase.execute(page, limit);
@@ -206,10 +230,6 @@ export class AppointmentService {
       this.errorHandler.handleError(error, 'getting');
     }
   }
-
-
-
-
 
   /**
    * Obtiene el precio del servicio asociado a una cita médica.
@@ -231,8 +251,6 @@ export class AppointmentService {
     return service.price;
   }
 
-
-
   async getStaffByAppointmentId(appointmentId: string): Promise<string> {
     const appointment = await this.findById(appointmentId);
 
@@ -243,9 +261,6 @@ export class AppointmentService {
     const staffId = appointment.staffId
 
     const staff = await this.serviceService.findOne(staffId);
-
-
-
 
     return staff.name
   }
@@ -260,6 +275,4 @@ export class AppointmentService {
     }
     return appointment;
   }
-
-
 }
