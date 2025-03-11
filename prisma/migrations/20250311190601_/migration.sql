@@ -491,6 +491,7 @@ CREATE TABLE "Appointment" (
     "paymentMethod" "PaymentMethod" NOT NULL,
     "status" "AppointmentStatus" NOT NULL DEFAULT 'PENDING',
     "cancellationReason" TEXT,
+    "noShowReason" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "rescheduledFromId" TEXT,
     "appointmentId" TEXT,
