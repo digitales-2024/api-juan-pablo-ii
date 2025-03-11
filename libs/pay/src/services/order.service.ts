@@ -410,6 +410,24 @@ export class OrderService {
   }
 
   /**
+  * Busca órdenes por referenceId
+  * @param referenceId - ID de referencia (por ejemplo, ID de una cita)
+  * @returns Arreglo de órdenes con el referenceId especificado
+  * @throws {BadRequestException} Si hay un error al obtener las órdenes
+  */
+  async findOrdersByReferenceId(referenceId: string): Promise<Order[]> {
+    try {
+      this.logger.debug(`Buscando órdenes con referenceId: ${referenceId}`);
+      const orders = await this.orderRepository.findByReference(referenceId);
+      this.logger.debug(`Se encontraron ${orders.length} órdenes con referenceId: ${referenceId}`);
+      return orders;
+    } catch (error) {
+      return this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+
+  /**
    * Cancela una orden y sus pagos asociados
    * @param id - ID de la orden a cancelar
    * @param user - Datos del usuario que realiza la acción
