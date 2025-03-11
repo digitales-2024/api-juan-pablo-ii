@@ -5,7 +5,8 @@ import {
 } from '@inventory/inventory/category/entities/category.entity';
 import { ActiveProductTypeProduct } from '@inventory/inventory/type-product/entities/type-product.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { TipoProducto } from '@prisma/client';
+import { ProductUse, TipoProducto } from '@prisma/client';
+import { ProductUse as Use } from './product.enum';
 
 export class Product {
   @ApiProperty()
@@ -35,8 +36,10 @@ export class Product {
   @ApiProperty()
   proveedor?: string;
 
-  @ApiProperty()
-  uso?: string;
+  @ApiProperty({
+    enum: Use,
+  })
+  uso?: Use;
 
   @ApiProperty()
   usoProducto?: string;
@@ -95,6 +98,11 @@ export class ActiveProduct {
 
   @ApiProperty()
   tipoProductoId: string;
+
+  @ApiProperty({
+    enum: Use,
+  })
+  uso?: ProductUse;
 
   @ApiProperty()
   categoria: ActiveProductCategory;

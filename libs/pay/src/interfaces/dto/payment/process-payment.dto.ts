@@ -8,7 +8,7 @@ import {
   IsOptional,
   IsDate,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PaymentMethod } from '../../payment.types';
 
 export class ProcessPaymentDto {
@@ -38,8 +38,13 @@ export class ProcessPaymentDto {
     description: 'Fecha de pago',
     type: Date,
   })
-  @IsDate()
   @Type(() => Date)
+  @Transform(({ value }) => {
+    if (!value) return value;
+    const date = new Date(value);
+    return date;
+  })
+  @IsDate()
   date: Date;
 
   @ApiProperty({

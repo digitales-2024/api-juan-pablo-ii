@@ -2,6 +2,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IOrder } from '../interfaces/order.interface';
 import { OrderStatus, OrderType } from '../interfaces/order.types';
+import { Payment } from './payment.entity';
 
 export class Order implements IOrder {
   @ApiProperty({
@@ -117,4 +118,29 @@ export class Order implements IOrder {
     },
   })
   metadata?: Record<string, any>;
+}
+
+// "payments": [
+// {
+// "id": "7a94417b-adfc-4955-af70-33dc1a8455cd",
+// "orderId": "5032c3a6-8663-48ef-aca9-0c1db19c4c10",
+// "date": "2025-03-10 10:33:03",
+// "status": "PROCESSING",
+// "type": "REGULAR",
+// "amount": 23,
+// "description": "string",
+// "paymentMethod": "CASH",
+// "voucherNumber": "string",
+// "verifiedBy": "Super Admin",
+// "verifiedAt": "2025-03-10 10:22:55",
+// "isActive": true,
+// "createdAt": "2025-03-10 10:22:55",
+// "updatedAt": "2025-03-10 10:33:09"
+// }
+export class DetailedOrder extends Order {
+  @ApiProperty({
+    description: 'Detalles del pago',
+    type: [Payment],
+  })
+  payments: Payment[];
 }

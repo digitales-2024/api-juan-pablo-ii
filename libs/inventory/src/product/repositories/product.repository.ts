@@ -48,6 +48,9 @@ export class ProductRepository extends BaseRepository<Product> {
    */
   async findAllActiveProducts(): Promise<ActiveProduct[]> {
     return await this.prisma.producto.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
       where: {
         isActive: true,
       },
@@ -59,6 +62,7 @@ export class ProductRepository extends BaseRepository<Product> {
         tipoProductoId: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         categoria: {
           select: {
             name: true,
@@ -73,6 +77,12 @@ export class ProductRepository extends BaseRepository<Product> {
         },
       },
     });
+
+    // // Map products to ActiveProduct type to ensure compatibility with the enum
+    // return products.map((product) => ({
+    //   ...product,
+    //   uso: product.uso as unknown as ProductUse,
+    // })) as ActiveProduct[];
   }
 
   /**
@@ -108,6 +118,37 @@ export class ProductRepository extends BaseRepository<Product> {
         name: true,
       },
       take: 15,
+    });
+  }
+
+  async bringForSaleProducts(): Promise<ActiveProduct[]> {
+    return await this.prisma.producto.findMany({
+      where: {
+        isActive: true,
+        uso: 'VENTA',
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        categoriaId: true,
+        tipoProductoId: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        uso: true,
+        categoria: {
+          select: {
+            name: true,
+            isActive: true,
+          },
+        },
+        tipoProducto: {
+          select: {
+            name: true,
+            isActive: true,
+          },
+        },
+      },
     });
   }
 }

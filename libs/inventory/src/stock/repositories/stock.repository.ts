@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository, PrismaService } from '@prisma/prisma';
 import { ProductStock, Stock, StockByStorage } from '../entities/stock.entity';
+import { ProductUse } from '@prisma/client';
 
 @Injectable()
 export class StockRepository extends BaseRepository<Stock> {
@@ -17,6 +18,7 @@ export class StockRepository extends BaseRepository<Stock> {
         precio: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         Stock: {
           select: {
             stock: true,
@@ -25,6 +27,86 @@ export class StockRepository extends BaseRepository<Stock> {
               select: {
                 id: true,
                 name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getAllForSaleProductsStock(use: ProductUse): Promise<ProductStock[]> {
+    return this.prisma.producto.findMany({
+      where: {
+        isActive: true,
+        uso: use,
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        uso: true,
+        Stock: {
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getAllForSaleProductsStockAndBranch(
+    use: ProductUse,
+    branchId: string,
+  ): Promise<ProductStock[]> {
+    return this.prisma.producto.findMany({
+      where: {
+        isActive: true,
+        uso: use,
+        Stock: {
+          some: {
+            Storage: {
+              branchId: branchId,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        precio: true,
+        codigoProducto: true,
+        unidadMedida: true,
+        uso: true,
+        Stock: {
+          select: {
+            stock: true,
+            isActive: true,
+            Storage: {
+              select: {
+                id: true,
+                name: true,
+                branch: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -53,6 +135,7 @@ export class StockRepository extends BaseRepository<Stock> {
         precio: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         Stock: {
           select: {
             stock: true,
@@ -78,6 +161,7 @@ export class StockRepository extends BaseRepository<Stock> {
         precio: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         Stock: {
           select: {
             stock: true,
@@ -106,6 +190,7 @@ export class StockRepository extends BaseRepository<Stock> {
         precio: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         Stock: {
           select: {
             stock: true,
@@ -134,6 +219,7 @@ export class StockRepository extends BaseRepository<Stock> {
         precio: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         Stock: {
           where: {
             storageId: storageId,
@@ -176,6 +262,7 @@ export class StockRepository extends BaseRepository<Stock> {
         precio: true,
         codigoProducto: true,
         unidadMedida: true,
+        uso: true,
         Stock: {
           where: {
             OR: combinations,
@@ -213,6 +300,7 @@ export class StockRepository extends BaseRepository<Stock> {
             precio: true,
             codigoProducto: true,
             unidadMedida: true,
+            uso: true,
             Stock: {
               where: {
                 storageId: ele.storageId,

@@ -294,3 +294,11 @@ export class MedicalPrescriptionMetadata extends BaseOrderMetadata {
   orderDetails: PrescriptionOrderDetails;
 }
 
+// Appointment Details Metadata (Specific)
+//--------------------------
+export class AppointmentDetailsMetadata {
+
+
+  @ApiProperty({ required: false, description: 'Estado de la cita médica' })
+  appointmentStatus?: string;
+}

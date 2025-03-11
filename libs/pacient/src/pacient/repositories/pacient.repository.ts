@@ -18,7 +18,21 @@ export class PacientRepository extends BaseRepository<Patient> {
    * @returns Array de pacientes que coinciden con el DNI
    */
   async findPatientByDNI(dni: string): Promise<Patient[]> {
-    return this.findByField('dni', dni);
+    return this.prisma.patient.findMany({
+      where: {
+        dni: {
+          contains: dni,
+          mode: 'insensitive',
+        },
+      },
+      take: 10,
+    });
+  }
+
+  async findFirstPatients(limit: number = 10): Promise<Patient[]> {
+    return this.prisma.patient.findMany({
+      take: limit,
+    });
   }
 
   async findPatientPrescriptions(
