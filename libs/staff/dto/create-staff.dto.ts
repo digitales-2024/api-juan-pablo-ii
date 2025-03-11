@@ -110,4 +110,14 @@ export class CreateStaffDto {
   @IsString()
   @Transform(({ value }) => value.trim())
   phone?: string;
+
+  @ApiProperty({
+    description: 'ID de la sucursal asociado al personal en el sistema',
+    example: '7c4dd6ce-scratch-41d4-a716-446655441111',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value.trim() === '' ? undefined : value.trim()))
+  branchId?: string;
 }

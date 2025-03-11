@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateAppointmentUserDto } from '../dto/update-apponitment-user.dto';
-import { AppointmentMedicalResponse } from '../entities/apponitment-user..entity';
+import { AppointmentResponse } from '../entities/apponitment-user..entity';
 import { ApponitmentUserRepository } from '../repositories/apponitment-user.repository';
 import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { UpdateAppointmentUserDto } from '../dto/update-apponitment-user.dto';
 
 @Injectable()
 export class UpdateApponitmentUserUseCase {
@@ -16,32 +16,35 @@ export class UpdateApponitmentUserUseCase {
 
   async execute(
     id: string,
-    updateAppointmentUserDto: UpdateAppointmentUserDto,
+    updateDto: UpdateAppointmentUserDto,
     user: UserData,
-  ): Promise<BaseApiResponse<AppointmentMedicalResponse>> {
-    const updatedPrescription =
-      await this.apponitmentUserRepository.transaction(async () => {
-        // Update prescription
-        const prescription = await this.apponitmentUserRepository.update(id, {
-          status: updateAppointmentUserDto.status,
-        });
+  ): Promise<BaseApiResponse<AppointmentResponse>> {
+    const updatedAppointment = await this.apponitmentUserRepository.transaction(
+      async () => {
+        // Usamos la función específica para actualizar estado de citas
+        const appointment =
+          await this.apponitmentUserRepository.updateAppointmentStatus(
+            id,
+            updateDto.status as 'COMPLETED' | 'NO_SHOW',
+          );
 
-        // Register audit
+        // Registramos la auditoría
         await this.auditService.create({
-          entityId: prescription.id,
-          entityType: 'prescription',
+          entityId: appointment.id,
+          entityType: 'appointment',
           action: AuditActionType.UPDATE,
           performedById: user.id,
           createdAt: new Date(),
         });
 
-        return prescription;
-      });
+        return appointment;
+      },
+    );
 
     return {
       success: true,
-      message: 'Receta médica actualizada exitosamente',
-      data: updatedPrescription,
+      message: 'Estado de cita actualizado exitosamente',
+      data: updatedAppointment,
     };
   }
 }
