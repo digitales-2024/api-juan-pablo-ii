@@ -37,3 +37,15 @@ export class AppointmentMedicalResponse {
   @IsOptional()
   status?: string;
 }
+
+export class AppointmentResponse {
+  id: string;
+  staff: string;
+  service: string;
+  branch: string;
+  patient: string;
+  start: Date;
+  end: Date;
+  status: string;
+  medicalHistoryId: string;
+}
