@@ -99,6 +99,7 @@ export class CreateMedicalPrescriptionUseCase {
                 quantity: product.quantity,
                 price: product.price,
                 subtotal: product.subtotal,
+                storageId: product.storageId,
             }));
 
             // Agregar servicios (citas) al metadata
@@ -254,6 +255,7 @@ export class CreateMedicalPrescriptionUseCase {
                 quantity: product.quantity,
                 price: priceWithTax, // Mostrar el precio con impuesto al usuario
                 subtotal: productSubtotal, // Subtotal sin impuesto para cálculos internos
+                storageId: product.storageId, // Añadir el storageId para el procesamiento de inventario
             });
         }
 

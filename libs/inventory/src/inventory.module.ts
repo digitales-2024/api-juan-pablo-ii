@@ -199,6 +199,7 @@ import { CreateStockUseCase } from './stock/use-cases/create-stock.use-case';
     CreateStockUseCase,
     UpdateOutgoingStorageUseCase,
     UpdateIncomingStorageUseCase,
+    CompensationService,
   ],
 })
-export class InventoryModule {}
+export class InventoryModule { }

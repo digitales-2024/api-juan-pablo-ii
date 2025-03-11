@@ -24,6 +24,8 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Appointment } from '../entities/appointment.entity';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
+import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
+import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
 
 @ApiTags('Appointments')
 @ApiBadRequestResponse({
@@ -217,5 +219,44 @@ export class AppointmentController {
     );
   }
 
+  /**
+   * Cancela una cita médica
+   */
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica cancelada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  cancel(
+    @Param('id') id: string,
+    @Body() cancelAppointmentDto: CancelAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.cancel(id, cancelAppointmentDto, user);
+  }
+
+  /**
+   * Marca una cita médica como NO_SHOW (paciente no se presentó)
+   */
+  @Patch(':id/no-show')
+  @ApiOperation({ summary: 'Marcar cita médica como NO_SHOW' })
+  @ApiOkResponse({
+    description: 'Cita médica marcada como NO_SHOW exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  markAsNoShow(
+    @Param('id') id: string,
+    @Body() noShowAppointmentDto: NoShowAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.markAsNoShow(id, noShowAppointmentDto, user);
+  }
 
 }

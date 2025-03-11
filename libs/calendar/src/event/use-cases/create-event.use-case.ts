@@ -6,9 +6,13 @@ import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType, EventStatus } from '@prisma/client';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateEventDto } from '../dto/create-event.dto';
+import { EventType } from '../entities/event-type.enum';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class CreateEventUseCase {
+  private readonly logger = new Logger(CreateEventUseCase.name);
+
   constructor(
     private readonly eventRepository: EventRepository,
     private readonly auditService: AuditService,
@@ -18,15 +22,21 @@ export class CreateEventUseCase {
     createEventDto: CreateEventDto,
     user: UserData,
   ): Promise<BaseApiResponse<Event>> {
-    // Verificar si hay eventos conflictivos
-    const conflictingEvents = await this.eventRepository.findConflictingEvents(
-      createEventDto.staffId,
-      createEventDto.start,
-      createEventDto.end,
-    );
+    // Verificar si hay eventos conflictivos, excepto para eventos de tipo CITA
+    if (createEventDto.type !== EventType.CITA) {
+      this.logger.log(`Verificando conflictos para evento de tipo ${createEventDto.type}`);
+      const conflictingEvents = await this.eventRepository.findConflictingEvents(
+        createEventDto.staffId,
+        createEventDto.start,
+        createEventDto.end,
+      );
 
-    if (conflictingEvents.length > 0) {
-      throw new Error('Ya existe un evento programado para este horario');
+      if (conflictingEvents.length > 0) {
+        this.logger.warn(`Se encontraron ${conflictingEvents.length} eventos conflictivos`);
+        throw new Error('Ya existe un evento programado para este horario');
+      }
+    } else {
+      this.logger.log(`Omitiendo verificación de conflictos para evento de tipo CITA`);
     }
 
     // Crear el evento usando una transacción
