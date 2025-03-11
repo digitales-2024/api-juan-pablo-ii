@@ -302,8 +302,8 @@ model Producto {
   precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
-  uso                       String? // Paciente, cliente, personal, etc.
-  usoProducto               String? // Venta, uso interno, etc.
+  uso                       ProductUse? // VENTA, INTERNO //Should obligatory, but in order not to broke anything is optional
+  usoProducto               String? // Paciente, cliente, personal, etc.
   description               String? // 
   codigoProducto            String? // Código de barras o código único del producto
   descuento                 Float? // Descuento aplicado, si aplica
@@ -782,4 +782,10 @@ enum PaymentType {
   PARTIAL
   ADJUSTMENT
   COMPENSATION
+}
+
+enum ProductUse {
+  VENTA
+  INTERNO
+  OTRO
 }

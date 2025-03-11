@@ -704,12 +704,11 @@ CREATE UNIQUE INDEX "TipoProducto_name_key" ON "TipoProducto"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "TipoProducto_name_isActive_key" ON "TipoProducto"("name", "isActive");
 
-
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
 -- CreateIndex
 CREATE UNIQUE INDEX "Producto_name_key" ON "Producto"("name");
 
 -- CreateIndex
+CREATE EXTENSION IF NOT EXISTS pg_trgm; --Esta linea
 CREATE INDEX "Producto_name_idx" ON "Producto" USING GIN ("name" gin_trgm_ops);
 
 -- CreateIndex

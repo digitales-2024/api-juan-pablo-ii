@@ -15,7 +15,10 @@ import { Order } from '@pay/pay/entities/order.entity';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
 import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
-import { CreateMedicalAppointmentBillingDto, CreateMedicalPrescriptionBillingDto } from '../dto';
+import {
+  CreateMedicalAppointmentBillingDto,
+  CreateMedicalPrescriptionBillingDto,
+} from '../dto';
 
 @ApiTags('Billing')
 @ApiBadRequestResponse({
@@ -36,7 +39,7 @@ import { CreateMedicalAppointmentBillingDto, CreateMedicalPrescriptionBillingDto
 })
 @Auth()
 export class BillingController {
-  constructor(private readonly billingService: BillingService) { }
+  constructor(private readonly billingService: BillingService) {}
 
   @Post('medical-appointment')
   @ApiOperation({ summary: 'Create medical consultation order' })

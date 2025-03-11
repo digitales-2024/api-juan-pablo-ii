@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ProductUse } from '@prisma/client';
 
 export class Stock {
   @ApiProperty()
@@ -93,6 +94,11 @@ export class ActiveProductStock {
   @ApiProperty()
   codigoProducto?: string;
 
+  @ApiProperty({
+    enum: ProductUse,
+  })
+  uso?: ProductUse;
+
   @ApiProperty()
   unidadMedida?: string;
 
@@ -109,12 +115,26 @@ export class ActiveProductStock {
   // tipoProducto: ActiveProductTypeProduct;
 }
 
+export class StockStorageBranch {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+}
+
 export class StockStorage {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
   name: string;
+
+  @ApiProperty({
+    type: StockStorageBranch,
+    required: false,
+  })
+  branch?: StockStorageBranch;
 }
 
 export class StockProduct {

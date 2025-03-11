@@ -8,6 +8,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { ProductStock, StockByStorage } from '../entities/stock.entity';
+import { ProductUse } from '@prisma/client';
 
 @ApiTags('Stock')
 @Controller({ path: 'stock', version: '1' })
@@ -117,6 +118,55 @@ export class StockController {
     @Param('storageId') storageId: string,
   ): Promise<ProductStock[]> {
     return this.stockService.getProductsStockByStorage({ storageId });
+  }
+
+  @Get('/availableProduct/byUse/:productUse')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({
+    name: 'use',
+    description: 'Ambito de uso del producto: VENTA, INTERNO, etc',
+    enum: ProductUse,
+  })
+  async getProductsStockByUse(
+    @Param('productUse') productUse: ProductUse,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductsForSaleStock(productUse);
+  }
+
+  @Get('/availableProduct/byUse/:productUse/branch/:branchId')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({
+    name: 'productUse',
+    description: 'Ambito de uso del producto: VENTA, INTERNO, etc',
+    enum: ProductUse,
+  })
+  @ApiParam({
+    name: 'branchId',
+    description: 'Ambito de uso del producto: VENTA, INTERNO, etc',
+    type: 'string',
+  })
+  async getProductsStockByUseAndBranch(
+    @Param('productUse') productUse: ProductUse,
+    @Param('branchId') branchId: string,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductsForSaleStockAndBranch(
+      productUse,
+      branchId,
+    );
   }
 
   @Get('/availableProduct/:productId')

@@ -149,7 +149,15 @@ export class PacientService {
   }
 
   async findPatientByDni(dni: string): Promise<Patient[]> {
-    return this.pacientRepository.findPatientByDNI(dni);
+    try {
+      const results =
+        dni === 'None'
+          ? await this.pacientRepository.findFirstPatients()
+          : await this.pacientRepository.findPatientByDNI(dni);
+      return results;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
   }
 
   /**
