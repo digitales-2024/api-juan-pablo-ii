@@ -102,6 +102,14 @@ export class CreateAppointmentDto {
   rescheduledFromId?: string;
 
   @ApiProperty({
+    description: 'Razón por la que el paciente no se presentó a la cita',
+    example: 'El paciente no se presentó sin previo aviso',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  noShowReason?: string;
+  @ApiProperty({
     description: 'Método de pago',
     enum: PaymentMethod,
     example: 'CASH',

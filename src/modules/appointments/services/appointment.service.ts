@@ -18,10 +18,12 @@ import {
   UpdateAppointmentUseCase,
   FindAppointmentsPaginatedUseCase,
   CancelAppointmentUseCase,
+  NoShowAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { ServiceService } from 'src/modules/services/services/service.service';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
+import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -41,6 +43,7 @@ export class AppointmentService {
     private readonly reactivateAppointmentsUseCase: ReactivateAppointmentsUseCase,
     private readonly findAppointmentsPaginatedUseCase: FindAppointmentsPaginatedUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
+    private readonly noShowAppointmentUseCase: NoShowAppointmentUseCase,
     private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -274,5 +277,29 @@ export class AppointmentService {
       throw new BadRequestException('Cita médica no encontrada');
     }
     return appointment;
+  }
+
+  /**
+   * Marca una cita médica como NO_SHOW (paciente no se presentó)
+   * @param id - ID de la cita a marcar
+   * @param noShowAppointmentDto - DTO con los datos de no presentación
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la cita actualizada
+   * @throws {BadRequestException} Si hay un error al marcar la cita
+   */
+  async markAsNoShow(
+    id: string,
+    noShowAppointmentDto: NoShowAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.noShowAppointmentUseCase.execute(
+        id,
+        noShowAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
   }
 }

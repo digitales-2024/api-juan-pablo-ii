@@ -4,6 +4,7 @@ import {
   CancelAppointmentUseCase,
   CreateAppointmentUseCase,
   FindAppointmentsPaginatedUseCase,
+  NoShowAppointmentUseCase,
   UpdateAppointmentUseCase,
 } from './use-cases';
 import { AppointmentService } from './services/appointment.service';
@@ -29,6 +30,7 @@ import { PayModule } from '@pay/pay/pay.module';
     ReactivateAppointmentsUseCase,
     FindAppointmentsPaginatedUseCase,
     CancelAppointmentUseCase,
+    NoShowAppointmentUseCase,
     AppointmentEventSubscriber
   ],
   exports: [AppointmentService],

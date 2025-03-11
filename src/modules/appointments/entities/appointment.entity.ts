@@ -42,6 +42,9 @@ export class Appointment {
   cancellationReason?: string;
 
   @ApiProperty()
+  noShowReason?: string;
+
+  @ApiProperty()
   rescheduledFromId?: string;
 
   @ApiProperty()
