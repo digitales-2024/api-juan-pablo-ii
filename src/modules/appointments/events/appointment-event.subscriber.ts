@@ -289,7 +289,7 @@ export class AppointmentEventSubscriber {
                 }
 
                 const patientDetails = metadata?.patientDetails || {};
-
+                // const staffName = await this.staffService.findById(order.referenceId);
                 // Actualizar el evento existente
                 try {
                     const updateResult = await this.eventService.update(
@@ -297,7 +297,7 @@ export class AppointmentEventSubscriber {
                         {
                             color: 'sky',
                             status: EventStatus.CONFIRMED,
-                            title: `Cita: ${patientDetails.fullName}   DNI: ${patientDetails.dni}`
+                            title: `Cita: ${patientDetails.fullName}-${patientDetails.dni}`,
                         },
                         userData
                     );

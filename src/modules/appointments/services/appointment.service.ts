@@ -19,11 +19,13 @@ import {
   FindAppointmentsPaginatedUseCase,
   CancelAppointmentUseCase,
   NoShowAppointmentUseCase,
+  RefundAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { ServiceService } from 'src/modules/services/services/service.service';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
+import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -44,6 +46,7 @@ export class AppointmentService {
     private readonly findAppointmentsPaginatedUseCase: FindAppointmentsPaginatedUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
     private readonly noShowAppointmentUseCase: NoShowAppointmentUseCase,
+    private readonly refundAppointmentUseCase: RefundAppointmentUseCase,
     private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -216,6 +219,30 @@ export class AppointmentService {
       return await this.cancelAppointmentUseCase.execute(
         id,
         cancelAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
+   * Reembolsa una cita médica y actualiza sus órdenes y pagos asociados a REFUNDED
+   * @param id - ID de la cita a reembolsar
+   * @param refundAppointmentDto - DTO con los datos del reembolso
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la cita reembolsada
+   * @throws {BadRequestException} Si hay un error al reembolsar la cita
+   */
+  async refund(
+    id: string,
+    refundAppointmentDto: RefundAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.refundAppointmentUseCase.execute(
+        id,
+        refundAppointmentDto,
         user,
       );
     } catch (error) {

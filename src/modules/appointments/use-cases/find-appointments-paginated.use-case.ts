@@ -14,7 +14,8 @@ export class FindAppointmentsPaginatedUseCase {
                 ...appointment,
                 patient: {
                     name: appointment.patient?.name || 'No asignado',
-                    lastName: appointment.patient?.lastName || ''
+                    lastName: appointment.patient?.lastName || '',
+                    dni: appointment.patient?.dni || ''
                 },
                 staff: {
                     name: appointment.staff?.name || 'No asignado',
