@@ -132,7 +132,7 @@ export class CreateAppointmentOrderUseCase {
 
             return {
                 success: true,
-                message: 'Medical appointment billing order created successfully',
+                message: 'Orden asociada a la cita médica creada correctamente',
                 data: updatedOrder,
             };
         });

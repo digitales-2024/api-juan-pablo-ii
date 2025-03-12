@@ -26,6 +26,7 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
+import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
 
 @ApiTags('Appointments')
 @ApiBadRequestResponse({
@@ -237,6 +238,26 @@ export class AppointmentController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Appointment>> {
     return this.appointmentService.cancel(id, cancelAppointmentDto, user);
+  }
+
+  /**
+   * Reembolsa una cita médica y actualiza sus órdenes y pagos asociados
+   */
+  @Patch(':id/refund')
+  @ApiOperation({ summary: 'Reembolsar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica reembolsada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  refund(
+    @Param('id') id: string,
+    @Body() refundAppointmentDto: RefundAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.refund(id, refundAppointmentDto, user);
   }
 
   /**

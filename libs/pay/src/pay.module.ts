@@ -25,6 +25,8 @@ import {
   RefundPaymentUseCase,
   SubmitDraftOrderUseCase,
   CompleteOrderUseCase,
+  CancelOrderUseCase,
+  RefundOrderUseCase,
 } from './use-cases';
 
 const orderProviders = [
@@ -37,6 +39,8 @@ const orderProviders = [
   FindOrdersByStatusUseCase,
   SubmitDraftOrderUseCase,
   CompleteOrderUseCase,
+  CancelOrderUseCase,
+  RefundOrderUseCase,
 ];
 
 const paymentProviders = [
@@ -60,4 +64,4 @@ const paymentProviders = [
   providers: [...orderProviders, ...paymentProviders],
   exports: [OrderService, PaymentService, OrderRepository, PaymentRepository],
 })
-export class PayModule {}
+export class PayModule { }

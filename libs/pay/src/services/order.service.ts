@@ -21,6 +21,8 @@ import {
   FindOrdersByStatusUseCase,
   SubmitDraftOrderUseCase,
   CompleteOrderUseCase,
+  CancelOrderUseCase,
+  RefundOrderUseCase,
 } from '../use-cases';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
@@ -42,6 +44,8 @@ export class OrderService {
     private readonly findOrderByStatusUseCase: FindOrdersByStatusUseCase,
     private readonly submitDraftOrderUseCase: SubmitDraftOrderUseCase,
     private readonly completeOrderUseCase: CompleteOrderUseCase,
+    private readonly cancelOrderUseCase: CancelOrderUseCase,
+    private readonly refundOrderUseCase: RefundOrderUseCase,
     private readonly paymentRepository: PaymentRepository,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -426,7 +430,6 @@ export class OrderService {
     }
   }
 
-
   /**
    * Cancela una orden y sus pagos asociados
    * @param id - ID de la orden a cancelar
@@ -439,53 +442,25 @@ export class OrderService {
     user: UserData,
   ): Promise<BaseApiResponse<Order>> {
     try {
-      this.logger.debug(`Cancelando orden con ID: ${id}`);
+      return await this.cancelOrderUseCase.execute(id, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
+    }
+  }
 
-      // Buscar la orden
-      const order = await this.findOrderById(id);
-      if (!order) {
-        throw new BadRequestException(`Orden con ID ${id} no encontrada`);
-      }
-
-      // Verificar que la orden no esté ya cancelada
-      if (order.status === OrderStatus.CANCELLED) {
-        this.logger.debug(`La orden ${id} ya está cancelada`);
-        return {
-          success: true,
-          message: 'La orden ya está cancelada',
-          data: order,
-        };
-      }
-
-      // Actualizar el estado de la orden a CANCELLED
-      const updatedOrder = await this.orderRepository.update(id, {
-        status: OrderStatus.CANCELLED,
-      });
-
-      this.logger.debug(`Orden ${id} actualizada a estado CANCELLED`);
-
-      // Buscar y cancelar todos los pagos asociados a la orden
-      const payments = await this.paymentRepository.findMany({
-        where: { orderId: id }
-      });
-
-      if (payments && payments.length > 0) {
-        for (const payment of payments) {
-          // Solo cancelar pagos que estén en estado PENDING o PROCESSING
-          if (payment.status === PaymentStatus.PENDING || payment.status === PaymentStatus.PROCESSING) {
-            await this.paymentRepository.update(payment.id, {
-              status: PaymentStatus.CANCELLED,
-            });
-            this.logger.debug(`Pago ${payment.id} actualizado a estado CANCELLED`);
-          }
-        }
-      }
-
-      return {
-        success: true,
-        message: 'Orden y pagos asociados cancelados exitosamente',
-        data: updatedOrder,
-      };
+  /**
+   * Reembolsa una orden y sus pagos asociados
+   * @param id - ID de la orden a reembolsar
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la orden reembolsada
+   * @throws {BadRequestException} Si hay un error al reembolsar la orden
+   */
+  async refundOrder(
+    id: string,
+    user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    try {
+      return await this.refundOrderUseCase.execute(id, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'processing');
     }

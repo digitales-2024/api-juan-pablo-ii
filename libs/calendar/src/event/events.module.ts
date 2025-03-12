@@ -15,13 +15,19 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
 import { FindEventsByFilterUseCase } from "./use-cases/find-events-by-filter.use-case";
 import { FindEventsByStaffScheduleUseCase } from "./use-cases/find-events-by-staff-schedule.use-case";
 import { DeleteEventsByStaffScheduleUseCase } from "./use-cases/delete-events-by-staff-schedule.use-case";
+import { EventObserver } from "./observers/event.observer";
+import { PrismaModule } from "@prisma/prisma";
 
 /**
  * Módulo que gestiona los eventos del calendario.
  * @module EventsModule
  */
 @Module({
-  imports: [AuditModule, StaffScheduleModule],
+  imports: [
+    AuditModule,
+    StaffScheduleModule,
+    PrismaModule,
+  ],
   providers: [
     EventRepository,
     EventService,
@@ -35,6 +41,7 @@ import { DeleteEventsByStaffScheduleUseCase } from "./use-cases/delete-events-by
     DeleteEventsByStaffScheduleUseCase,
     EventFactory,
     RecurrenceParser,
+    EventObserver,
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
@@ -43,4 +50,4 @@ import { DeleteEventsByStaffScheduleUseCase } from "./use-cases/delete-events-by
   controllers: [EventController],
   exports: [EventService],
 })
-export class EventsModule {}
+export class EventsModule { }
