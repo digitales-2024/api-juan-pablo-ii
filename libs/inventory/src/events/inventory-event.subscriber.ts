@@ -92,10 +92,14 @@ export class InventoryEventSubscriber {
       this.logger.log(`Processing medical prescription order ${order.id}`);
       // Ya no delegamos el procesamiento al subscriber de appointments
       // El procesamiento de inventario para prescripciones médicas se maneja en el AppointmentEventSubscriber
-      this.logger.log(`Inventory processing for medical prescriptions is handled by the AppointmentEventSubscriber`);
+      this.logger.log(
+        `Inventory processing for medical prescriptions is handled by the AppointmentEventSubscriber`,
+      );
       return;
     } else {
-      this.logger.log(`Order ${order.id} is not a supported order type for inventory, skipping inventory processing`);
+      this.logger.log(
+        `Order ${order.id} is not a supported order type for inventory, skipping inventory processing`,
+      );
       return;
     }
   }
