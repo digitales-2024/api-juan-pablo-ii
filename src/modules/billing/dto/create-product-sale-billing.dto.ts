@@ -36,8 +36,6 @@ export class ProductSaleItemDto {
   })
   @IsUUID()
   storageId: string;
-
-
 }
 
 export class CreateProductSaleBillingDto {
@@ -48,8 +46,7 @@ export class CreateProductSaleBillingDto {
       {
         productId: '123e4567-e89b-12d3-a456-426614174000',
         quantity: 5,
-        storageId: 'd4892502-5685-45e1-b323-55f933f54387'
-
+        storageId: 'd4892502-5685-45e1-b323-55f933f54387',
       },
     ],
   })
@@ -57,7 +54,6 @@ export class CreateProductSaleBillingDto {
   @ValidateNested({ each: true })
   @Type(() => ProductSaleItemDto)
   products: ProductSaleItemDto[];
-
 
   @ApiProperty({
     description: 'ID de la sucursal',

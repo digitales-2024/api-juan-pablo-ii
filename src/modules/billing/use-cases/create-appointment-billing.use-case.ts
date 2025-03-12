@@ -46,6 +46,12 @@ export class CreateAppointmentOrderUseCase {
                 throw new BadRequestException(`Cita médica con ID ${appointmentId} no encontrada`);
             }
 
+            // Validar que la cita esté en estado PENDING
+            if (appointment.status !== 'PENDING') {
+                this.logger.warn(`Intento de generar orden para cita ${appointmentId} con estado ${appointment.status}`);
+                throw new BadRequestException(`No se puede generar una orden para una cita que no está en estado PENDING. Estado actual: ${appointment.status}`);
+            }
+
             // Obtener detalles del paciente usando PacientService
             const patient = await this.pacientService.findOne(appointment.patientId);
             if (!patient) {
@@ -60,6 +66,14 @@ export class CreateAppointmentOrderUseCase {
             metadata.patientDetails.dni = patient.dni;
             metadata.patientDetails.address = patient.address;
             metadata.patientDetails.phone = patient.phone;
+
+            // Agregar información importante de la cita a los metadatos
+            metadata.orderDetails.staffId = appointment.staffId;
+            metadata.orderDetails.branchId = appointment.branchId;
+            metadata.orderDetails.serviceId = appointment.serviceId;
+            metadata.orderDetails.appointmentStart = appointment.start ? appointment.start.toString() : '';
+            metadata.orderDetails.appointmentEnd = appointment.end ? appointment.end.toString() : '';
+            metadata.orderDetails.appointmentType = appointment.type;
 
             // Obtener el precio del servicio asociado a la cita
             const servicePrice = await this.appointmentService.getServicePriceByAppointmentId(appointmentId);

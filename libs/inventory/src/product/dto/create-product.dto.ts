@@ -1,7 +1,14 @@
 // create-product.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNotEmpty, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+  IsNumber,
+  IsEnum,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
+import { ProductUse } from '../entities/product.enum';
 
 export class CreateProductDto {
   @ApiProperty({
@@ -63,17 +70,17 @@ export class CreateProductDto {
 
   @ApiProperty({
     description: 'Uso del producto',
-    example: 'Paciente',
-    required: false,
+    example: ProductUse.VENTA,
+    required: true, //The external validation will be true
+    enum: ProductUse,
   })
-  @IsString()
+  @IsEnum(ProductUse)
   @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  uso?: string;
+  uso?: ProductUse;
 
   @ApiProperty({
     description: 'Uso específico del producto',
-    example: 'Venta',
+    example: 'Paciente',
     required: false,
   })
   @IsString()

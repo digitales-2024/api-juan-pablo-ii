@@ -19,6 +19,9 @@ export class ProductMovement {
   @ApiProperty({ description: 'Identificador único del producto' })
   productId: string;
 
+  @ApiProperty({ description: 'Identificador único del almacén' })
+  storageId: string;
+
   @ApiProperty({ description: 'Nombre del producto' })
   name: string;
 
@@ -291,3 +294,11 @@ export class MedicalPrescriptionMetadata extends BaseOrderMetadata {
   orderDetails: PrescriptionOrderDetails;
 }
 
+// Appointment Details Metadata (Specific)
+//--------------------------
+export class AppointmentDetailsMetadata {
+
+
+  @ApiProperty({ required: false, description: 'Estado de la cita médica' })
+  appointmentStatus?: string;
+}

@@ -48,7 +48,7 @@ export const ServiceTypeSeed: ServiceType[] = [
     description: 'Tipo de servicio de tratamiento',
   },
   {
-    name: 'Aplicaiones',
+    name: 'Aplicaciones',
     description: 'Tipo de servicio de aplicaciones',
   },
   {

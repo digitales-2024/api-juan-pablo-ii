@@ -25,8 +25,9 @@ export class CreateStaffDto {
     example: '7c4dd6ce-scratch-41d4-a716-446655441111',
     required: false,
   })
-  @IsUUID()
   @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value.trim() === '' ? undefined : value.trim()))
   userId?: string;
 
   @ApiProperty({
@@ -49,7 +50,6 @@ export class CreateStaffDto {
   @Transform(({ value }) => value.trim())
   lastName: string;
 
-
   @ApiProperty({
     description: 'Numero de CMP',
     example: '123456789',
@@ -64,7 +64,6 @@ export class CreateStaffDto {
     return value.trim();
   })
   cmp?: string;
-
 
   @ApiProperty({
     description: 'Número de DNI del personal médico',
@@ -111,4 +110,14 @@ export class CreateStaffDto {
   @IsString()
   @Transform(({ value }) => value.trim())
   phone?: string;
+
+  @ApiProperty({
+    description: 'ID de la sucursal asociado al personal en el sistema',
+    example: '7c4dd6ce-scratch-41d4-a716-446655441111',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value.trim() === '' ? undefined : value.trim()))
+  branchId?: string;
 }

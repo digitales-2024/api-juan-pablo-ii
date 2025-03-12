@@ -12,7 +12,7 @@ export class UpdateEventUseCase {
   constructor(
     private readonly eventRepository: EventRepository,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async execute(
     id: string,
@@ -22,6 +22,7 @@ export class UpdateEventUseCase {
     const updatedEvent = await this.eventRepository.transaction(async () => {
       // Update event
       const event = await this.eventRepository.update(id, {
+        color: updateEventDto.color,
         title: updateEventDto.title,
         type: updateEventDto.type,
         start: updateEventDto.start,

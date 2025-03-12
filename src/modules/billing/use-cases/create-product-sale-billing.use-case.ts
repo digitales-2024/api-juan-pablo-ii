@@ -4,7 +4,10 @@ import { UserData } from '@login/login/interfaces';
 import { AuditActionType } from '@prisma/client';
 import { OrderService } from '@pay/pay/services/order.service';
 import { OrderType, OrderStatus } from '@pay/pay/interfaces/order.types';
-import { CreateProductSaleBillingDto, ProductSaleItemDto } from '../dto/create-product-sale-billing.dto';
+import {
+  CreateProductSaleBillingDto,
+  ProductSaleItemDto,
+} from '../dto/create-product-sale-billing.dto';
 import { Order } from '@pay/pay/entities/order.entity';
 import { OrderRepository } from '@pay/pay/repositories/order.repository';
 import { PaymentService } from '@pay/pay/services/payment.service';
@@ -13,8 +16,6 @@ import {
   PaymentStatus,
   PaymentType,
 } from '@pay/pay/interfaces/payment.types';
-import { TypeMovementService } from '@inventory/inventory/type-movement/services/type-movement.service';
-import { StockRepository } from '@inventory/inventory/stock/repositories/stock.repository';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { PacientService } from '@pacient/pacient/pacient/services/pacient.service';
 import { ProductSaleGenerator } from '../generators/product-sale-generator';
@@ -33,7 +34,7 @@ export class CreateProductSaleOrderUseCase {
     private readonly productService: ProductService,
     private readonly stockService: StockService,
     private readonly patientService: PacientService,
-    private readonly productSaleGenerator: ProductSaleGenerator
+    private readonly productSaleGenerator: ProductSaleGenerator,
   ) { }
 
   async execute(
@@ -49,11 +50,18 @@ export class CreateProductSaleOrderUseCase {
 
     // Validar disponibilidad de stock para todos los productos
     for (const product of createDto.products) {
-      const stockInStorage = await this.stockService.getStockByStorageProduct(product.storageId, product.productId);
-      const productStock = stockInStorage[0]?.stock.find(item => item.idProduct === product.productId);
+      const stockInStorage = await this.stockService.getStockByStorageProduct(
+        product.storageId,
+        product.productId,
+      );
+      const productStock = stockInStorage[0]?.stock.find(
+        (item) => item.idProduct === product.productId,
+      );
 
       if (!productStock || productStock.stock < product.quantity) {
-        const productName = productStock ? productStock.name : product.productId;
+        const productName = productStock
+          ? productStock.name
+          : product.productId;
         const storageName = stockInStorage[0]?.name || product.storageId;
 
         unavailableProducts.push({
@@ -64,7 +72,9 @@ export class CreateProductSaleOrderUseCase {
           availableQuantity: productStock ? productStock.stock : 0,
         });
       } else {
-        this.logger.log(`Disponibilidad de stock para el producto ${product.productId} en el almacén ${product.storageId}: Suficiente`);
+        this.logger.log(
+          `Disponibilidad de stock para el producto ${product.productId} en el almacén ${product.storageId}: Suficiente`,
+        );
       }
     }
 
@@ -79,7 +89,10 @@ export class CreateProductSaleOrderUseCase {
     }
 
     // Crear metadata vacía usando el generador
-    const metadata = this.productSaleGenerator.createEmptyMetadata(createDto, patient);
+    const metadata = this.productSaleGenerator.createEmptyMetadata(
+      createDto,
+      patient,
+    );
 
     // Llenar los detalles del paciente
     metadata.patientDetails.fullName = `${patient.name} ${patient.lastName}`;
@@ -88,14 +101,19 @@ export class CreateProductSaleOrderUseCase {
     metadata.patientDetails.phone = patient.phone;
 
     // Log de los detalles del paciente
-    this.logger.log(`Detalles del paciente en metadata: ${JSON.stringify(metadata.patientDetails)}`);
+    this.logger.log(
+      `Detalles del paciente en metadata: ${JSON.stringify(metadata.patientDetails)}`,
+    );
 
     // Calcular el subtotal, impuestos y detalles de los productos
-    const { subtotal, tax, total, productDetails } = await this.calculateProductTotals(createDto.products);
+    const { subtotal, tax, total, productDetails } =
+      await this.calculateProductTotals(createDto.products);
 
     // Log del subtotal y detalles de los productos
     this.logger.log(`Subtotal calculado: ${subtotal}`);
-    this.logger.log(`Detalles de los productos: ${JSON.stringify(productDetails)}`);
+    this.logger.log(
+      `Detalles de los productos: ${JSON.stringify(productDetails)}`,
+    );
 
     // Actualiza el metadata con los valores calculados
     metadata.orderDetails.transactionDetails = {
@@ -194,7 +212,7 @@ export class CreateProductSaleOrderUseCase {
       }
 
       // Calcular el subtotal sin impuesto (precio base)
-      const productSubtotal = priceWithTax / (1 + taxRate) * product.quantity;
+      const productSubtotal = (priceWithTax / (1 + taxRate)) * product.quantity;
       subtotal += productSubtotal;
 
       const productInfo = await this.productService.findById(product.productId);
@@ -204,6 +222,7 @@ export class CreateProductSaleOrderUseCase {
         quantity: product.quantity,
         price: priceWithTax, // Mostrar el precio con impuesto al usuario
         subtotal: productSubtotal, // Subtotal sin impuesto para cálculos internos
+        storageId: product.storageId, // Añadir el storageId para el procesamiento de inventario
       });
     }
 

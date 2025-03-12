@@ -55,6 +55,9 @@ export class Staff {
 
   @ApiProperty({ description: 'Número de Colegiatura Médica (CMP)' })
   cmp: string;
+
+  @ApiProperty({ description: 'id de la sucursa asignado a este personal' })
+  branchId: string;
 }
 
 export class StaffType {

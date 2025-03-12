@@ -1,7 +1,7 @@
 // libs/pay/src/services/order.service.ts
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { OrderRepository } from '../repositories/order.repository';
-import { Order } from '../entities/order.entity';
+import { DetailedOrder, Order } from '../entities/order.entity';
 import { IOrderGenerator } from '../interfaces';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { orderErrorMessages } from '../errors/errors-order';
@@ -24,6 +24,8 @@ import {
 } from '../use-cases';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { PaymentRepository } from '../repositories/payment.repository';
+import { PaymentStatus } from '../interfaces/payment.types';
 
 @Injectable()
 export class OrderService {
@@ -40,6 +42,7 @@ export class OrderService {
     private readonly findOrderByStatusUseCase: FindOrdersByStatusUseCase,
     private readonly submitDraftOrderUseCase: SubmitDraftOrderUseCase,
     private readonly completeOrderUseCase: CompleteOrderUseCase,
+    private readonly paymentRepository: PaymentRepository,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -185,7 +188,7 @@ export class OrderService {
   }
 
   /**
-   * Busca una orden por su identificador
+   * Busca una orden detallada por su identificador
    * @param id - Identificador de la orden
    * @returns La orden encontrada
    * @throws {BadRequestException} Si la orden no se encuentra
@@ -199,23 +202,82 @@ export class OrderService {
   }
 
   /**
+   * Busca una orden por su identificador
+   * @param id - Identificador de la orden
+   * @returns La orden encontrada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+  async findDetailedOrderById(id: string): Promise<DetailedOrder> {
+    try {
+      const response = (await this.orderRepository.findById(id, {
+        payments: true,
+      })) as DetailedOrder;
+      return response;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca una orden por su identificador
+   * @param id - Identificador de la orden
+   * @returns La orden encontrada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+  async searchDetailedOrderById(id: string): Promise<DetailedOrder[]> {
+    try {
+      const results =
+        id === 'None'
+          ? ((await this.orderRepository.findMany({
+            where: {
+              isActive: true,
+            },
+            orderBy: {
+              date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
+            },
+            include: {
+              payments: true,
+            },
+            take: 10,
+          })) as DetailedOrder[])
+          : [
+            (await this.orderRepository.findOne({
+              where: {
+                id: {
+                  contains: id,
+                  mode: 'insensitive',
+                },
+              },
+              include: {
+                payments: true,
+              },
+            })) as DetailedOrder,
+          ];
+
+      return results;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
    * Obtiene todas las órdenes
    * @returns Arreglo de órdenes
    * @throws {BadRequestException} Si hay un error al obtener las órdenes
    */
-  async findAll(): Promise<Order[]> {
+  async findAll(): Promise<DetailedOrder[]> {
     try {
       return this.orderRepository.findMany({
-        where: {
-          isActive: true,
-        },
+        // where: {
+        //   isActive: true,
+        // },
         include: {
           payments: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          date: 'desc',
         },
-      });
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -228,7 +290,11 @@ export class OrderService {
    */
   async findAllActive(): Promise<Order[]> {
     try {
-      return await this.orderRepository.findManyActive();
+      return await this.orderRepository.findManyActive({
+        orderBy: {
+          date: 'desc',
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -240,11 +306,17 @@ export class OrderService {
    * @returns Arreglo de órdenes del tipo especificado
    * @throws {BadRequestException} Si hay un error al obtener las órdenes
    */
-  async findByType(type: OrderType): Promise<Order[]> {
+  async findByType(type: OrderType): Promise<DetailedOrder[]> {
     try {
       return this.orderRepository.findMany({
         where: { type, isActive: true },
-      });
+        orderBy: {
+          date: 'desc',
+        },
+        include: {
+          payments: true,
+        },
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -256,11 +328,17 @@ export class OrderService {
    * @returns Arreglo de órdenes con el estado especificado
    * @throws {BadRequestException} Si hay un error al obtener las órdenes
    */
-  async findByStatus(status: OrderStatus): Promise<Order[]> {
+  async findByStatus(status: OrderStatus): Promise<DetailedOrder[]> {
     try {
       return this.orderRepository.findMany({
         where: { status, isActive: true },
-      });
+        orderBy: {
+          date: 'desc',
+        },
+        include: {
+          payments: true,
+        },
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -290,12 +368,21 @@ export class OrderService {
   async findOrderByStatusType(
     type: OrderType,
     status: OrderStatus,
-  ): Promise<Order[]> {
+  ): Promise<DetailedOrder[]> {
     try {
-      const orders = await this.findByStatus(status);
-      return orders.filter((order) => order.type === type);
+      // const orders = await this.findByStatus(status);
+      // return orders.filter((order) => order.type === type);
+      return this.orderRepository.findMany({
+        where: { type, status, isActive: true },
+        orderBy: {
+          date: 'desc',
+        },
+        include: {
+          payments: true,
+        },
+      }) as Promise<DetailedOrder[]>;
     } catch (error) {
-      this.errorHandler.handleError(error, 'getting');
+      return this.errorHandler.handleError(error, 'getting');
     }
   }
 
@@ -317,6 +404,88 @@ export class OrderService {
   ): Promise<BaseApiResponse<Order>> {
     try {
       return await this.completeOrderUseCase.execute(id, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
+    }
+  }
+
+  /**
+  * Busca órdenes por referenceId
+  * @param referenceId - ID de referencia (por ejemplo, ID de una cita)
+  * @returns Arreglo de órdenes con el referenceId especificado
+  * @throws {BadRequestException} Si hay un error al obtener las órdenes
+  */
+  async findOrdersByReferenceId(referenceId: string): Promise<Order[]> {
+    try {
+      this.logger.debug(`Buscando órdenes con referenceId: ${referenceId}`);
+      const orders = await this.orderRepository.findByReference(referenceId);
+      this.logger.debug(`Se encontraron ${orders.length} órdenes con referenceId: ${referenceId}`);
+      return orders;
+    } catch (error) {
+      return this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+
+  /**
+   * Cancela una orden y sus pagos asociados
+   * @param id - ID de la orden a cancelar
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la orden cancelada
+   * @throws {BadRequestException} Si hay un error al cancelar la orden
+   */
+  async cancelOrder(
+    id: string,
+    user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    try {
+      this.logger.debug(`Cancelando orden con ID: ${id}`);
+
+      // Buscar la orden
+      const order = await this.findOrderById(id);
+      if (!order) {
+        throw new BadRequestException(`Orden con ID ${id} no encontrada`);
+      }
+
+      // Verificar que la orden no esté ya cancelada
+      if (order.status === OrderStatus.CANCELLED) {
+        this.logger.debug(`La orden ${id} ya está cancelada`);
+        return {
+          success: true,
+          message: 'La orden ya está cancelada',
+          data: order,
+        };
+      }
+
+      // Actualizar el estado de la orden a CANCELLED
+      const updatedOrder = await this.orderRepository.update(id, {
+        status: OrderStatus.CANCELLED,
+      });
+
+      this.logger.debug(`Orden ${id} actualizada a estado CANCELLED`);
+
+      // Buscar y cancelar todos los pagos asociados a la orden
+      const payments = await this.paymentRepository.findMany({
+        where: { orderId: id }
+      });
+
+      if (payments && payments.length > 0) {
+        for (const payment of payments) {
+          // Solo cancelar pagos que estén en estado PENDING o PROCESSING
+          if (payment.status === PaymentStatus.PENDING || payment.status === PaymentStatus.PROCESSING) {
+            await this.paymentRepository.update(payment.id, {
+              status: PaymentStatus.CANCELLED,
+            });
+            this.logger.debug(`Pago ${payment.id} actualizado a estado CANCELLED`);
+          }
+        }
+      }
+
+      return {
+        success: true,
+        message: 'Orden y pagos asociados cancelados exitosamente',
+        data: updatedOrder,
+      };
     } catch (error) {
       this.errorHandler.handleError(error, 'processing');
     }

@@ -8,14 +8,17 @@ import {
   ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
-import { UserData } from '@login/login/interfaces';
+import { HttpResponse, UserData } from '@login/login/interfaces';
 import { BillingService } from '../services/billing.service';
 import { Order } from '@pay/pay/entities/order.entity';
 // import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
 import { CreateProductSaleBillingDto } from '../dto/create-product-sale-billing.dto';
 import { CreateProductPurchaseBillingDto } from '../dto/create-product-purchase-billing.dto';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
-import { CreateMedicalAppointmentBillingDto } from '../dto';
+import {
+  CreateMedicalAppointmentBillingDto,
+  CreateMedicalPrescriptionBillingDto,
+} from '../dto';
 
 @ApiTags('Billing')
 @ApiBadRequestResponse({
@@ -36,7 +39,7 @@ import { CreateMedicalAppointmentBillingDto } from '../dto';
 })
 @Auth()
 export class BillingController {
-  constructor(private readonly billingService: BillingService) { }
+  constructor(private readonly billingService: BillingService) {}
 
   @Post('medical-appointment')
   @ApiOperation({ summary: 'Create medical consultation order' })
@@ -50,18 +53,18 @@ export class BillingController {
   ): Promise<BaseApiResponse<Order>> {
     return this.billingService.createMedicalAppointment(createDto, user);
   }
-  // @Post('medical-prescription')
-  // @ApiOperation({ summary: 'Create medical prescription order' })
-  // @ApiCreatedResponse({
-  //   description: 'Medical prescription order created successfully',
-  //   type: Order,
-  // })
-  // async createMedicalPrescriptionOrder(
-  //   @Body() createDto: CreateMedicalPrescriptionBillingDto,
-  //   @GetUser() user: UserData,
-  // ): Promise<HttpResponse<Order>> {
-  //   return this.billingService.createMedicalPrescription(createDto, user);
-  // }
+  @Post('medical-prescription')
+  @ApiOperation({ summary: 'Create medical prescription order' })
+  @ApiCreatedResponse({
+    description: 'Medical prescription order created successfully',
+    type: Order,
+  })
+  async createMedicalPrescriptionOrder(
+    @Body() createDto: CreateMedicalPrescriptionBillingDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.billingService.createMedicalPrescription(createDto, user);
+  }
 
   @Post('product-sale')
   @ApiOperation({ summary: 'Create product sale order' })

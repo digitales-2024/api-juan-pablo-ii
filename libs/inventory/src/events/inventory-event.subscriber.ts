@@ -1,38 +1,35 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { OrderType } from '@pay/pay/interfaces/order.types';
-import { TypeMovementRepository } from '../type-movement/repositories/type-movement.repository';
 import { Order } from '@pay/pay/entities/order.entity';
 import { CompensationService } from '../compensation/compensation.service';
-// import { MovementRepository } from '../movement/repositories/movement.repository';
-// import { IncomingRepository } from '../incoming/repositories/incoming.repository';
-// import { OutgoingRepository } from '../outgoing/repositories/outgoing.repository';
-// import { StockService } from '../stock/services/stock.service';
 import {
   ProductSaleMetadata,
   ProductPurchaseMetadata,
 } from 'src/modules/billing/interfaces/metadata.interfaces';
 import { StockRepository } from '../stock/repositories/stock.repository';
 import { UserData } from '@login/login/interfaces';
-import { CreateIncomingDtoStorage } from '../incoming/dto/create-incomingStorage.dto';
-import { IncomingService } from '../incoming/services/incoming.service';
 import { CreateOutgoingDtoStorage } from '../outgoing/dto/create-outgoingStorage.dto';
 import { OutgoingService } from '../outgoing/services/outgoing.service';
+
+// Interfaz para los productos en el metadata de la orden
+interface OrderProduct {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+  storageId: string;
+}
 
 @Injectable()
 export class InventoryEventSubscriber {
   private readonly logger = new Logger(InventoryEventSubscriber.name);
 
   constructor(
-    private readonly typeMovementRepository: TypeMovementRepository,
     private readonly stockRepository: StockRepository,
     private readonly compensationService: CompensationService,
-    private readonly incomingService: IncomingService,
     private readonly outgoingService: OutgoingService,
-    // private readonly movementRepository: MovementRepository,
-    // private readonly outgoingRepository: OutgoingRepository,
-    // private readonly incomingRepository: IncomingRepository,
-    // private readonly stockService: StockService,
   ) { }
 
   @OnEvent('order.completed')
@@ -47,7 +44,11 @@ export class InventoryEventSubscriber {
     this.logger.log(
       `Received order.completed event for order: ${payload.order.id}`,
     );
-    this.logger.log(`Payment verification metadata:`, payload.metadata);
+
+    if (payload.metadata) {
+      this.logger.log(`Payment verification metadata:`);
+      this.logger.log(`Object:`, payload.metadata);
+    }
 
     try {
       const { order, metadata } = payload;
@@ -81,21 +82,34 @@ export class InventoryEventSubscriber {
   private shouldProcessInventory(order: Order): boolean {
     return [
       OrderType.PRODUCT_SALE_ORDER,
-      OrderType.PRODUCT_PURCHASE_ORDER,
+      OrderType.MEDICAL_PRESCRIPTION_ORDER,
     ].includes(order.type as OrderType);
   }
 
   private async processInventoryMovements(order: Order, userId: string) {
-    if (!order.movementTypeId) {
-      throw new Error(`Order ${order.id} has no movement type ID`);
+    // Procesamos órdenes de venta (outgoing) y prescripciones médicas
+    if (order.type === OrderType.PRODUCT_SALE_ORDER) {
+      this.logger.log(`Processing product sale order ${order.id}`);
+      await this.processProductSaleOrder(order, userId);
+    } else if (order.type === OrderType.MEDICAL_PRESCRIPTION_ORDER) {
+      this.logger.log(`Processing medical prescription order ${order.id}`);
+      // Ya no delegamos el procesamiento al subscriber de appointments
+      // El procesamiento de inventario para prescripciones médicas se maneja en el AppointmentEventSubscriber
+      this.logger.log(`Inventory processing for medical prescriptions is handled by the AppointmentEventSubscriber`);
+      return;
+    } else {
+      this.logger.log(`Order ${order.id} is not a supported order type for inventory, skipping inventory processing`);
+      return;
     }
+  }
 
-    const isIncoming = order.type === OrderType.PRODUCT_PURCHASE_ORDER;
-    this.logger.log(
-      `Processing ${isIncoming ? 'incoming' : 'outgoing'} movement`,
-    );
+  /**
+   * Procesa una orden de venta de productos
+   */
+  private async processProductSaleOrder(order: Order, userId: string) {
+    this.logger.log(`Processing outgoing movement`);
 
-    let metadata: ProductSaleMetadata | ProductPurchaseMetadata;
+    let metadata: any;
     try {
       metadata =
         typeof order.metadata === 'string'
@@ -109,35 +123,7 @@ export class InventoryEventSubscriber {
 
     this.logger.debug('Metadata structure:', JSON.stringify(metadata, null, 2));
 
-
-
-    this.logger.log(
-      `Updating movement type ${order.movementTypeId} to active state`,
-    );
-    await this.typeMovementRepository.update(order.movementTypeId, {
-      state: true,
-    });
-
-
-    // const record = isIncoming
-    //   ? await this.incomingRepository.create({
-    //       name: `Purchase Order ${order.code}`,
-    //       description: `Purchase incoming for order ${order.id}`,
-    //       storageId: storageId,
-    //       date: new Date(),
-    //       state: true,
-    //       referenceId: order.id,
-    //     })
-    //   : await this.outgoingRepository.create({
-    //       name: `Sale Order ${order.code}`,
-    //       description: `Sale outgoing for order ${order.id}`,
-    //       storageId: storageId,
-    //       date: new Date(),
-    //       state: true,
-    //       referenceId: order.id,
-    //     });
-
-    const products = metadata?.orderDetails?.products;
+    const products = metadata?.orderDetails?.products as OrderProduct[];
     if (!Array.isArray(products) || products.length === 0) {
       throw new Error(`No valid products found in order ${order.id}`);
     }
@@ -152,154 +138,104 @@ export class InventoryEventSubscriber {
       roles: [],
     };
 
-    // Si es incoming, usar createIncoming además del flujo normal
-    if (isIncoming) {
-      this.logger.log(
-        'Processing additional incoming flow with createIncoming',
-      );
-      const createIncomingDto: CreateIncomingDtoStorage = {
-        name: `Purchase Order ${order.code}`,
-        storageId: '',
-        date: new Date(),
-        state: true,
-        movement: products.map((product) => ({
-          productId: product.productId,
-          quantity: product.quantity,
-        })),
-      };
+    this.logger.log('Processing outgoing operations');
 
-      await this.incomingService.createIncoming(createIncomingDto, userData);
-    }
-
-    // await Promise.all(
-    //   products.map(async (product) => {
-    //     try {
-    //       this.logger.debug('Processing product:', {
-    //         productId: product.productId,
-    //         quantity: product.quantity,
-    //         orderId: order.id,
-    //         storageId,
-    //       });
-
-    //       await this.createMovement(order, product, isIncoming, record.id);
-
-    //       if (!isIncoming) {
-    //         await this.stockService.updateStockOutgoing(
-    //           storageId,
-    //           product.productId,
-    //           product.quantity,
-    //           userData,
-    //         );
-
-    //         this.logger.log(
-    //           `Stock updated for product ${product.productId} - Quantity: ${product.quantity}`,
-    //         );
-    //       }
-
-    //       if (order.type === OrderType.PRODUCT_SALE_ORDER) {
-    //         await this.validateStock(order, product);
-    //       }
-    //     } catch (error) {
-    //       this.logger.error('Error processing product:', {
-    //         productId: product.productId,
-    //         error: error.message,
-    //       });
-    //       throw error;
-    //     }
-    //   }),
-    // );
-
-    if (!isIncoming && order.type === OrderType.PRODUCT_SALE_ORDER) {
-      this.logger.log('Processing outgoing operations');
-
-      try {
-        const outgoingProductMovements = await Promise.all(
-          products.map(async (product) => {
-            await this.validateStock(order, product);
-            return {
-              productId: product.productId,
-              quantity: product.quantity,
-            };
-          }),
-        );
-
-        const createOutgoingDto: CreateOutgoingDtoStorage = {
-          name: `Órden de venta ${order.code}`,
-          storageId: '',
-          date: new Date(),
-          state: true,
-          movement: outgoingProductMovements,
-        };
-
-        await this.outgoingService.createOutgoing(createOutgoingDto, userData);
-      } catch (error) {
-        this.logger.error('Error processing outgoing products in order: ', {
-          error: error.message,
-        });
-        throw error;
+    try {
+      // Obtenemos el storageId del branch
+      const branchId = metadata?.orderDetails?.branchId;
+      if (!branchId) {
+        throw new Error(`Missing branchId in order ${order.id}`);
       }
+
+      // Validar stock para todos los productos antes de procesar
+      for (const product of products) {
+        // Usamos el storageId del producto si está disponible, de lo contrario usamos el branchId
+        const storageId = product.storageId || branchId;
+
+        await this.validateStock(order, {
+          productId: product.id,
+          quantity: product.quantity,
+          storageId: storageId
+        });
+      }
+
+      // Mapeamos los productos para el outgoing y los agrupamos por storageId
+      const productsByStorage: Record<string, { productId: string; quantity: number }[]> = {};
+
+      for (const product of products) {
+        // Usamos el storageId del producto si está disponible, de lo contrario usamos el branchId
+        const storageId = product.storageId || branchId;
+
+        if (!productsByStorage[storageId]) {
+          productsByStorage[storageId] = [];
+        }
+
+        productsByStorage[storageId].push({
+          productId: product.id,
+          quantity: product.quantity,
+        });
+      }
+
+      // Crear un outgoing para cada almacén
+      await Promise.all(
+        Object.entries(productsByStorage).map(async ([storageId, products]) => {
+          const createOutgoingDto: CreateOutgoingDtoStorage = {
+            name: `Órden de venta ${order.code}`,
+            storageId: storageId,
+            date: new Date(),
+            state: true,
+            movement: products,
+          };
+
+          await this.outgoingService.createOutgoing(createOutgoingDto, userData);
+        })
+      );
+
+      this.logger.log(
+        `Successfully processed all ${products.length} products for order ${order.id}`,
+      );
+    } catch (error) {
+      this.logger.error('Error processing outgoing products in order: ', {
+        error: error.message,
+      });
+      throw error;
     }
-
-    this.logger.log(
-      `Successfully processed all ${products.length} products for order ${order.id}`,
-    );
   }
-
-  // private async createMovement(
-  //   order: Order,
-  //   product: { productId: string; quantity: number },
-  //   isIncoming: boolean,
-  //   recordId: string,
-  // ) {
-  //   await this.movementRepository.create({
-  //     movementTypeId: order.movementTypeId,
-  //     productId: product.productId,
-  //     quantity: isIncoming ? product.quantity : -product.quantity,
-  //     date: new Date(),
-  //     state: true,
-  //     incomingId: isIncoming ? recordId : null,
-  //     outgoingId: !isIncoming ? recordId : null,
-  //   });
-  // }
 
   private async validateStock(
     order: Order,
-    product: { productId: string; quantity: number },
+    product: { productId: string; quantity: number; storageId?: string },
   ) {
-    let metadata: ProductSaleMetadata | ProductPurchaseMetadata;
     try {
-      metadata =
-        typeof order.metadata === 'string'
-          ? JSON.parse(order.metadata)
-          : order.metadata;
-      // const storageId = metadata?.orderDetails?.storageId;
-      // if (!storageId) {
-      //   throw new Error(`Missing storageId in metadata for order ${order.id}`);
-      // }
+      // Verificar que el producto tenga storageId
+      const storageId = product.storageId;
+      if (!storageId) {
+        throw new Error(`Missing storageId for product ${product.productId} in order ${order.id}`);
+      }
 
-      // this.logger.debug('Validating stock for:', {
-      //   storageId,
-      //   productId: product.productId,
-      //   quantity: product.quantity,
-      // });
+      this.logger.debug('Validating stock for:', {
+        storageId,
+        productId: product.productId,
+        quantity: product.quantity,
+      });
 
-      // const stockActual =
-      //   await this.stockRepository.getStockByStorageAndProduct(
-      //     storageId,
-      //     product.productId,
-      //   );
-      // this.logger.log('stockActual:', stockActual);
-      // if (stockActual.stock < 0) {
-      //   throw new Error(
-      //     `Invalid stock movement: Negative stock for product ${product.productId} in storage ${storageId}`,
-      //   );
-      // }
+      const stockActual = await this.stockRepository.getStockByStorageAndProduct(
+        storageId,
+        product.productId,
+      );
+
+      this.logger.log('stockActual:', stockActual);
+
+      if (!stockActual || stockActual.stock < product.quantity) {
+        throw new Error(
+          `Insufficient stock for product ${product.productId} in storage ${storageId}. Required: ${product.quantity}, Available: ${stockActual ? stockActual.stock : 0}`,
+        );
+      }
     } catch (error) {
       this.logger.error('Error validating stock:', {
         orderId: order.id,
         productId: product.productId,
         error: error.message,
-        metadata: metadata,
       });
       throw error;
     }
