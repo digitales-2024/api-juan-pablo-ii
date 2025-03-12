@@ -154,4 +154,60 @@ export class StaffRepository extends BaseRepository<Staff> {
       ...this.defaultSelect,
     });
   }
+
+  /**
+   * Actualiza un miembro del personal con manejo especial para campos que pueden ser null
+   * @param id - ID del personal a actualizar
+   * @param data - Datos para actualizar
+   * @returns El personal actualizado
+   */
+  async updateStaff(id: string, data: any): Promise<Staff> {
+    // Construir el objeto de datos para Prisma
+    const updateData: any = { ...data };
+
+    // Manejar explícitamente los campos que pueden ser null
+    // Verificar tanto cadenas vacías como undefined
+    if (data.userId === '' || data.userId === undefined) {
+      updateData.userId = null;
+    }
+
+    if (data.cmp === '' || data.cmp === undefined) {
+      updateData.cmp = null;
+    }
+
+    // Para branchId, necesitamos manejar la relación con branch
+    if (data.branchId === '' || data.branchId === undefined) {
+      updateData.branchId = null;
+      updateData.branch = { disconnect: true };
+    } else if (data.branchId) {
+      updateData.branch = {
+        connect: {
+          id: data.branchId
+        }
+      };
+      // Eliminar branchId para evitar conflictos con la relación
+      delete updateData.branchId;
+    }
+
+    // Manejar la relación con staffType si existe staffTypeId
+    if (data.staffTypeId) {
+      updateData.staffType = {
+        connect: {
+          id: data.staffTypeId
+        }
+      };
+      // Eliminar staffTypeId para evitar conflictos con la relación
+      delete updateData.staffTypeId;
+    }
+
+    console.log('Datos a actualizar en Prisma:', updateData);
+
+    return this.prisma.measureQuery(`updateStaff`, () =>
+      this.prisma.staff.update({
+        where: { id },
+        data: updateData,
+        ...this.defaultSelect,
+      }),
+    );
+  }
 }
