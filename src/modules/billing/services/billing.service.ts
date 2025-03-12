@@ -12,7 +12,10 @@ import { CreateProductSaleOrderUseCase } from '../use-cases/create-product-sale-
 // import { CreateProductPurchaseOrderUseCase } from '../use-cases/create-product-purchase-billing.use-case';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateAppointmentOrderUseCase } from '../use-cases/create-appointment-billing.use-case';
-import { CreateMedicalAppointmentBillingDto, CreateMedicalPrescriptionBillingDto } from '../dto';
+import {
+  CreateMedicalAppointmentBillingDto,
+  CreateMedicalPrescriptionBillingDto,
+} from '../dto';
 import { AppointmentGenerator } from '../generators/appointment.generator';
 import { CreateMedicalPrescriptionUseCase } from '../use-cases/create-medical-prescription-billing.use-case';
 import { MedicalPrescriptionGenerator } from '../generators/medical-prescription.generator';
@@ -36,7 +39,7 @@ export class BillingService {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
       'Billing',
-      billingErrorMessages
+      billingErrorMessages,
     );
     // this.orderService.registerGenerator(this.productPurchaseGenerator);
     this.orderService.registerGenerator(this.productSaleGenerator);
@@ -55,10 +58,7 @@ export class BillingService {
     user: UserData,
   ): Promise<BaseApiResponse<Order>> {
     try {
-      return await this.createAppointmentOrderUseCase.execute(
-        createDto,
-        user,
-      );
+      return await this.createAppointmentOrderUseCase.execute(createDto, user);
     } catch (error) {
       this.logger.error(
         `Error al crear orden de facturación para cita médica: ${error.message}`,
@@ -114,7 +114,10 @@ export class BillingService {
     user: UserData,
   ): Promise<BaseApiResponse<Order>> {
     try {
-      const response = await this.createProductSaleUseCase.execute(createDto, user);
+      const response = await this.createProductSaleUseCase.execute(
+        createDto,
+        user,
+      );
 
       // Verificar si hay productos no disponibles
       if ('unavailableProducts' in response.data) {

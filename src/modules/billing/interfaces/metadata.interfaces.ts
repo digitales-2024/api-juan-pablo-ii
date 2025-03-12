@@ -16,7 +16,7 @@ export class BaseServiceItem {
 
 export class ProductMovement {
   @ApiProperty({ description: 'Identificador único del producto' })
-  productId: string;
+  id: string;
 
   @ApiProperty({ description: 'Identificador único del almacén' })
   storageId: string;

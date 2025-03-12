@@ -115,14 +115,8 @@ export class Order implements IOrder {
   @ApiProperty({
     description: 'Metadatos adicionales en formato JSON',
     required: false,
-    type: 'object',
-    example: {
-      pacienteId: 'PAT-12345',
-      medicoId: 'DOC-67890',
-      seguro: 'Seguro Salud Total',
-    },
   })
-  metadata?: Record<string, any>;
+  metadata?: string;
 }
 
 // "payments": [
@@ -156,7 +150,7 @@ export class PrescriptionOrder extends Order {
     required: false,
     type: MedicalPrescriptionMetadata,
   })
-  metadata?: Record<string, any>;
+  metadata?: string;
 }
 
 export class ProductSaleOrder extends Order {
@@ -165,7 +159,7 @@ export class ProductSaleOrder extends Order {
     required: false,
     type: ProductSaleMetadata,
   })
-  metadata?: Record<string, any>;
+  metadata?: string;
 }
 
 export class AppointmentOrder extends Order {
@@ -174,5 +168,5 @@ export class AppointmentOrder extends Order {
     required: false,
     type: MedicalAppointmentMetadata,
   })
-  metadata?: Record<string, any>;
+  metadata?: string;
 }

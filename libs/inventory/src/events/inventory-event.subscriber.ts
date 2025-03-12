@@ -3,24 +3,21 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { OrderType } from '@pay/pay/interfaces/order.types';
 import { Order } from '@pay/pay/entities/order.entity';
 import { CompensationService } from '../compensation/compensation.service';
-import {
-  ProductSaleMetadata,
-  ProductPurchaseMetadata,
-} from 'src/modules/billing/interfaces/metadata.interfaces';
+import { ProductMovement } from 'src/modules/billing/interfaces/metadata.interfaces';
 import { StockRepository } from '../stock/repositories/stock.repository';
 import { UserData } from '@login/login/interfaces';
 import { CreateOutgoingDtoStorage } from '../outgoing/dto/create-outgoingStorage.dto';
 import { OutgoingService } from '../outgoing/services/outgoing.service';
 
 // Interfaz para los productos en el metadata de la orden
-interface OrderProduct {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  subtotal: number;
-  storageId: string;
-}
+// interface OrderProduct {
+//   id: string;
+//   name: string;
+//   quantity: number;
+//   price: number;
+//   subtotal: number;
+//   storageId: string;
+// }
 
 @Injectable()
 export class InventoryEventSubscriber {
@@ -30,7 +27,7 @@ export class InventoryEventSubscriber {
     private readonly stockRepository: StockRepository,
     private readonly compensationService: CompensationService,
     private readonly outgoingService: OutgoingService,
-  ) { }
+  ) {}
 
   @OnEvent('order.completed')
   async handleOrderCompleted(payload: {
@@ -80,15 +77,15 @@ export class InventoryEventSubscriber {
   }
 
   private shouldProcessInventory(order: Order): boolean {
-    return [
-      OrderType.PRODUCT_SALE_ORDER,
-    ].includes(order.type as OrderType);
+    return [OrderType.PRODUCT_SALE_ORDER].includes(order.type as OrderType);
   }
 
   private async processInventoryMovements(order: Order, userId: string) {
     // Solo procesamos órdenes de venta (outgoing)
     if (order.type !== OrderType.PRODUCT_SALE_ORDER) {
-      this.logger.log(`Order ${order.id} is not a sale order, skipping inventory processing`);
+      this.logger.log(
+        `Order ${order.id} is not a sale order, skipping inventory processing`,
+      );
       return;
     }
 
@@ -108,7 +105,7 @@ export class InventoryEventSubscriber {
 
     this.logger.debug('Metadata structure:', JSON.stringify(metadata, null, 2));
 
-    const products = metadata?.orderDetails?.products as OrderProduct[];
+    const products = metadata?.orderDetails?.products as ProductMovement[];
     if (!Array.isArray(products) || products.length === 0) {
       throw new Error(`No valid products found in order ${order.id}`);
     }
@@ -140,12 +137,15 @@ export class InventoryEventSubscriber {
         await this.validateStock(order, {
           productId: product.id,
           quantity: product.quantity,
-          storageId: storageId
+          storageId: storageId,
         });
       }
 
       // Mapeamos los productos para el outgoing y los agrupamos por storageId
-      const productsByStorage: Record<string, { productId: string; quantity: number }[]> = {};
+      const productsByStorage: Record<
+        string,
+        { productId: string; quantity: number }[]
+      > = {};
 
       for (const product of products) {
         // Usamos el storageId del producto si está disponible, de lo contrario usamos el branchId
@@ -172,8 +172,11 @@ export class InventoryEventSubscriber {
             movement: products,
           };
 
-          await this.outgoingService.createOutgoing(createOutgoingDto, userData);
-        })
+          await this.outgoingService.createOutgoing(
+            createOutgoingDto,
+            userData,
+          );
+        }),
       );
 
       this.logger.log(
@@ -195,7 +198,9 @@ export class InventoryEventSubscriber {
       // Verificar que el producto tenga storageId
       const storageId = product.storageId;
       if (!storageId) {
-        throw new Error(`Missing storageId for product ${product.productId} in order ${order.id}`);
+        throw new Error(
+          `Missing storageId for product ${product.productId} in order ${order.id}`,
+        );
       }
 
       this.logger.debug('Validating stock for:', {
@@ -204,10 +209,11 @@ export class InventoryEventSubscriber {
         quantity: product.quantity,
       });
 
-      const stockActual = await this.stockRepository.getStockByStorageAndProduct(
-        storageId,
-        product.productId,
-      );
+      const stockActual =
+        await this.stockRepository.getStockByStorageAndProduct(
+          storageId,
+          product.productId,
+        );
 
       this.logger.log('stockActual:', stockActual);
 
