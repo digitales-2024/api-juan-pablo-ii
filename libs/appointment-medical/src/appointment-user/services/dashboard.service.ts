@@ -43,4 +43,36 @@ export class DashboardService {
       };
     }
   }
+  // Añadir este método a la clase DashboardService existente
+
+  /**
+   * Obtiene datos de los 12 servicios más demandados por sucursal
+   * @returns Datos de servicios agrupados por sucursal
+   */
+  async getTopServicesBySucursal() {
+    try {
+      this.logger.log('Iniciando consulta de top servicios por sucursal');
+
+      const serviciosData =
+        await this.dashboardRepository.getTopServicesBySucursal();
+
+      this.logger.log(`Datos obtenidos: ${serviciosData.length} servicios`);
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Top servicios por sucursal obtenidos con éxito',
+        data: serviciosData,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error al obtener top servicios por sucursal: ${error.message}`,
+        error.stack,
+      );
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error al obtener top servicios por sucursal',
+        error: error.message,
+      };
+    }
+  }
 }
