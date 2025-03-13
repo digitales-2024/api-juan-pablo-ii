@@ -91,7 +91,7 @@ export class BillingService {
 
       return {
         success: true,
-        message: 'Receta médica creada exitosamente',
+        message: 'Órden por Receta médica creada exitosamente',
         data: response.data as Order,
       };
     } catch (error) {
