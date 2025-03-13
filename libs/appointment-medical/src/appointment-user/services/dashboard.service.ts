@@ -108,4 +108,52 @@ export class DashboardService {
       };
     }
   }
+
+  // Añadir este método a la clase DashboardService existente
+
+  /**
+   * Obtiene datos de ingresos por sucursal para el dashboard KPI
+   * @returns Datos de ingresos agrupados por día y sucursal
+   */
+  async getIngresosPorSucursal() {
+    try {
+      this.logger.log('Iniciando consulta de ingresos por sucursal');
+
+      const ingresosData =
+        await this.dashboardRepository.getIngresosPorSucursal();
+
+      // Obtener un listado de todas las sucursales disponibles en los datos
+      const sucursales = new Set<string>();
+      ingresosData.forEach((dia) => {
+        Object.keys(dia).forEach((key) => {
+          if (key !== 'date') {
+            sucursales.add(key);
+          }
+        });
+      });
+
+      this.logger.log(
+        `Datos obtenidos para ${ingresosData.length} días y ${sucursales.size} sucursales`,
+      );
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Ingresos por sucursal obtenidos con éxito',
+        data: {
+          ingresos: ingresosData,
+          sucursales: Array.from(sucursales),
+        },
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error al obtener ingresos por sucursal: ${error.message}`,
+        error.stack,
+      );
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error al obtener ingresos por sucursal',
+        error: error.message,
+      };
+    }
+  }
 }
