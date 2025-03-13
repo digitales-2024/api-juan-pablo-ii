@@ -26,6 +26,8 @@ import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
+import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
+import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
 
 @ApiTags('Appointments')
 @ApiBadRequestResponse({
@@ -240,6 +242,26 @@ export class AppointmentController {
   }
 
   /**
+   * Reembolsa una cita médica y actualiza sus órdenes y pagos asociados
+   */
+  @Patch(':id/refund')
+  @ApiOperation({ summary: 'Reembolsar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica reembolsada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  refund(
+    @Param('id') id: string,
+    @Body() refundAppointmentDto: RefundAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.refund(id, refundAppointmentDto, user);
+  }
+
+  /**
    * Marca una cita médica como NO_SHOW (paciente no se presentó)
    */
   @Patch(':id/no-show')
@@ -257,6 +279,26 @@ export class AppointmentController {
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Appointment>> {
     return this.appointmentService.markAsNoShow(id, noShowAppointmentDto, user);
+  }
+
+  /**
+   * Reprograma una cita médica
+   */
+  @Patch(':id/reschedule')
+  @ApiOperation({ summary: 'Reprogramar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica reprogramada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  reschedule(
+    @Param('id') id: string,
+    @Body() rescheduleAppointmentDto: RescheduleAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.reschedule(id, rescheduleAppointmentDto, user);
   }
 
 }

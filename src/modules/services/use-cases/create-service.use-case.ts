@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateServiceDto } from '../dto/create-service.dto';
 import { Service } from '../entities/service.entity';
 import { ServiceRepository } from '../repositories/service.repository';
@@ -14,14 +14,14 @@ export class CreateServiceUseCase {
     private readonly serviceRepository: ServiceRepository,
     private readonly serviceTypeService: ServiceTypeService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   /**
    * Ejecuta el caso de uso de creación de un nuevo servicio.
    * @param {CreateServiceDto} createServiceDto - Datos para crear el servicio.
    * @param {UserData} user - Datos del usuario que crea el servicio.
    * @returns {Promise<HttpResponse<Service>>} - Respuesta HTTP con el servicio creado.
-   * @throws {BadRequestException} - Si el tipo de servicio no existe.
+   * @throws {BadRequestException} - Si el tipo de servicio no existe o si ya existe un servicio con el mismo nombre.
    */
   async execute(
     createServiceDto: CreateServiceDto,
@@ -29,6 +29,12 @@ export class CreateServiceUseCase {
   ): Promise<BaseApiResponse<Service>> {
     // Verificar que existe el tipo de servicio
     await this.serviceTypeService.findById(createServiceDto.serviceTypeId);
+
+    // Verificar que no exista otro servicio con el mismo nombre
+    const existingServices = await this.serviceRepository.findByName<Service>(createServiceDto.name);
+    if (existingServices && existingServices.length > 0) {
+      throw new BadRequestException(`Ya existe un servicio con el nombre '${createServiceDto.name}'`);
+    }
 
     // Usar transacción para crear el servicio y registrar auditoría
     const newService = await this.serviceRepository.transaction(async () => {

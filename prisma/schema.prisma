@@ -571,6 +571,7 @@ model Appointment {
   cancellationReason String?
   noShowReason       String?
   isActive           Boolean           @default(true)
+  rescheduleReason   String?
 
   rescheduledFrom   Appointment?  @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
   rescheduledFromId String?
@@ -606,6 +607,7 @@ enum EventStatus {
   CANCELLED
   COMPLETED
   NO_SHOW
+  RESCHEDULED
 }
 
 model Event {

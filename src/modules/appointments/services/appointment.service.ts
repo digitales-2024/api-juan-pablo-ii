@@ -19,11 +19,15 @@ import {
   FindAppointmentsPaginatedUseCase,
   CancelAppointmentUseCase,
   NoShowAppointmentUseCase,
+  RefundAppointmentUseCase,
+  RescheduleAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { ServiceService } from 'src/modules/services/services/service.service';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
+import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
+import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -44,6 +48,8 @@ export class AppointmentService {
     private readonly findAppointmentsPaginatedUseCase: FindAppointmentsPaginatedUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
     private readonly noShowAppointmentUseCase: NoShowAppointmentUseCase,
+    private readonly refundAppointmentUseCase: RefundAppointmentUseCase,
+    private readonly rescheduleAppointmentUseCase: RescheduleAppointmentUseCase,
     private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -224,6 +230,30 @@ export class AppointmentService {
   }
 
   /**
+   * Reembolsa una cita médica y actualiza sus órdenes y pagos asociados a REFUNDED
+   * @param id - ID de la cita a reembolsar
+   * @param refundAppointmentDto - DTO con los datos del reembolso
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la cita reembolsada
+   * @throws {BadRequestException} Si hay un error al reembolsar la cita
+   */
+  async refund(
+    id: string,
+    refundAppointmentDto: RefundAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.refundAppointmentUseCase.execute(
+        id,
+        refundAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
    * Obtiene todas las citas médicas de forma paginada
    */
   async findAllPaginated(page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
@@ -296,6 +326,30 @@ export class AppointmentService {
       return await this.noShowAppointmentUseCase.execute(
         id,
         noShowAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
+   * Reprograma una cita médica
+   * @param id - ID de la cita a reprogramar
+   * @param rescheduleAppointmentDto - DTO con los datos de reprogramación
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la nueva cita reprogramada
+   * @throws {BadRequestException} Si hay un error al reprogramar la cita
+   */
+  async reschedule(
+    id: string,
+    rescheduleAppointmentDto: RescheduleAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.rescheduleAppointmentUseCase.execute(
+        id,
+        rescheduleAppointmentDto,
         user,
       );
     } catch (error) {
