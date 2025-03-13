@@ -53,4 +53,49 @@ export class DashboardController {
       throw error;
     }
   }
+  // Añadir este endpoint a la clase DashboardController existente
+
+  /**
+   * Obtiene los 12 servicios más demandados por sucursal
+   */
+  @Get('/top-servicios-por-sucursal')
+  @ApiOperation({
+    summary: 'Obtener top 12 servicios más demandados por sucursal',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Top servicios agrupados por sucursal',
+    schema: {
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Top servicios por sucursal obtenidos con éxito',
+        },
+        data: {
+          type: 'array',
+          items: {
+            properties: {
+              serviceName: { type: 'string', example: 'Consulta General' },
+              JLBYR: { type: 'number', example: 120 },
+              Yanahuara: { type: 'number', example: 80 },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getTopServicesBySucursal() {
+    this.logger.log(
+      'Iniciando solicitud para obtener top servicios por sucursal',
+    );
+
+    try {
+      const response = await this.dashboardService.getTopServicesBySucursal();
+      return response;
+    } catch (error) {
+      this.logger.error(`Error al procesar la solicitud: ${error.message}`);
+      throw error;
+    }
+  }
 }
