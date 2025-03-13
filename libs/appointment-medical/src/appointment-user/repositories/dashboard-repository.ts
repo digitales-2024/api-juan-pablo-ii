@@ -446,4 +446,173 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
     this.logger.log(`Retornando ${resultado.length} registros`);
     return resultado;
   }
+
+  // Añadir este método a la clase DashboardRepository existente
+
+  /**
+   * Obtiene los ingresos diarios por sucursal de los últimos 3 meses
+   * @returns Array con datos de ingresos diarios por sucursal
+   */
+  async getIngresosPorSucursal(): Promise<any[]> {
+    this.logger.log('Iniciando consulta de ingresos por sucursal');
+
+    // Calculamos la fecha de hace 3 meses desde hoy
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    threeMonthsAgo.setHours(0, 0, 0, 0);
+
+    this.logger.log(`Fecha de inicio: ${threeMonthsAgo.toISOString()}`);
+
+    // Obtener todas las órdenes completadas en los últimos 3 meses
+    const ordenes = await this.prisma.order.findMany({
+      where: {
+        status: 'COMPLETED',
+        isActive: true,
+        createdAt: {
+          gte: threeMonthsAgo,
+        },
+      },
+      select: {
+        total: true,
+        metadata: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    this.logger.log(`Total de órdenes encontradas: ${ordenes.length}`);
+
+    // Mapa para almacenar las sucursales y sus IDs
+    const sucursalesMap = new Map<string, string>();
+
+    // Primero, extraer todos los branchIds únicos
+    const branchIds = new Set<string>();
+
+    ordenes.forEach((orden) => {
+      if (orden.metadata) {
+        try {
+          // Si metadata es una cadena JSON, intentamos parsearla
+          let metadataObj;
+          if (typeof orden.metadata === 'string') {
+            // Eliminar caracteres escapados si los hay
+            const cleanMetadata = orden.metadata.replace(/\\/g, '');
+            // Intentar extraer JSON válido (puede estar entre comillas)
+            const match = cleanMetadata.match(/\{.*\}/);
+            if (match) {
+              metadataObj = JSON.parse(match[0]);
+            }
+          } else {
+            // Ya es un objeto
+            metadataObj = orden.metadata;
+          }
+
+          // Extraer el branchId
+          if (
+            metadataObj &&
+            metadataObj.orderDetails &&
+            metadataObj.orderDetails.branchId
+          ) {
+            branchIds.add(metadataObj.orderDetails.branchId);
+          }
+        } catch (error) {
+          this.logger.warn(`Error al parsear metadata: ${error.message}`);
+        }
+      }
+    });
+
+    // Buscar nombres de sucursales para los IDs encontrados
+    if (branchIds.size > 0) {
+      const branches = await this.prisma.branch.findMany({
+        where: {
+          id: {
+            in: Array.from(branchIds),
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+      // Crear mapa de ID a nombre de sucursal
+      branches.forEach((branch) => {
+        sucursalesMap.set(branch.id, branch.name);
+      });
+    }
+
+    // Mapa para almacenar los ingresos por día y sucursal
+    const ingresosPorDia: Record<string, Record<string, number>> = {};
+
+    // Procesar las órdenes para obtener ingresos por día y sucursal
+    ordenes.forEach((orden) => {
+      if (!orden.metadata) return;
+
+      try {
+        // Extraer metadata
+        let metadataObj;
+        if (typeof orden.metadata === 'string') {
+          const cleanMetadata = orden.metadata.replace(/\\/g, '');
+          const match = cleanMetadata.match(/\{.*\}/);
+          if (match) {
+            metadataObj = JSON.parse(match[0]);
+          }
+        } else {
+          metadataObj = orden.metadata;
+        }
+
+        // Verificar si podemos obtener el branchId y total
+        if (
+          metadataObj &&
+          metadataObj.orderDetails &&
+          metadataObj.orderDetails.branchId &&
+          metadataObj.orderDetails.transactionDetails &&
+          typeof metadataObj.orderDetails.transactionDetails.total === 'number'
+        ) {
+          const branchId = metadataObj.orderDetails.branchId;
+          const branchName = sucursalesMap.get(branchId) || branchId; // Usar nombre si existe, o ID como fallback
+          const montoTotal =
+            metadataObj.orderDetails.transactionDetails.total || orden.total;
+          const fechaOrden = new Date(orden.createdAt);
+          const fechaKey = fechaOrden.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+          // Inicializar registro para la fecha si no existe
+          if (!ingresosPorDia[fechaKey]) {
+            ingresosPorDia[fechaKey] = {};
+          }
+
+          // Acumular el monto para la sucursal y fecha
+          if (!ingresosPorDia[fechaKey][branchName]) {
+            ingresosPorDia[fechaKey][branchName] = 0;
+          }
+          ingresosPorDia[fechaKey][branchName] += montoTotal;
+        }
+      } catch (error) {
+        this.logger.warn(`Error al procesar orden: ${error.message}`);
+      }
+    });
+
+    // Convertir a formato esperado por el frontend
+    const resultado: any[] = [];
+
+    Object.entries(ingresosPorDia).forEach(([fecha, montosPorSucursal]) => {
+      const registro: any = { date: fecha };
+
+      // Agregar monto para cada sucursal
+      Object.entries(montosPorSucursal).forEach(([sucursal, monto]) => {
+        registro[sucursal] = Math.round(monto); // Redondear para simplificar
+      });
+
+      resultado.push(registro);
+    });
+
+    // Ordenar por fecha
+    resultado.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+
+    this.logger.log(`Retornando datos para ${resultado.length} días`);
+    return resultado;
+  }
 }
