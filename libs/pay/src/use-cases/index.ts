@@ -5,6 +5,8 @@ export * from './order/find-orders-by-status.use-case';
 export * from './order/reactive-order.use-case';
 export * from './order/submit-draft-order.use-case';
 export * from './order/update-order.use-case';
+export * from './order/cancel-order.use-case';
+export * from './order/refund-order.use-case';
 export * from './payment/cancel-payment.use-case';
 export * from './payment/create-payment.use-case';
 export * from './payment/delete-payments.use-case';

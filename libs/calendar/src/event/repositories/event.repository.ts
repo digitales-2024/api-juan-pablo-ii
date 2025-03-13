@@ -267,4 +267,48 @@ export class EventRepository extends BaseRepository<Event> {
 
     return turn;
   }
+
+  /**
+   * Actualiza forzadamente un evento sin validaciones adicionales
+   * @param id - ID del evento a actualizar
+   * @param eventData - Datos completos del evento
+   * @returns Evento actualizado
+   */
+  async forceUpdate(id: string, eventData: any): Promise<Event> {
+    console.log(`[EventRepository] Forzando actualización del evento ${id}`);
+    console.log(`[EventRepository] Datos para actualización: ${JSON.stringify(eventData, null, 2)}`);
+    
+    // Verificar que el evento exista
+    const exists = await this.findById(id);
+    if (!exists) {
+      console.log(`[EventRepository] Evento ${id} no encontrado`);
+      throw new Error(`Event with id ${id} not found`);
+    }
+    
+    console.log(`[EventRepository] Evento ${id} encontrado, procediendo con la actualización forzada`);
+    
+    // Actualizar directamente en la base de datos
+    const updatedEvent = await this.prisma.event.update({
+      where: { id },
+      data: {
+        color: eventData.color || exists.color,
+        status: eventData.status || exists.status,
+        title: eventData.title || exists.title,
+        start: eventData.start || exists.start,
+        end: eventData.end || exists.end,
+        staffId: eventData.staffId || exists.staffId,
+        branchId: eventData.branchId || exists.branchId,
+        updatedAt: new Date()
+      },
+      include: {
+        staff: { select: { name: true, lastName: true } },
+        branch: { select: { name: true } }
+      }
+    });
+    
+    console.log(`[EventRepository] Evento ${id} actualizado forzadamente`);
+    console.log(`[EventRepository] Resultado: ${JSON.stringify(updatedEvent, null, 2)}`);
+    
+    return updatedEvent;
+  }
 }

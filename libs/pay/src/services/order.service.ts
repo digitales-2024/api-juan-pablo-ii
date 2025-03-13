@@ -21,6 +21,8 @@ import {
   FindOrdersByStatusUseCase,
   SubmitDraftOrderUseCase,
   CompleteOrderUseCase,
+  CancelOrderUseCase,
+  RefundOrderUseCase,
 } from '../use-cases';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
@@ -42,6 +44,8 @@ export class OrderService {
     private readonly findOrderByStatusUseCase: FindOrdersByStatusUseCase,
     private readonly submitDraftOrderUseCase: SubmitDraftOrderUseCase,
     private readonly completeOrderUseCase: CompleteOrderUseCase,
+    private readonly cancelOrderUseCase: CancelOrderUseCase,
+    private readonly refundOrderUseCase: RefundOrderUseCase,
     private readonly paymentRepository: PaymentRepository,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -440,8 +444,13 @@ export class OrderService {
     user: UserData,
   ): Promise<BaseApiResponse<Order>> {
     try {
-      this.logger.debug(`Cancelando orden con ID: ${id}`);
+      return await this.cancelOrderUseCase.execute(id, user);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'processing');
+    }
+  }
 
+<<<<<<< HEAD
       // Buscar la orden
       const order = await this.findOrderById(id);
       if (!order) {
@@ -492,6 +501,21 @@ export class OrderService {
         message: 'Orden y pagos asociados cancelados exitosamente',
         data: updatedOrder,
       };
+=======
+  /**
+   * Reembolsa una orden y sus pagos asociados
+   * @param id - ID de la orden a reembolsar
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la orden reembolsada
+   * @throws {BadRequestException} Si hay un error al reembolsar la orden
+   */
+  async refundOrder(
+    id: string,
+    user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    try {
+      return await this.refundOrderUseCase.execute(id, user);
+>>>>>>> 934e478a2e5a6a5e36cff25bca8f9d210d963f69
     } catch (error) {
       this.errorHandler.handleError(error, 'processing');
     }

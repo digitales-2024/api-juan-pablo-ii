@@ -40,7 +40,7 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 @Controller({ path: 'order', version: '1' })
 @Auth()
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
   @Post()
   @ApiOperation({ summary: 'Crear nueva orden' })
@@ -223,6 +223,72 @@ export class OrderController {
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<Order>> {
     return this.orderService.submitDraftOrder(id, submitDto, user);
+  }
+
+  @Post(':id/complete')
+  @ApiOperation({ summary: 'Completar una orden' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden a completar',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden completada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no puede ser completada',
+  })
+  async completeOrder(
+    @Param('id') id: string,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.completeOrder(id, user);
+  }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar una orden y sus pagos asociados' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden a cancelar',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden cancelada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no puede ser cancelada',
+  })
+  async cancelOrder(
+    @Param('id') id: string,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.cancelOrder(id, user);
+  }
+
+  @Post(':id/refund')
+  @ApiOperation({ summary: 'Reembolsar una orden y sus pagos asociados' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden a reembolsar',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden reembolsada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no puede ser reembolsada',
+  })
+  async refundOrder(
+    @Param('id') id: string,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.refundOrder(id, user);
   }
 
   @Get(':type/status/:status')
