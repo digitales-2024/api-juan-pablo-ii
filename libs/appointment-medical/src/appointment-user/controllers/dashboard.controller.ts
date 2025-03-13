@@ -142,4 +142,57 @@ export class DashboardController {
       throw error;
     }
   }
+
+  // Añadir este endpoint a la clase DashboardController existente
+
+  /**
+   * Obtiene ingresos diarios por sucursal
+   */
+  @Get('/ingresos-por-sucursal')
+  @ApiOperation({ summary: 'Obtener ingresos diarios por sucursal' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ingresos agrupados por día y sucursal',
+    schema: {
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Ingresos por sucursal obtenidos con éxito',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            ingresos: {
+              type: 'array',
+              items: {
+                type: 'object',
+                example: {
+                  date: '2023-01-01',
+                  JLBYR: 1200,
+                  Yanahuara: 950,
+                },
+              },
+            },
+            sucursales: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['JLBYR', 'Yanahuara'],
+            },
+          },
+        },
+      },
+    },
+  })
+  async getIngresosPorSucursal() {
+    this.logger.log('Iniciando solicitud para obtener ingresos por sucursal');
+
+    try {
+      const response = await this.dashboardService.getIngresosPorSucursal();
+      return response;
+    } catch (error) {
+      this.logger.error(`Error al procesar la solicitud: ${error.message}`);
+      throw error;
+    }
+  }
 }
