@@ -619,37 +619,57 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
   // Añadir estos métodos a la clase DashboardRepository existente
 
   /**
-   * Obtiene el total de ingresos del último mes completo
-   * @returns Total de ingresos del último mes
+   * Obtiene el total de ingresos del mes actual basado en el último registro
+   * @returns Total de ingresos del mes
    */
   async getTotalIngresosMes(): Promise<number> {
-    this.logger.log('Iniciando consulta de total de ingresos del último mes');
+    this.logger.log('Iniciando consulta de total de ingresos del mes actual');
 
-    // Obtener primer y último día del mes anterior
-    const today = new Date();
-    const primerDiaMesAnterior = new Date(
-      today.getFullYear(),
-      today.getMonth() - 1,
-      1,
-    );
-    const ultimoDiaMesAnterior = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      0,
-    );
+    // Encontrar la orden completada más reciente para determinar el "mes actual" de referencia
+    const ultimaOrden = await this.prisma.order.findFirst({
+      where: {
+        status: 'COMPLETED',
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        createdAt: true,
+      },
+    });
+
+    if (!ultimaOrden) {
+      this.logger.warn('No se encontraron órdenes completadas');
+      return 0;
+    }
+
+    // Usar la fecha de la última orden como referencia
+    const fechaReferencia = new Date(ultimaOrden.createdAt);
+
+    // Calcular primer día del mes de la orden más reciente
+    const primerDiaMes = new Date(fechaReferencia);
+    primerDiaMes.setDate(1);
+    primerDiaMes.setHours(0, 0, 0, 0);
+
+    // Calcular último día del mes de la orden más reciente
+    const ultimoDiaMes = new Date(primerDiaMes);
+    ultimoDiaMes.setMonth(ultimoDiaMes.getMonth() + 1);
+    ultimoDiaMes.setDate(0); // Último día del mes
+    ultimoDiaMes.setHours(23, 59, 59, 999);
 
     this.logger.log(
-      `Período: ${primerDiaMesAnterior.toISOString()} - ${ultimoDiaMesAnterior.toISOString()}`,
+      `Período para el mes actual: ${primerDiaMes.toISOString()} - ${ultimoDiaMes.toISOString()}`,
     );
 
-    // Obtener órdenes completadas del mes anterior
+    // Obtener todas las órdenes completadas de este mes
     const ordenes = await this.prisma.order.findMany({
       where: {
         status: 'COMPLETED',
         isActive: true,
         createdAt: {
-          gte: primerDiaMesAnterior,
-          lte: ultimoDiaMesAnterior,
+          gte: primerDiaMes,
+          lte: ultimoDiaMes,
         },
       },
       select: {
@@ -664,21 +684,33 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
     let totalIngresos = 0;
 
     ordenes.forEach((orden) => {
-      if (orden.metadata) {
-        try {
-          // Extraer total del metadata si existe
+      try {
+        if (orden.metadata) {
+          // Si metadata es una cadena JSON, intentamos parsearla
           let metadataObj;
           if (typeof orden.metadata === 'string') {
-            const cleanMetadata = orden.metadata.replace(/\\/g, '');
-            const match = cleanMetadata.match(/\{.*\}/);
-            if (match) {
-              metadataObj = JSON.parse(match[0]);
+            try {
+              // Limpiar la cadena (eliminar escapes y comillas extras)
+              const cleanMetadata = orden.metadata
+                .replace(/\\"/g, '"')
+                .replace(/\\/g, '');
+
+              // Intentar extraer un objeto JSON válido usando expresión regular
+              const match = cleanMetadata.match(/\{.*\}/s);
+              if (match) {
+                metadataObj = JSON.parse(match[0]);
+              }
+            } catch (parseError) {
+              this.logger.warn(
+                `Error al parsear metadata como cadena: ${parseError.message}`,
+              );
             }
           } else {
+            // Ya es un objeto
             metadataObj = orden.metadata;
           }
 
-          // Intentar obtener el total desde metadata o usar el valor de la orden
+          // Intentar obtener el total de transactionDetails
           if (
             metadataObj &&
             metadataObj.orderDetails &&
@@ -687,17 +719,23 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
               'number'
           ) {
             totalIngresos += metadataObj.orderDetails.transactionDetails.total;
+            this.logger.debug(
+              `Sumando desde metadata: ${metadataObj.orderDetails.transactionDetails.total}`,
+            );
           } else {
             // Si no está en metadata, usar el total de la orden
             totalIngresos += orden.total;
+            this.logger.debug(`Sumando desde orden.total: ${orden.total}`);
           }
-        } catch (error) {
-          // En caso de error, usar el valor de la orden
-          this.logger.warn(`Error al parsear metadata: ${error.message}`);
+        } else {
+          // Si no hay metadata, usar el total de la orden
           totalIngresos += orden.total;
+          this.logger.debug(`No hay metadata, sumando: ${orden.total}`);
         }
-      } else {
-        // Si no hay metadata, usar el total de la orden
+      } catch (error) {
+        this.logger.warn(
+          `Error procesando orden: ${error.message}, usando total: ${orden.total}`,
+        );
         totalIngresos += orden.total;
       }
     });
@@ -707,38 +745,49 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
   }
 
   /**
-   * Obtiene el ingreso promedio por día del último mes
-   * @returns Ingreso promedio por día del último mes
+   * Obtiene el ingreso promedio por día del mes actual
+   * @returns Ingreso promedio por día
    */
   async getIngresoPromedioDiario(): Promise<number> {
     this.logger.log('Iniciando consulta de ingreso promedio diario');
 
-    // Obtener primer y último día del mes anterior
-    const today = new Date();
-    const primerDiaMesAnterior = new Date(
-      today.getFullYear(),
-      today.getMonth() - 1,
-      1,
-    );
-    const ultimoDiaMesAnterior = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      0,
-    );
+    // Encontrar la orden completada más reciente para determinar el "mes actual" de referencia
+    const ultimaOrden = await this.prisma.order.findFirst({
+      where: {
+        status: 'COMPLETED',
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        createdAt: true,
+      },
+    });
 
-    // Calcular el número de días en el mes anterior
-    const diasMesAnterior = ultimoDiaMesAnterior.getDate();
+    if (!ultimaOrden) {
+      this.logger.warn('No se encontraron órdenes completadas');
+      return 0;
+    }
 
-    this.logger.log(
-      `Período: ${primerDiaMesAnterior.toISOString()} - ${ultimoDiaMesAnterior.toISOString()}`,
-    );
-    this.logger.log(`Días en el mes: ${diasMesAnterior}`);
+    // Usar la fecha de la última orden como referencia
+    const fechaReferencia = new Date(ultimaOrden.createdAt);
 
-    // Obtener el total de ingresos del mes anterior
+    // Calcular primer día del mes de la orden más reciente
+    const primerDiaMes = new Date(fechaReferencia);
+    primerDiaMes.setDate(1);
+    primerDiaMes.setHours(0, 0, 0, 0);
+
+    // En lugar de contar todos los días del mes, contamos los días transcurridos hasta la fecha de referencia
+    const diasTranscurridos = fechaReferencia.getDate();
+
+    this.logger.log(`Días transcurridos en el mes: ${diasTranscurridos}`);
+
+    // Obtener el total de ingresos usando la función corregida
     const totalIngresos = await this.getTotalIngresosMes();
 
-    // Calcular el promedio diario
-    const promedioDiario = totalIngresos / diasMesAnterior;
+    // Calcular el promedio diario solo para los días transcurridos
+    const promedioDiario = totalIngresos / diasTranscurridos;
 
     this.logger.log(`Ingreso promedio diario calculado: ${promedioDiario}`);
     return promedioDiario;
@@ -762,27 +811,47 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
   }
 
   /**
-   * Obtiene el número de citas completadas en el último mes
+   * Obtiene el número de citas completadas en el mes actual
    * @returns Número de citas completadas
    */
   async getCitasCompletadas(): Promise<number> {
-    this.logger.log('Iniciando consulta de citas completadas del último mes');
+    this.logger.log('Iniciando consulta de citas completadas del mes actual');
 
-    // Obtener primer y último día del mes anterior
-    const today = new Date();
-    const primerDiaMesAnterior = new Date(
-      today.getFullYear(),
-      today.getMonth() - 1,
-      1,
-    );
-    const ultimoDiaMesAnterior = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      0,
-    );
+    // Encontrar la cita completada más reciente para determinar el "mes actual" de referencia
+    const ultimaCita = await this.prisma.appointment.findFirst({
+      where: {
+        status: 'COMPLETED',
+      },
+      orderBy: {
+        start: 'desc',
+      },
+      select: {
+        start: true,
+      },
+    });
+
+    // Si no hay citas completadas, devolver 0
+    if (!ultimaCita) {
+      this.logger.warn('No se encontraron citas completadas');
+      return 0;
+    }
+
+    // Usar la fecha de la última cita como referencia
+    const fechaReferencia = new Date(ultimaCita.start);
+
+    // Calcular primer día del mes de la cita más reciente
+    const primerDiaMes = new Date(fechaReferencia);
+    primerDiaMes.setDate(1);
+    primerDiaMes.setHours(0, 0, 0, 0);
+
+    // Calcular último día del mes de la cita más reciente
+    const ultimoDiaMes = new Date(primerDiaMes);
+    ultimoDiaMes.setMonth(ultimoDiaMes.getMonth() + 1);
+    ultimoDiaMes.setDate(0); // Último día del mes
+    ultimoDiaMes.setHours(23, 59, 59, 999);
 
     this.logger.log(
-      `Período: ${primerDiaMesAnterior.toISOString()} - ${ultimoDiaMesAnterior.toISOString()}`,
+      `Período para citas completadas: ${primerDiaMes.toISOString()} - ${ultimoDiaMes.toISOString()}`,
     );
 
     // Contar citas completadas en el período
@@ -790,8 +859,8 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
       where: {
         status: 'COMPLETED',
         start: {
-          gte: primerDiaMesAnterior,
-          lte: ultimoDiaMesAnterior,
+          gte: primerDiaMes,
+          lte: ultimoDiaMes,
         },
       },
     });
@@ -803,28 +872,27 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
   }
 
   /**
-   * Obtiene el número de citas pendientes (confirmadas pero no completadas) en el último mes
+   * Obtiene el número de citas pendientes (confirmadas) actuales y futuras
    * @returns Número de citas pendientes
    */
   async getCitasPendientes(): Promise<number> {
-    this.logger.log('Iniciando consulta de citas pendientes del último mes');
-
-    // Obtener primer y último día del mes actual
-    const today = new Date();
-    const primerDiaMes = new Date(today.getFullYear(), today.getMonth(), 1);
-    const ultimoDiaMes = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
     this.logger.log(
-      `Período: ${primerDiaMes.toISOString()} - ${ultimoDiaMes.toISOString()}`,
+      'Iniciando consulta de citas pendientes actuales y futuras',
     );
 
-    // Contar citas confirmadas en el período
+    // Usar la fecha y hora actual como punto de referencia
+    const ahora = new Date();
+
+    this.logger.log(
+      `Consultando citas pendientes desde: ${ahora.toISOString()}`,
+    );
+
+    // Contar citas confirmadas que están programadas desde ahora en adelante
     const citasPendientes = await this.prisma.appointment.count({
       where: {
         status: 'CONFIRMED',
         start: {
-          gte: primerDiaMes,
-          lte: ultimoDiaMes,
+          gte: ahora,
         },
       },
     });
