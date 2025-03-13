@@ -715,7 +715,7 @@ enum OrderStatus {
   CANCELLED
   REFUNDED
 }
-
+/* "{\"patientDetails\":{\"fullName\":\"jesus andre carrillo lujan\",\"dni\":\"78945641\",\"address\":\"\",\"phone\":\"\"},\"orderDetails\":{\"transactionType\":\"SALE\",\"branchId\":\"d42ace3b-037e-4047-82b4-829fa121eb9d\",\"products\":[{\"id\":\"5b060ce5-92e9-47df-8eda-5456653f2992\",\"name\":\"cremas 1\",\"quantity\":10,\"price\":50,\"subtotal\":423.7288135593221,\"storageId\":\"64c93916-8ab3-4b07-b766-4b901bfb69b1\"}],\"transactionDetails\":{\"subtotal\":423.73,\"tax\":76.27,\"total\":500}}}" */
 model Order {
   id             String      @id @default(uuid())
   code           String?
