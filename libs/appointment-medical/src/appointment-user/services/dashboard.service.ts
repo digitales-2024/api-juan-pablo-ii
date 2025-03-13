@@ -156,4 +156,34 @@ export class DashboardService {
       };
     }
   }
+
+  // Añadir este método a la clase DashboardService existente
+
+  /**
+   * Obtiene datos para los KPI Cards del dashboard
+   * @returns Datos de KPI Cards
+   */
+  async getKpiCardsData() {
+    try {
+      this.logger.log('Iniciando consulta de datos para KPI Cards');
+
+      const kpiData = await this.dashboardRepository.getKpiCardsData();
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Datos de KPI Cards obtenidos con éxito',
+        data: kpiData,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error al obtener datos de KPI Cards: ${error.message}`,
+        error.stack,
+      );
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error al obtener datos de KPI Cards',
+        error: error.message,
+      };
+    }
+  }
 }
