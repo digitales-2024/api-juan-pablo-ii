@@ -195,4 +195,46 @@ export class DashboardController {
       throw error;
     }
   }
+
+  // Añadir este endpoint a la clase DashboardController existente
+
+  /**
+   * Obtiene datos para los KPI Cards
+   */
+  @Get('/kpi-cards')
+  @ApiOperation({ summary: 'Obtener datos para los KPI Cards' })
+  @ApiResponse({
+    status: 200,
+    description: 'Datos para los KPI Cards',
+    schema: {
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Datos de KPI Cards obtenidos con éxito',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            totalIngresos: { type: 'number', example: 5231.89 },
+            ingresoPromedio: { type: 'number', example: 174.4 },
+            totalPacientes: { type: 'number', example: 235 },
+            citasCompletadas: { type: 'number', example: 124 },
+            citasPendientes: { type: 'number', example: 15 },
+          },
+        },
+      },
+    },
+  })
+  async getKpiCardsData() {
+    this.logger.log('Iniciando solicitud para obtener datos de KPI Cards');
+
+    try {
+      const response = await this.dashboardService.getKpiCardsData();
+      return response;
+    } catch (error) {
+      this.logger.error(`Error al procesar la solicitud: ${error.message}`);
+      throw error;
+    }
+  }
 }
