@@ -615,4 +615,254 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
     this.logger.log(`Retornando datos para ${resultado.length} días`);
     return resultado;
   }
+
+  // Añadir estos métodos a la clase DashboardRepository existente
+
+  /**
+   * Obtiene el total de ingresos del último mes completo
+   * @returns Total de ingresos del último mes
+   */
+  async getTotalIngresosMes(): Promise<number> {
+    this.logger.log('Iniciando consulta de total de ingresos del último mes');
+
+    // Obtener primer y último día del mes anterior
+    const today = new Date();
+    const primerDiaMesAnterior = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1,
+    );
+    const ultimoDiaMesAnterior = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      0,
+    );
+
+    this.logger.log(
+      `Período: ${primerDiaMesAnterior.toISOString()} - ${ultimoDiaMesAnterior.toISOString()}`,
+    );
+
+    // Obtener órdenes completadas del mes anterior
+    const ordenes = await this.prisma.order.findMany({
+      where: {
+        status: 'COMPLETED',
+        isActive: true,
+        createdAt: {
+          gte: primerDiaMesAnterior,
+          lte: ultimoDiaMesAnterior,
+        },
+      },
+      select: {
+        total: true,
+        metadata: true,
+      },
+    });
+
+    this.logger.log(`Total de órdenes encontradas: ${ordenes.length}`);
+
+    // Sumar los valores de total
+    let totalIngresos = 0;
+
+    ordenes.forEach((orden) => {
+      if (orden.metadata) {
+        try {
+          // Extraer total del metadata si existe
+          let metadataObj;
+          if (typeof orden.metadata === 'string') {
+            const cleanMetadata = orden.metadata.replace(/\\/g, '');
+            const match = cleanMetadata.match(/\{.*\}/);
+            if (match) {
+              metadataObj = JSON.parse(match[0]);
+            }
+          } else {
+            metadataObj = orden.metadata;
+          }
+
+          // Intentar obtener el total desde metadata o usar el valor de la orden
+          if (
+            metadataObj &&
+            metadataObj.orderDetails &&
+            metadataObj.orderDetails.transactionDetails &&
+            typeof metadataObj.orderDetails.transactionDetails.total ===
+              'number'
+          ) {
+            totalIngresos += metadataObj.orderDetails.transactionDetails.total;
+          } else {
+            // Si no está en metadata, usar el total de la orden
+            totalIngresos += orden.total;
+          }
+        } catch (error) {
+          // En caso de error, usar el valor de la orden
+          this.logger.warn(`Error al parsear metadata: ${error.message}`);
+          totalIngresos += orden.total;
+        }
+      } else {
+        // Si no hay metadata, usar el total de la orden
+        totalIngresos += orden.total;
+      }
+    });
+
+    this.logger.log(`Total de ingresos calculado: ${totalIngresos}`);
+    return totalIngresos;
+  }
+
+  /**
+   * Obtiene el ingreso promedio por día del último mes
+   * @returns Ingreso promedio por día del último mes
+   */
+  async getIngresoPromedioDiario(): Promise<number> {
+    this.logger.log('Iniciando consulta de ingreso promedio diario');
+
+    // Obtener primer y último día del mes anterior
+    const today = new Date();
+    const primerDiaMesAnterior = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1,
+    );
+    const ultimoDiaMesAnterior = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      0,
+    );
+
+    // Calcular el número de días en el mes anterior
+    const diasMesAnterior = ultimoDiaMesAnterior.getDate();
+
+    this.logger.log(
+      `Período: ${primerDiaMesAnterior.toISOString()} - ${ultimoDiaMesAnterior.toISOString()}`,
+    );
+    this.logger.log(`Días en el mes: ${diasMesAnterior}`);
+
+    // Obtener el total de ingresos del mes anterior
+    const totalIngresos = await this.getTotalIngresosMes();
+
+    // Calcular el promedio diario
+    const promedioDiario = totalIngresos / diasMesAnterior;
+
+    this.logger.log(`Ingreso promedio diario calculado: ${promedioDiario}`);
+    return promedioDiario;
+  }
+
+  /**
+   * Obtiene el total de pacientes registrados
+   * @returns Número total de pacientes
+   */
+  async getTotalPacientes(): Promise<number> {
+    this.logger.log('Iniciando consulta de total de pacientes');
+
+    const totalPacientes = await this.prisma.patient.count({
+      where: {
+        isActive: true,
+      },
+    });
+
+    this.logger.log(`Total de pacientes encontrados: ${totalPacientes}`);
+    return totalPacientes;
+  }
+
+  /**
+   * Obtiene el número de citas completadas en el último mes
+   * @returns Número de citas completadas
+   */
+  async getCitasCompletadas(): Promise<number> {
+    this.logger.log('Iniciando consulta de citas completadas del último mes');
+
+    // Obtener primer y último día del mes anterior
+    const today = new Date();
+    const primerDiaMesAnterior = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1,
+    );
+    const ultimoDiaMesAnterior = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      0,
+    );
+
+    this.logger.log(
+      `Período: ${primerDiaMesAnterior.toISOString()} - ${ultimoDiaMesAnterior.toISOString()}`,
+    );
+
+    // Contar citas completadas en el período
+    const citasCompletadas = await this.prisma.appointment.count({
+      where: {
+        status: 'COMPLETED',
+        start: {
+          gte: primerDiaMesAnterior,
+          lte: ultimoDiaMesAnterior,
+        },
+      },
+    });
+
+    this.logger.log(
+      `Total de citas completadas encontradas: ${citasCompletadas}`,
+    );
+    return citasCompletadas;
+  }
+
+  /**
+   * Obtiene el número de citas pendientes (confirmadas pero no completadas) en el último mes
+   * @returns Número de citas pendientes
+   */
+  async getCitasPendientes(): Promise<number> {
+    this.logger.log('Iniciando consulta de citas pendientes del último mes');
+
+    // Obtener primer y último día del mes actual
+    const today = new Date();
+    const primerDiaMes = new Date(today.getFullYear(), today.getMonth(), 1);
+    const ultimoDiaMes = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    this.logger.log(
+      `Período: ${primerDiaMes.toISOString()} - ${ultimoDiaMes.toISOString()}`,
+    );
+
+    // Contar citas confirmadas en el período
+    const citasPendientes = await this.prisma.appointment.count({
+      where: {
+        status: 'CONFIRMED',
+        start: {
+          gte: primerDiaMes,
+          lte: ultimoDiaMes,
+        },
+      },
+    });
+
+    this.logger.log(
+      `Total de citas pendientes encontradas: ${citasPendientes}`,
+    );
+    return citasPendientes;
+  }
+
+  /**
+   * Obtiene todos los datos de los KPI Cards
+   * @returns Objeto con todos los datos para los KPI Cards
+   */
+  async getKpiCardsData(): Promise<any> {
+    this.logger.log('Iniciando consulta de datos para KPI Cards');
+
+    // Obtener todos los datos en paralelo para mejor rendimiento
+    const [
+      totalIngresos,
+      ingresoPromedio,
+      totalPacientes,
+      citasCompletadas,
+      citasPendientes,
+    ] = await Promise.all([
+      this.getTotalIngresosMes(),
+      this.getIngresoPromedioDiario(),
+      this.getTotalPacientes(),
+      this.getCitasCompletadas(),
+      this.getCitasPendientes(),
+    ]);
+
+    return {
+      totalIngresos,
+      ingresoPromedio,
+      totalPacientes,
+      citasCompletadas,
+      citasPendientes,
+    };
+  }
 }
