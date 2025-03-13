@@ -15,7 +15,7 @@ import {
 import { Transform, Type } from 'class-transformer';
 import { DayOfWeek } from '@prisma/client';
 
-class RecurrenceDto {
+export class RecurrenceDto {
   @ApiProperty({
     description: 'Frecuencia de recurrencia',
     enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'],

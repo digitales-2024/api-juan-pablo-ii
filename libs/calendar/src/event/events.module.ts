@@ -2,7 +2,7 @@ import { AuditModule } from "@login/login/admin/audit/audit.module";
 import { EventRepository } from "./repositories/event.repository";
 import { EventService } from "./services/event.service";
 import { CreateEventUseCase } from "./use-cases/create-event.use-case";
-import { ClassSerializerInterceptor, Module } from "@nestjs/common";
+import { ClassSerializerInterceptor, Module, forwardRef } from "@nestjs/common";
 import { EventController } from "./controllers/event.controller";
 import { UpdateEventUseCase } from "./use-cases";
 import { DeleteEventsUseCase } from "./use-cases/delete-events.use-case";
@@ -25,7 +25,7 @@ import { PrismaModule } from "@prisma/prisma";
 @Module({
   imports: [
     AuditModule,
-    StaffScheduleModule,
+    forwardRef(() => StaffScheduleModule),
     PrismaModule,
   ],
   providers: [
@@ -48,6 +48,6 @@ import { PrismaModule } from "@prisma/prisma";
     },
   ],
   controllers: [EventController],
-  exports: [EventService],
+  exports: [EventService, EventRepository],
 })
 export class EventsModule { }
