@@ -298,7 +298,7 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  name                      String  @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
+  name                      String      @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
   precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
@@ -309,7 +309,7 @@ model Producto {
   descuento                 Float? // Descuento aplicado, si aplica
   observaciones             String? // Observaciones adicionales
   condicionesAlmacenamiento String? // Condiciones de almacenamiento (ej. "refrigerar")
-  isActive                  Boolean @default(true)
+  isActive                  Boolean     @default(true)
   imagenUrl                 String? // URL de la imagen del producto
 
   // Fechas de control
