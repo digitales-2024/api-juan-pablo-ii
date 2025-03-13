@@ -98,4 +98,48 @@ export class DashboardController {
       throw error;
     }
   }
+
+  // Añadir este endpoint a la clase DashboardController existente
+
+  /**
+   * Obtiene datos de cotizaciones pagadas vs pendientes
+   */
+  @Get('/cotizaciones-por-estado')
+  @ApiOperation({
+    summary: 'Obtener datos de cotizaciones pagadas vs pendientes',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Datos de cotizaciones agrupados por mes y estado',
+    schema: {
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Datos de cotizaciones por estado obtenidos con éxito',
+        },
+        data: {
+          type: 'array',
+          items: {
+            properties: {
+              month: { type: 'string', example: 'Enero' },
+              pendientes: { type: 'number', example: 12 },
+              pagadas: { type: 'number', example: 8 },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getCotizacionesPorEstado() {
+    this.logger.log('Iniciando solicitud para obtener cotizaciones por estado');
+
+    try {
+      const response = await this.dashboardService.getCotizacionesPorEstado();
+      return response;
+    } catch (error) {
+      this.logger.error(`Error al procesar la solicitud: ${error.message}`);
+      throw error;
+    }
+  }
 }
