@@ -20,12 +20,14 @@ import {
   CancelAppointmentUseCase,
   NoShowAppointmentUseCase,
   RefundAppointmentUseCase,
+  RescheduleAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { ServiceService } from 'src/modules/services/services/service.service';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
 import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
+import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -47,6 +49,7 @@ export class AppointmentService {
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
     private readonly noShowAppointmentUseCase: NoShowAppointmentUseCase,
     private readonly refundAppointmentUseCase: RefundAppointmentUseCase,
+    private readonly rescheduleAppointmentUseCase: RescheduleAppointmentUseCase,
     private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
@@ -323,6 +326,30 @@ export class AppointmentService {
       return await this.noShowAppointmentUseCase.execute(
         id,
         noShowAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
+   * Reprograma una cita médica
+   * @param id - ID de la cita a reprogramar
+   * @param rescheduleAppointmentDto - DTO con los datos de reprogramación
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la nueva cita reprogramada
+   * @throws {BadRequestException} Si hay un error al reprogramar la cita
+   */
+  async reschedule(
+    id: string,
+    rescheduleAppointmentDto: RescheduleAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.rescheduleAppointmentUseCase.execute(
+        id,
+        rescheduleAppointmentDto,
         user,
       );
     } catch (error) {

@@ -50,6 +50,12 @@ export class Appointment {
   @ApiProperty()
   isActive: boolean;
 
+  @ApiProperty({
+    description: 'Motivo de la reprogramación',
+    required: false,
+  })
+  rescheduleReason?: string;
+
   // Campos de auditoría
   @ApiProperty()
   createdAt: Date;

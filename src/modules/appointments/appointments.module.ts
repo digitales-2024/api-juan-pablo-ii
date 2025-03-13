@@ -7,6 +7,7 @@ import {
   NoShowAppointmentUseCase,
   UpdateAppointmentUseCase,
   RefundAppointmentUseCase,
+  RescheduleAppointmentUseCase,
 } from './use-cases';
 import { AppointmentService } from './services/appointment.service';
 import { AppointmentRepository } from './repositories/appointment.repository';
@@ -33,7 +34,8 @@ import { PayModule } from '@pay/pay/pay.module';
     CancelAppointmentUseCase,
     NoShowAppointmentUseCase,
     RefundAppointmentUseCase,
-    AppointmentEventSubscriber
+    AppointmentEventSubscriber,
+    RescheduleAppointmentUseCase,
   ],
   exports: [AppointmentService],
 })
