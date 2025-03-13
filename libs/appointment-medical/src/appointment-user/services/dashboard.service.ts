@@ -75,4 +75,37 @@ export class DashboardService {
       };
     }
   }
+
+  // Añadir este método a la clase DashboardService existente
+
+  /**
+   * Obtiene datos de cotizaciones por estado (pagadas vs pendientes)
+   * @returns Datos de cotizaciones agrupados por mes y estado
+   */
+  async getCotizacionesPorEstado() {
+    try {
+      this.logger.log('Iniciando consulta de cotizaciones por estado');
+
+      const cotizacionesData =
+        await this.dashboardRepository.getCotizacionesPorEstado();
+
+      this.logger.log(`Datos obtenidos: ${cotizacionesData.length} registros`);
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Datos de cotizaciones por estado obtenidos con éxito',
+        data: cotizacionesData,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error al obtener cotizaciones por estado: ${error.message}`,
+        error.stack,
+      );
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error al obtener cotizaciones por estado',
+        error: error.message,
+      };
+    }
+  }
 }
