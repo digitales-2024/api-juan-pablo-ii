@@ -164,4 +164,99 @@ export class DashboardRepository extends BaseRepository<AppointmentMedicalRespon
     this.logger.log(`Retornando ${resultado.length} registros`);
     return resultado;
   }
+
+  // Añadir este método a la clase DashboardRepository existente
+
+  /**
+   * Obtiene los 12 servicios más demandados con conteo por sucursal
+   * @returns Array con datos de los servicios más utilizados por sucursal
+   */
+  async getTopServicesBySucursal(): Promise<any[]> {
+    this.logger.log('Iniciando consulta de top servicios por sucursal');
+
+    // Obtener todas las citas confirmadas y completadas
+    const citas = await this.prisma.appointment.findMany({
+      where: {
+        status: {
+          in: ['CONFIRMED', 'COMPLETED'],
+        },
+      },
+      select: {
+        serviceId: true,
+        branch: {
+          select: {
+            name: true,
+          },
+        },
+        service: {
+          select: {
+            name: true,
+          },
+        },
+        start: true,
+      },
+      orderBy: {
+        start: 'desc',
+      },
+    });
+
+    this.logger.log(`Total de citas encontradas: ${citas.length}`);
+
+    if (citas.length === 0) {
+      return [];
+    }
+
+    // Agrupar por servicioId para contar ocurrencias totales
+    const serviciosCount: Record<
+      string,
+      {
+        JLBYR: number;
+        Yanahuara: number;
+        serviceName: string;
+        total: number;
+      }
+    > = {};
+
+    // Contar citas por servicio y sucursal
+    citas.forEach((cita) => {
+      const serviceId = cita.serviceId;
+      const serviceName = cita.service.name;
+
+      if (!serviciosCount[serviceId]) {
+        serviciosCount[serviceId] = {
+          JLBYR: 0,
+          Yanahuara: 0,
+          serviceName,
+          total: 0,
+        };
+      }
+
+      if (cita.branch?.name === 'JLBYR') {
+        serviciosCount[serviceId].JLBYR += 1;
+      } else if (cita.branch?.name === 'Yanahuara') {
+        serviciosCount[serviceId].Yanahuara += 1;
+      }
+
+      // Incrementar contador total
+      serviciosCount[serviceId].total += 1;
+    });
+
+    // Convertir a array y ordenar por total (descendente)
+    const serviciosArray = Object.values(serviciosCount).sort(
+      (a, b) => b.total - a.total,
+    );
+
+    // Tomar solo los 12 más demandados
+    const top12Servicios = serviciosArray.slice(0, 12);
+
+    // Mapear al formato requerido por el frontend
+    const resultado = top12Servicios.map((servicio) => ({
+      serviceName: servicio.serviceName,
+      JLBYR: servicio.JLBYR,
+      Yanahuara: servicio.Yanahuara,
+    }));
+
+    this.logger.log(`Retornando ${resultado.length} servicios más demandados`);
+    return resultado;
+  }
 }
