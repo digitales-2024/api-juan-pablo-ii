@@ -2,7 +2,8 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { AppointmentRepository } from '../repositories/appointment.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { AuditActionType } from '@prisma/client';
+import { AuditActionType, EventStatus } from '@prisma/client';
+import { PrismaService } from '@prisma/prisma';
 import { Appointment } from '../entities/appointment.entity';
 import { OrderService } from '@pay/pay/services/order.service';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
@@ -15,6 +16,7 @@ export class CancelAppointmentUseCase {
         private readonly appointmentRepository: AppointmentRepository,
         private readonly auditService: AuditService,
         private readonly orderService: OrderService,
+        private readonly prisma: PrismaService,
     ) { }
 
     async execute(
@@ -31,9 +33,6 @@ export class CancelAppointmentUseCase {
                 throw new BadRequestException(`Cita con ID ${id} no encontrada`);
             }
 
-
-
-
             if (appointment.status !== 'PENDING') {
                 this.logger.debug(`Solo se puede cancelar citas pendientes`);
                 return {
@@ -43,17 +42,6 @@ export class CancelAppointmentUseCase {
                 };
             }
 
-
-            // // Verificar que la cita no esté ya cancelada
-            // if (appointment.status === 'CANCELLED') {
-            //     this.logger.debug(`La cita ${id} ya está cancelada`);
-            //     return {
-            //         statusCode: 200,
-            //         message: 'La cita ya está cancelada',
-            //         data: appointment,
-            //     };
-            // }
-
             // Actualizar el estado de la cita a CANCELLED
             const updatedAppointment = await this.appointmentRepository.update(id, {
                 status: 'CANCELLED',
@@ -61,6 +49,28 @@ export class CancelAppointmentUseCase {
             });
 
             this.logger.debug(`Cita ${id} actualizada a estado CANCELLED`);
+
+            // Actualizar el evento asociado si existe
+            if (appointment.eventId) {
+                try {
+                    this.logger.debug(`Actualizando evento ${appointment.eventId} asociado a la cita ${id}`);
+
+                    const updatedEvent = await this.prisma.event.update({
+                        where: { id: appointment.eventId },
+                        data: {
+                            color: 'red',
+                            status: 'CANCELLED',
+                            isCancelled: true,
+                            cancellationReason: cancelAppointmentDto.cancellationReason || 'Cita cancelada'
+                        }
+                    });
+
+                    this.logger.debug(`Evento ${appointment.eventId} actualizado: ${JSON.stringify(updatedEvent)}`);
+                } catch (eventError) {
+                    this.logger.error(`Error al actualizar el evento asociado a la cita: ${eventError.message}`, eventError.stack);
+                    // No lanzamos el error para que no afecte el flujo principal
+                }
+            }
 
             // Buscar órdenes asociadas a la cita
             const orders = await this.orderService.findOrdersByReferenceId(id);
