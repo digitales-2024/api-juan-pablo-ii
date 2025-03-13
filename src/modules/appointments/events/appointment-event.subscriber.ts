@@ -234,26 +234,26 @@ export class AppointmentEventSubscriber {
         try {
             // Obtener la cita completa para tener acceso a todos sus datos, incluyendo el eventId
             const appointment = await this.appointmentService.findOne(appointmentData.appointmentId);
-            
+
             if (!appointment) {
                 this.logger.error(`Appointment ${appointmentData.appointmentId} not found`);
                 throw new Error(`Appointment ${appointmentData.appointmentId} not found`);
             }
-            
+
             this.logger.log(`Retrieved appointment: ${JSON.stringify(appointment)}`);
             this.logger.log(`Appointment eventId: ${appointment.eventId || 'none'}`);
-            
+
             // Verificar si esta cita es resultado de una reprogramación
             if (appointment.rescheduledFromId) {
                 this.logger.log(`Esta cita ${appointmentData.appointmentId} es resultado de una reprogramación de la cita ${appointment.rescheduledFromId}`);
-                
+
                 // Si la cita no tiene eventId pero es una reprogramación, intentamos obtener el eventId de la cita original
                 if (!appointment.eventId) {
                     try {
                         const originalAppointment = await this.appointmentService.findOne(appointment.rescheduledFromId);
                         if (originalAppointment && originalAppointment.eventId) {
                             this.logger.log(`Obteniendo eventId ${originalAppointment.eventId} de la cita original ${appointment.rescheduledFromId}`);
-                            
+
                             // Actualizar la cita actual con el eventId de la cita original
                             await this.appointmentService.update(
                                 appointmentData.appointmentId,
@@ -262,9 +262,9 @@ export class AppointmentEventSubscriber {
                                 },
                                 userData
                             );
-                            
+
                             this.logger.log(`Cita ${appointmentData.appointmentId} actualizada con eventId ${originalAppointment.eventId} de la cita original`);
-                            
+
                             // Actualizar el objeto appointment en memoria para que tenga el eventId
                             appointment.eventId = originalAppointment.eventId;
                         }
@@ -335,6 +335,16 @@ export class AppointmentEventSubscriber {
             const appointment = await this.appointmentService.findOne(appointmentData.appointmentId);
             this.logger.log(`Cita encontrada: ${JSON.stringify(appointment, null, 2)}`);
             this.logger.log(`EventId en la cita: ${appointment?.eventId || 'NO TIENE'}`);
+
+            // Verificar si la cita es una reprogramación y está confirmada
+            // Si es una reprogramación de una cita confirmada, solo actualizamos fechas sin cambiar estado ni color
+            const isRescheduledConfirmed = appointment &&
+                appointment.rescheduledFromId &&
+                appointment.status === AppointmentStatus.CONFIRMED;
+
+            if (isRescheduledConfirmed) {
+                this.logger.log(`Esta es una reprogramación de una cita CONFIRMADA. Solo actualizaremos fechas.`);
+            }
 
             // Obtener los datos del paciente para el título del evento
             let metadata: any;
@@ -440,7 +450,7 @@ export class AppointmentEventSubscriber {
             if (appointment && appointment.eventId) {
                 this.logger.log(`CASO 1: La cita tiene eventId: ${appointment.eventId}`);
                 eventIdToUpdate = appointment.eventId;
-                
+
                 // Intentar obtener el evento existente
                 try {
                     this.logger.log(`Buscando evento con ID: ${eventIdToUpdate}`);
@@ -461,12 +471,12 @@ export class AppointmentEventSubscriber {
                 try {
                     this.logger.log(`Llamando a findAvailableTurn con staffId: ${staffId}, startDate: ${startDate.toISOString()}, endDate: ${endDate.toISOString()}`);
                     const availableTurn = await this.eventService.findAvailableTurn(staffId, startDate, endDate);
-                    
+
                     if (availableTurn) {
                         this.logger.log(`Evento encontrado por horario y médico: ${JSON.stringify(availableTurn, null, 2)}`);
                         existingEvent = availableTurn;
                         eventIdToUpdate = availableTurn.id;
-                        
+
                         // Si encontramos un evento pero la cita no tiene eventId, actualizamos la cita
                         if (appointment && !appointment.eventId) {
                             try {
@@ -497,19 +507,19 @@ export class AppointmentEventSubscriber {
                 try {
                     // Obtener la cita original
                     const originalAppointment = await this.appointmentService.findOne(appointment.rescheduledFromId);
-                    
+
                     if (originalAppointment && originalAppointment.eventId) {
                         this.logger.log(`Cita original encontrada con eventId: ${originalAppointment.eventId}`);
-                        
+
                         // Obtener el evento de la cita original
                         try {
                             const originalEvent = await this.eventService.findOne(originalAppointment.eventId);
-                            
+
                             if (originalEvent) {
                                 this.logger.log(`Evento de la cita original encontrado: ${JSON.stringify(originalEvent, null, 2)}`);
                                 existingEvent = originalEvent;
                                 eventIdToUpdate = originalEvent.id;
-                                
+
                                 // Actualizar la cita actual con el eventId de la cita original
                                 if (!appointment.eventId) {
                                     try {
@@ -544,7 +554,7 @@ export class AppointmentEventSubscriber {
             // Si tenemos un evento para actualizar
             if (eventIdToUpdate) {
                 this.logger.log(`ACTUALIZANDO: Evento existente con ID ${eventIdToUpdate}`);
-                
+
                 try {
                     // Intentar obtener el evento existente para preservar su título y otros datos
                     if (!existingEvent) {
@@ -562,10 +572,37 @@ export class AppointmentEventSubscriber {
                     const originalTitle = existingEvent?.title || this.createEventTitle(orderDetails, patientDetails);
                     this.logger.log(`Título original: ${originalTitle}`);
 
+                    // Para citas reprogramadas confirmadas, solo actualizamos fechas
+                    if (isRescheduledConfirmed) {
+                        this.logger.log(`Actualizando solo fechas para cita reprogramada confirmada`);
+
+                        try {
+                            const updateResult = await this.eventService.update(
+                                eventIdToUpdate,
+                                {
+                                    start: startDate,
+                                    end: endDate,
+                                    title: originalTitle,
+                                    staffId: staffId,
+                                    branchId: branchId
+                                    // No actualizamos color ni status para mantener la confirmación
+                                },
+                                userData
+                            );
+
+                            this.logger.log(`Actualización de fechas exitosa: ${JSON.stringify(updateResult, null, 2)}`);
+                            return updateResult;
+                        } catch (updateError) {
+                            this.logger.error(`Error actualizando fechas: ${updateError.message}`);
+                            this.logger.error(`Stack trace: ${updateError.stack}`);
+                            return null;
+                        }
+                    }
+
                     // Intentar actualización directa usando el repositorio para evitar la validación de cambios
                     try {
                         this.logger.log(`Intentando actualización directa a través del repositorio`);
-                        
+
                         // Crear un evento actualizado manteniendo el título original
                         const updatedEvent = {
                             ...existingEvent,
@@ -579,10 +616,10 @@ export class AppointmentEventSubscriber {
                             updatedAt: new Date(),
                             updatedBy: userData.id
                         };
-                        
+
                         // Actualizar directamente en el repositorio
                         const directUpdateResult = await this.eventService.directUpdate(eventIdToUpdate, updatedEvent);
-                        
+
                         if (directUpdateResult) {
                             this.logger.log(`Actualización directa exitosa: ${JSON.stringify(directUpdateResult, null, 2)}`);
                             return {
@@ -601,14 +638,14 @@ export class AppointmentEventSubscriber {
 
                     // Si la actualización directa falló, intentamos el método normal
                     this.logger.log(`Intentando actualización normal a través del servicio`);
-                    
+
                     // Preparar los datos para la actualización
                     // Forzar valores diferentes para color y status para asegurar que se actualicen
                     const currentColor = existingEvent?.color || '';
                     const currentStatus = existingEvent?.status || '';
-                    
+
                     this.logger.log(`Color actual: ${currentColor}, Status actual: ${currentStatus}`);
-                    
+
                     // Asegurarnos de que los valores sean diferentes para forzar la actualización
                     const updateEventDto = {
                         // Si el color actual ya es 'sky', usamos temporalmente otro color y luego lo actualizamos de nuevo
@@ -624,7 +661,7 @@ export class AppointmentEventSubscriber {
                     };
 
                     this.logger.log(`Datos para actualización: ${JSON.stringify(updateEventDto, null, 2)}`);
-                    
+
                     // Actualizar el evento existente con los nuevos datos
                     this.logger.log(`Llamando a eventService.update con ID: ${eventIdToUpdate}`);
                     const updateResult = await this.eventService.update(
@@ -638,7 +675,7 @@ export class AppointmentEventSubscriber {
                     // Si usamos valores temporales, ahora actualizamos a los valores finales deseados
                     if (updateResult && updateResult.data) {
                         this.logger.log(`Primera actualización - color: ${updateResult.data.color}, status: ${updateResult.data.status}`);
-                        
+
                         // Siempre hacemos una segunda actualización para asegurarnos de que el color sea 'sky' y el estado sea CONFIRMED
                         try {
                             this.logger.log(`Realizando actualización final a color 'sky' y status CONFIRMED`);
@@ -650,12 +687,12 @@ export class AppointmentEventSubscriber {
                                 },
                                 userData
                             );
-                            
+
                             if (finalUpdate && finalUpdate.data) {
                                 this.logger.log(`Actualización final - color: ${finalUpdate.data.color}, status: ${finalUpdate.data.status}`);
                                 this.logger.log(`Evento final: ${JSON.stringify(finalUpdate.data, null, 2)}`);
                             }
-                            
+
                             // Usamos el resultado de la actualización final
                             this.logger.log(`Actualización exitosa del evento ${eventIdToUpdate} a color sky y status CONFIRMED`);
                             return finalUpdate;
@@ -687,7 +724,7 @@ export class AppointmentEventSubscriber {
 
             // Si no hay evento existente o falló la actualización, creamos uno nuevo
             this.logger.log(`CREANDO: Nuevo evento para la cita ${appointmentData.appointmentId}`);
-            
+
             const createEventDto: CreateEventDto = {
                 title: this.createEventTitle(orderDetails, patientDetails),
                 color: 'sky',
@@ -756,7 +793,7 @@ export class AppointmentEventSubscriber {
      */
     private createEventTitle(orderDetails: any, patientDetails: any): string {
         let eventTitle = `Cita: ${patientDetails.fullName || 'Paciente'}`;
-        
+
         // Enriquecer el título con información adicional si está disponible
         if (orderDetails.appointmentType) {
             eventTitle = `${orderDetails.appointmentType}: ${patientDetails.fullName || 'Paciente'}`;

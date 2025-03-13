@@ -106,7 +106,7 @@ export class RescheduleAppointmentUseCase {
             // Crear nueva cita con la fecha reprogramada
             // Extraemos las propiedades que necesitamos de la cita original, sin incluir el ID
             const { id: _, ...appointmentWithoutId } = originalAppointment;
-            
+
             // Primero creamos la cita sin eventId para evitar el error de unique constraint
             const newAppointment = await this.appointmentRepository.create({
                 ...appointmentWithoutId,
@@ -142,48 +142,27 @@ export class RescheduleAppointmentUseCase {
                     });
 
                     if (currentEvent) {
-                        // Actualizar el evento original para marcarlo como reprogramado
+                        // Actualizar el evento existente con las nuevas fechas
                         await this.prisma.event.update({
                             where: { id: originalAppointment.eventId },
                             data: {
-                                color: 'indigo',
-                                isCancelled: false,
-                                status: 'RESCHEDULED',
-                                updatedAt: new Date()
-                            }
-                        });
-                        
-                        this.logger.debug(`Evento original ${originalAppointment.eventId} actualizado a estado RESCHEDULED`);
-                        
-                        // Crear un nuevo evento para la cita reprogramada
-                        const color = newAppointment.status === 'CONFIRMED' ? 'sky' : 'indigo';
-                        const status = newAppointment.status === 'CONFIRMED' ? EventStatus.CONFIRMED : EventStatus.RESCHEDULED;
-                        
-                        // Crear un nuevo evento basado en el original pero con las nuevas fechas
-                        const newEvent = await this.prisma.event.create({
-                            data: {
-                                title: currentEvent.title,
-                                color: color,
-                                type: currentEvent.type,
-                                status: status,
                                 start: start,
                                 end: end,
-                                staffId: currentEvent.staffId,
-                                branchId: currentEvent.branchId,
-                                isCancelled: false,
                                 updatedAt: new Date()
                             }
                         });
-                        
-                        newEventId = newEvent.id;
-                        this.logger.debug(`Nuevo evento creado con ID: ${newEventId} para la cita reprogramada ${newAppointment.id}`);
-                        
-                        // Actualizar la nueva cita con el ID del nuevo evento
+
+                        this.logger.debug(`Evento ${originalAppointment.eventId} actualizado con nuevas fechas`);
+
+                        // Asignar el mismo eventId a la nueva cita
+                        newEventId = originalAppointment.eventId;
+
+                        // Actualizar la nueva cita con el ID del evento
                         await this.appointmentRepository.update(newAppointment.id, {
                             eventId: newEventId
                         });
-                        
-                        this.logger.debug(`Cita reprogramada ${newAppointment.id} actualizada con el nuevo eventId: ${newEventId}`);
+
+                        this.logger.debug(`Cita reprogramada ${newAppointment.id} actualizada con el eventId: ${newEventId}`);
                     } else {
                         this.logger.warn(`No se encontró el evento ${originalAppointment.eventId} para actualizar`);
                     }
@@ -200,7 +179,7 @@ export class RescheduleAppointmentUseCase {
             // Actualizar las órdenes para que apunten a la nueva cita
             if (orders && orders.length > 0) {
                 this.logger.debug(`Se encontraron ${orders.length} órdenes asociadas a la cita original`);
-                
+
                 for (const order of orders) {
                     try {
                         // Actualizar el referenceId de la orden para que apunte a la nueva cita
