@@ -14,7 +14,7 @@ CREATE TYPE "AppointmentType" AS ENUM ('CONSULTA', 'OTRO');
 CREATE TYPE "EventType" AS ENUM ('TURNO', 'CITA', 'OTRO');
 
 -- CreateEnum
-CREATE TYPE "EventStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW');
+CREATE TYPE "EventStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW', 'RESCHEDULED');
 
 -- CreateEnum
 CREATE TYPE "RecurrenceFrequency" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
@@ -493,6 +493,7 @@ CREATE TABLE "Appointment" (
     "cancellationReason" TEXT,
     "noShowReason" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "rescheduleReason" TEXT,
     "rescheduledFromId" TEXT,
     "appointmentId" TEXT,
     "type" "AppointmentType" NOT NULL DEFAULT 'CONSULTA',
@@ -707,8 +708,6 @@ CREATE UNIQUE INDEX "TipoProducto_name_isActive_key" ON "TipoProducto"("name", "
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Producto_name_key" ON "Producto"("name");
-
-
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm; --Esta linea
 -- CreateIndex
