@@ -1,12 +1,14 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { StockService } from '../services/stock.service';
 import {
   ApiTags,
   ApiOperation,
   ApiParam,
   ApiOkResponse,
+  ApiBody,
 } from '@nestjs/swagger';
 import { ProductStock, StockByStorage } from '../entities/stock.entity';
+import { ProductUse } from '@prisma/client';
 
 @ApiTags('Stock')
 @Controller({ path: 'stock', version: '1' })
@@ -118,6 +120,55 @@ export class StockController {
     return this.stockService.getProductsStockByStorage({ storageId });
   }
 
+  @Get('/availableProduct/byUse/:productUse')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({
+    name: 'use',
+    description: 'Ambito de uso del producto: VENTA, INTERNO, etc',
+    enum: ProductUse,
+  })
+  async getProductsStockByUse(
+    @Param('productUse') productUse: ProductUse,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductsForSaleStock(productUse);
+  }
+
+  @Get('/availableProduct/byUse/:productUse/branch/:branchId')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({
+    name: 'productUse',
+    description: 'Ambito de uso del producto: VENTA, INTERNO, etc',
+    enum: ProductUse,
+  })
+  @ApiParam({
+    name: 'branchId',
+    description: 'Ambito de uso del producto: VENTA, INTERNO, etc',
+    type: 'string',
+  })
+  async getProductsStockByUseAndBranch(
+    @Param('productUse') productUse: ProductUse,
+    @Param('branchId') branchId: string,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductsForSaleStockAndBranch(
+      productUse,
+      branchId,
+    );
+  }
+
   @Get('/availableProduct/:productId')
   @ApiOperation({
     summary: 'Obtener un producto en stock en todos los almacenes.',
@@ -132,5 +183,76 @@ export class StockController {
     @Param('productId') id: string,
   ): Promise<ProductStock[]> {
     return this.stockService.getProductStock(id);
+  }
+
+  @Get('/availableProduct/:productId/storage/:storageId')
+  @ApiOperation({
+    summary: 'Obtener un producto en stock en todos los almacenes.',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Producto en stock en todos los almacenes',
+    type: [ProductStock],
+  })
+  @ApiParam({ name: 'productId', description: 'ID del producto' })
+  async getOneProductStockByStorage(
+    @Param('productId') id: string,
+    @Param('storageId') storageId: string,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getOneProductStockByStorage(id, storageId);
+  }
+
+  @Post('/manyProductsByStorage')
+  @ApiOperation({
+    summary:
+      'Obtener varios productos en stock por combinaciones de almacén y producto',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Productos en stock según las combinaciones solicitadas',
+    type: [ProductStock],
+  })
+  @ApiBody({
+    description: 'Array de combinaciones de producto y almacén',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          productId: { type: 'string' },
+          storageId: { type: 'string' },
+        },
+      },
+    },
+  })
+  async getManyProductsStockByStorageAndProduct(
+    @Body() params: Array<{ productId: string; storageId: string }>,
+  ): Promise<ProductStock[]> {
+    return this.stockService.getManyProductsStockByStorageAndProduct(params);
+  }
+
+  @Post('/manyProducts')
+  @ApiOperation({
+    summary:
+      'Obtener varios productos en stock por combinaciones de almacén y producto',
+  })
+  @ApiOkResponse({
+    status: 200,
+    description: 'Productos en stock según las combinaciones solicitadas',
+    type: [ProductStock],
+  })
+  @ApiBody({
+    description: 'Array de combinaciones de producto y almacén',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+  })
+  async getProductsStockByProductsIds(
+    @Body() params: string[],
+  ): Promise<ProductStock[]> {
+    return this.stockService.getProductsStockByProductsIds(params);
   }
 }

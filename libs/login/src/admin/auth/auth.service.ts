@@ -50,9 +50,9 @@ export class AuthService {
       await this.userService.updateLastLogin(userDB.id);
 
       // Indicar que el usuario debe cambiar la contraseña si es la primera vez que inicia sesión
-      if (userDB.mustChangePassword) {
+      /*   if (userDB.mustChangePassword) {
         throw new ForbiddenException('You must change your password');
-      }
+      } */
 
       // Genera el token
       const token = this.getJwtToken({ id: userDB.id });

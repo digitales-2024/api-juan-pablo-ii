@@ -5,17 +5,28 @@ import {
   IsNotEmpty,
   IsDateString,
   ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+
 export class PrescriptionItemDto {
-  @ApiProperty()
-  id: string;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  id?: string;
 
-  @ApiProperty()
-  name: string;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  name?: string;
 
-  @ApiProperty()
-  quantity: number;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  quantity?: number;
 
   @ApiProperty({
     required: false,
@@ -75,34 +86,36 @@ export class CreatePrescriptionDto {
     example: [
       {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        nombre: 'Paracetamol',
-        cantidad: '1',
-        description: 'recomendado para el paciente',
+        name: 'Paracetamol',
+        quantity: 1,
+        description: 'Recomendado para el paciente',
       },
     ],
     required: false,
   })
   @ValidateNested({ each: true })
   @Type(() => PrescriptionItemDto)
-  @IsNotEmpty()
+  @IsArray()
+  @IsOptional()
   prescriptionMedicaments?: PrescriptionItemDto[];
 
   @ApiProperty({
     type: [PrescriptionItemDto],
-    description: 'Detalle de medicamentos y dosificación',
+    description: 'Detalle de servicios y dosificación',
     example: [
       {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        nombre: 'consulta general',
-        cantidad: '1',
-        description: 'recomendado para el paciente',
+        name: 'Consulta general',
+        quantity: 1,
+        description: 'Recomendado para el paciente',
       },
     ],
     required: false,
   })
   @ValidateNested({ each: true })
   @Type(() => PrescriptionItemDto)
-  @IsNotEmpty()
+  @IsArray()
+  @IsOptional()
   prescriptionServices?: PrescriptionItemDto[];
 
   @ApiProperty({

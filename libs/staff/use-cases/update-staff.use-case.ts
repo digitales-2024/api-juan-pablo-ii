@@ -19,7 +19,7 @@ export class UpdateStaffUseCase {
     private readonly staffRepository: StaffRepository,
     private readonly staffTypeRepository: StaffTypeRepository,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   /**
    * Valida si ya existe personal con el DNI proporcionado, excluyendo al personal actual
@@ -63,7 +63,7 @@ export class UpdateStaffUseCase {
     }
 
     const updatedStaff = await this.staffRepository.transaction(async () => {
-      const staff = await this.staffRepository.update(id, updateStaffDto);
+      const staff = await this.staffRepository.updateStaff(id, updateStaffDto);
 
       // Registrar auditoría
       await this.auditService.create({

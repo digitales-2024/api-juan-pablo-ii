@@ -75,6 +75,6 @@ import { CloudflareModule } from 'src/cloudflare/cloudflare.module';
     DeleteMedicalHistoriesUseCase,
     ReactivateMedicalHistoryUseCase,
   ],
-  exports: [PacientModule],
+  exports: [PacientService],
 })
 export class PacientModule {}

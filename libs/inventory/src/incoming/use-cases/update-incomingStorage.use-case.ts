@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DetailedIncoming } from '../entities/incoming.entity';
 import { IncomingRepository } from '../repositories/incoming.repository';
 import { UserData } from '@login/login/interfaces';
@@ -15,6 +15,7 @@ import { StockRepository } from '@inventory/inventory/stock/repositories/stock.r
 import { UpdateStockUseCase } from '@inventory/inventory/stock/use-cases/update-stock.use-case';
 import { UpdateIncomingStorageDto } from '../dto';
 import { OutgoingIncomingUpdateMovementDto } from '@inventory/inventory/movement/dto';
+import { UpdateOutgoingStorageUseCase } from '@inventory/inventory/outgoing/use-cases/update-outgoingStorage.use-case';
 
 export type StockAction = {
   type: 'increase' | 'decrease' | 'adjust';
@@ -31,12 +32,16 @@ export class UpdateIncomingStorageUseCase {
     private readonly movementRepository: MovementRepository,
     private readonly stockRepository: StockRepository,
     private readonly updateStockUseCase: UpdateStockUseCase,
+
+    @Inject(forwardRef(() => UpdateOutgoingStorageUseCase))
+    private readonly updateOutgoingStorageUseCase: UpdateOutgoingStorageUseCase, // Inyección
   ) {}
 
   async execute(
     id: string,
     updateIncomingStorageDto: UpdateIncomingStorageDto,
     user: UserData,
+    firstTransferOperation = false,
   ): Promise<BaseApiResponse<DetailedIncoming>> {
     const updatedIncoming = await this.incomingRepository.transaction(
       async () => {
@@ -157,6 +162,28 @@ export class UpdateIncomingStorageUseCase {
                 price: movement.buyingPrice, //Take a close look to this data
               },
             });
+          }
+
+          // Lógica de transferencia
+          if (
+            updateIncomingStorageDto.isTransference &&
+            updateIncomingStorageDto.referenceId &&
+            firstTransferOperation
+          ) {
+            await this.updateOutgoingStorageUseCase.execute(
+              updateIncomingStorageDto.referenceId,
+              {
+                name: updateIncomingStorageDto.name,
+                description: updateIncomingStorageDto.description,
+                storageId: updateIncomingStorageDto.storageId,
+                isTransference: updateIncomingStorageDto.isTransference,
+                state: updateIncomingStorageDto.state,
+                referenceId: id,
+                date: updateIncomingStorageDto.date,
+                movement: updateIncomingStorageDto.movement,
+              },
+              user,
+            );
           }
 
           // Register audit

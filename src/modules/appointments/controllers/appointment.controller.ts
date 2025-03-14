@@ -24,6 +24,10 @@ import { HttpResponse, UserData } from '@login/login/interfaces';
 import { Appointment } from '../entities/appointment.entity';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
+import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
+import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
+import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
+import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
 
 @ApiTags('Appointments')
 @ApiBadRequestResponse({
@@ -36,7 +40,7 @@ import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 @Controller({ path: 'appointments', version: '1' })
 @Auth()
 export class AppointmentController {
-  constructor(private readonly appointmentService: AppointmentService) {}
+  constructor(private readonly appointmentService: AppointmentService) { }
 
   /**
    * Crea una nueva cita médica
@@ -60,6 +64,36 @@ export class AppointmentController {
   /**
    * Obtiene todas las citas médicas con filtros opcionales
    */
+
+  /**
+   * Obtiene todas las citas médicas de forma paginada
+   */
+  @Get('paginated')
+  @ApiOperation({ summary: 'Obtener todas las citas médicas de forma paginada' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página para la paginación',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de registros por página',
+  })
+  @ApiOkResponse({
+    description: 'Lista de citas médicas paginadas',
+    type: [Appointment],
+  })
+  async findAllPaginated(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+
+    return this.appointmentService.findAllPaginated(page, limit);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Obtener todas las citas médicas' })
   @ApiQuery({
@@ -79,10 +113,12 @@ export class AppointmentController {
     type: [Appointment],
   })
   findAll(
-    @Query('startDate') startDate?: Date,
-    @Query('endDate') endDate?: Date,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<Appointment[]> {
-    return this.appointmentService.findAll(startDate, endDate);
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.appointmentService.findAll(start, end);
   }
 
   /**
@@ -184,4 +220,85 @@ export class AppointmentController {
       user,
     );
   }
+
+  /**
+   * Cancela una cita médica
+   */
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica cancelada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  cancel(
+    @Param('id') id: string,
+    @Body() cancelAppointmentDto: CancelAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.cancel(id, cancelAppointmentDto, user);
+  }
+
+  /**
+   * Reembolsa una cita médica y actualiza sus órdenes y pagos asociados
+   */
+  @Patch(':id/refund')
+  @ApiOperation({ summary: 'Reembolsar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica reembolsada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  refund(
+    @Param('id') id: string,
+    @Body() refundAppointmentDto: RefundAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.refund(id, refundAppointmentDto, user);
+  }
+
+  /**
+   * Marca una cita médica como NO_SHOW (paciente no se presentó)
+   */
+  @Patch(':id/no-show')
+  @ApiOperation({ summary: 'Marcar cita médica como NO_SHOW' })
+  @ApiOkResponse({
+    description: 'Cita médica marcada como NO_SHOW exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  markAsNoShow(
+    @Param('id') id: string,
+    @Body() noShowAppointmentDto: NoShowAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.markAsNoShow(id, noShowAppointmentDto, user);
+  }
+
+  /**
+   * Reprograma una cita médica
+   */
+  @Patch(':id/reschedule')
+  @ApiOperation({ summary: 'Reprogramar cita médica' })
+  @ApiOkResponse({
+    description: 'Cita médica reprogramada exitosamente',
+    type: Appointment,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos o cita no encontrada',
+  })
+  reschedule(
+    @Param('id') id: string,
+    @Body() rescheduleAppointmentDto: RescheduleAppointmentDto,
+    @GetUser() user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    return this.appointmentService.reschedule(id, rescheduleAppointmentDto, user);
+  }
+
 }

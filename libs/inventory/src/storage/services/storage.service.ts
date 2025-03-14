@@ -146,6 +146,14 @@ export class StorageService {
     }
   }
 
+  async findAllActiveByBranch(branchId: string): Promise<DetailedStorage[]> {
+    try {
+      return this.storageRepository.getStoragesByBranchId(branchId);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   /**
    * Obtiene todos los almacenes
    * @returns Una promesa que resuelve con una lista de todos los almacenes

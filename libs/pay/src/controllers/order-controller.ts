@@ -18,8 +18,8 @@ import {
   ApiOkResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
-import { Order } from '../entities/order.entity';
+import { UserData } from '@login/login/interfaces';
+import { DetailedOrder, Order } from '../entities/order.entity';
 import {
   CreateOrderDto,
   DeleteOrdersDto,
@@ -27,6 +27,7 @@ import {
   UpdateOrderDto,
 } from '../interfaces/dto';
 import { OrderStatus, OrderType } from '../interfaces/order.types';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @ApiTags('Order')
 @ApiBadRequestResponse({
@@ -39,7 +40,7 @@ import { OrderStatus, OrderType } from '../interfaces/order.types';
 @Controller({ path: 'order', version: '1' })
 @Auth()
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
   @Post()
   @ApiOperation({ summary: 'Crear nueva orden' })
@@ -54,22 +55,8 @@ export class OrderController {
   create(
     @Body() createOrderDto: CreateOrderDto,
     @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return this.orderService.create(createOrderDto, user);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Obtener orden por ID' })
-  @ApiParam({ name: 'id', description: 'ID de la orden' })
-  @ApiOkResponse({
-    description: 'Orden encontrada',
-    type: Order,
-  })
-  @ApiBadRequestResponse({
-    description: 'ID de orden inválido',
-  })
-  findOne(@Param('id') id: string): Promise<Order> {
-    return this.orderService.findOrderById(id);
   }
 
   @Get()
@@ -77,81 +64,23 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: 'Lista de todas las órdenes',
-    type: [Order],
+    type: [DetailedOrder],
   })
-  findAll(): Promise<Order[]> {
+  findAll(): Promise<DetailedOrder[]> {
     return this.orderService.findAll();
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar orden existente' })
+  @Get('/active')
+  @ApiOperation({ summary: 'Obtener todas las órdenes' })
   @ApiResponse({
     status: 200,
-    description: 'Orden actualizada exitosamente',
-    type: Order,
-  })
-  update(
-    @Param('id') id: string,
-    @Body() updateOrderDto: UpdateOrderDto,
-    @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
-    return this.orderService.update(id, updateOrderDto, user);
-  }
-
-  @Delete('remove/all')
-  @ApiOperation({ summary: 'Desactivar múltiples órdenes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Órdenes desactivadas exitosamente',
+    description: 'Lista de todas las órdenes',
     type: [Order],
   })
-  @ApiBadRequestResponse({
-    description: 'IDs inválidos o órdenes no existen',
-  })
-  deleteMany(
-    @Body() deleteOrdersDto: DeleteOrdersDto,
-    @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order[]>> {
-    return this.orderService.deleteMany(deleteOrdersDto, user);
+  findAllActive(): Promise<Order[]> {
+    return this.orderService.findAllActive();
   }
 
-  @Patch('reactivate/all')
-  @ApiOperation({ summary: 'Reactivar múltiples órdenes' })
-  @ApiOkResponse({
-    description: 'Órdenes reactivadas exitosamente',
-    type: [Order],
-  })
-  @ApiBadRequestResponse({
-    description: 'IDs inválidos o órdenes no existen',
-  })
-  reactivateAll(
-    @Body() deleteOrdersDto: DeleteOrdersDto,
-    @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order[]>> {
-    return this.orderService.reactiveMany(deleteOrdersDto.ids, user);
-  }
-  @Post(':id/submit-draft')
-  @ApiOperation({ summary: 'Confirmar orden borrador y cambiar a pendiente' })
-  @ApiParam({
-    name: 'id',
-    description: 'ID de la orden borrador',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Orden borrador confirmada exitosamente',
-    type: Order,
-  })
-  @ApiBadRequestResponse({
-    description: 'Orden no encontrada o no está en estado borrador',
-  })
-  async submitDraftOrder(
-    @Param('id') id: string,
-    @Body() submitDto: SubmitDraftOrderDto,
-    @GetUser() user: UserData,
-  ): Promise<HttpResponse<Order>> {
-    return this.orderService.submitDraftOrder(id, submitDto, user);
-  }
   @Get('type/:type') // Cambiado de ':type' a 'type/:type'
   @ApiOperation({ summary: 'Get all orders by type' })
   @ApiParam({
@@ -181,6 +110,185 @@ export class OrderController {
   })
   async findByStatus(@Param('status') status: OrderStatus): Promise<Order[]> {
     return this.orderService.findOrderByStatus(status);
+  }
+
+  @Get('/detailed/:id')
+  @ApiOperation({ summary: 'Obtener orden por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la orden' })
+  @ApiOkResponse({
+    description: 'Orden encontrada',
+    type: DetailedOrder,
+  })
+  @ApiBadRequestResponse({
+    description: 'ID de orden inválido',
+  })
+  findOneDetailed(@Param('id') id: string): Promise<DetailedOrder> {
+    return this.orderService.findDetailedOrderById(id);
+  }
+
+  @Get('/search/detailed/:id')
+  @ApiOperation({ summary: 'Obtener orden por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la orden' })
+  @ApiOkResponse({
+    description: 'Orden encontrada',
+    type: [DetailedOrder],
+  })
+  @ApiBadRequestResponse({
+    description: 'ID de orden inválido',
+  })
+  searchOneDetailed(@Param('id') id: string): Promise<DetailedOrder[]> {
+    return this.orderService.searchDetailedOrderById(id);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener orden por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la orden' })
+  @ApiOkResponse({
+    description: 'Orden encontrada',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'ID de orden inválido',
+  })
+  findOne(@Param('id') id: string): Promise<Order> {
+    return this.orderService.findOrderById(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar orden existente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden actualizada exitosamente',
+    type: Order,
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateOrderDto: UpdateOrderDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.update(id, updateOrderDto, user);
+  }
+
+  @Delete('remove/all')
+  @ApiOperation({ summary: 'Desactivar múltiples órdenes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Órdenes desactivadas exitosamente',
+    type: [Order],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o órdenes no existen',
+  })
+  deleteMany(
+    @Body() deleteOrdersDto: DeleteOrdersDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order[]>> {
+    return this.orderService.deleteMany(deleteOrdersDto, user);
+  }
+
+  @Patch('reactivate/all')
+  @ApiOperation({ summary: 'Reactivar múltiples órdenes' })
+  @ApiOkResponse({
+    description: 'Órdenes reactivadas exitosamente',
+    type: [Order],
+  })
+  @ApiBadRequestResponse({
+    description: 'IDs inválidos o órdenes no existen',
+  })
+  reactivateAll(
+    @Body() deleteOrdersDto: DeleteOrdersDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order[]>> {
+    return this.orderService.reactiveMany(deleteOrdersDto.ids, user);
+  }
+
+  @Post(':id/submit-draft')
+  @ApiOperation({ summary: 'Confirmar orden borrador y cambiar a pendiente' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden borrador',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden borrador confirmada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no está en estado borrador',
+  })
+  async submitDraftOrder(
+    @Param('id') id: string,
+    @Body() submitDto: SubmitDraftOrderDto,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.submitDraftOrder(id, submitDto, user);
+  }
+
+  @Post(':id/complete')
+  @ApiOperation({ summary: 'Completar una orden' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden a completar',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden completada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no puede ser completada',
+  })
+  async completeOrder(
+    @Param('id') id: string,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.completeOrder(id, user);
+  }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar una orden y sus pagos asociados' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden a cancelar',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden cancelada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no puede ser cancelada',
+  })
+  async cancelOrder(
+    @Param('id') id: string,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.cancelOrder(id, user);
+  }
+
+  @Post(':id/refund')
+  @ApiOperation({ summary: 'Reembolsar una orden y sus pagos asociados' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la orden a reembolsar',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden reembolsada exitosamente',
+    type: Order,
+  })
+  @ApiBadRequestResponse({
+    description: 'Orden no encontrada o no puede ser reembolsada',
+  })
+  async refundOrder(
+    @Param('id') id: string,
+    @GetUser() user: UserData,
+  ): Promise<BaseApiResponse<Order>> {
+    return this.orderService.refundOrder(id, user);
   }
 
   @Get(':type/status/:status')

@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OrderRepository } from '../../repositories/order.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Order } from '../../entities/order.entity';
 import { AuditActionType } from '@prisma/client';
 import { DeleteOrdersDto } from '@pay/pay/interfaces/dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class DeleteOrdersUseCase {
@@ -16,7 +17,7 @@ export class DeleteOrdersUseCase {
   async execute(
     deleteOrdersDto: DeleteOrdersDto,
     user: UserData,
-  ): Promise<HttpResponse<Order[]>> {
+  ): Promise<BaseApiResponse<Order[]>> {
     const deletedOrders = await this.orderRepository.transaction(async () => {
       // Perform soft delete and get updated orders
       const orders = await this.orderRepository.softDeleteMany(
@@ -40,7 +41,7 @@ export class DeleteOrdersUseCase {
     });
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Órdenes eliminadas exitosamente',
       data: deletedOrders,
     };

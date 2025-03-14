@@ -15,7 +15,7 @@ export interface IOrder {
   date: Date;
   dueDate?: Date;
   notes?: string;
-  metadata?: Record<string, any>;
+  metadata?: string;
 }
 
 // Base para generadores de órdenes

@@ -107,31 +107,16 @@ export class OutgoingService {
     id: string,
     updateOutgoingStorageDto: UpdateOutgoingStorageDto,
     user: UserData,
+    firstTransferOperation: boolean,
   ): Promise<BaseApiResponse<DetailedOutgoing>> {
     try {
-      // const currentOutgoing = await this.findById(id);
-      // const updateOutgoingDto: UpdateOutgoingDto = {
-      //   name: updateOutgoingStorageDto?.name,
-      //   description: updateOutgoingStorageDto?.description,
-      //   isTransference: updateOutgoingStorageDto?.isTransference,
-      //   referenceId: updateOutgoingStorageDto?.referenceId,
-      //   storageId: updateOutgoingStorageDto?.storageId,
-      //   state: updateOutgoingStorageDto?.state,
-      //   date: updateOutgoingStorageDto?.date,
-      // };
-
-      // if (!validateChanges(updateOutgoingDto, currentOutgoing)) {
-      //   return {
-      //     success: true,
-      //     message: 'No se detectaron cambios en la salida',
-      //     data: await this.outgoingRepository.findDetailedOutgoingById(id),
-      //   };
-      // }
+      this.logger.log('isTransference Outgoing: ', firstTransferOperation);
 
       return await this.updateOutgoingStorageUseCase.execute(
         id,
         updateOutgoingStorageDto,
         user,
+        firstTransferOperation,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
@@ -291,21 +276,34 @@ export class OutgoingService {
       // Extraer los datos de movement y usarlos en createMovementStorage
       //const stockData = await this.extractProductoIdQuantity(movement);
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
-      await Promise.all(
-        movementsList.map(async (item) => {
-          const { productId, quantity } = item;
+      // await Promise.all(
+      //   movementsList.map(async (item) => {
+      //     const { productId, quantity } = item;
 
-          // Llamar a createMovementStorage
-          const idStock = await this.stockService.updateStockOutgoing(
-            storageId,
-            productId,
-            quantity,
-            user,
-          );
+      //     // Llamar a createMovementStorage
+      //     const idStock = await this.stockService.updateStockOutgoing(
+      //       storageId,
+      //       productId,
+      //       quantity,
+      //       user,
+      //     );
 
-          console.log(`Movimiento creado con ID: ${idStock}`);
-        }),
-      );
+      //     console.log(`Movimiento creado con ID: ${idStock}`);
+      //   }),
+      // );
+      //Para evitar las condiciones de carrera
+      for (const item of movementsList) {
+        const { productId, quantity } = item;
+
+        const idStock = await this.stockService.updateStockOutgoing(
+          storageId,
+          productId,
+          quantity,
+          user,
+        );
+
+        console.log(`Movimiento creado con ID: ${idStock}`);
+      }
       // const data = {
       //   outgoingId,
       //   movementTypeId,

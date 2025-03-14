@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsDateString, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { AppointmentType, AppointmentStatus } from '@prisma/client';
+import { AppointmentStatus, AppointmentType, PaymentMethod } from '@prisma/client';
 
 export class CreateAppointmentDto {
   @ApiProperty({
@@ -100,4 +100,30 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsString()
   rescheduledFromId?: string;
+
+  @ApiProperty({
+    description: 'Razón por la que el paciente no se presentó a la cita',
+    example: 'El paciente no se presentó sin previo aviso',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  noShowReason?: string;
+  @ApiProperty({
+    description: 'Método de pago',
+    enum: PaymentMethod,
+    example: 'CASH',
+  })
+  @IsString()
+  @IsNotEmpty()
+  paymentMethod: PaymentMethod;
+
+  @ApiProperty({
+    description: 'ID del evento asociado a la cita',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  eventId?: string;
 }

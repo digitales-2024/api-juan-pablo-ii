@@ -83,10 +83,34 @@ export class EventService {
     user: UserData,
   ): Promise<BaseApiResponse<Event>> {
     try {
+      this.logger.log(`=== INICIO: update para evento ${id} ===`);
+      this.logger.log(`Datos de actualización: ${JSON.stringify(updateEventDto, null, 2)}`);
+      
+      this.logger.log(`Buscando evento actual con ID: ${id}`);
       const currentEvent = await this.findOne(id);
+      this.logger.log(`Evento actual encontrado: ${JSON.stringify(currentEvent, null, 2)}`);
 
-      if (!validateChanges(updateEventDto, currentEvent)) {
+      // Verificar si hay cambios en color o status, que siempre queremos aplicar
+      const hasColorOrStatusChanges = 
+        (updateEventDto.color && updateEventDto.color !== currentEvent.color) ||
+        (updateEventDto.status && updateEventDto.status !== currentEvent.status);
+      
+      this.logger.log(`¿Tiene cambios de color o estado? ${hasColorOrStatusChanges}`);
+      if (updateEventDto.color) {
+        this.logger.log(`Color en DTO: ${updateEventDto.color}, Color actual: ${currentEvent.color}`);
+      }
+      if (updateEventDto.status) {
+        this.logger.log(`Status en DTO: ${updateEventDto.status}, Status actual: ${currentEvent.status}`);
+      }
+
+      // Verificar si hay otros cambios significativos
+      const hasOtherChanges = validateChanges(updateEventDto, currentEvent);
+      this.logger.log(`¿Tiene otros cambios significativos? ${hasOtherChanges}`);
+
+      // Si no hay cambios significativos y tampoco hay cambios de color o estado, omitimos la actualización
+      if (!hasOtherChanges && !hasColorOrStatusChanges) {
         this.logger.log('No hay cambios significativos, omitiendo actualización');
+        this.logger.log(`=== FIN: update para evento ${id} (sin cambios) ===`);
         return {
           success: true,
           message: 'Evento actualizado correctamente',
@@ -94,8 +118,15 @@ export class EventService {
         };
       }
 
-      return await this.updateEventUseCase.execute(id, updateEventDto, user);
+      this.logger.log(`Actualizando evento ${id} con datos: ${JSON.stringify(updateEventDto, null, 2)}`);
+      const result = await this.updateEventUseCase.execute(id, updateEventDto, user);
+      this.logger.log(`Resultado de la actualización: ${JSON.stringify(result, null, 2)}`);
+      this.logger.log(`=== FIN: update para evento ${id} (actualizado) ===`);
+      return result;
     } catch (error) {
+      this.logger.error(`Error en update para evento ${id}: ${error.message}`);
+      this.logger.error(`Stack trace: ${error.stack}`);
+      this.logger.log(`=== FIN: update para evento ${id} (con error) ===`);
       this.errorHandler.handleError(error, 'updating');
     }
   }
@@ -108,8 +139,20 @@ export class EventService {
    */
   async findOne(id: string): Promise<Event> {
     try {
-      return await this.eventRepository.findById(id);
+      this.logger.log(`=== INICIO: findOne para evento ${id} ===`);
+      const event = await this.eventRepository.findById(id);
+      
+      if (event) {
+        this.logger.log(`Evento encontrado: ${JSON.stringify(event, null, 2)}`);
+      } else {
+        this.logger.log(`No se encontró evento con ID ${id}`);
+      }
+      
+      this.logger.log(`=== FIN: findOne para evento ${id} ===`);
+      return event;
     } catch (error) {
+      this.logger.error(`Error buscando evento ${id}: ${error.message}`);
+      this.logger.error(`Stack trace: ${error.stack}`);
       this.errorHandler.handleError(error, 'getting');
     }
   }
@@ -255,12 +298,57 @@ export class EventService {
     end: Date
   ): Promise<Event | null> {
     try {
-      this.logger.debug(`Buscando TURNO para staff: ${staffId}`);
+      this.logger.log(`=== INICIO: findAvailableTurn ===`);
+      this.logger.log(`Buscando TURNO para staff: ${staffId}`);
+      this.logger.log(`Fecha inicio (UTC): ${start.toISOString()}`);
+      this.logger.log(`Fecha fin (UTC): ${end.toISOString()}`);
+
       const turn = await this.eventRepository.findAvailableTurn(staffId, start, end);
-      this.logger.debug(`Resultado de búsqueda de TURNO: ${JSON.stringify(turn)}`);
+
+      if (turn) {
+        this.logger.log(`TURNO encontrado: ${turn.id}`);
+        this.logger.log(`TURNO horario: ${turn.start.toISOString()} - ${turn.end.toISOString()}`);
+        this.logger.log(`TURNO detalles: ${JSON.stringify(turn, null, 2)}`);
+      } else {
+        this.logger.log(`No se encontró TURNO para el horario solicitado`);
+      }
+
+      this.logger.log(`=== FIN: findAvailableTurn ===`);
       return turn;
     } catch (error) {
+      this.logger.error(`Error al buscar TURNO: ${error.message}`);
+      this.logger.error(`Stack trace: ${error.stack}`);
       this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Actualiza directamente un evento sin pasar por la validación de cambios.
+   * Útil para forzar actualizaciones de color y estado.
+   * @param id - ID del evento a actualizar.
+   * @param eventData - Datos completos del evento actualizado.
+   * @returns El evento actualizado.
+   */
+  async directUpdate(id: string, eventData: any): Promise<Event> {
+    try {
+      this.logger.log(`=== INICIO: directUpdate para evento ${id} ===`);
+      this.logger.log(`Datos completos para actualización directa: ${JSON.stringify(eventData, null, 2)}`);
+      
+      // Verificar que el evento exista
+      await this.findOne(id);
+      
+      // Actualizar directamente a través del repositorio usando el nuevo método forceUpdate
+      const updatedEvent = await this.eventRepository.forceUpdate(id, eventData);
+      
+      this.logger.log(`Evento actualizado directamente: ${JSON.stringify(updatedEvent, null, 2)}`);
+      this.logger.log(`=== FIN: directUpdate para evento ${id} ===`);
+      
+      return updatedEvent;
+    } catch (error) {
+      this.logger.error(`Error en directUpdate para evento ${id}: ${error.message}`);
+      this.logger.error(`Stack trace: ${error.stack}`);
+      this.logger.log(`=== FIN: directUpdate para evento ${id} (con error) ===`);
+      this.errorHandler.handleError(error, 'updating');
     }
   }
 

@@ -16,8 +16,18 @@ import {
   DeleteAppointmentsUseCase,
   ReactivateAppointmentsUseCase,
   UpdateAppointmentUseCase,
+  FindAppointmentsPaginatedUseCase,
+  CancelAppointmentUseCase,
+  NoShowAppointmentUseCase,
+  RefundAppointmentUseCase,
+  RescheduleAppointmentUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
+import { ServiceService } from 'src/modules/services/services/service.service';
+import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
+import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
+import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
+import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -35,6 +45,12 @@ export class AppointmentService {
     private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
     private readonly deleteAppointmentsUseCase: DeleteAppointmentsUseCase,
     private readonly reactivateAppointmentsUseCase: ReactivateAppointmentsUseCase,
+    private readonly findAppointmentsPaginatedUseCase: FindAppointmentsPaginatedUseCase,
+    private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
+    private readonly noShowAppointmentUseCase: NoShowAppointmentUseCase,
+    private readonly refundAppointmentUseCase: RefundAppointmentUseCase,
+    private readonly rescheduleAppointmentUseCase: RescheduleAppointmentUseCase,
+    private readonly serviceService: ServiceService,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -51,7 +67,6 @@ export class AppointmentService {
     user: UserData,
   ): Promise<HttpResponse<Appointment>> {
     try {
-      console.log('estoy en el service aqui no es', createAppointmentDto);
       return await this.createAppointmentUseCase.execute(
         createAppointmentDto,
         user,
@@ -104,11 +119,16 @@ export class AppointmentService {
    * Obtiene todas las citas médicas
    */
   async findAll(startDate?: Date, endDate?: Date): Promise<Appointment[]> {
+    this.logger.log(`findAll called with startDate: ${startDate}, endDate: ${endDate}`);
     try {
       if (startDate && endDate) {
-        return this.appointmentRepository.findByDateRange(startDate, endDate);
+        const appointments = await this.appointmentRepository.findByDateRange(startDate, endDate);
+        this.logger.log(`Appointments found: ${JSON.stringify(appointments)}`);
+        return appointments;
       }
-      return this.appointmentRepository.findMany();
+      const allAppointments = await this.appointmentRepository.findMany();
+      this.logger.log(`All appointments found: ${JSON.stringify(allAppointments)}`);
+      return allAppointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -129,8 +149,11 @@ export class AppointmentService {
    * Busca citas por paciente
    */
   async findByPatient(pacienteId: string): Promise<Appointment[]> {
+    this.logger.log(`findByPatient called with pacienteId: ${pacienteId}`);
     try {
-      return await this.appointmentRepository.findByPatient(pacienteId);
+      const appointments = await this.appointmentRepository.findByPatient(pacienteId);
+      this.logger.log(`Appointments found for patient ${pacienteId}: ${JSON.stringify(appointments)}`);
+      return appointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -140,8 +163,11 @@ export class AppointmentService {
    * Busca citas por personal médico
    */
   async findByStaff(personalId: string): Promise<Appointment[]> {
+    this.logger.log(`findByStaff called with personalId: ${personalId}`);
     try {
-      return await this.appointmentRepository.findByStaff(personalId);
+      const appointments = await this.appointmentRepository.findByStaff(personalId);
+      this.logger.log(`Appointments found for staff ${personalId}: ${JSON.stringify(appointments)}`);
+      return appointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -173,11 +199,103 @@ export class AppointmentService {
     user: UserData,
   ): Promise<HttpResponse<Appointment[]>> {
     try {
-      validateArray(ids, 'IDs de citas médicas');
       return await this.reactivateAppointmentsUseCase.execute(ids, user);
     } catch (error) {
       this.errorHandler.handleError(error, 'reactivating');
     }
+  }
+
+  /**
+   * Cancela una cita médica y sus órdenes asociadas
+   * @param id - ID de la cita a cancelar
+   * @param cancelAppointmentDto - DTO con los datos de cancelación
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la cita cancelada
+   * @throws {BadRequestException} Si hay un error al cancelar la cita
+   */
+  async cancel(
+    id: string,
+    cancelAppointmentDto: CancelAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.cancelAppointmentUseCase.execute(
+        id,
+        cancelAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
+   * Reembolsa una cita médica y actualiza sus órdenes y pagos asociados a REFUNDED
+   * @param id - ID de la cita a reembolsar
+   * @param refundAppointmentDto - DTO con los datos del reembolso
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la cita reembolsada
+   * @throws {BadRequestException} Si hay un error al reembolsar la cita
+   */
+  async refund(
+    id: string,
+    refundAppointmentDto: RefundAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.refundAppointmentUseCase.execute(
+        id,
+        refundAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
+   * Obtiene todas las citas médicas de forma paginada
+   */
+  async findAllPaginated(page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
+    try {
+      return await this.findAppointmentsPaginatedUseCase.execute(page, limit);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene el precio del servicio asociado a una cita médica.
+   * @param appointmentId - ID de la cita médica
+   * @returns El precio del servicio
+   * @throws {BadRequestException} Si la cita médica o el servicio no se encuentran
+   */
+  async getServicePriceByAppointmentId(appointmentId: string): Promise<number> {
+    const appointment = await this.findById(appointmentId);
+    if (!appointment) {
+      throw new BadRequestException(`Cita médica con ID ${appointmentId} no encontrada`);
+    }
+
+    const serviceId = appointment.serviceId;
+    const service = await this.serviceService.findOne(serviceId);
+    if (!service) {
+      throw new BadRequestException(`Servicio con ID ${serviceId} no encontrado`);
+    }
+    return service.price;
+  }
+
+  async getStaffByAppointmentId(appointmentId: string): Promise<string> {
+    const appointment = await this.findById(appointmentId);
+
+    if (!appointment) {
+      throw new BadRequestException(`Cita médica con ID ${appointmentId} no encontrada`);
+    }
+
+    const staffId = appointment.staffId
+
+    const staff = await this.serviceService.findOne(staffId);
+
+    return staff.name
   }
 
   /**
@@ -189,5 +307,53 @@ export class AppointmentService {
       throw new BadRequestException('Cita médica no encontrada');
     }
     return appointment;
+  }
+
+  /**
+   * Marca una cita médica como NO_SHOW (paciente no se presentó)
+   * @param id - ID de la cita a marcar
+   * @param noShowAppointmentDto - DTO con los datos de no presentación
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la cita actualizada
+   * @throws {BadRequestException} Si hay un error al marcar la cita
+   */
+  async markAsNoShow(
+    id: string,
+    noShowAppointmentDto: NoShowAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.noShowAppointmentUseCase.execute(
+        id,
+        noShowAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
+  }
+
+  /**
+   * Reprograma una cita médica
+   * @param id - ID de la cita a reprogramar
+   * @param rescheduleAppointmentDto - DTO con los datos de reprogramación
+   * @param user - Datos del usuario que realiza la acción
+   * @returns Respuesta con la nueva cita reprogramada
+   * @throws {BadRequestException} Si hay un error al reprogramar la cita
+   */
+  async reschedule(
+    id: string,
+    rescheduleAppointmentDto: RescheduleAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      return await this.rescheduleAppointmentUseCase.execute(
+        id,
+        rescheduleAppointmentDto,
+        user,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'updating');
+    }
   }
 }

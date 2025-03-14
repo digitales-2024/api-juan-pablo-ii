@@ -1,13 +1,14 @@
-import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { OrderRepository } from '../../repositories/order.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Order } from '../../entities/order.entity';
 import { AuditActionType } from '@prisma/client';
 import { OrderStatus } from '../../interfaces/order.types';
 import { PaymentStatus, PaymentType } from '../../interfaces/payment.types';
 import { PaymentRepository } from '../../repositories/payment.repository';
 import { SubmitDraftOrderDto } from '@pay/pay/interfaces/dto';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class SubmitDraftOrderUseCase {
@@ -21,7 +22,7 @@ export class SubmitDraftOrderUseCase {
     id: string,
     submitDto: SubmitDraftOrderDto,
     user: UserData,
-  ): Promise<HttpResponse<Order>> {
+  ): Promise<BaseApiResponse<Order>> {
     return await this.orderRepository.transaction(async () => {
       // Validar que la orden existe y obtener datos actuales
       const order = await this.orderRepository.findById(id);
@@ -74,7 +75,7 @@ export class SubmitDraftOrderUseCase {
       });
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'Orden confirmada exitosamente',
         data: updatedOrder,
       };

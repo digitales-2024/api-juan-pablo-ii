@@ -1,19 +1,15 @@
-import {
-  HttpStatus,
-  Injectable,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PaymentRepository } from '../../repositories/payment.repository';
 import { OrderRepository } from '../../repositories/order.repository';
 import { Payment } from '../../entities/payment.entity';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
 import { PaymentStatus } from '../../interfaces/payment.types';
 import { OrderStatus } from '../../interfaces/order.types';
 import { VerifyPaymentDto } from '@pay/pay/interfaces/dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class VerifyPaymentUseCase {
@@ -28,7 +24,7 @@ export class VerifyPaymentUseCase {
     id: string,
     verifyPaymentDto: VerifyPaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     const logger = new Logger('VerifyPaymentUseCase');
     logger.log(`Starting payment verification for payment ${id}`);
     return await this.paymentRepository.transaction(async () => {
@@ -86,7 +82,7 @@ export class VerifyPaymentUseCase {
       });
 
       return {
-        statusCode: HttpStatus.OK,
+        success: true,
         message: 'Pago verificado exitosamente',
         data: verifiedPayment,
       };

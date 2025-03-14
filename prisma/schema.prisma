@@ -178,7 +178,7 @@ model Patient {
   lifestyleHabits        String? @db.Text
   vaccinations           Json?
   primaryDoctor          String? @db.VarChar(100)
-  language               String? @db.VarChar(50)
+  sucursal               String? @db.VarChar(50)
   treatmentAuthorization String? @db.VarChar(255)
   notes                  String? @db.Text
   patientPhoto           String? @db.Text
@@ -189,6 +189,7 @@ model Patient {
   updatedAt      DateTime         @updatedAt
   MedicalHistory MedicalHistory[]
   Appointment    Appointment[]
+  Prescription   Prescription[]
 }
 
 //tabla tipo de servicio
@@ -200,6 +201,8 @@ model ServiceType {
   services    Service[] // Relación inversa con Service
   createdAt   DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt
+
+  @@unique([name, isActive])
 }
 
 //tabla servicios
@@ -228,6 +231,8 @@ model StaffType {
   staff     Staff[] // Relación con Staff
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+
+  @@unique([name, isActive])
 }
 
 model Staff {
@@ -264,6 +269,8 @@ model Categoria {
   createdAt DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt DateTime   @updatedAt
   Producto  Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a una categoría.
+
+  @@unique([name, isActive])
 }
 
 // Tabla TipoProducto
@@ -276,6 +283,8 @@ model TipoProducto {
   createdAt DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt DateTime   @updatedAt
   Producto  Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a un tipo de producto específico.
+
+  @@unique([name, isActive])
 }
 
 // Tabla Producto
@@ -289,18 +298,18 @@ model Producto {
   tipoProducto   TipoProducto @relation(fields: [tipoProductoId], references: [id])
 
   // Información básica del producto
-  name                      String  @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
+  name                      String      @unique // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
   precio                    Float // Precio de venta del producto (sin descuentos)
   unidadMedida              String? // Unidad de medida (ml, kg, caja, etc.)
   proveedor                 String? // Fabricante o proveedor
-  uso                       String? // Paciente, cliente, personal, etc.
-  usoProducto               String? // Venta, uso interno, etc.
+  uso                       ProductUse? // VENTA, INTERNO //Should obligatory, but in order not to broke anything is optional
+  usoProducto               String? // Paciente, cliente, personal, etc.
   description               String? // 
   codigoProducto            String? // Código de barras o código único del producto
   descuento                 Float? // Descuento aplicado, si aplica
   observaciones             String? // Observaciones adicionales
   condicionesAlmacenamiento String? // Condiciones de almacenamiento (ej. "refrigerar")
-  isActive                  Boolean @default(true)
+  isActive                  Boolean     @default(true)
   imagenUrl                 String? // URL de la imagen del producto
 
   // Fechas de control
@@ -328,26 +337,28 @@ model TypeStorage {
   // branch  Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
   // staff   Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
   Storage Storage[] // Relación con la tabla Almacen
+
+  @@unique([name, isActive])
 }
 
 //tabla almacen
 model Storage {
-  id            String      @id @default(uuid())
-  name          String      @unique // Nombre del almacén
+  id            String   @id @default(uuid())
+  name          String   @unique // Nombre del almacén
   location      String? // Ubicación física del almacén
   typeStorageId String
-  branchId    String? // Clave foránea a Sucursal o local
-  staffId     String? // Clave foránea a Personal empleado responsable del almacén
-  isActive      Boolean     @default(true) // Campo para controlar si está activo o no
-  createdAt     DateTime    @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime    @updatedAt
+  branchId      String? // Clave foránea a Sucursal o local
+  staffId       String? // Clave foránea a Personal empleado responsable del almacén
+  isActive      Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt
 
-  TypeStorage   TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
-  branch        Branch?   @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
-  staff         Staff?    @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
-  Incoming      Incoming[] // Relación con Ingreso
-  Outgoing      Outgoing[] // Relación con Salida
-  Stock         Stock[]
+  TypeStorage TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
+  branch      Branch?     @relation(fields: [branchId], references: [id]) // Relación con la tabla Sucursal
+  staff       Staff?      @relation(fields: [staffId], references: [id]) // Relación con la tabla Personal
+  Incoming    Incoming[] // Relación con Ingreso
+  Outgoing    Outgoing[] // Relación con Salida
+  Stock       Stock[]
 }
 
 model Stock {
@@ -407,53 +418,55 @@ model Movement {
 
 //tabla ingresos 
 model Incoming {
-  id          String   @id @default(uuid())
-  name        String?
-  description String?
-  storageId   String
-  Storage     Storage  @relation(fields: [storageId], references: [id])
-  date        DateTime @default(now()) @db.Timestamptz(6)
-  state       Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
+  id             String   @id @default(uuid())
+  name           String?
+  description    String?
+  storageId      String
+  Storage        Storage  @relation(fields: [storageId], references: [id])
+  date           DateTime @default(now()) @db.Timestamptz(6)
+  state          Boolean  @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
   isTransference Boolean? @default(false) // Indica si el ingreso es por transferencia entre almacenes
-  referenceId String? // Referencia a un registro etc
-  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt
+  referenceId    String? // Referencia a un registro para el storage etc
+  outgoingId     String? // Referencia a una salida
+  isActive       Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt
 
   Movement Movement[] // Relación con Movimiento
 }
 
 //tabla salidas
 model Outgoing {
-  id          String   @id @default(uuid())
-  name        String?
-  description String?
-  storageId   String
-  Storage     Storage  @relation(fields: [storageId], references: [id])
-  date        DateTime @default(now()) @db.Timestamptz(6)
-  state       Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
+  id             String   @id @default(uuid())
+  name           String?
+  description    String?
+  storageId      String
+  Storage        Storage  @relation(fields: [storageId], references: [id])
+  date           DateTime @default(now()) @db.Timestamptz(6)
+  state          Boolean  @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
   isTransference Boolean? @default(false) // Indica si la salida es por transferencia entre almacenes
-  referenceId String? // Referencia a un registro etc
-  isActive    Boolean  @default(true) // Campo para controlar si está activo o no
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt
+  referenceId    String? // Referencia a un registro PARA EL STORAGE etc
+  incomingId     String? // Referencia a un ingreso
+  isActive       Boolean  @default(true) // Campo para controlar si está activo o no
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt
 
   Movement Movement[] // Relación con Movimiento
 }
 
 // MedicalHistory table
 model MedicalHistory {
-  id             String   @id @default(uuid())
+  id             String          @id @default(uuid())
   patientId      String
   fullName       String? // Nombre completo del paciente
-  patient        Patient  @relation(fields: [patientId], references: [id])
+  patient        Patient         @relation(fields: [patientId], references: [id])
   medicalHistory Json? // Historial médico del paciente
   description    String?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime @updatedAt
-
-  UpdateHistory UpdateHistory[]
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt
+  dni            String? // Asegúrate de que este campo exista
+  UpdateHistory  UpdateHistory[]
 }
 
 // UpdateHistory table
@@ -505,6 +518,7 @@ model Prescription {
   branchId                String // ID of the branch where it is issued
   staffId                 String // ID of the medical staff issuing it
   patientId               String // ID of the patient
+  patient                 Patient       @relation(fields: [patientId], references: [id])
   // Main data
   registrationDate        String // Date of prescription issuance
   prescriptionMedicaments Json?
@@ -517,7 +531,7 @@ model Prescription {
 }
 
 enum AppointmentStatus {
-  PENDING // Generada pero no pagada (WhatsApp/digital)
+  PENDING // Generada pero no pagada 
   CONFIRMED // Pagada y confirmada (genera evento CITA)
   COMPLETED // El paciente asistió y se completó
   CANCELLED // Cancelada antes de la fecha
@@ -552,12 +566,17 @@ model Appointment {
   patientId          String
   start              DateTime
   end                DateTime
+  paymentMethod      PaymentMethod
   status             AppointmentStatus @default(PENDING)
   cancellationReason String?
-  rescheduledFrom    Appointment?      @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
-  rescheduledFromId  String?
-  rescheduledTo      Appointment[]     @relation("RescheduledAppointments")
-  appointmentId      String?
+  noShowReason       String?
+  isActive           Boolean           @default(true)
+  rescheduleReason   String?
+
+  rescheduledFrom   Appointment?  @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
+  rescheduledFromId String?
+  rescheduledTo     Appointment[] @relation("RescheduledAppointments")
+  appointmentId     String?
 
   type  AppointmentType @default(CONSULTA)
   notes String?
@@ -588,6 +607,7 @@ enum EventStatus {
   CANCELLED
   COMPLETED
   NO_SHOW
+  RESCHEDULED
 }
 
 model Event {
@@ -678,11 +698,13 @@ model Branch {
   staff          Staff[]
   timeOffs       TimeOff[]
   storage        Storage[] // Relación con TypeStorage
+
+  @@unique([name, isActive])
 }
 
 enum OrderType {
   MEDICAL_PRESCRIPTION_ORDER
-  MEDICAL_CONSULTATION_ORDER
+  MEDICAL_APPOINTMENT_ORDER
   PRODUCT_SALE_ORDER
   PRODUCT_PURCHASE_ORDER
 }
@@ -732,7 +754,7 @@ model Payment {
   type          PaymentType   @default(REGULAR)
   amount        Float
   description   String?
-  paymentMethod PaymentMethod // CASH, TRANSFER, YAPE
+  paymentMethod PaymentMethod // CASH, BANK_TRANSFER, DIGITAL_WALLET
   voucherNumber String? // Número de comprobante/operación
   verifiedBy    String? // ID del usuario que verificó
   verifiedAt    DateTime? // Cuándo se verificó
@@ -745,7 +767,7 @@ model Payment {
 enum PaymentMethod {
   CASH
   BANK_TRANSFER
-  YAPE
+  DIGITAL_WALLET
 }
 
 enum PaymentStatus {
@@ -762,4 +784,10 @@ enum PaymentType {
   PARTIAL
   ADJUSTMENT
   COMPENSATION
+}
+
+enum ProductUse {
+  VENTA
+  INTERNO
+  OTRO
 }

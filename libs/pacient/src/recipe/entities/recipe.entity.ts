@@ -1,14 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 export class PrescriptionItemResponse {
-  @ApiProperty()
-  id: string;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  id?: string;
 
-  @ApiProperty()
-  name: string;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  name?: string;
 
-  @ApiProperty()
-  quantity: number;
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  quantity?: number;
 
   @ApiProperty({
     required: false,
@@ -46,12 +55,63 @@ export class Prescription {
   })
   prescriptionServices: PrescriptionItemResponse[];
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   description?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   purchaseOrderId?: string;
 
   @ApiProperty()
   isActive: boolean;
+}
+
+export class PrescriptionPatient {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  lastName?: string;
+
+  @ApiProperty()
+  dni: string;
+
+  @ApiProperty()
+  birthDate: string;
+
+  @ApiProperty()
+  gender: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  address?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  phone?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  email?: string;
+
+  @ApiProperty()
+  isActive: boolean;
+}
+
+export class PrescriptionWithPatient extends Prescription {
+  @ApiProperty({
+    type: PrescriptionPatient,
+  })
+  patient: PrescriptionPatient;
 }

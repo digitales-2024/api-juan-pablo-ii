@@ -151,7 +151,11 @@ export class ProductService {
    */
   async findAll(): Promise<Product[]> {
     try {
-      return this.productRepository.findMany();
+      return this.productRepository.findMany({
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -166,6 +170,9 @@ export class ProductService {
   async findAllWithRelations(): Promise<ProductWithRelations[]> {
     try {
       const products = await this.productRepository.findManyWithRelations({
+        orderBy: {
+          createdAt: 'desc',
+        },
         include: {
           categoria: {
             select: {
@@ -309,6 +316,18 @@ export class ProductService {
           : await this.productRepository.searchProductByIndexedName(name);
 
       return results;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async getForSaleProducts() {
+    try {
+      const products = await this.productRepository.bringForSaleProducts();
+      if (!products) {
+        throw new BadRequestException('Producto no encontrado');
+      }
+      return products;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

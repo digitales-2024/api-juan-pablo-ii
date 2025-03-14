@@ -1,9 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PaymentRepository } from '../../repositories/payment.repository';
 import { AuditService } from '@login/login/admin/audit/audit.service';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { Payment } from '../../entities/payment.entity';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class ReactivatePaymentsUseCase {
@@ -15,7 +16,7 @@ export class ReactivatePaymentsUseCase {
   async execute(
     ids: string[],
     user: UserData,
-  ): Promise<HttpResponse<Payment[]>> {
+  ): Promise<BaseApiResponse<Payment[]>> {
     // Reactivate payments and register audit
     const reactivatedPayments = await this.paymentRepository.transaction(
       async () => {
@@ -39,7 +40,7 @@ export class ReactivatePaymentsUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Pagos reactivados exitosamente',
       data: reactivatedPayments,
     };

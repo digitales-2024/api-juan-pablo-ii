@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { OutgoingService } from '../services/outgoing.service';
 import { Auth, GetUser } from '@login/login/admin/auth/decorators';
@@ -152,6 +153,7 @@ export class OutgoingController {
   })
   updateOutgoingStorage(
     @Param('id') id: string,
+    @Query('isTransference') isTransference: boolean = false,
     @Body() updateOutgoingStorageDto: UpdateOutgoingStorageDto,
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<DetailedOutgoing>> {
@@ -159,6 +161,7 @@ export class OutgoingController {
       id,
       updateOutgoingStorageDto,
       user,
+      isTransference,
     );
   }
 

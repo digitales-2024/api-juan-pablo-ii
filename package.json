@@ -60,6 +60,7 @@
     "generate-password": "^1.7.1",
     "moment-timezone": "^0.5.46",
     "node-cron": "^3.0.3",
+    "node-gyp": "^11.1.0",
     "passport-jwt": "^4.0.1",
     "puppeteer": "^23.5.0",
     "reflect-metadata": "^0.2.0",
@@ -137,11 +138,13 @@
     }
   },
   "pnpm": {
-    "ignoredBuiltDependencies": [
-      "bcrypt"
-    ],
     "onlyBuiltDependencies": [
-      "bcrypt"
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "bcrypt",
+      "prisma",
+      "puppeteer"
     ]
   }
 }

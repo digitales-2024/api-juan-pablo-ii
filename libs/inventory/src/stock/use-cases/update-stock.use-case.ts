@@ -22,8 +22,8 @@ export class UpdateStockUseCase {
     const updatedStock = await this.stockRepository.transaction(async () => {
       // Update product
       const stock = await this.stockRepository.update(id, {
-        storageId: updateStockDto.storageId,
-        productId: updateStockDto.productId,
+        //storageId: updateStockDto.storageId,
+        //productId: updateStockDto.productId,
         stock: updateStockDto.stock,
         price: updateStockDto.price,
       });

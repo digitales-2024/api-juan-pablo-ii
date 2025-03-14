@@ -104,6 +104,7 @@ export class IncomingService {
     id: string,
     updateIncomingStorageDto: UpdateIncomingStorageDto,
     user: UserData,
+    firstTransferOperation: boolean,
   ): Promise<BaseApiResponse<DetailedIncoming>> {
     try {
       // const currentIncoming = await this.findById(id);
@@ -116,10 +117,13 @@ export class IncomingService {
       //   };
       // }
 
+      this.logger.log('isTransference Incoming', firstTransferOperation);
+
       return await this.updateIncomingStorageUseCase.execute(
         id,
         updateIncomingStorageDto,
         user,
+        firstTransferOperation,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
@@ -276,21 +280,32 @@ export class IncomingService {
       // Extraer los datos de movement y usarlos en createMovementStorage
       //const stockData = this.extractProductoIdQuantity(movement);
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
-      await Promise.all(
-        movementsList.map(async (item) => {
-          const { productId, quantity } = item;
+      // await Promise.all(
+      //   movementsList.map(async (item) => {
+      //     const { productId, quantity } = item;
 
-          // Llamar a createMovementStorage
-          const idStock = await this.stockService.createOrUpdateStockIncoming(
-            storageId,
-            productId,
-            quantity,
-            user,
-          );
+      //     // Llamar a createMovementStorage
+      //     const idStock = await this.stockService.createOrUpdateStockIncoming(
+      //       storageId,
+      //       productId,
+      //       quantity,
+      //       user,
+      //     );
 
-          console.log(`Movimiento creado con ID: ${idStock}`);
-        }),
-      );
+      //     console.log(`Movimiento creado con ID: ${idStock}`);
+      //   }),
+      // );
+      //Para evitar condiciones de carrera
+      for (const item of movementsList) {
+        const { productId, quantity } = item;
+        const idStock = await this.stockService.createOrUpdateStockIncoming(
+          storageId,
+          productId,
+          quantity,
+          user,
+        );
+        console.log(`Movimiento creado con ID: ${idStock}`);
+      }
 
       // const data: IncomingCreateResponseData = {
       //   incomingId,

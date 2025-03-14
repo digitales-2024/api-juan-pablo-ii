@@ -6,13 +6,17 @@ import { PayModule } from '@pay/pay/pay.module';
 import { ProductSaleGenerator } from './generators/product-sale-generator';
 import { CreateProductSaleOrderUseCase } from './use-cases/create-product-sale-billing.use-case';
 import { InventoryModule } from '@inventory/inventory/inventory.module';
-import { ProductPurchaseGenerator } from './generators/product-purchase-generator';
-import { CreateProductPurchaseOrderUseCase } from './use-cases/create-product-purchase-billing.use-case';
+// import { ProductPurchaseGenerator } from './generators/product-purchase-generator';
+// import { CreateProductPurchaseOrderUseCase } from './use-cases/create-product-purchase-billing.use-case';
 import { StockService } from '@inventory/inventory/stock/services/stock.service';
 import { StorageRepository } from '@inventory/inventory/storage/repositories/storage.repository';
 import { ServiceModule } from '../services/service.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
-
+import { PacientModule } from '@pacient/pacient/pacient.module';
+import { CreateAppointmentOrderUseCase } from './use-cases/create-appointment-billing.use-case';
+import { AppointmentGenerator } from './generators/appointment.generator';
+import { CreateMedicalPrescriptionUseCase } from './use-cases/create-medical-prescription-billing.use-case';
+import { MedicalPrescriptionGenerator } from './generators/medical-prescription.generator';
 @Module({
   imports: [
     PayModule,
@@ -20,16 +24,21 @@ import { AppointmentsModule } from '../appointments/appointments.module';
     AuditModule,
     ServiceModule,
     AppointmentsModule,
+    PacientModule
   ],
   controllers: [BillingController],
   providers: [
     ProductSaleGenerator,
-    ProductPurchaseGenerator,
+    MedicalPrescriptionGenerator,
+    // ProductPurchaseGenerator,
+    AppointmentGenerator,
     StorageRepository,
     BillingService,
     StockService,
     CreateProductSaleOrderUseCase,
-    CreateProductPurchaseOrderUseCase,
+    // CreateProductPurchaseOrderUseCase,
+    CreateAppointmentOrderUseCase,
+    CreateMedicalPrescriptionUseCase,
   ],
 })
-export class BillingModule {}
+export class BillingModule { }

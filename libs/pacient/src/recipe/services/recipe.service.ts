@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrescriptionRepository } from '../repositories/recipe.repository';
-import { Prescription } from '../entities/recipe.entity';
+import {
+  Prescription,
+  PrescriptionWithPatient,
+} from '../entities/recipe.entity';
 import {
   CreatePrescriptionDto,
   UpdatePrescriptionDto,
@@ -22,6 +25,8 @@ import {
   ReactivatePrescriptionUseCase,
 } from '../use-cases';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
+import { PacientRepository } from '@pacient/pacient/pacient/repositories/pacient.repository';
+import { PatientPrescriptions } from '@pacient/pacient/pacient/entities/pacient.entity';
 
 // Constantes para nombres de tablas
 const TABLE_NAMES = {
@@ -42,6 +47,7 @@ export class PrescriptionService {
     private readonly updatePrescriptionUseCase: UpdatePrescriptionUseCase,
     private readonly deletePrescriptionsUseCase: DeletePrescriptionsUseCase,
     private readonly reactivatePrescriptionUseCase: ReactivatePrescriptionUseCase,
+    private readonly patientRepository: PacientRepository,
   ) {
     this.errorHandler = new BaseErrorHandler(
       this.logger,
@@ -100,25 +106,44 @@ export class PrescriptionService {
   /**
    * Crea una nueva receta médica
    */
+  // ... existing code ...
+
   async create(
     createPrescriptionDto: CreatePrescriptionDto,
     user: UserData,
   ): Promise<BaseApiResponse<Prescription>> {
+    console.log(
+      '🚀 ~ PrescriptionService en el bakend con el id  ~ createPrescriptionDto:',
+      createPrescriptionDto,
+    );
     try {
-      // Validar referencias antes de crear
       await this.validateReferences(createPrescriptionDto);
-      console.log(
-        '🚀 ~ PrescriptionService ~ createPrescriptionDto:',
-        createPrescriptionDto,
-      );
-      return await this.createPrescriptionUseCase.execute(
+
+      // Crear la receta y obtener la respuesta
+      const prescriptionResponse = await this.createPrescriptionUseCase.execute(
         createPrescriptionDto,
         user,
       );
+
+      // Extraer los IDs necesarios
+      const prescriptionId = prescriptionResponse.data.id;
+      const updateHistoryId = createPrescriptionDto.updateHistoryId;
+
+      // Actualizar el historial
+      if (updateHistoryId) {
+        await this.prescriptionRepository.updatePrescriptionInHistory(
+          updateHistoryId,
+          prescriptionId,
+        );
+      }
+
+      return prescriptionResponse;
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
     }
   }
+
+  // ... existing code ...
 
   /**
    * Actualiza una receta médica existente
@@ -173,6 +198,50 @@ export class PrescriptionService {
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
       throw error;
+    }
+  }
+
+  /**
+   * Obtiene una receta médica por DNI del paciente
+   */
+  async findPrescriptionsByPatientIdCard(
+    dni: string,
+  ): Promise<PatientPrescriptions> {
+    try {
+      return await this.patientRepository.findPrescriptionsByPatientDNI(dni);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Obtiene una receta médica por paciente
+   */
+  async findPatientsPrescriptions(
+    limit = 10,
+    offset = 0,
+  ): Promise<PatientPrescriptions[]> {
+    try {
+      return await this.patientRepository.findPatientPrescriptions(
+        limit,
+        offset,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  async findPrescriptionsWithPatient(
+    limit = 10,
+    offset = 0,
+  ): Promise<PrescriptionWithPatient[]> {
+    try {
+      return await this.prescriptionRepository.findPrescriptionsWithPatient(
+        limit,
+        offset,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
     }
   }
 

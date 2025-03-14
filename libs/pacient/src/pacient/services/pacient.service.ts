@@ -148,6 +148,18 @@ export class PacientService {
     return existingPacients.length > 0;
   }
 
+  async findPatientByDni(dni: string): Promise<Patient[]> {
+    try {
+      const results =
+        dni === 'None'
+          ? await this.pacientRepository.findFirstPatients()
+          : await this.pacientRepository.findPatientByDNI(dni);
+      return results;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   /**
    * Desactiva múltiples pacientes
    * @param deletePacientDto - DTO con los IDs de los pacientes a desactivar
@@ -364,4 +376,32 @@ export class PacientService {
       user,
     );
   }
+
+  /**
+   * Obtiene los datos de pacientes por sucursal para el dashboard
+   * @param year Año para filtrar los datos (opcional)
+   * @returns Datos de pacientes agrupados por mes y sucursal
+   */
+  async getPacientesPorSucursal(): Promise<any> {
+    try {
+      const pacientesData =
+        await this.pacientRepository.getPacientesPorSucursal();
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Datos de pacientes por sucursal obtenidos con éxito',
+        data: pacientesData,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error al obtener datos de pacientes por sucursal: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        'Error al obtener datos de pacientes por sucursal',
+      );
+    }
+  }
+
+  //funcion service para traer la data de los pacientes registrados por las sucursales
 }

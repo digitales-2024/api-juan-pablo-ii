@@ -19,7 +19,22 @@ export class StaffScheduleRepository extends BaseRepository<StaffSchedule> {
    * @internal
    */
   async findStaffScheduleById(id: string): Promise<StaffSchedule> {
-    const schedule = await this.findById(id);
+    const schedule = await this.findOne({
+      where: { id },
+      include: {
+        staff: {
+          select: {
+            name: true,
+            lastName: true
+          }
+        },
+        branch: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
     if (!schedule) {
       throw new BadRequestException('Horario del personal no encontrado');
     }

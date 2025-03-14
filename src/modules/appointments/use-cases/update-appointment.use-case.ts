@@ -42,6 +42,7 @@ export class UpdateAppointmentUseCase {
 
         // Preparar los datos de actualización
         const updateData: Partial<Appointment> = {
+          ...(updateAppointmentDto.eventId && { eventId: updateAppointmentDto.eventId }),
           ...(updateAppointmentDto.staffId && { staffId: updateAppointmentDto.staffId }),
           ...(updateAppointmentDto.serviceId && { serviceId: updateAppointmentDto.serviceId }),
           ...(updateAppointmentDto.branchId && { branchId: updateAppointmentDto.branchId }),

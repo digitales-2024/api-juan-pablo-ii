@@ -28,6 +28,11 @@ export class Outgoing {
   })
   isTransference?: boolean;
 
+  @ApiProperty({
+    required: false,
+  })
+  incomingId?: string;
+
   @ApiProperty()
   isActive?: boolean;
 }

@@ -9,7 +9,7 @@ export enum PaymentStatus {
 export enum PaymentMethod {
   CASH = 'CASH',
   BANK_TRANSFER = 'BANK_TRANSFER',
-  YAPE = 'YAPE',
+  DIGITAL_WALLET = 'DIGITAL_WALLET',
 }
 export enum PaymentType {
   REGULAR = 'REGULAR', // Pago normal

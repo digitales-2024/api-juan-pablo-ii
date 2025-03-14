@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdatePaymentDto } from '../../interfaces/dto';
 import { Payment } from '../../entities/payment.entity';
 import { PaymentRepository } from '../../repositories/payment.repository';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import { UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
 import { AuditActionType } from '@prisma/client';
+import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 
 @Injectable()
 export class UpdatePaymentUseCase {
@@ -17,7 +18,7 @@ export class UpdatePaymentUseCase {
     id: string,
     updatePaymentDto: UpdatePaymentDto,
     user: UserData,
-  ): Promise<HttpResponse<Payment>> {
+  ): Promise<BaseApiResponse<Payment>> {
     const updatedPayment = await this.paymentRepository.transaction(
       async () => {
         // Update payment
@@ -47,7 +48,7 @@ export class UpdatePaymentUseCase {
     );
 
     return {
-      statusCode: HttpStatus.OK,
+      success: true,
       message: 'Pago actualizado exitosamente',
       data: updatedPayment,
     };

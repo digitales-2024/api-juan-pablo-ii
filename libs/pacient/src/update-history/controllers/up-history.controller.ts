@@ -262,7 +262,6 @@ export class UpdateHistoryController {
         'staffId',
         'branchId',
         'medicalHistoryId',
-        'updateHistory',
       ],
     },
   })
@@ -292,7 +291,7 @@ export class UpdateHistoryController {
    * @param user Usuario que realiza la actualización
    * @returns Historia médica actualizada con sus imágenes
    */
-  @Patch(':id/with-images')
+  @Patch(':id/update-with-images')
   @ApiOperation({ summary: 'Actualizar historia médica con imágenes' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

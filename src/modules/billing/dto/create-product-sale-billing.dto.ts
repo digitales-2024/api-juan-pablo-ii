@@ -29,6 +29,13 @@ export class ProductSaleItemDto {
   @IsNumber()
   @Min(1)
   quantity: number;
+
+  @ApiProperty({
+    description: 'ID del almacen',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsUUID()
+  storageId: string;
 }
 
 export class CreateProductSaleBillingDto {
@@ -39,6 +46,7 @@ export class CreateProductSaleBillingDto {
       {
         productId: '123e4567-e89b-12d3-a456-426614174000',
         quantity: 5,
+        storageId: 'd4892502-5685-45e1-b323-55f933f54387',
       },
     ],
   })
@@ -48,18 +56,18 @@ export class CreateProductSaleBillingDto {
   products: ProductSaleItemDto[];
 
   @ApiProperty({
-    description: 'ID del almacén de origen',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsUUID()
-  storageId: string;
-
-  @ApiProperty({
     description: 'ID de la sucursal',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID()
   branchId: string;
+
+  @ApiProperty({
+    description: 'ID del paciente',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsUUID()
+  patientId: string;
 
   @ApiProperty({
     description: 'Ubicación en almacén',
