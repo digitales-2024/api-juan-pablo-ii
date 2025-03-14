@@ -146,7 +146,7 @@ export class StorageService {
     }
   }
 
-  findAllActiveByBranch(branchId: string): Promise<DetailedStorage[]> {
+  async findAllActiveByBranch(branchId: string): Promise<DetailedStorage[]> {
     try {
       return this.storageRepository.getStoragesByBranchId(branchId);
     } catch (error) {
