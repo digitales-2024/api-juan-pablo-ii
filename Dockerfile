@@ -15,11 +15,14 @@ ENV PORT=3000
 
 # Etapa de dependencias
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml .npmrc* ./
 COPY libs/*/package.json ./libs/
 # Instalar dependencias incluyendo devDependencies
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
- pnpm install --frozen-lockfile 
+    pnpm install --frozen-lockfile
+
+# Aprobar builds automáticamente (incluyendo bcrypt)
+#RUN pnpm approve-builds --yes
 
 # Etapa de build
 FROM base AS builder
