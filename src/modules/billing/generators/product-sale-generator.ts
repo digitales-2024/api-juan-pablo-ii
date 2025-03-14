@@ -63,7 +63,7 @@ export class ProductSaleGenerator extends BaseOrderGenerator {
       currency: input.currency || 'PEN',
       date: new Date(),
       notes: input.notes,
-      metadata
+      metadata: JSON.stringify(metadata),
     };
   }
 

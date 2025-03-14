@@ -12,12 +12,11 @@ export class BaseServiceItem {
 
   @ApiProperty({ type: Number, description: 'Cantidad del servicio' })
   quantity: number;
-
 }
 
 export class ProductMovement {
   @ApiProperty({ description: 'Identificador único del producto' })
-  productId: string;
+  id: string;
 
   @ApiProperty({ description: 'Identificador único del almacén' })
   storageId: string;
@@ -33,7 +32,6 @@ export class ProductMovement {
 
   @ApiProperty({ type: Number, description: 'Cantidad del producto' })
   price: number;
-
 }
 
 export class DiscountDetails {
@@ -48,7 +46,6 @@ export class DiscountDetails {
 }
 
 export class TransactionDetails {
-
   @ApiProperty({ type: Number, description: 'Subtotal de la transacción' })
   subtotal: number;
 
@@ -66,11 +63,7 @@ export class OrderDetails {
     enum: ['SALE', 'PURCHASE', 'MEDICAL_APPOINTMENT', 'PRESCRIPTION'],
     description: 'Tipo de transacción',
   })
-  transactionType:
-    | 'SALE'
-    | 'PURCHASE'
-    | 'MEDICAL_APPOINTMENT'
-    | 'PRESCRIPTION';
+  transactionType: 'SALE' | 'PURCHASE' | 'MEDICAL_APPOINTMENT' | 'PRESCRIPTION';
 
   @ApiProperty({ description: 'ID de la sucursal' })
   branchId: string;
@@ -97,13 +90,11 @@ export class PatientDetailsMetadata {
 }
 
 export class BaseOrderMetadata {
-
   @ApiProperty({
     description: 'Detalles del paciente',
     type: PatientDetailsMetadata,
   })
   patientDetails: PatientDetailsMetadata;
-
 }
 
 //--------------------------
@@ -130,7 +121,6 @@ export class SaleOrderDetails {
   })
   transactionDetails: TransactionDetails;
 }
-
 
 export class ProductSaleMetadata extends BaseOrderMetadata {
   @ApiProperty({
@@ -191,7 +181,6 @@ export class ProductPurchaseMetadata extends BaseOrderMetadata {
     description: 'Detalles de la orden de compra',
   })
   orderDetails: PurchaseOrderDetails;
-
 }
 
 //------------------------------------
@@ -219,10 +208,18 @@ export class MedicalAppointmentOrderDetails {
   @ApiProperty({ required: false, description: 'Tipo de cita médica' })
   appointmentType?: string;
 
-  @ApiProperty({ required: false, type: Date, description: 'Fecha y hora de inicio de la cita' })
+  @ApiProperty({
+    required: false,
+    type: Date,
+    description: 'Fecha y hora de inicio de la cita',
+  })
   appointmentStart?: string;
 
-  @ApiProperty({ required: false, type: Date, description: 'Fecha y hora de fin de la cita' })
+  @ApiProperty({
+    required: false,
+    type: Date,
+    description: 'Fecha y hora de fin de la cita',
+  })
   appointmentEnd?: string;
 
   // @ApiProperty({ description: 'ID del paciente' })
@@ -243,8 +240,6 @@ export class MedicalAppointmentMetadata extends BaseOrderMetadata {
     description: 'Detalles de la orden de consulta médica',
   })
   orderDetails: MedicalAppointmentOrderDetails;
-
-
 }
 
 // Prescription Order Metadata
@@ -277,14 +272,12 @@ export class PrescriptionOrderDetails {
   })
   services?: BaseServiceItem[];
 
-
   @ApiProperty({
     type: TransactionDetails,
     description: 'Detalles de la transacción',
   })
   transactionDetails: TransactionDetails;
 }
-
 
 export class MedicalPrescriptionMetadata extends BaseOrderMetadata {
   @ApiProperty({
@@ -297,8 +290,6 @@ export class MedicalPrescriptionMetadata extends BaseOrderMetadata {
 // Appointment Details Metadata (Specific)
 //--------------------------
 export class AppointmentDetailsMetadata {
-
-
   @ApiProperty({ required: false, description: 'Estado de la cita médica' })
   appointmentStatus?: string;
 }

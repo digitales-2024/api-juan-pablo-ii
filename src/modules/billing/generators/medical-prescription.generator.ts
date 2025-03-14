@@ -4,25 +4,13 @@ import { OrderStatus, OrderType } from '@pay/pay/interfaces/order.types';
 import { CreateMedicalPrescriptionBillingDto } from '../dto/create-medical-prescription-billing.dto';
 import { MedicalPrescriptionMetadata } from '../interfaces/metadata.interfaces';
 
-// Interfaces para simular respuestas de otros servicios
-interface RecetaData {
-  id: string;
-  tipo: string;
-  doctorId: string;
-  pacienteId: string;
-  fecha: Date;
-  estado: string; // PENDIENTE, COMPLETADA, ANULADA
-  medicamentos: MedicamentoRecetaData[];
-  total: number;
-}
-
-interface MedicamentoRecetaData {
-  id: string;
-  nombre: string;
-  cantidad: number;
-  precio: number;
-  subtotal: number;
-}
+// interface MedicamentoRecetaData {
+//   id: string;
+//   nombre: string;
+//   cantidad: number;
+//   precio: number;
+//   subtotal: number;
+// }
 
 /**
  * Generador para órdenes de facturación de recetas médicas.
@@ -60,14 +48,16 @@ export class MedicalPrescriptionGenerator extends BaseOrderGenerator {
       currency: input.currency || 'PEN',
       date: new Date(),
       notes: input.notes,
-      metadata: {
+      metadata: JSON.stringify({
         ...metadata,
         ...input.metadata,
-      },
+      }),
     };
   }
 
-  async calculateTotal(input: CreateMedicalPrescriptionBillingDto): Promise<number> {
+  async calculateTotal(
+    input: CreateMedicalPrescriptionBillingDto,
+  ): Promise<number> {
     return input.amountPaid || 0;
   }
 
@@ -94,7 +84,7 @@ export class MedicalPrescriptionGenerator extends BaseOrderGenerator {
           tax: 0,
           total: createDto.amountPaid || 0,
         },
-      }
+      },
     };
 
     return metadata;

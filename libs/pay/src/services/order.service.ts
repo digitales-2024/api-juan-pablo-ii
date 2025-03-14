@@ -233,30 +233,30 @@ export class OrderService {
       const results =
         id === 'None'
           ? ((await this.orderRepository.findMany({
-            where: {
-              isActive: true,
-            },
-            orderBy: {
-              date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
-            },
-            include: {
-              payments: true,
-            },
-            take: 10,
-          })) as DetailedOrder[])
-          : [
-            (await this.orderRepository.findOne({
               where: {
-                id: {
-                  contains: id,
-                  mode: 'insensitive',
-                },
+                isActive: true,
+              },
+              orderBy: {
+                date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
               },
               include: {
                 payments: true,
               },
-            })) as DetailedOrder,
-          ];
+              take: 10,
+            })) as DetailedOrder[])
+          : [
+              (await this.orderRepository.findOne({
+                where: {
+                  id: {
+                    contains: id,
+                    mode: 'insensitive',
+                  },
+                },
+                include: {
+                  payments: true,
+                },
+              })) as DetailedOrder,
+            ];
 
       return results;
     } catch (error) {
@@ -414,16 +414,18 @@ export class OrderService {
   }
 
   /**
-  * Busca órdenes por referenceId
-  * @param referenceId - ID de referencia (por ejemplo, ID de una cita)
-  * @returns Arreglo de órdenes con el referenceId especificado
-  * @throws {BadRequestException} Si hay un error al obtener las órdenes
-  */
+   * Busca órdenes por referenceId
+   * @param referenceId - ID de referencia (por ejemplo, ID de una cita)
+   * @returns Arreglo de órdenes con el referenceId especificado
+   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   */
   async findOrdersByReferenceId(referenceId: string): Promise<Order[]> {
     try {
       this.logger.debug(`Buscando órdenes con referenceId: ${referenceId}`);
       const orders = await this.orderRepository.findByReference(referenceId);
-      this.logger.debug(`Se encontraron ${orders.length} órdenes con referenceId: ${referenceId}`);
+      this.logger.debug(
+        `Se encontraron ${orders.length} órdenes con referenceId: ${referenceId}`,
+      );
       return orders;
     } catch (error) {
       return this.errorHandler.handleError(error, 'getting');
@@ -448,6 +450,58 @@ export class OrderService {
     }
   }
 
+<<<<<<< HEAD
+      // Buscar la orden
+      const order = await this.findOrderById(id);
+      if (!order) {
+        throw new BadRequestException(`Orden con ID ${id} no encontrada`);
+      }
+
+      // Verificar que la orden no esté ya cancelada
+      if (order.status === OrderStatus.CANCELLED) {
+        this.logger.debug(`La orden ${id} ya está cancelada`);
+        return {
+          success: true,
+          message: 'La orden ya está cancelada',
+          data: order,
+        };
+      }
+
+      // Actualizar el estado de la orden a CANCELLED
+      const updatedOrder = await this.orderRepository.update(id, {
+        status: OrderStatus.CANCELLED,
+      });
+
+      this.logger.debug(`Orden ${id} actualizada a estado CANCELLED`);
+
+      // Buscar y cancelar todos los pagos asociados a la orden
+      const payments = await this.paymentRepository.findMany({
+        where: { orderId: id },
+      });
+
+      if (payments && payments.length > 0) {
+        for (const payment of payments) {
+          // Solo cancelar pagos que estén en estado PENDING o PROCESSING
+          if (
+            payment.status === PaymentStatus.PENDING ||
+            payment.status === PaymentStatus.PROCESSING
+          ) {
+            await this.paymentRepository.update(payment.id, {
+              status: PaymentStatus.CANCELLED,
+            });
+            this.logger.debug(
+              `Pago ${payment.id} actualizado a estado CANCELLED`,
+            );
+          }
+        }
+      }
+
+      return {
+        success: true,
+        message: 'Orden y pagos asociados cancelados exitosamente',
+        data: updatedOrder,
+      };
+=======
   /**
    * Reembolsa una orden y sus pagos asociados
    * @param id - ID de la orden a reembolsar
@@ -461,6 +515,7 @@ export class OrderService {
   ): Promise<BaseApiResponse<Order>> {
     try {
       return await this.refundOrderUseCase.execute(id, user);
+>>>>>>> 934e478a2e5a6a5e36cff25bca8f9d210d963f69
     } catch (error) {
       this.errorHandler.handleError(error, 'processing');
     }

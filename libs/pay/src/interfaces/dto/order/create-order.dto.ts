@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsOptional,
   IsObject,
+  IsJSON,
 } from 'class-validator';
 import { OrderStatus, OrderType } from '../../order.types';
 
@@ -126,6 +127,6 @@ export class CreateOrderDto {
     required: false,
   })
   @IsOptional()
-  @IsObject()
-  metadata?: Record<string, any>;
+  @IsJSON()
+  metadata?: string;
 }

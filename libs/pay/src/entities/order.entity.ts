@@ -3,6 +3,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IOrder } from '../interfaces/order.interface';
 import { OrderStatus, OrderType } from '../interfaces/order.types';
 import { Payment } from './payment.entity';
+import {
+  MedicalAppointmentMetadata,
+  MedicalPrescriptionMetadata,
+  ProductSaleMetadata,
+} from 'src/modules/billing/interfaces/metadata.interfaces';
 
 export class Order implements IOrder {
   @ApiProperty({
@@ -110,14 +115,8 @@ export class Order implements IOrder {
   @ApiProperty({
     description: 'Metadatos adicionales en formato JSON',
     required: false,
-    type: 'object',
-    example: {
-      pacienteId: 'PAT-12345',
-      medicoId: 'DOC-67890',
-      seguro: 'Seguro Salud Total',
-    },
   })
-  metadata?: Record<string, any>;
+  metadata?: string;
 }
 
 // "payments": [
@@ -143,4 +142,31 @@ export class DetailedOrder extends Order {
     type: [Payment],
   })
   payments: Payment[];
+}
+
+export class PrescriptionOrder extends Order {
+  @ApiProperty({
+    description: 'Metadatos adicionales en formato JSON',
+    required: false,
+    type: MedicalPrescriptionMetadata,
+  })
+  metadata?: string;
+}
+
+export class ProductSaleOrder extends Order {
+  @ApiProperty({
+    description: 'Metadatos adicionales en formato JSON',
+    required: false,
+    type: ProductSaleMetadata,
+  })
+  metadata?: string;
+}
+
+export class AppointmentOrder extends Order {
+  @ApiProperty({
+    description: 'Metadatos adicionales en formato JSON',
+    required: false,
+    type: MedicalAppointmentMetadata,
+  })
+  metadata?: string;
 }
