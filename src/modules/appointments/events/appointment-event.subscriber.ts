@@ -60,53 +60,56 @@ export class AppointmentEventSubscriber {
         };
     }) {
         this.logger.log(
-            `Received order.completed event for order: ${payload.order.id}`,
+            `[handleOrderCompleted] Received order.completed event for order: ${payload.order.id}`,
         );
 
+        this.logger.log(`[handleOrderCompleted] Order type: ${payload.order.type}`);
+        this.logger.log(`[handleOrderCompleted] Order metadata: ${payload.order.metadata}`);
+
         if (payload.metadata) {
-            this.logger.log(`Payment verification metadata:`);
-            this.logger.log(`Object:`, payload.metadata);
+            this.logger.log(`[handleOrderCompleted] Payment verification metadata:`);
+            this.logger.log(`[handleOrderCompleted] Object:`, payload.metadata);
         }
 
         try {
             const { order, metadata } = payload;
             const userId = metadata?.verifiedBy;
 
-            this.logger.log(`Order type: ${order.type}`);
-            this.logger.log(`Should process appointment: ${this.shouldProcessAppointment(order)}`);
+            this.logger.log(`[handleOrderCompleted] Order type: ${order.type}`);
+            this.logger.log(`[handleOrderCompleted] Should process appointment: ${this.shouldProcessAppointment(order)}`);
 
             if (!this.shouldProcessAppointment(order)) {
                 this.logger.log(
-                    `Order ${order.id} does not require appointment processing`,
+                    `[handleOrderCompleted] Order ${order.id} does not require appointment processing`,
                 );
                 return;
             }
 
             this.logger.log(
-                `Starting appointment processing for order ${order.id}`,
+                `[handleOrderCompleted] Starting appointment processing for order ${order.id}`,
             );
 
             await this.processAppointmentOrder(order, userId);
 
             this.logger.log(
-                `Successfully processed appointment for order ${order.id}`,
+                `[handleOrderCompleted] Successfully processed appointment for order ${order.id}`,
             );
         } catch (error) {
             this.logger.error(
-                `Error processing appointment for order ${payload.order.id}:`,
+                `[handleOrderCompleted] Error processing appointment for order ${payload.order.id}:`,
                 error.stack,
             );
 
             // Si es una orden de prescripción médica, iniciamos el flujo de compensación
             if (payload.order.type === OrderType.MEDICAL_PRESCRIPTION_ORDER) {
                 this.logger.log(
-                    `Initiating compensation flow for failed prescription order ${payload.order.id}`,
+                    `[handleOrderCompleted] Initiating compensation flow for failed prescription order ${payload.order.id}`,
                 );
                 try {
                     await this.compensationService.compensateFailedMovements(payload.order);
                 } catch (compError) {
                     this.logger.error(
-                        `Error during compensation for order ${payload.order.id}:`,
+                        `[handleOrderCompleted] Error during compensation for order ${payload.order.id}:`,
                         compError.stack,
                     );
                 }
@@ -831,7 +834,9 @@ export class AppointmentEventSubscriber {
     }
 
     private async processMedicalPrescription(order: Order, userId: string) {
-        this.logger.log(`Processing medical prescription order ${order.id}`);
+        this.logger.log(`[processMedicalPrescription] Starting processing for order ${order.id}`);
+        this.logger.log(`[processMedicalPrescription] Order type: ${order.type}`);
+        this.logger.log(`[processMedicalPrescription] Raw metadata: ${order.metadata}`);
 
         let metadata: any;
         try {
@@ -839,18 +844,30 @@ export class AppointmentEventSubscriber {
                 typeof order.metadata === 'string'
                     ? JSON.parse(order.metadata)
                     : order.metadata;
+            this.logger.log(`[processMedicalPrescription] Parsed metadata:`, JSON.stringify(metadata, null, 2));
         } catch (error) {
+            this.logger.error(`[processMedicalPrescription] Error parsing metadata:`, error);
             throw new Error(
                 `Invalid metadata format for order ${order.id}: ${error.message}`,
             );
         }
 
-        this.logger.debug('Metadata structure:', JSON.stringify(metadata, null, 2));
+        this.logger.debug('[processMedicalPrescription] Metadata structure:', JSON.stringify(metadata, null, 2));
 
         // Extraer datos de la prescripción del metadata usando el nuevo formato
         const orderDetails = metadata?.orderDetails;
-        if (!orderDetails || !orderDetails.products || orderDetails.products.length === 0) {
-            throw new Error(`No valid products found in order ${order.id}`);
+        this.logger.log(`[processMedicalPrescription] Order details:`, JSON.stringify(orderDetails, null, 2));
+
+        if (!orderDetails) {
+            this.logger.error(`[processMedicalPrescription] No orderDetails found in metadata`);
+            throw new Error(`No orderDetails found in order ${order.id}`);
+        }
+
+        // Validar que la orden tenga al menos productos o servicios
+        if ((!orderDetails.products || orderDetails.products.length === 0) && 
+            (!orderDetails.services || orderDetails.services.length === 0)) {
+            this.logger.error(`[processMedicalPrescription] Order has no products or services`);
+            throw new Error(`Order ${order.id} must have at least products or services`);
         }
 
         // Preparar userData
@@ -864,13 +881,77 @@ export class AppointmentEventSubscriber {
         };
 
         try {
+            // Procesar los appointments asociados a la prescripción
+            if (orderDetails.services && orderDetails.services.length > 0) {
+                this.logger.log(`[processMedicalPrescription] Found ${orderDetails.services.length} services to process`);
+                
+                for (const service of orderDetails.services) {
+                    this.logger.log(`[processMedicalPrescription] Processing service:`, JSON.stringify(service, null, 2));
+                    
+                    const appointmentId = service.id;
+                    if (!appointmentId) {
+                        this.logger.warn(`[processMedicalPrescription] Service without appointment ID found in order ${order.id}`);
+                        continue;
+                    }
+
+                    this.logger.log(`[processMedicalPrescription] Processing appointment ID: ${appointmentId}`);
+
+                    try {
+                        // Obtener la cita
+                        const appointment = await this.appointmentService.findOne(appointmentId);
+                        this.logger.log(`[processMedicalPrescription] Found appointment:`, JSON.stringify(appointment, null, 2));
+                        
+                        if (!appointment) {
+                            this.logger.warn(`[processMedicalPrescription] Appointment ${appointmentId} not found`);
+                            continue;
+                        }
+
+                        // Actualizar el estado de la cita a CONFIRMED
+                        this.logger.log(`[processMedicalPrescription] Updating appointment ${appointmentId} to CONFIRMED status`);
+                        const updateResult = await this.appointmentService.update(
+                            appointmentId,
+                            {
+                                status: AppointmentStatus.CONFIRMED,
+                            },
+                            userData,
+                        );
+                        this.logger.log(`[processMedicalPrescription] Update result:`, JSON.stringify(updateResult, null, 2));
+
+                        // Crear o actualizar el evento en el calendario
+                        try {
+                            const appointmentData = {
+                                appointmentId: appointment.id,
+                                patientId: metadata?.patientDetails?.id || '',
+                                staffId: appointment.staffId || orderDetails.staffId || '',
+                                serviceId: appointment.serviceId || service.serviceId || '',
+                                date: (appointment.start || new Date()).toISOString(),
+                                time: '',
+                                price: service.servicePrice || 0
+                            };
+
+                            this.logger.log(`[processMedicalPrescription] Creating/updating calendar event with data:`, JSON.stringify(appointmentData, null, 2));
+                            const eventResult = await this.createAppointmentEvent(order, appointmentData, userData);
+                            this.logger.log(`[processMedicalPrescription] Event creation/update result:`, JSON.stringify(eventResult, null, 2));
+                        } catch (eventError) {
+                            this.logger.error(`[processMedicalPrescription] Error processing event for appointment ${appointmentId}:`, eventError.stack);
+                            // No lanzamos el error para que no afecte el flujo principal
+                        }
+                    } catch (appointmentError) {
+                        this.logger.error(`[processMedicalPrescription] Error processing appointment ${appointmentId}:`, appointmentError.stack);
+                        // Continuamos con el siguiente appointment
+                    }
+                }
+            } else {
+                this.logger.log(`[processMedicalPrescription] No services found in order ${order.id}`);
+            }
+
             // Obtener el branchId del metadata como fallback
             const defaultBranchId = orderDetails.branchId;
             if (!defaultBranchId) {
                 throw new Error(`Missing branchId in order ${order.id}`);
             }
 
-            this.logger.log(`Processing outgoing operations for prescription medications`);
+            this.logger.log(`[processMedicalPrescription] Processing outgoing operations for prescription medications`);
 
             // Agrupar productos por storageId
             const productsByStorage: Record<string, { productId: string; quantity: number }[]> = {};
@@ -913,7 +994,7 @@ export class AppointmentEventSubscriber {
             );
 
             this.logger.log(
-                `Successfully processed all ${orderDetails.products.length} products for prescription order ${order.id}`,
+                `[processMedicalPrescription] Successfully processed all ${orderDetails.products.length} products for prescription order ${order.id}`,
             );
 
             return { success: true };

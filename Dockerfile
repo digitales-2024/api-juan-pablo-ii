@@ -7,6 +7,12 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # https://github.com/prisma/prisma/issues/25817#issuecomment-2530137579
 RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 
+# Configurar zona horaria para America/Lima
+ENV TZ=America/Lima
+RUN apk add --no-cache tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 ENV DIR=/app
 WORKDIR $DIR
 
@@ -15,11 +21,14 @@ ENV PORT=3000
 
 # Etapa de dependencias
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml .npmrc* ./
 COPY libs/*/package.json ./libs/
 # Instalar dependencias incluyendo devDependencies
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
- pnpm install --frozen-lockfile 
+    pnpm install --frozen-lockfile
+
+# Aprobar builds automáticamente (incluyendo bcrypt)
+#RUN pnpm approve-builds --yes
 
 # Etapa de build
 FROM base AS builder
