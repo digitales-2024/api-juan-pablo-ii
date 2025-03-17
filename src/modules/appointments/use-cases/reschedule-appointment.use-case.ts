@@ -103,21 +103,17 @@ export class RescheduleAppointmentUseCase {
                 throw new BadRequestException('Ya existe una cita confirmada para este doctor en esta fecha y hora');
             }
 
-            // Crear nueva cita con la fecha reprogramada
-            // Extraemos las propiedades que necesitamos de la cita original, sin incluir el ID
-            const { id: _, ...appointmentWithoutId } = originalAppointment;
+            // Crear nueva cita inicialmente sin el eventId
+            const { id: _, eventId: __, ...appointmentWithoutIdAndEvent } = originalAppointment;
 
-            // Primero creamos la cita sin eventId para evitar el error de unique constraint
+            // Crear nueva cita sin el eventId inicialmente
             const newAppointment = await this.appointmentRepository.create({
-                ...appointmentWithoutId,
+                ...appointmentWithoutIdAndEvent,
                 start: start,
                 end: end,
-                // Mantener el mismo estado que tenía la cita original
                 status: originalAppointment.status,
                 rescheduledFromId: id,
-                rescheduleReason: rescheduleAppointmentDto.rescheduleReason,
-                // No asignar eventId inicialmente para evitar el error de unique constraint
-                eventId: undefined
+                rescheduleReason: rescheduleAppointmentDto.rescheduleReason
             });
 
             this.logger.debug(`Nueva cita creada con ID: ${newAppointment.id}`);
@@ -126,12 +122,12 @@ export class RescheduleAppointmentUseCase {
             const updatedOriginalAppointment = await this.appointmentRepository.update(id, {
                 status: 'RESCHEDULED',
                 rescheduleReason: rescheduleAppointmentDto.rescheduleReason,
+                eventId: null // Removemos el eventId de la cita original
             });
 
-            this.logger.debug(`Cita ${id} actualizada a estado RESCHEDULED y nueva cita creada con ID: ${newAppointment.id}`);
+            this.logger.debug(`Cita ${id} actualizada a estado RESCHEDULED y eventId removido`);
 
             // Manejar el evento asociado si existe
-            let newEventId = undefined;
             if (originalAppointment.eventId) {
                 try {
                     this.logger.debug(`Procesando evento ${originalAppointment.eventId} asociado a la cita ${id}`);
@@ -152,17 +148,12 @@ export class RescheduleAppointmentUseCase {
                             }
                         });
 
-                        this.logger.debug(`Evento ${originalAppointment.eventId} actualizado con nuevas fechas`);
-
-                        // Asignar el mismo eventId a la nueva cita
-                        newEventId = originalAppointment.eventId;
-
-                        // Actualizar la nueva cita con el ID del evento
+                        // Ahora sí actualizamos la nueva cita con el eventId
                         await this.appointmentRepository.update(newAppointment.id, {
-                            eventId: newEventId
+                            eventId: originalAppointment.eventId
                         });
 
-                        this.logger.debug(`Cita reprogramada ${newAppointment.id} actualizada con el eventId: ${newEventId}`);
+                        this.logger.debug(`Evento ${originalAppointment.eventId} actualizado y asociado a la nueva cita ${newAppointment.id}`);
                     } else {
                         this.logger.warn(`No se encontró el evento ${originalAppointment.eventId} para actualizar`);
                     }
