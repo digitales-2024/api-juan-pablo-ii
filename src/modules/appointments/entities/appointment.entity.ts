@@ -78,4 +78,10 @@ export class Appointment {
 
   @ApiProperty({ required: false })
   event?: any;
+
+  @ApiProperty({
+    required: false,
+    description: 'ID de la orden asociada a la cita, especialmente útil para órdenes de prescripción médica'
+  })
+  orderId?: string;
 }

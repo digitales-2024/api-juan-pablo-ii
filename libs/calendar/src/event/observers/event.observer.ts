@@ -5,6 +5,7 @@ import { Order } from '@pay/pay/entities/order.entity';
 import { EventRepository } from '../repositories/event.repository';
 import { EventStatus } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma';
+import { AppointmentStatus } from '@prisma/client';
 
 @Injectable()
 export class EventObserver {
@@ -79,7 +80,7 @@ export class EventObserver {
 
             // Intentar buscar la cita directamente por el ID de la orden
             const appointmentByOrder = await this.prisma.appointment.findFirst({
-                where: { appointmentId: order.id }
+                where: { orderId: order.id }
             });
 
             if (appointmentByOrder) {
@@ -87,10 +88,14 @@ export class EventObserver {
 
                 if (!appointmentByOrder.eventId) {
                     this.logger.warn(`[EventObserver] La cita encontrada no tiene un evento asociado`);
+                    // Aunque no tenga evento asociado, actualizamos el estado de la cita
+                    await this.updateAppointmentToCancelled(appointmentByOrder.id, 'Orden cancelada');
                     return;
                 }
 
                 await this.updateEventToRed(appointmentByOrder.eventId);
+                // También actualizamos el estado de la cita
+                await this.updateAppointmentToCancelled(appointmentByOrder.id, 'Orden cancelada');
                 return;
             }
 
@@ -101,10 +106,14 @@ export class EventObserver {
 
         if (!appointment.eventId) {
             this.logger.warn(`[EventObserver] La cita ${appointmentId} no tiene un evento asociado`);
+            // Aunque no tenga evento asociado, actualizamos el estado de la cita
+            await this.updateAppointmentToCancelled(appointmentId, 'Orden cancelada');
             return;
         }
 
         await this.updateEventToRed(appointment.eventId);
+        // También actualizamos el estado de la cita
+        await this.updateAppointmentToCancelled(appointmentId, 'Orden cancelada');
     }
 
     /**
@@ -148,7 +157,7 @@ export class EventObserver {
                                 // Buscar en campos de texto que podrían contener el referenceId
                                 { notes: { contains: order.referenceId } },
                                 // Buscar por el ID de la orden
-                                { appointmentId: order.referenceId }
+                                { orderId: order.referenceId }
                             ]
                         }
                     });
@@ -160,6 +169,9 @@ export class EventObserver {
                             if (appointment.eventId) {
                                 this.logger.log(`[EventObserver] Procesando cita ${appointment.id} con eventId ${appointment.eventId}`);
                                 await this.updateEventToRed(appointment.eventId);
+
+                                // Actualizar el estado de la cita a CANCELLED
+                                await this.updateAppointmentToCancelled(appointment.id, 'Orden de prescripción cancelada');
                             }
                         }
 
@@ -204,7 +216,7 @@ export class EventObserver {
                 const appointmentsByOrderId = await this.prisma.appointment.findMany({
                     where: {
                         OR: [
-                            { appointmentId: order.id },
+                            { orderId: order.id },
                             // Buscar en campos de texto que podrían contener el ID de la orden
                             { notes: { contains: order.id } }
                         ]
@@ -218,6 +230,9 @@ export class EventObserver {
                         if (appointment.eventId) {
                             this.logger.log(`[EventObserver] Procesando cita ${appointment.id} con eventId ${appointment.eventId}`);
                             await this.updateEventToRed(appointment.eventId);
+
+                            // Actualizar el estado de la cita a CANCELLED
+                            await this.updateAppointmentToCancelled(appointment.id, 'Orden de prescripción cancelada');
                         }
                     }
 
@@ -261,7 +276,7 @@ export class EventObserver {
 
                     // Intentar buscar por appointmentId = service.id
                     const appointmentByServiceId = await this.prisma.appointment.findFirst({
-                        where: { appointmentId: service.id }
+                        where: { orderId: service.id }
                     });
 
                     if (appointmentByServiceId) {
@@ -273,6 +288,10 @@ export class EventObserver {
                         }
 
                         await this.updateEventToRed(appointmentByServiceId.eventId);
+
+                        // Actualizar el estado de la cita a CANCELLED
+                        await this.updateAppointmentToCancelled(appointmentByServiceId.id, 'Orden de prescripción cancelada');
+
                         continue;
                     }
 
@@ -291,6 +310,10 @@ export class EventObserver {
                             }
 
                             await this.updateEventToRed(appointmentByServiceId.eventId);
+
+                            // Actualizar el estado de la cita a CANCELLED
+                            await this.updateAppointmentToCancelled(appointmentByServiceId.id, 'Orden de prescripción cancelada');
+
                             continue;
                         }
                     }
@@ -302,6 +325,10 @@ export class EventObserver {
 
                 if (!appointment.eventId) {
                     this.logger.warn(`[EventObserver] La cita ${appointmentId} no tiene un evento asociado`);
+
+                    // Aún así, actualizar el estado de la cita a CANCELLED
+                    await this.updateAppointmentToCancelled(appointmentId, 'Orden de prescripción cancelada');
+
                     continue;
                 }
 
@@ -310,6 +337,10 @@ export class EventObserver {
                 // Actualizar el evento asociado a la cita
                 const result = await this.updateEventToRed(appointment.eventId);
                 this.logger.log(`[EventObserver] Resultado de actualización del evento: ${JSON.stringify(result)}`);
+
+                // Actualizar el estado de la cita a CANCELLED
+                await this.updateAppointmentToCancelled(appointmentId, 'Orden de prescripción cancelada');
+
             } catch (error) {
                 this.logger.error(
                     `[EventObserver] Error al procesar la cita ${appointmentId}:`,
@@ -424,6 +455,51 @@ export class EventObserver {
                 );
                 return null;
             }
+        }
+    }
+
+    /**
+     * Actualiza el estado de una cita a CANCELLED
+     * @param appointmentId ID de la cita a cancelar
+     * @param reason Motivo de la cancelación
+     */
+    private async updateAppointmentToCancelled(appointmentId: string, reason: string) {
+        this.logger.log(`[EventObserver] Actualizando cita ${appointmentId} a estado CANCELLED`);
+
+        try {
+            // Obtener el estado actual de la cita
+            const appointment = await this.prisma.appointment.findUnique({
+                where: { id: appointmentId }
+            });
+
+            if (!appointment) {
+                this.logger.warn(`[EventObserver] No se encontró la cita ${appointmentId}`);
+                return null;
+            }
+
+            // Solo actualizar a CANCELLED si no está ya cancelada o completada
+            if (appointment.status === AppointmentStatus.CANCELLED ||
+                appointment.status === AppointmentStatus.COMPLETED ||
+                appointment.status === AppointmentStatus.NO_SHOW) {
+                this.logger.log(`[EventObserver] Cita ${appointmentId} ya está en estado ${appointment.status}, no se actualiza`);
+                return appointment;
+            }
+
+            // Actualizar la cita a estado CANCELLED
+            const updatedAppointment = await this.prisma.appointment.update({
+                where: { id: appointmentId },
+                data: {
+                    status: AppointmentStatus.CANCELLED,
+                    cancellationReason: reason
+                }
+            });
+
+            this.logger.log(`[EventObserver] Cita ${appointmentId} actualizada a CANCELLED: ${JSON.stringify(updatedAppointment)}`);
+            return updatedAppointment;
+
+        } catch (error) {
+            this.logger.error(`[EventObserver] Error al actualizar cita ${appointmentId}: ${error.message}`, error.stack);
+            return null;
         }
     }
 }
