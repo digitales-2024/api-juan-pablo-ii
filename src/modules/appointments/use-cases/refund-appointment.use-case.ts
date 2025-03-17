@@ -73,6 +73,7 @@ export class RefundAppointmentUseCase {
                     this.logger.debug(`Actualizando evento ${appointment.eventId} a CANCELLED`);
                     await this.eventService.directUpdate(appointment.eventId, {
                         status: EventStatus.CANCELLED,
+                        color: 'red',
                         updatedAt: new Date()
                     });
                     this.logger.debug(`Evento ${appointment.eventId} actualizado a CANCELLED exitosamente`);
