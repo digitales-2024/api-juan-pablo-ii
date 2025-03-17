@@ -76,8 +76,6 @@ export class RescheduleAppointmentUseCase {
                 throw new BadRequestException('No hay turnos disponibles para este horario');
             }
 
-            this.logger.debug(`TURNO encontrado: ${JSON.stringify(validTurn)}`);
-
             // Verificar solapamientos
             const overlappingAppointments = await this.appointmentRepository.findMany({
                 where: {
@@ -98,79 +96,70 @@ export class RescheduleAppointmentUseCase {
 
             if (overlappingAppointments.length > 0) {
                 this.logger.warn(`Citas CONFIRMADAS solapadas encontradas: ${JSON.stringify(overlappingAppointments)}`);
-                this.logger.warn(`Total de citas solapadas: ${overlappingAppointments.length}`);
-                this.logger.warn(`Horarios de citas solapadas: ${overlappingAppointments.map(a => `${a.start.toISOString()} - ${a.end.toISOString()}`).join(', ')}`);
                 throw new BadRequestException('Ya existe una cita confirmada para este doctor en esta fecha y hora');
             }
 
-            // Crear nueva cita con la fecha reprogramada
-            // Extraemos las propiedades que necesitamos de la cita original, sin incluir el ID
-            const { id: _, ...appointmentWithoutId } = originalAppointment;
+            // Manejar el evento si existe en la cita original
+            let eventId = null;
+            if (originalAppointment.eventId) {
+                try {
+                    // Verificar que el evento exista
+                    const currentEvent = await this.eventService.findOne(originalAppointment.eventId);
+                    if (!currentEvent) {
+                        this.logger.warn(`No se encontró el evento ${originalAppointment.eventId} de la cita original`);
+                        throw new BadRequestException('El evento asociado a la cita no existe');
+                    }
 
-            // Primero creamos la cita sin eventId para evitar el error de unique constraint
+                    // Actualizar el evento con las nuevas fechas usando EventService
+                    await this.eventService.directUpdate(originalAppointment.eventId, {
+                        start: start,
+                        end: end,
+                        updatedAt: new Date()
+                    });
+
+                    this.logger.debug(`Evento ${originalAppointment.eventId} actualizado con nuevas fechas`);
+                    eventId = originalAppointment.eventId;
+                } catch (eventError) {
+                    this.logger.error(`Error al procesar el evento: ${eventError.message}`);
+                    throw new BadRequestException('Error al actualizar el evento asociado');
+                }
+            }
+
+            // PRIMERO: Actualizar la cita original y remover su eventId
+            await this.appointmentRepository.update(id, {
+                status: 'RESCHEDULED',
+                rescheduleReason: rescheduleAppointmentDto.rescheduleReason,
+                eventId: null // Removemos el eventId de la cita original
+            });
+
+            this.logger.debug(`Cita original ${id} actualizada a estado RESCHEDULED y eventId removido`);
+
+            // SEGUNDO: Crear nueva cita con el eventId
+            const { id: _, ...appointmentWithoutId } = originalAppointment;
             const newAppointment = await this.appointmentRepository.create({
                 ...appointmentWithoutId,
                 start: start,
                 end: end,
-                // Mantener el mismo estado que tenía la cita original
                 status: originalAppointment.status,
                 rescheduledFromId: id,
                 rescheduleReason: rescheduleAppointmentDto.rescheduleReason,
-                // No asignar eventId inicialmente para evitar el error de unique constraint
-                eventId: undefined
+                eventId: eventId // Asignamos el eventId que ya fue liberado de la cita original
             });
 
-            this.logger.debug(`Nueva cita creada con ID: ${newAppointment.id}`);
+            this.logger.debug(`Nueva cita creada con ID: ${newAppointment.id} y eventId: ${eventId}`);
 
-            // Actualizar la cita original
-            const updatedOriginalAppointment = await this.appointmentRepository.update(id, {
-                status: 'RESCHEDULED',
-                rescheduleReason: rescheduleAppointmentDto.rescheduleReason,
-            });
-
-            this.logger.debug(`Cita ${id} actualizada a estado RESCHEDULED y nueva cita creada con ID: ${newAppointment.id}`);
-
-            // Manejar el evento asociado si existe
-            let newEventId = undefined;
-            if (originalAppointment.eventId) {
-                try {
-                    this.logger.debug(`Procesando evento ${originalAppointment.eventId} asociado a la cita ${id}`);
-
-                    // Obtener el evento actual para preservar sus propiedades
-                    const currentEvent = await this.prisma.event.findUnique({
-                        where: { id: originalAppointment.eventId }
-                    });
-
-                    if (currentEvent) {
-                        // Actualizar el evento existente con las nuevas fechas
-                        await this.prisma.event.update({
-                            where: { id: originalAppointment.eventId },
-                            data: {
-                                start: start,
-                                end: end,
-                                updatedAt: new Date()
-                            }
-                        });
-
-                        this.logger.debug(`Evento ${originalAppointment.eventId} actualizado con nuevas fechas`);
-
-                        // Asignar el mismo eventId a la nueva cita
-                        newEventId = originalAppointment.eventId;
-
-                        // Actualizar la nueva cita con el ID del evento
-                        await this.appointmentRepository.update(newAppointment.id, {
-                            eventId: newEventId
-                        });
-
-                        this.logger.debug(`Cita reprogramada ${newAppointment.id} actualizada con el eventId: ${newEventId}`);
-                    } else {
-                        this.logger.warn(`No se encontró el evento ${originalAppointment.eventId} para actualizar`);
-                    }
-                } catch (eventError) {
-                    this.logger.error(`Error al procesar el evento asociado a la cita: ${eventError.message}`, eventError.stack);
+            // Verificación final
+            const finalAppointment = await this.appointmentRepository.findById(newAppointment.id);
+            if (!finalAppointment?.eventId && eventId) {
+                this.logger.error(`Verificación final falló: La nueva cita ${newAppointment.id} no tiene eventId`);
+                // Intentar recuperar
+                await this.appointmentRepository.update(newAppointment.id, { eventId });
+                
+                // Verificar una vez más
+                const recheck = await this.appointmentRepository.findById(newAppointment.id);
+                if (!recheck?.eventId) {
+                    throw new BadRequestException('Error en la verificación final de la reprogramación');
                 }
-            } else {
-                this.logger.debug(`La cita original no tiene un evento asociado, no se requiere actualización de evento`);
             }
 
             // Buscar órdenes asociadas a la cita original
@@ -178,21 +167,16 @@ export class RescheduleAppointmentUseCase {
 
             // Actualizar las órdenes para que apunten a la nueva cita
             if (orders && orders.length > 0) {
-                this.logger.debug(`Se encontraron ${orders.length} órdenes asociadas a la cita original`);
-
                 for (const order of orders) {
                     try {
-                        // Actualizar el referenceId de la orden para que apunte a la nueva cita
                         await this.orderService.update(order.id, {
                             referenceId: newAppointment.id
                         }, user);
                         this.logger.debug(`Orden ${order.id} actualizada con nuevo referenceId: ${newAppointment.id}`);
                     } catch (orderError) {
-                        this.logger.error(`Error al actualizar la orden ${order.id}: ${orderError.message}`, orderError.stack);
+                        this.logger.error(`Error al actualizar la orden ${order.id}: ${orderError.message}`);
                     }
                 }
-            } else {
-                this.logger.debug(`No se encontraron órdenes asociadas a la cita ${id}`);
             }
 
             // Registrar auditoría

@@ -7,6 +7,12 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # https://github.com/prisma/prisma/issues/25817#issuecomment-2530137579
 RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 
+# Configurar zona horaria para America/Lima
+ENV TZ=America/Lima
+RUN apk add --no-cache tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 ENV DIR=/app
 WORKDIR $DIR
 
