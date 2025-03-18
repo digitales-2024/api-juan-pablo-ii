@@ -117,7 +117,8 @@ export class PacientService {
    */
   async findAll(): Promise<Patient[]> {
     try {
-      return this.pacientRepository.findMany();
+      const patients = await this.pacientRepository.findMany();
+      return patients.reverse(); // Invierte el orden del array de resultados
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
