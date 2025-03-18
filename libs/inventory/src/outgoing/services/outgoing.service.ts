@@ -251,27 +251,25 @@ export class OutgoingService {
       //const movementData = await this.extractProductoIdQuantity(movement);
 
       // Recorrer los datos extraídos y llamar a createMovementStorage para cada producto y su cantidad
-      await Promise.all(
-        movementsList.map(async (item) => {
-          const { productId, quantity } = item;
+      for (const item of movementsList) {
+        const { productId, quantity } = item;
 
-          // Llamar a createMovementStorage
-          const idMovement =
-            await this.createMovementUseCase.createMovementStorage(
-              {
-                movementTypeId,
-                outgoingId: outgoing.id,
-                productId,
-                quantity,
-                date,
-                state,
-              },
-              user,
-            );
+        // Llamar a createMovementStorage
+        const idMovement =
+          await this.createMovementUseCase.createMovementStorage(
+            {
+              movementTypeId,
+              outgoingId: outgoing.id,
+              productId,
+              quantity,
+              date,
+              state,
+            },
+            user,
+          );
 
-          console.log(`Movimiento creado con ID: ${idMovement}`);
-        }),
-      );
+        console.log(`Movimiento creado con ID: ${idMovement}`);
+      }
       //registra y sumar ingreso al alamacen y al stock
       // Extraer los datos de movement y usarlos en createMovementStorage
       //const stockData = await this.extractProductoIdQuantity(movement);

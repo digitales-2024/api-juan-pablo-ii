@@ -40,7 +40,7 @@ export class CreateMedicalPrescriptionUseCase {
     private readonly appointmentService: AppointmentService,
     private readonly prescriptionGenerator: MedicalPrescriptionGenerator,
     private readonly serviceService: ServiceService,
-  ) {}
+  ) { }
 
   async execute(
     createDto: CreateMedicalPrescriptionBillingDto,
@@ -190,6 +190,18 @@ export class CreateMedicalPrescriptionUseCase {
         performedById: user.id,
         createdAt: new Date(),
       });
+
+      // Actualizar las citas con la referencia a la orden
+      for (const appointmentId of createDto.appointmentIds) {
+        try {
+          await this.appointmentService.update(appointmentId, {
+            orderId: order.id,
+          }, user);
+          this.logger.log(`Cita ${appointmentId} actualizada con orderId: ${order.id}`);
+        } catch (error) {
+          this.logger.error(`Error al actualizar cita ${appointmentId} con orderId: ${error.message}`);
+        }
+      }
 
       return {
         success: true,

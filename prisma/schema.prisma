@@ -576,7 +576,8 @@ model Appointment {
   rescheduledFrom   Appointment?  @relation("RescheduledAppointments", fields: [rescheduledFromId], references: [id])
   rescheduledFromId String?
   rescheduledTo     Appointment[] @relation("RescheduledAppointments")
-  appointmentId     String?
+  orderId           String?
+  order             Order?        @relation("AppointmentOrder", fields: [orderId], references: [id])
 
   type  AppointmentType @default(CONSULTA)
   notes String?
@@ -737,8 +738,9 @@ model Order {
   isActive       Boolean     @default(true)
 
   // Relations
-  payments  Payment[]      @relation("OrderPayments")
-  movements MovementType[]
+  payments     Payment[]      @relation("OrderPayments")
+  movements    MovementType[]
+  appointments Appointment[]  @relation("AppointmentOrder")
 
   // Audit fields
   createdAt DateTime @default(now()) @db.Timestamptz(6)
