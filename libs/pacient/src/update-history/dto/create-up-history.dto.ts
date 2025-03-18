@@ -61,7 +61,7 @@ export class CreateUpdateHistoryDto {
   })
   @IsBoolean()
   @IsOptional()
-  prescription?: boolean = false;
+  prescription?: boolean;
 
   @ApiProperty({
     description: 'ID de la receta médica',
@@ -102,7 +102,7 @@ export class CreateUpdateHistoryDto {
   })
   @IsBoolean()
   @IsOptional()
-  medicalLeave?: boolean = false;
+  medicalLeave?: boolean;
 
   @ApiProperty({
     description: 'Fecha de inicio del descanso médico',
