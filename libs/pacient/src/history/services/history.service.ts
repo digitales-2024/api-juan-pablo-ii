@@ -157,7 +157,9 @@ export class MedicalHistoryService {
    */
   async findAll(): Promise<MedicalHistory[]> {
     try {
-      return this.medicalHistoryRepository.findMany();
+      /*    return this.medicalHistoryRepository.findMany(); */
+      const medicalHistory = await this.medicalHistoryRepository.findMany();
+      return medicalHistory.reverse(); // Invierte el orden del array de resultados
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
       throw error;
