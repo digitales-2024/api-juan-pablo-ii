@@ -27,7 +27,7 @@ export class InventoryEventSubscriber {
     private readonly stockRepository: StockRepository,
     private readonly compensationService: CompensationService,
     private readonly outgoingService: OutgoingService,
-  ) { }
+  ) {}
 
   @OnEvent('order.completed')
   async handleOrderCompleted(payload: {
@@ -178,22 +178,18 @@ export class InventoryEventSubscriber {
       }
 
       // Crear un outgoing para cada almacén
-      await Promise.all(
-        Object.entries(productsByStorage).map(async ([storageId, products]) => {
-          const createOutgoingDto: CreateOutgoingDtoStorage = {
-            name: `Órden de venta ${order.code}`,
-            storageId: storageId,
-            date: new Date(),
-            state: true,
-            movement: products,
-          };
+      // Process each storage sequentially
+      for (const [storageId, products] of Object.entries(productsByStorage)) {
+        const createOutgoingDto: CreateOutgoingDtoStorage = {
+          name: `Órden de venta ${order.code}`,
+          storageId: storageId,
+          date: new Date(),
+          state: true,
+          movement: products,
+        };
 
-          await this.outgoingService.createOutgoing(
-            createOutgoingDto,
-            userData,
-          );
-        }),
-      );
+        await this.outgoingService.createOutgoing(createOutgoingDto, userData);
+      }
 
       this.logger.log(
         `Successfully processed all ${products.length} products for order ${order.id}`,
@@ -224,11 +220,16 @@ export class InventoryEventSubscriber {
       );
     }
 
-    this.logger.debug('Prescription metadata structure:', JSON.stringify(metadata, null, 2));
+    this.logger.debug(
+      'Prescription metadata structure:',
+      JSON.stringify(metadata, null, 2),
+    );
 
     const products = metadata?.orderDetails?.products as ProductMovement[];
     if (!Array.isArray(products) || products.length === 0) {
-      this.logger.log(`No products found in prescription order ${order.id}, skipping inventory processing`);
+      this.logger.log(
+        `No products found in prescription order ${order.id}, skipping inventory processing`,
+      );
       return;
     }
 
@@ -305,9 +306,12 @@ export class InventoryEventSubscriber {
         `Successfully processed all ${products.length} products for prescription order ${order.id}`,
       );
     } catch (error) {
-      this.logger.error('Error processing outgoing products in prescription order: ', {
-        error: error.message,
-      });
+      this.logger.error(
+        'Error processing outgoing products in prescription order: ',
+        {
+          error: error.message,
+        },
+      );
       throw error;
     }
   }
