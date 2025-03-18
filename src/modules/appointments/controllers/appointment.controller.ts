@@ -15,6 +15,7 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -28,6 +29,7 @@ import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
 import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
 import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
+import { AppointmentStatus } from '@prisma/client';
 
 @ApiTags('Appointments')
 @ApiBadRequestResponse({
@@ -90,8 +92,45 @@ export class AppointmentController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<{ appointments: Appointment[]; total: number }> {
-
     return this.appointmentService.findAllPaginated(page, limit);
+  }
+
+  /**
+   * Obtiene citas médicas por estado de forma paginada
+   */
+  @Get('status/:status/paginated')
+  @ApiOperation({ summary: 'Obtener citas médicas por estado de forma paginada' })
+  @ApiParam({
+    name: 'status',
+    enum: AppointmentStatus,
+    description: 'Estado de las citas a filtrar'
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página para la paginación',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de registros por página',
+  })
+  @ApiOkResponse({
+    description: 'Lista de citas médicas paginadas por estado',
+    type: [Appointment],
+  })
+  async findByStatusPaginated(
+    @Param('status') status: AppointmentStatus,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    // Convertir explícitamente a números y proporcionar valores por defecto
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+
+    return this.appointmentService.findByStatus(status, pageNum, limitNum);
   }
 
   @Get()

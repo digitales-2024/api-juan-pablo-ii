@@ -163,6 +163,75 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
     return { appointments, total };
   }
 
+  async findManyWithFilter(filter: any, page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
+    // Asegurar que page y limit sean números válidos y tengan valores predeterminados
+    const pageNum = typeof page === 'number' && !isNaN(page) ? page : 1;
+    const limitNum = typeof limit === 'number' && !isNaN(limit) ? Math.min(limit, 50) : 10;
+
+    const skip = (pageNum - 1) * limitNum;
+
+    const [total, appointments] = await Promise.all([
+      this.prisma.appointment.count({ where: filter }),
+      this.prisma.appointment.findMany({
+        where: filter,
+        skip,
+        take: limitNum,  // Asegurar que take siempre tenga un valor válido
+        select: {
+          id: true,
+          eventId: true,
+          staffId: true,
+          serviceId: true,
+          branchId: true,
+          patientId: true,
+          start: true,
+          end: true,
+          paymentMethod: true,
+          status: true,
+          cancellationReason: true,
+          isActive: true,
+          rescheduledFromId: true,
+          orderId: true,
+          type: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
+          patient: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              dni: true,
+            },
+          },
+          staff: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              userId: true,
+              cmp: true,
+            },
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          branch: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { start: 'desc' }
+      })
+    ]);
+
+    return { appointments, total };
+  }
+
   async findById(id: string): Promise<Appointment> {
     return this.prisma.appointment.findUnique({
       where: { id },
