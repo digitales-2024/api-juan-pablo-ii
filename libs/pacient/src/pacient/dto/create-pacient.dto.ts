@@ -32,7 +32,7 @@ export class CreatePatientDto {
   })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(20)
+  @MaxLength(12)
   @Transform(({ value }) => value.trim())
   dni: string;
 
