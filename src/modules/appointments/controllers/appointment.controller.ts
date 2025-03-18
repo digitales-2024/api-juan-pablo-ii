@@ -96,14 +96,12 @@ export class AppointmentController {
   }
 
   /**
-   * Obtiene citas médicas por estado de forma paginada
+   * Obtiene todas las citas médicas de forma paginada sin filtrar por estado
    */
-  @Get('status/:status/paginated')
-  @ApiOperation({ summary: 'Obtener citas médicas por estado de forma paginada' })
-  @ApiParam({
-    name: 'status',
-    enum: AppointmentStatus,
-    description: 'Estado de las citas a filtrar'
+  @Get('status/all/paginated')
+  @ApiOperation({
+    summary: 'Obtener TODAS las citas médicas sin filtrar por estado',
+    description: 'Endpoint especializado para obtener todas las citas médicas activas sin aplicar filtros de estado.'
   })
   @ApiQuery({
     name: 'page',
@@ -118,11 +116,10 @@ export class AppointmentController {
     description: 'Número de registros por página',
   })
   @ApiOkResponse({
-    description: 'Lista de citas médicas paginadas por estado',
+    description: 'Lista de todas las citas médicas paginadas',
     type: [Appointment],
   })
-  async findByStatusPaginated(
-    @Param('status') status: AppointmentStatus,
+  async findAllStatusPaginated(
     @Query('page') page: string,
     @Query('limit') limit: string,
   ): Promise<{ appointments: Appointment[]; total: number }> {
@@ -130,7 +127,56 @@ export class AppointmentController {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 10;
 
-    return this.appointmentService.findByStatus(status, pageNum, limitNum);
+    return this.appointmentService.findByStatus(undefined, pageNum, limitNum);
+  }
+
+  /**
+   * Obtiene citas médicas por estado de forma paginada
+   * Si el status es 'all', devuelve todas las citas activas sin filtrar por estado
+   */
+  @Get('status/:status/paginated')
+  @ApiOperation({
+    summary: 'Obtener citas médicas por estado de forma paginada',
+    description: 'Permite obtener citas médicas filtradas por estado de forma paginada. Usar "all" como valor del parámetro status para obtener TODAS las citas sin filtrar por estado.'
+  })
+  @ApiParam({
+    name: 'status',
+    required: true,
+    description: 'Estado de las citas a filtrar. Use el valor "all" para obtener TODAS las citas sin filtrar por estado.',
+    enum: [...Object.values(AppointmentStatus), 'all']
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página para la paginación',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de registros por página',
+  })
+  @ApiOkResponse({
+    description: 'Lista de citas médicas paginadas por estado o todas las citas si se usa "all"',
+    type: [Appointment],
+  })
+  async findByStatusPaginated(
+    @Param('status') status: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    // Convertir explícitamente a números y proporcionar valores por defecto
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+
+    // Validar si el status es válido o 'all'
+    const validStatus = Object.values(AppointmentStatus).includes(status as AppointmentStatus);
+
+    // Si el status es 'all' o no es válido, pasar undefined para obtener todas las citas
+    const appointmentStatus = (status === 'all' || !validStatus) ? undefined : status as AppointmentStatus;
+
+    return this.appointmentService.findByStatus(appointmentStatus, pageNum, limitNum);
   }
 
   @Get()

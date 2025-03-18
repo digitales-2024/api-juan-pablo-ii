@@ -9,18 +9,27 @@ export class FindAppointmentsByStatusUseCase {
 
     constructor(private readonly appointmentRepository: AppointmentRepository) { }
 
-    async execute(status: AppointmentStatus, page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
+    /**
+     * Busca citas médicas por estado o todas las citas si no se especifica un estado
+     * @param status Estado opcional para filtrar citas (undefined = todas)
+     * @param page Número de página
+     * @param limit Número de registros por página
+     * @returns Lista paginada de citas médicas según filtro
+     */
+    async execute(status?: AppointmentStatus, page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
         // Validar y asegurar que page y limit sean números válidos
         const pageNum = page && !isNaN(Number(page)) ? Number(page) : 1;
         const limitNum = limit && !isNaN(Number(limit)) ? Number(limit) : 10;
 
-        this.logger.debug(`Buscando citas con estado ${status}, página ${pageNum}, límite ${limitNum}`);
+        // Si se proporciona un estado, filtrar por estado; de lo contrario, obtener todas las citas activas
+        const filter = status
+            ? { status, isActive: true }
+            : { isActive: true };
+
+        this.logger.debug(`Buscando citas${status ? ` con estado ${status}` : ' (TODAS LAS CITAS)'}, página ${pageNum}, límite ${limitNum}`);
 
         const result = await this.appointmentRepository.findManyWithFilter(
-            {
-                status,
-                isActive: true
-            },
+            filter,
             pageNum,
             limitNum
         );

@@ -269,17 +269,17 @@ export class AppointmentService {
 
   /**
    * Busca citas médicas por estado de forma paginada
-   * @param status Estado de las citas a buscar
+   * @param status Estado de las citas a buscar (opcional). Usar undefined para obtener TODAS las citas
    * @param page Número de página
    * @param limit Límite de registros por página
-   * @returns Lista paginada de citas médicas que coinciden con el estado especificado
+   * @returns Lista paginada de citas médicas que coinciden con el estado especificado o TODAS las citas si no se especifica
    */
   async findByStatus(
-    status: AppointmentStatus,
+    status?: AppointmentStatus,
     page: number = 1,
     limit: number = 10
   ): Promise<{ appointments: Appointment[]; total: number }> {
-    this.logger.log(`findByStatus called with status: ${status}, page: ${page}, limit: ${limit}`);
+    this.logger.log(`findByStatus called with status: ${status || 'TODAS LAS CITAS'}, page: ${page}, limit: ${limit}`);
     try {
       return await this.findAppointmentsByStatusUseCase.execute(status, page, limit);
     } catch (error) {
