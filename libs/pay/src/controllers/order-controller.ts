@@ -40,7 +40,7 @@ import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 @Controller({ path: 'order', version: '1' })
 @Auth()
 export class OrderController {
-  constructor(private readonly orderService: OrderService) { }
+  constructor(private readonly orderService: OrderService) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear nueva orden' })
@@ -112,6 +112,20 @@ export class OrderController {
     return this.orderService.findOrderByStatus(status);
   }
 
+  @Get('/detailed/code/:code')
+  @ApiOperation({ summary: 'Obtener orden por código' })
+  @ApiParam({ name: 'id', description: 'Código de la orden' })
+  @ApiOkResponse({
+    description: 'Orden encontrada',
+    type: DetailedOrder,
+  })
+  @ApiBadRequestResponse({
+    description: 'Code de orden inválido',
+  })
+  findOneDetailedByCode(@Param('code') code: string): Promise<DetailedOrder> {
+    return this.orderService.findDetailedOrderByCode(code);
+  }
+
   @Get('/detailed/:id')
   @ApiOperation({ summary: 'Obtener orden por ID' })
   @ApiParam({ name: 'id', description: 'ID de la orden' })
@@ -126,19 +140,36 @@ export class OrderController {
     return this.orderService.findDetailedOrderById(id);
   }
 
-  @Get('/search/detailed/:id')
-  @ApiOperation({ summary: 'Obtener orden por ID' })
-  @ApiParam({ name: 'id', description: 'ID de la orden' })
+  @Get('/search/detailed/code/:code')
+  @ApiOperation({ summary: 'Obtener orden por código' })
+  @ApiParam({ name: 'code', description: 'Código de la orden' })
   @ApiOkResponse({
     description: 'Orden encontrada',
     type: [DetailedOrder],
   })
   @ApiBadRequestResponse({
-    description: 'ID de orden inválido',
+    description: 'Código de orden inválido',
   })
-  searchOneDetailed(@Param('id') id: string): Promise<DetailedOrder[]> {
-    return this.orderService.searchDetailedOrderById(id);
+  searchOneDetailed(@Param('code') code: string): Promise<DetailedOrder[]> {
+    return this.orderService.searchDetailedOrderByCode(code);
   }
+
+  //No direct relationship with Patient Dni in Order Table
+  // @Get('/search/detailed/:dni')
+  // @ApiOperation({ summary: 'Obtener orden por dni del paciente' })
+  // @ApiParam({ name: 'dni', description: 'Dni del paciente en la orden' })
+  // @ApiOkResponse({
+  //   description: 'Orden encontrada',
+  //   type: [DetailedOrder],
+  // })
+  // @ApiBadRequestResponse({
+  //   description: 'Dni del paciente para la órden inválido',
+  // })
+  // findDetailedOrderByPatientDni(
+  //   @Param('dni') dni: string,
+  // ): Promise<DetailedOrder[]> {
+  //   return this.orderService.findDetailedOrderByPatientDni(dni);
+  // }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener orden por ID' })
