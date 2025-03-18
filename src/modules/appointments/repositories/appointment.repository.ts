@@ -121,7 +121,7 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
           cancellationReason: true,
           isActive: true,
           rescheduledFromId: true,
-          appointmentId: true,
+          orderId: true,
           type: true,
           notes: true,
           createdAt: true,

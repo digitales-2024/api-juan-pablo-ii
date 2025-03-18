@@ -66,4 +66,9 @@ export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
   @IsString()
   @IsOptional()
   eventId?: string;
+
+  @ApiProperty({ required: false, description: 'ID de la orden asociada a la cita' })
+  @IsString()
+  @IsOptional()
+  orderId?: string;
 }

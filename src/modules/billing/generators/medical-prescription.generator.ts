@@ -40,8 +40,8 @@ export class MedicalPrescriptionGenerator extends BaseOrderGenerator {
       status: OrderStatus.PENDING,
       movementTypeId: '',
       referenceId: input.recipeId, // Usamos el primer ID de cita como referencia
-      sourceId: input.patientId,
-      targetId: input.branchId,
+      sourceId: '',
+      targetId: '',
       subtotal: 0, // Estos valores deberán ser calculados por otro servicio
       tax: 0,
       total: input.amountPaid || 0,
