@@ -162,4 +162,84 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
 
     return { appointments, total };
   }
+
+  async findById(id: string): Promise<Appointment> {
+    return this.prisma.appointment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        eventId: true,
+        staffId: true,
+        serviceId: true,
+        branchId: true,
+        patientId: true,
+        start: true,
+        end: true,
+        paymentMethod: true,
+        status: true,
+        cancellationReason: true,
+        noShowReason: true,
+        isActive: true,
+        rescheduleReason: true,
+        rescheduledFromId: true,
+        orderId: true,
+        type: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            dni: true,
+            phone: true,
+            email: true,
+          },
+        },
+        staff: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            userId: true,
+            cmp: true,
+            email: true,
+            phone: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            price: true,
+          },
+        },
+        branch: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            phone: true,
+          },
+        },
+        rescheduledFrom: {
+          select: {
+            id: true,
+            start: true,
+            end: true,
+          },
+        },
+        order: {
+          select: {
+            id: true,
+            code: true,
+            total: true,
+            status: true,
+          },
+        },
+      },
+    });
+  }
 }
