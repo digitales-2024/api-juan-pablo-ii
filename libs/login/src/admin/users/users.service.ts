@@ -115,7 +115,7 @@ export class UsersService {
         });
 
         // Enviamos el usuario al correo con la contraseña temporal
-        const emailResponse = await this.eventEmitter.emitAsync(
+        /*    const emailResponse = await this.eventEmitter.emitAsync(
           'user.welcome-admin-first',
           {
             name: newUser.name.toUpperCase(),
@@ -127,7 +127,7 @@ export class UsersService {
 
         if (emailResponse.every((response) => response !== true)) {
           throw new BadRequestException('No se pudo enviar correo electrónico');
-        }
+        } */
 
         const userRoles: Omit<Rol, 'description'>[] = [];
 
