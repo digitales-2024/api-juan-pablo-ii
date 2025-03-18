@@ -49,6 +49,9 @@ export class PrescriptionRepository extends BaseRepository<Prescription> {
     offset: number = 0,
   ): Promise<PrescriptionWithPatient[]> {
     const prescriptions = await this.prisma.prescription.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
       take: limit,
       skip: offset,
       include: {
