@@ -86,7 +86,57 @@ export class RefundAppointmentUseCase {
             }
 
             // Buscar órdenes asociadas a la cita
-            const orders = await this.orderService.findOrdersByReferenceId(id);
+            let orders = await this.orderService.findOrdersByReferenceId(id);
+
+            // Si es una cita reprogramada y no se encontraron órdenes, buscar en la cita original
+            if (appointment.rescheduledFromId && (!orders || orders.length === 0)) {
+                this.logger.debug(`No se encontraron órdenes para la cita reprogramada ${id}, buscando en la cita original ${appointment.rescheduledFromId}`);
+                orders = await this.orderService.findOrdersByReferenceId(appointment.rescheduledFromId);
+            }
+
+            // Si hay un orderId específico en la cita, asegurarse de incluirlo
+            if (appointment.orderId && (!orders || !orders.some(o => o.id === appointment.orderId))) {
+                this.logger.debug(`Verificando orden específica ${appointment.orderId} asociada a la cita`);
+                try {
+                    const specificOrder = await this.orderService.findOrderById(appointment.orderId);
+                    if (specificOrder) {
+                        orders = orders || [];
+                        if (!orders.some(o => o.id === specificOrder.id)) {
+                            orders.push(specificOrder);
+                        }
+                    }
+                } catch (orderError) {
+                    this.logger.error(`Error al buscar la orden específica ${appointment.orderId}: ${orderError.message}`);
+                }
+            }
+
+            // Si aún no se encuentran órdenes, buscar en los metadatos de las órdenes existentes
+            if (!orders || orders.length === 0) {
+                this.logger.debug(`Buscando órdenes en metadatos para la cita ${id}`);
+                try {
+                    const allOrders = await this.orderService.findAllActive();
+                    const ordersWithAppointment = allOrders.filter(order => {
+                        try {
+                            if (order.metadata) {
+                                const metadata = JSON.parse(String(order.metadata));
+                                return metadata?.orderDetails?.services?.some(
+                                    service => service && service.id === id
+                                );
+                            }
+                            return false;
+                        } catch (e) {
+                            return false;
+                        }
+                    });
+
+                    if (ordersWithAppointment.length > 0) {
+                        orders = ordersWithAppointment;
+                        this.logger.debug(`Se encontraron ${orders.length} órdenes en metadatos`);
+                    }
+                } catch (metadataError) {
+                    this.logger.error(`Error al buscar en metadatos: ${metadataError.message}`);
+                }
+            }
 
             // Reembolsar órdenes y pagos asociados
             if (orders && orders.length > 0) {
@@ -94,6 +144,8 @@ export class RefundAppointmentUseCase {
                     await this.orderService.refundOrder(order.id, user);
                     this.logger.debug(`Orden ${order.id} marcada para rembolso`);
                 }
+            } else {
+                this.logger.warn(`No se encontraron órdenes para reembolsar asociadas a la cita ${id}`);
             }
 
             // Registrar auditoría
