@@ -160,5 +160,7 @@ export class OutgoingIncomingUpdateMovementDto extends PartialType(
   @ApiProperty({
     required: false,
   })
+  @IsString()
+  @IsOptional()
   id?: string;
 }
