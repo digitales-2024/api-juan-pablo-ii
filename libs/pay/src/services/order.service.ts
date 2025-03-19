@@ -222,16 +222,38 @@ export class OrderService {
     }
   }
 
+    /**
+   * Busca una orden por su identificador
+   * @param id - Identificador de la orden
+   * @returns La orden encontrada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+    async findDetailedOrderByCode(code: string): Promise<DetailedOrder> {
+      try {
+        const response = (await this.orderRepository.findOne({
+          where: {
+            code: code,
+          },
+          include: {
+            payments: true,
+          },
+        })) as DetailedOrder;
+        return response;
+      } catch (error) {
+        this.errorHandler.handleError(error, 'getting');
+      }
+    }
+
   /**
    * Busca una orden por su identificador
    * @param id - Identificador de la orden
    * @returns La orden encontrada
    * @throws {BadRequestException} Si la orden no se encuentra
    */
-  async searchDetailedOrderById(id: string): Promise<DetailedOrder[]> {
+  async searchDetailedOrderByCode(code: string): Promise<DetailedOrder[]> {
     try {
       const results =
-        id === 'None'
+        code === 'None'
           ? ((await this.orderRepository.findMany({
             where: {
               isActive: true,
@@ -247,8 +269,8 @@ export class OrderService {
           : [
             (await this.orderRepository.findOne({
               where: {
-                id: {
-                  contains: id,
+                code: {
+                  contains: code,
                   mode: 'insensitive',
                 },
               },
@@ -256,13 +278,46 @@ export class OrderService {
                 payments: true,
               },
             })) as DetailedOrder,
+
           ];
+
+        if (results[0] === null) {
+          return [];
+        }
 
       return results;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
   }
+
+  //No existe relacion en Order para el paciente aparte de la metadata
+    /**
+   * Busca una orden por su identificador
+   * @param id - Identificador de la orden
+   * @returns La orden encontrada
+   * @throws {BadRequestException} Si la orden no se encuentra
+   */
+    // async findDetailedOrderByPatientDni(dni: string): Promise<DetailedOrder[]> {
+    //   try {
+    //     const results = await this.orderRepository.findMany({
+    //       where: {
+    //         isActive: true,
+    //         dni: dni
+    //       },
+    //       orderBy: {
+    //         date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
+    //       },
+    //       include: {
+    //         payments: true,
+    //       },
+    //     }) as DetailedOrder[]
+  
+    //     return results;
+    //   } catch (error) {
+    //     this.errorHandler.handleError(error, 'getting');
+    //   }
+    // }
 
   /**
    * Obtiene todas las órdenes

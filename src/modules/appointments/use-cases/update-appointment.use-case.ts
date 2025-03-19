@@ -58,6 +58,7 @@ export class UpdateAppointmentUseCase {
           ...(updateAppointmentDto.rescheduledFromId && {
             rescheduledFromId: updateAppointmentDto.rescheduledFromId,
           }),
+          ...(updateAppointmentDto.orderId && { orderId: updateAppointmentDto.orderId }),
         };
 
         // Actualizar la cita
