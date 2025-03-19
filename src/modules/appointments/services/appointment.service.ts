@@ -21,6 +21,7 @@ import {
   NoShowAppointmentUseCase,
   RefundAppointmentUseCase,
   RescheduleAppointmentUseCase,
+  FindAppointmentsByStatusUseCase,
 } from '../use-cases';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { ServiceService } from 'src/modules/services/services/service.service';
@@ -28,6 +29,7 @@ import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
 import { RefundAppointmentDto } from '../dto/refund-appointment.dto';
 import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
+import { AppointmentStatus } from '@prisma/client';
 
 /**
  * Servicio que implementa la lógica de negocio para citas médicas.
@@ -46,6 +48,7 @@ export class AppointmentService {
     private readonly deleteAppointmentsUseCase: DeleteAppointmentsUseCase,
     private readonly reactivateAppointmentsUseCase: ReactivateAppointmentsUseCase,
     private readonly findAppointmentsPaginatedUseCase: FindAppointmentsPaginatedUseCase,
+    private readonly findAppointmentsByStatusUseCase: FindAppointmentsByStatusUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
     private readonly noShowAppointmentUseCase: NoShowAppointmentUseCase,
     private readonly refundAppointmentUseCase: RefundAppointmentUseCase,
@@ -259,6 +262,26 @@ export class AppointmentService {
   async findAllPaginated(page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
     try {
       return await this.findAppointmentsPaginatedUseCase.execute(page, limit);
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca citas médicas por estado de forma paginada
+   * @param status Estado de las citas a buscar (opcional). Usar undefined para obtener TODAS las citas
+   * @param page Número de página
+   * @param limit Límite de registros por página
+   * @returns Lista paginada de citas médicas que coinciden con el estado especificado o TODAS las citas si no se especifica
+   */
+  async findByStatus(
+    status?: AppointmentStatus,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    this.logger.log(`findByStatus called with status: ${status || 'TODAS LAS CITAS'}, page: ${page}, limit: ${limit}`);
+    try {
+      return await this.findAppointmentsByStatusUseCase.execute(status, page, limit);
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
