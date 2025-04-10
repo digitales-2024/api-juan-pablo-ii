@@ -91,7 +91,7 @@ EOL
                                 touch .env.frontend && \
                                 cat .env.backend >> .env && \
                                 cat .env.frontend >> .env && \
-                                docker compose up -d --no-deps ${PROJECT_TRIPLET}
+                                docker compose up -d
                             """
                         }
                     }
