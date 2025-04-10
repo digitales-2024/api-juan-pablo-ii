@@ -16,10 +16,10 @@ pipeline {
         // VPS setup
         //
         // FIXME:
-        REMOTE_USER = "ansible"
-        REMOTE_IP = credentials("acide-elastika-01")
+        REMOTE_USER = "docker_admin"
+        REMOTE_IP = credentials("juanpablo-vps-prod")
         // Folder where docker-compose and .env files are placed
-        REMOTE_FOLDER = "/home/${REMOTE_USER}/docker/${PROJECT_NAME}-${PROJECT_STAGE}/"
+        REMOTE_FOLDER = "/opt/docker/compose/core/cmjuanpabloii/"
 
         //
         // Docker registry setup
@@ -61,7 +61,7 @@ pipeline {
                     }
 
                     withCredentials(credentialsList) {
-                        sshagent(['ssh-deploy']) {
+                        sshagent(['juanpablo-ssh-prod']) {
                             // Create a temporary script that will create the .env file
                             // This enables us to use shell variables to properly handle 
                             // the credentials without using binding.getVariable()
@@ -93,10 +93,7 @@ EOL
                                 touch .env.frontend && \
                                 cat .env.backend >> .env && \
                                 cat .env.frontend >> .env && \
-                                docker compose -f docker-compose.yml \
-                                    -f docker-compose.db.yml \
-                                    -f docker-compose.backend.yml \
-                                    up -d --no-deps'
+                                docker compose up -d --no-deps ${PROJECT_TRIPLET}
                             """
                         }
                     }
