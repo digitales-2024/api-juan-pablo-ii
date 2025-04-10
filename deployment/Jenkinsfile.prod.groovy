@@ -15,10 +15,8 @@ pipeline {
         //
         // VPS setup
         //
-        // FIXME:
         REMOTE_USER = "docker_admin"
         REMOTE_IP = credentials("juanpablo-vps-prod")
-        // Folder where docker-compose and .env files are placed
         REMOTE_FOLDER = "/opt/docker/compose/core/cmjuanpabloii/"
 
         //
