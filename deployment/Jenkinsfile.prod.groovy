@@ -91,7 +91,7 @@ EOL
                                 touch .env.frontend && \
                                 cat .env.backend >> .env && \
                                 cat .env.frontend >> .env && \
-                                docker compose up -d
+                                docker compose up -d'
                             """
                         }
                     }
