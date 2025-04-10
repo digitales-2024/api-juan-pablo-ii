@@ -7,7 +7,7 @@ services:
       juanpablo-db-prod:
         condition: service_healthy
     env_file:
-      - .env
+      - .env.backend
     deploy:
       resources:
         limits:
@@ -25,18 +25,18 @@ services:
       juanpablo-backend-prod:
         condition: service_started
     env_file:
-      - .env
+      - .env.frontend
     networks:
       - juanpablo-network-prod
-      - proxy
+      - traefik3_proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.juanpablo-staging.rule=Host(`staging-juanpablo-front.acide.win`)"
+      - "traefik.http.routers.juanpablo-staging.rule=Host(`admin.cmjuanpabloii.com`)"
       - "traefik.http.routers.juanpablo-staging.entrypoints=websecure"
       - "traefik.http.routers.juanpablo-staging.tls=true"
       - "traefik.http.routers.juanpablo-staging.tls.certresolver=dns-cloudflare"
-      - "traefik.http.routers.juanpablo-staging.tls.domains[0].main=acide.win"
-      - "traefik.http.routers.juanpablo-staging.tls.domains[0].sans=*.acide.win"
+      - "traefik.http.routers.juanpablo-staging.tls.domains[0].main=cmjuanpabloii.com"
+      - "traefik.http.routers.juanpablo-staging.tls.domains[0].sans=*.cmjuanpabloii.com"
       - "traefik.http.services.juanpablo-staging.loadbalancer.server.port=3000"
 
   juanpablo-db-prod:
@@ -60,8 +60,8 @@ services:
       - postgres_data_stage:/var/lib/postgresql/data
       - ./db:/docker-entrypoint-initdb.d
     environment:
-      POSTGRES_USER: "root"
-      POSTGRES_PASSWORD: "root"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: "juanpabloii"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U root -d juanpabloii -h localhost -p 5432"]
@@ -72,8 +72,15 @@ services:
     networks:
       - juanpablo-network-prod
 
+volumes:
+  postgres_data_stage:
+    # Para persistencia de datos - comentado para revisión
+    # driver: local
+    # driver_opts:
+    #   type: none
+    #   device: /path/to/persistent/storage/postgres
+    #   o: bind
+
 networks:
   juanpablo-network-prod:
     driver: bridge
-  proxy:
-    external: true
