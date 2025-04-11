@@ -126,42 +126,13 @@ export class AppointmentService {
    * Obtiene todas las citas médicas
    */
 
-  /* 
-  registros optenidos 
-  model Appointment {
-  id                 String            @id @default(uuid())
-  branchId           String
-etc...
-}
-fin
-
-  🚀 ~ AppointmentService ~ user: {
-    id: '8995a857-c3d1-4254-af10-b6950dfb9c83',
-    name: 'alexjoseluis',
-    email: 'alexjoseluis@admin.com',
-    phone: '+51923456899',
-    isSuperAdmin: false,
-    roles: [
-      {
-        id: 'e63269a1-1476-4de3-8be4-f23f65e8af40',
-        name: 'ADMINISTRATIVO' otros roles //SUPER_ADMIN
-      }
-    ]
-  } 
-    
-  model Staff {
-  id           String          @id @default(uuid())
-  userId       String?
-  name         String
-  branchId     String?
-  branch       Branch?         @relation(fields: [branchId], references: [id])
-}
-  
-model Branch {
-  id       String  @id @default(uuid())
-  name     String //solo existen dos sucursales JLBYR, Yanahuara
- etc...
-}*/
+  /*   🚀 ~ AppointmentService ~ userBranch: {
+    id: '6d7c4e62-68b2-446e-8859-55cfc7c94301',
+    isSuperAdmin: true,
+    rol: 'SUPER_ADMIN',
+    staffId: null,
+    branchId: null
+  } */
   async findAll(
     startDate?: Date,
     endDate?: Date,

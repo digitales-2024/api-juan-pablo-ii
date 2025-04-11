@@ -14,30 +14,35 @@ export const GetUserBranch = createParamDecorator(
 
     if (!user) throw new InternalServerErrorException('Usuario no encontrado');
 
-    // Datos básicos del usuario
+    // Determinar el rol principal como string
+    let rol = 'USER';
+    if (user.isSuperAdmin) {
+      rol = 'SUPER_ADMIN';
+    } else if (user.roles && user.roles.length > 0) {
+      // Priorizar MEDICO y ADMINISTRATIVO
+      const medicoRole = user.roles.find((r) => r.name === 'MEDICO');
+      const adminRole = user.roles.find((r) => r.name === 'ADMINISTRATIVO');
+
+      if (medicoRole) {
+        rol = 'MEDICO';
+      } else if (adminRole) {
+        rol = 'ADMINISTRATIVO';
+      } else {
+        rol = user.roles[0].name;
+      }
+    }
+
+    // Datos básicos del usuario (formato específico solicitado)
     const userData: UserBranchData = {
       id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
       isSuperAdmin: user.isSuperAdmin,
-      roles: user.roles,
+      rol, // Solo un string, no un array
       staffId: null,
       branchId: null,
     };
 
-    // Si es superadmin, no necesitamos buscar información de staff
-    if (user.isSuperAdmin) {
-      return userData;
-    }
-
-    // Verificamos si es ADMINISTRATIVO o MEDICO buscando en los roles
-    const isAdminOrMedico = user.roles.some(
-      (rol) => rol.name === 'ADMINISTRATIVO' || rol.name === 'MEDICO',
-    );
-
-    if (isAdminOrMedico) {
-      // Buscamos si existe un staff asociado a este usuario
+    // Si no es superadmin, buscar si está asociado a un staff
+    if (!user.isSuperAdmin && (rol === 'MEDICO' || rol === 'ADMINISTRATIVO')) {
       const staff = await prisma.staff.findFirst({
         where: {
           userId: user.id,
