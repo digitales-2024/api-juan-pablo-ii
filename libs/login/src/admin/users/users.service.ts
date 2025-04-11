@@ -60,13 +60,13 @@ export class UsersService {
           }
 
           // Verificar que no se pueda crear un usuario con el rol superadmin
-          const rolIsSuperAdmin = await this.rolService.isRolSuperAdmin(rol);
+          /*   const rolIsSuperAdmin = await this.rolService.isRolSuperAdmin(rol);
 
           if (rolIsSuperAdmin) {
             throw new BadRequestException(
               'Solo puede existir un SUPER_ADMIN, No puedes crear un usuario con este rol selecione otro',
             );
-          }
+          } */
         }
 
         // Verificamos si el email ya existe y este activo
@@ -885,7 +885,9 @@ export class UsersService {
 
         // Verificamos que no actualice su propia contraseña
         if (userDB.id === user.id) {
-          throw new BadRequestException('You cannot update your own password');
+          throw new BadRequestException(
+            'No puedes actualizar tu propia contraseña',
+          );
         }
 
         await prisma.user.update({
