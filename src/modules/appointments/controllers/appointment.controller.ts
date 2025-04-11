@@ -215,11 +215,11 @@ export class AppointmentController {
   findAll(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    @GetUser() user?: UserData,
+    /*     @GetUser() user?: UserData, */
   ): Promise<Appointment[]> {
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
-    return this.appointmentService.findAll(start, end, user);
+    return this.appointmentService.findAll(start, end /* , user */);
   }
 
   /**
