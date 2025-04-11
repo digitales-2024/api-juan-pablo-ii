@@ -14,7 +14,7 @@ import {
   UpdatePrescriptionDto,
   DeletePrescriptionDto,
 } from '../dto';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { recipeErrorMessages } from '../errors/errors-recipe';
@@ -231,14 +231,47 @@ export class PrescriptionService {
     }
   }
 
+  /**
+   * Crea un filtro de sucursal basado en los datos del usuario
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns Filtro para usar en consultas Prisma
+   */
+  private createBranchFilter(userBranch?: UserBranchData): any {
+    // Si no hay datos de usuario o es SuperAdmin, no aplicar filtro por sucursal
+    if (
+      !userBranch ||
+      userBranch.isSuperAdmin ||
+      userBranch.rol === 'SUPER_ADMIN' ||
+      userBranch.rol === 'MEDICO'
+    ) {
+      return {};
+    }
+
+    // Si es un usuario administrativo, filtrar por su sucursal
+    if (userBranch.rol === 'ADMINISTRATIVO' && userBranch.branchId) {
+      return { branchId: userBranch.branchId };
+    }
+
+    return {};
+  }
+
   async findPrescriptionsWithPatient(
     limit = 10,
     offset = 0,
+    userBranch?: UserBranchData,
   ): Promise<PrescriptionWithPatient[]> {
     try {
+      // Crear el filtro basado en el rol del usuario
+      const branchFilter = this.createBranchFilter(userBranch);
+
+      this.logger.log(
+        `Buscando prescripciones con filtro: ${JSON.stringify(branchFilter)}`,
+      );
+
       return await this.prescriptionRepository.findPrescriptionsWithPatient(
         limit,
         offset,
+        branchFilter,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
