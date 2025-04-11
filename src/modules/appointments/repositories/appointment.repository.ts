@@ -11,6 +11,7 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
   async findByDateRange(
     startDate: Date,
     endDate: Date,
+    branchFilter: any = {}, // Agregar parámetro para el filtro de sucursal
   ): Promise<Appointment[]> {
     return this.findMany({
       where: {
@@ -19,6 +20,7 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
           lte: endDate,
         },
         isActive: true,
+        ...branchFilter, // Añadir el filtro de sucursal si existe
       },
       select: {
         id: true,
@@ -100,14 +102,21 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
   async findManyPaginated(
     page: number = 1,
     limit: number = 10,
+    branchFilter: any = {}, // Agregar el parámetro para filtro de sucursal
   ): Promise<{ appointments: Appointment[]; total: number }> {
-    const take = Math.min(limit, 50); // Máximo 50 registros
+    const take = Math.min(limit, 50);
     const skip = (page - 1) * take;
 
+    // Aplicar el filtro de sucursal junto con el filtro base
+    const whereClause = {
+      isActive: true,
+      ...branchFilter,
+    };
+
     const [total, appointments] = await Promise.all([
-      this.prisma.appointment.count({ where: { isActive: true } }), // Contar solo citas activas
+      this.prisma.appointment.count({ where: whereClause }),
       this.prisma.appointment.findMany({
-        where: { isActive: true },
+        where: whereClause,
         skip,
         take,
         select: {
@@ -171,19 +180,18 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
     page: number = 1,
     limit: number = 10,
   ): Promise<{ appointments: Appointment[]; total: number }> {
-    // Asegurar que page y limit sean números válidos y tengan valores predeterminados
-    const pageNum = typeof page === 'number' && !isNaN(page) ? page : 1;
-    const limitNum =
-      typeof limit === 'number' && !isNaN(limit) ? Math.min(limit, 50) : 10;
+    // El filtro ya incluye tanto el estado como el filtro de sucursal
+    // No es necesario modificar este método si se pasa el filtro completo
 
-    const skip = (pageNum - 1) * limitNum;
+    const take = Math.min(limit, 50);
+    const skip = (page - 1) * take;
 
     const [total, appointments] = await Promise.all([
       this.prisma.appointment.count({ where: filter }),
       this.prisma.appointment.findMany({
         where: filter,
         skip,
-        take: limitNum, // Asegurar que take siempre tenga un valor válido
+        take,
         select: {
           id: true,
           eventId: true,
@@ -240,9 +248,13 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
     return { appointments, total };
   }
 
-  async findById(id: string): Promise<Appointment> {
-    return this.prisma.appointment.findUnique({
-      where: { id },
+  async findById(id: string, branchFilter: any = {}): Promise<Appointment> {
+    return this.prisma.appointment.findFirst({
+      where: {
+        id,
+        isActive: true,
+        ...branchFilter, // Aplicar filtro de sucursal si existe
+      },
       select: {
         id: true,
         eventId: true,
