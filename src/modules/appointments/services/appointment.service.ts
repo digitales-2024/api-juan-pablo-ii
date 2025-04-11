@@ -161,9 +161,8 @@ model Branch {
   async findAll(
     startDate?: Date,
     endDate?: Date,
-    user?: UserData,
+    /*    user?: UserData, */
   ): Promise<Appointment[]> {
-    console.log('🚀 ~ AppointmentService ~ user:', user);
     this.logger.log(
       `findAll called with startDate: ${startDate}, endDate: ${endDate}`,
     );
@@ -172,7 +171,7 @@ model Branch {
         const appointments = await this.appointmentRepository.findByDateRange(
           startDate,
           endDate,
-          user,
+          /*      user, */
         );
         this.logger.log(`Appointments found: ${JSON.stringify(appointments)}`);
         return appointments;
