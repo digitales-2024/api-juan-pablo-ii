@@ -117,7 +117,7 @@ export class CreateMedicalPrescriptionBillingDto {
   currency?: string;
 
   @ApiProperty({
-    description: 'Número de voucher o referencia del pago',
+    description: 'Número de Comprobante o referencia del pago',
     required: false,
   })
   @IsString()

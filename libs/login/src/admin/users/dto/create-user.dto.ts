@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsMobilePhone,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -57,6 +58,7 @@ export class CreateUserDto {
   })
   @IsString()
   @IsMobilePhone()
+  @IsOptional()
   @Transform(({ value }) => value.trim())
   phone?: string;
 

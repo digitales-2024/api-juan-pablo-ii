@@ -81,7 +81,9 @@ export class StaffScheduleService {
   async findAll(): Promise<StaffSchedule[]> {
     try {
       const staffSchedule =
-        await this.staffScheduleRepository.findWithRelations();
+        await this.staffScheduleRepository.findWithRelations(
+          
+        );
       return staffSchedule.reverse();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');

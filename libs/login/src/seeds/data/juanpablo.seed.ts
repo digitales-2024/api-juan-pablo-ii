@@ -7,7 +7,7 @@ export interface Branch {
 export const BranchSeed: Branch[] = [
   {
     name: 'JLBYR',
-    address: 'av. Peru 123',
+    address: 'Av. Peru 123',
     phone: '+51987654321',
   },
   {

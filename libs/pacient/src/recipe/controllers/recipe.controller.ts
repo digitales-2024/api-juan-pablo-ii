@@ -174,7 +174,7 @@ export class PrescriptionController {
   @ApiResponse({
     status: 200,
     description: 'Receta médica actualizada exitosamente',
-    type: BaseApiResponse<Prescription>,
+    type: Prescription,
   })
   update(
     @Param('id') id: string,
