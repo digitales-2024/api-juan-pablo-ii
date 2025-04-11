@@ -29,6 +29,12 @@ services:
     networks:
       - juanpablo-network-prod
       - traefik3_proxy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.juanpablo-staging.rule=Host(`admin.cmjuanpabloii.com`)"
