@@ -97,7 +97,10 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
     });
   }
 
-  async findManyPaginated(page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
+  async findManyPaginated(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
     const take = Math.min(limit, 50); // Máximo 50 registros
     const skip = (page - 1) * take;
 
@@ -156,17 +159,22 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
             },
           },
         },
-        orderBy: { start: 'asc' } // Ordenar por fecha de inicio
-      })
+        orderBy: { start: 'asc' }, // Ordenar por fecha de inicio
+      }),
     ]);
 
     return { appointments, total };
   }
 
-  async findManyWithFilter(filter: any, page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
+  async findManyWithFilter(
+    filter: any,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
     // Asegurar que page y limit sean números válidos y tengan valores predeterminados
     const pageNum = typeof page === 'number' && !isNaN(page) ? page : 1;
-    const limitNum = typeof limit === 'number' && !isNaN(limit) ? Math.min(limit, 50) : 10;
+    const limitNum =
+      typeof limit === 'number' && !isNaN(limit) ? Math.min(limit, 50) : 10;
 
     const skip = (pageNum - 1) * limitNum;
 
@@ -175,7 +183,7 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
       this.prisma.appointment.findMany({
         where: filter,
         skip,
-        take: limitNum,  // Asegurar que take siempre tenga un valor válido
+        take: limitNum, // Asegurar que take siempre tenga un valor válido
         select: {
           id: true,
           eventId: true,
@@ -225,8 +233,8 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
             },
           },
         },
-        orderBy: { start: 'desc' }
-      })
+        orderBy: { start: 'desc' },
+      }),
     ]);
 
     return { appointments, total };

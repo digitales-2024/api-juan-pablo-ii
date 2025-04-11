@@ -9,7 +9,13 @@ import { UpdateStaffScheduleDto } from '../dto/update-staff-schedule.dto';
 import { UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { DeleteStaffSchedulesDto } from '../dto/delete-staff-schedule.dto';
-import { CreateStaffScheduleUseCase, DeleteStaffSchedulesUseCase, ReactivateStaffSchedulesUseCase, UpdateStaffScheduleUseCase, FindStaffSchedulesByFilterUseCase } from '../use-cases';
+import {
+  CreateStaffScheduleUseCase,
+  DeleteStaffSchedulesUseCase,
+  ReactivateStaffSchedulesUseCase,
+  UpdateStaffScheduleUseCase,
+  FindStaffSchedulesByFilterUseCase,
+} from '../use-cases';
 import { FindStaffSchedulesQueryDto } from '../dto/find-staff-schedule-query.dto';
 
 @Injectable()
@@ -44,7 +50,10 @@ export class StaffScheduleService {
     user: UserData,
   ): Promise<BaseApiResponse<StaffSchedule>> {
     try {
-      return await this.createStaffScheduleUseCase.execute(createStaffScheduleDto, user);
+      return await this.createStaffScheduleUseCase.execute(
+        createStaffScheduleDto,
+        user,
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');
     }
@@ -71,7 +80,11 @@ export class StaffScheduleService {
    */
   async findAll(): Promise<StaffSchedule[]> {
     try {
-      return await this.staffScheduleRepository.findWithRelations();
+      const staffSchedule =
+        await this.staffScheduleRepository.findWithRelations(
+          
+        );
+      return staffSchedule.reverse();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -88,7 +101,8 @@ export class StaffScheduleService {
     user: UserData,
   ): Promise<BaseApiResponse<StaffSchedule>> {
     try {
-      const currentSchedule = await this.staffScheduleRepository.findStaffScheduleById(id);
+      const currentSchedule =
+        await this.staffScheduleRepository.findStaffScheduleById(id);
 
       if (!validateChanges(updateStaffScheduleDto, currentSchedule)) {
         return {
@@ -98,7 +112,11 @@ export class StaffScheduleService {
         };
       }
 
-      return await this.updateStaffScheduleUseCase.execute(id, updateStaffScheduleDto, user);
+      return await this.updateStaffScheduleUseCase.execute(
+        id,
+        updateStaffScheduleDto,
+        user,
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
     }
@@ -110,7 +128,10 @@ export class StaffScheduleService {
   ): Promise<BaseApiResponse<StaffSchedule[]>> {
     try {
       validateArray(deleteStaffSchedulesDto.ids, 'IDs de horarios');
-      return await this.deleteStaffSchedulesUseCase.execute(deleteStaffSchedulesDto, user);
+      return await this.deleteStaffSchedulesUseCase.execute(
+        deleteStaffSchedulesDto,
+        user,
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'deactivating');
     }
@@ -132,7 +153,8 @@ export class StaffScheduleService {
     query: FindStaffSchedulesQueryDto,
   ): Promise<StaffSchedule[]> {
     try {
-      const result = await this.findStaffSchedulesByFilterUseCase.execute(query);
+      const result =
+        await this.findStaffSchedulesByFilterUseCase.execute(query);
       return result;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');

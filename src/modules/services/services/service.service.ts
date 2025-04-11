@@ -117,7 +117,11 @@ export class ServiceService {
    */
   async findAll(): Promise<Service[]> {
     try {
-      return this.serviceRepository.findMany();
+      return this.serviceRepository.findMany({
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

@@ -42,7 +42,7 @@ import { AppointmentStatus } from '@prisma/client';
 @Controller({ path: 'appointments', version: '1' })
 @Auth()
 export class AppointmentController {
-  constructor(private readonly appointmentService: AppointmentService) { }
+  constructor(private readonly appointmentService: AppointmentService) {}
 
   /**
    * Crea una nueva cita médica
@@ -71,7 +71,9 @@ export class AppointmentController {
    * Obtiene todas las citas médicas de forma paginada
    */
   @Get('paginated')
-  @ApiOperation({ summary: 'Obtener todas las citas médicas de forma paginada' })
+  @ApiOperation({
+    summary: 'Obtener todas las citas médicas de forma paginada',
+  })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -101,7 +103,8 @@ export class AppointmentController {
   @Get('status/all/paginated')
   @ApiOperation({
     summary: 'Obtener TODAS las citas médicas sin filtrar por estado',
-    description: 'Endpoint especializado para obtener todas las citas médicas activas sin aplicar filtros de estado.'
+    description:
+      'Endpoint especializado para obtener todas las citas médicas activas sin aplicar filtros de estado.',
   })
   @ApiQuery({
     name: 'page',
@@ -137,13 +140,15 @@ export class AppointmentController {
   @Get('status/:status/paginated')
   @ApiOperation({
     summary: 'Obtener citas médicas por estado de forma paginada',
-    description: 'Permite obtener citas médicas filtradas por estado de forma paginada. Usar "all" como valor del parámetro status para obtener TODAS las citas sin filtrar por estado.'
+    description:
+      'Permite obtener citas médicas filtradas por estado de forma paginada. Usar "all" como valor del parámetro status para obtener TODAS las citas sin filtrar por estado.',
   })
   @ApiParam({
     name: 'status',
     required: true,
-    description: 'Estado de las citas a filtrar. Use el valor "all" para obtener TODAS las citas sin filtrar por estado.',
-    enum: [...Object.values(AppointmentStatus), 'all']
+    description:
+      'Estado de las citas a filtrar. Use el valor "all" para obtener TODAS las citas sin filtrar por estado.',
+    enum: [...Object.values(AppointmentStatus), 'all'],
   })
   @ApiQuery({
     name: 'page',
@@ -158,7 +163,8 @@ export class AppointmentController {
     description: 'Número de registros por página',
   })
   @ApiOkResponse({
-    description: 'Lista de citas médicas paginadas por estado o todas las citas si se usa "all"',
+    description:
+      'Lista de citas médicas paginadas por estado o todas las citas si se usa "all"',
     type: [Appointment],
   })
   async findByStatusPaginated(
@@ -171,12 +177,21 @@ export class AppointmentController {
     const limitNum = limit ? parseInt(limit, 10) : 10;
 
     // Validar si el status es válido o 'all'
-    const validStatus = Object.values(AppointmentStatus).includes(status as AppointmentStatus);
+    const validStatus = Object.values(AppointmentStatus).includes(
+      status as AppointmentStatus,
+    );
 
     // Si el status es 'all' o no es válido, pasar undefined para obtener todas las citas
-    const appointmentStatus = (status === 'all' || !validStatus) ? undefined : status as AppointmentStatus;
+    const appointmentStatus =
+      status === 'all' || !validStatus
+        ? undefined
+        : (status as AppointmentStatus);
 
-    return this.appointmentService.findByStatus(appointmentStatus, pageNum, limitNum);
+    return this.appointmentService.findByStatus(
+      appointmentStatus,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get()
@@ -200,10 +215,11 @@ export class AppointmentController {
   findAll(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @GetUser() user?: UserData,
   ): Promise<Appointment[]> {
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
-    return this.appointmentService.findAll(start, end);
+    return this.appointmentService.findAll(start, end, user);
   }
 
   /**
@@ -383,7 +399,10 @@ export class AppointmentController {
     @Body() rescheduleAppointmentDto: RescheduleAppointmentDto,
     @GetUser() user: UserData,
   ): Promise<HttpResponse<Appointment>> {
-    return this.appointmentService.reschedule(id, rescheduleAppointmentDto, user);
+    return this.appointmentService.reschedule(
+      id,
+      rescheduleAppointmentDto,
+      user,
+    );
   }
-
 }

@@ -27,7 +27,7 @@ import {
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { PaymentRepository } from '../repositories/payment.repository';
-import { PaymentStatus } from '../interfaces/payment.types';
+/* import { PaymentStatus } from '../interfaces/payment.types'; */
 
 @Injectable()
 export class OrderService {
@@ -222,27 +222,27 @@ export class OrderService {
     }
   }
 
-    /**
+  /**
    * Busca una orden por su identificador
    * @param id - Identificador de la orden
    * @returns La orden encontrada
    * @throws {BadRequestException} Si la orden no se encuentra
    */
-    async findDetailedOrderByCode(code: string): Promise<DetailedOrder> {
-      try {
-        const response = (await this.orderRepository.findOne({
-          where: {
-            code: code,
-          },
-          include: {
-            payments: true,
-          },
-        })) as DetailedOrder;
-        return response;
-      } catch (error) {
-        this.errorHandler.handleError(error, 'getting');
-      }
+  async findDetailedOrderByCode(code: string): Promise<DetailedOrder> {
+    try {
+      const response = (await this.orderRepository.findOne({
+        where: {
+          code: code,
+        },
+        include: {
+          payments: true,
+        },
+      })) as DetailedOrder;
+      return response;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
     }
+  }
 
   /**
    * Busca una orden por su identificador
@@ -255,35 +255,34 @@ export class OrderService {
       const results =
         code === 'None'
           ? ((await this.orderRepository.findMany({
-            where: {
-              isActive: true,
-            },
-            orderBy: {
-              date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
-            },
-            include: {
-              payments: true,
-            },
-            take: 10,
-          })) as DetailedOrder[])
-          : [
-            (await this.orderRepository.findOne({
               where: {
-                code: {
-                  contains: code,
-                  mode: 'insensitive',
-                },
+                isActive: true,
+              },
+              orderBy: {
+                date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
               },
               include: {
                 payments: true,
               },
-            })) as DetailedOrder,
+              take: 10,
+            })) as DetailedOrder[])
+          : [
+              (await this.orderRepository.findOne({
+                where: {
+                  code: {
+                    contains: code,
+                    mode: 'insensitive',
+                  },
+                },
+                include: {
+                  payments: true,
+                },
+              })) as DetailedOrder,
+            ];
 
-          ];
-
-        if (results[0] === null) {
-          return [];
-        }
+      if (results[0] === null) {
+        return [];
+      }
 
       return results;
     } catch (error) {
@@ -292,32 +291,32 @@ export class OrderService {
   }
 
   //No existe relacion en Order para el paciente aparte de la metadata
-    /**
+  /**
    * Busca una orden por su identificador
    * @param id - Identificador de la orden
    * @returns La orden encontrada
    * @throws {BadRequestException} Si la orden no se encuentra
    */
-    // async findDetailedOrderByPatientDni(dni: string): Promise<DetailedOrder[]> {
-    //   try {
-    //     const results = await this.orderRepository.findMany({
-    //       where: {
-    //         isActive: true,
-    //         dni: dni
-    //       },
-    //       orderBy: {
-    //         date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
-    //       },
-    //       include: {
-    //         payments: true,
-    //       },
-    //     }) as DetailedOrder[]
-  
-    //     return results;
-    //   } catch (error) {
-    //     this.errorHandler.handleError(error, 'getting');
-    //   }
-    // }
+  // async findDetailedOrderByPatientDni(dni: string): Promise<DetailedOrder[]> {
+  //   try {
+  //     const results = await this.orderRepository.findMany({
+  //       where: {
+  //         isActive: true,
+  //         dni: dni
+  //       },
+  //       orderBy: {
+  //         date: 'desc', // Changed from 'asc' to 'desc' to get newest records first
+  //       },
+  //       include: {
+  //         payments: true,
+  //       },
+  //     }) as DetailedOrder[]
+
+  //     return results;
+  //   } catch (error) {
+  //     this.errorHandler.handleError(error, 'getting');
+  //   }
+  // }
 
   /**
    * Obtiene todas las órdenes
@@ -329,6 +328,7 @@ export class OrderService {
       return this.orderRepository.findMany({
         // where: {
         //   isActive: true,
+        //funcion para filtrar registros por rol de personal y sucursal que creo el registro
         // },
         include: {
           payments: true,

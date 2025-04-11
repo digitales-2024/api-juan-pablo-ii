@@ -9,9 +9,6 @@ import {
   rolSuperAdminSeed,
   superAdminSeed,
   rolAdminSeed,
-  adminSeed,
-  ceciliaAdminSeed,
-  doctorSeed,
   rolDoctorSeed,
 } from './data/superadmin.seed';
 import { handleException } from '@login/login/utils';
@@ -198,42 +195,6 @@ export class SeedsService {
           skipDuplicates: true,
         });
 
-        // Crear usuario admin y asignarle el rol si no existe
-        await prisma.user.upsert({
-          where: {
-            email_isActive: { email: adminSeed.email, isActive: true },
-          },
-          update: {},
-          create: {
-            ...adminSeed,
-            password: await bcrypt.hash(adminSeed.password, 10),
-            isSuperAdmin: false,
-            userRols: {
-              create: {
-                rolId: adminRole.id,
-              },
-            },
-          },
-        });
-
-        // Crear usuario Cecilia admin y asignarle el rol admin
-        await prisma.user.upsert({
-          where: {
-            email_isActive: { email: ceciliaAdminSeed.email, isActive: true },
-          },
-          update: {},
-          create: {
-            ...ceciliaAdminSeed,
-            password: await bcrypt.hash(ceciliaAdminSeed.password, 10),
-            isSuperAdmin: false,
-            userRols: {
-              create: {
-                rolId: adminRole.id,
-              },
-            },
-          },
-        });
-
         // Crear rol doctor si no existe
         const doctorRole = await prisma.rol.upsert({
           where: {
@@ -270,24 +231,6 @@ export class SeedsService {
         await prisma.rolModulePermissions.createMany({
           data: doctorModulePermissionEntries,
           skipDuplicates: true,
-        });
-
-        // Crear usuario doctor y asignarle el rol
-        await prisma.user.upsert({
-          where: {
-            email_isActive: { email: doctorSeed.email, isActive: true },
-          },
-          update: {},
-          create: {
-            ...doctorSeed,
-            password: await bcrypt.hash(doctorSeed.password, 10),
-            isSuperAdmin: false,
-            userRols: {
-              create: {
-                rolId: doctorRole.id,
-              },
-            },
-          },
         });
 
         // Crear las sucursales/branches desde el seed

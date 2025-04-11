@@ -121,16 +121,66 @@ export class AppointmentService {
   /**
    * Obtiene todas las citas médicas
    */
-  async findAll(startDate?: Date, endDate?: Date): Promise<Appointment[]> {
-    this.logger.log(`findAll called with startDate: ${startDate}, endDate: ${endDate}`);
+
+  /* 
+  registros optenidos 
+  model Appointment {
+  id                 String            @id @default(uuid())
+  branchId           String
+etc...
+}
+fin
+
+  🚀 ~ AppointmentService ~ user: {
+    id: '8995a857-c3d1-4254-af10-b6950dfb9c83',
+    name: 'alexjoseluis',
+    email: 'alexjoseluis@admin.com',
+    phone: '+51923456899',
+    isSuperAdmin: false,
+    roles: [
+      {
+        id: 'e63269a1-1476-4de3-8be4-f23f65e8af40',
+        name: 'ADMINISTRATIVO' otros roles //SUPER_ADMIN
+      }
+    ]
+  } 
+    
+  model Staff {
+  id           String          @id @default(uuid())
+  userId       String?
+  name         String
+  branchId     String?
+  branch       Branch?         @relation(fields: [branchId], references: [id])
+}
+  
+model Branch {
+  id       String  @id @default(uuid())
+  name     String //solo existen dos sucursales JLBYR, Yanahuara
+ etc...
+}*/
+  async findAll(
+    startDate?: Date,
+    endDate?: Date,
+    user?: UserData,
+  ): Promise<Appointment[]> {
+    console.log('🚀 ~ AppointmentService ~ user:', user);
+    this.logger.log(
+      `findAll called with startDate: ${startDate}, endDate: ${endDate}`,
+    );
     try {
       if (startDate && endDate) {
-        const appointments = await this.appointmentRepository.findByDateRange(startDate, endDate);
+        const appointments = await this.appointmentRepository.findByDateRange(
+          startDate,
+          endDate,
+          user,
+        );
         this.logger.log(`Appointments found: ${JSON.stringify(appointments)}`);
         return appointments;
       }
       const allAppointments = await this.appointmentRepository.findMany();
-      this.logger.log(`All appointments found: ${JSON.stringify(allAppointments)}`);
+      this.logger.log(
+        `All appointments found: ${JSON.stringify(allAppointments)}`,
+      );
       return allAppointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
@@ -154,8 +204,11 @@ export class AppointmentService {
   async findByPatient(pacienteId: string): Promise<Appointment[]> {
     this.logger.log(`findByPatient called with pacienteId: ${pacienteId}`);
     try {
-      const appointments = await this.appointmentRepository.findByPatient(pacienteId);
-      this.logger.log(`Appointments found for patient ${pacienteId}: ${JSON.stringify(appointments)}`);
+      const appointments =
+        await this.appointmentRepository.findByPatient(pacienteId);
+      this.logger.log(
+        `Appointments found for patient ${pacienteId}: ${JSON.stringify(appointments)}`,
+      );
       return appointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
@@ -168,8 +221,11 @@ export class AppointmentService {
   async findByStaff(personalId: string): Promise<Appointment[]> {
     this.logger.log(`findByStaff called with personalId: ${personalId}`);
     try {
-      const appointments = await this.appointmentRepository.findByStaff(personalId);
-      this.logger.log(`Appointments found for staff ${personalId}: ${JSON.stringify(appointments)}`);
+      const appointments =
+        await this.appointmentRepository.findByStaff(personalId);
+      this.logger.log(
+        `Appointments found for staff ${personalId}: ${JSON.stringify(appointments)}`,
+      );
       return appointments;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
@@ -259,7 +315,10 @@ export class AppointmentService {
   /**
    * Obtiene todas las citas médicas de forma paginada
    */
-  async findAllPaginated(page: number = 1, limit: number = 10): Promise<{ appointments: Appointment[]; total: number }> {
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
     try {
       return await this.findAppointmentsPaginatedUseCase.execute(page, limit);
     } catch (error) {
@@ -277,11 +336,17 @@ export class AppointmentService {
   async findByStatus(
     status?: AppointmentStatus,
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<{ appointments: Appointment[]; total: number }> {
-    this.logger.log(`findByStatus called with status: ${status || 'TODAS LAS CITAS'}, page: ${page}, limit: ${limit}`);
+    this.logger.log(
+      `findByStatus called with status: ${status || 'TODAS LAS CITAS'}, page: ${page}, limit: ${limit}`,
+    );
     try {
-      return await this.findAppointmentsByStatusUseCase.execute(status, page, limit);
+      return await this.findAppointmentsByStatusUseCase.execute(
+        status,
+        page,
+        limit,
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -296,13 +361,17 @@ export class AppointmentService {
   async getServicePriceByAppointmentId(appointmentId: string): Promise<number> {
     const appointment = await this.findById(appointmentId);
     if (!appointment) {
-      throw new BadRequestException(`Cita médica con ID ${appointmentId} no encontrada`);
+      throw new BadRequestException(
+        `Cita médica con ID ${appointmentId} no encontrada`,
+      );
     }
 
     const serviceId = appointment.serviceId;
     const service = await this.serviceService.findOne(serviceId);
     if (!service) {
-      throw new BadRequestException(`Servicio con ID ${serviceId} no encontrado`);
+      throw new BadRequestException(
+        `Servicio con ID ${serviceId} no encontrado`,
+      );
     }
     return service.price;
   }
@@ -311,14 +380,16 @@ export class AppointmentService {
     const appointment = await this.findById(appointmentId);
 
     if (!appointment) {
-      throw new BadRequestException(`Cita médica con ID ${appointmentId} no encontrada`);
+      throw new BadRequestException(
+        `Cita médica con ID ${appointmentId} no encontrada`,
+      );
     }
 
-    const staffId = appointment.staffId
+    const staffId = appointment.staffId;
 
     const staff = await this.serviceService.findOne(staffId);
 
-    return staff.name
+    return staff.name;
   }
 
   /**
