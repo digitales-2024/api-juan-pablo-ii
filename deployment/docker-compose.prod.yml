@@ -1,0 +1,92 @@
+services:
+  juanpablo-backend-prod:
+    container_name: juanpablo-backend-prod
+    image: docker.io/digitalesacide/juanpablo-backend-prod:${JUANPABLO_BACKEND_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      juanpablo-db-prod:
+        condition: service_healthy
+    env_file:
+      - .env.backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - juanpablo-network-prod
+
+  juanpablo-frontend-prod:
+    container_name: juanpablo-frontend-prod
+    image: docker.io/digitalesacide/juanpablo-frontend-prod:${JUANPABLO_FRONTEND_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      juanpablo-backend-prod:
+        condition: service_started
+    env_file:
+      - .env.frontend
+    networks:
+      - juanpablo-network-prod
+      - traefik3_proxy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.juanpablo-staging.rule=Host(`admin.cmjuanpabloii.com`)"
+      - "traefik.http.routers.juanpablo-staging.entrypoints=websecure"
+      - "traefik.http.routers.juanpablo-staging.tls=true"
+      - "traefik.http.routers.juanpablo-staging.tls.certresolver=dns-cloudflare"
+      - "traefik.http.routers.juanpablo-staging.tls.domains[0].main=cmjuanpabloii.com"
+      - "traefik.http.routers.juanpablo-staging.tls.domains[0].sans=*.cmjuanpabloii.com"
+      - "traefik.http.services.juanpablo-staging.loadbalancer.server.port=3000"
+
+  juanpablo-db-prod:
+    container_name: juanpablo-db-prod
+    image: postgres:17.4
+    restart: unless-stopped
+    shm_size: 256mb
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 512M
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "shared_buffers=256MB"
+    volumes:
+      - postgres_data_stage:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: "juanpabloii"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d juanpabloii -h localhost -p 5432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - juanpablo-network-prod
+
+volumes:
+  postgres_data_stage:
+    # Para persistencia de datos - comentado para revisión
+    # driver: local
+    # driver_opts:
+    #   type: none
+    #   device: /path/to/persistent/storage/postgres
+    #   o: bind
+
+networks:
+  juanpablo-network-prod:
+    driver: bridge
