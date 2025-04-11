@@ -21,9 +21,17 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import {
+  HttpResponse,
+  UserData,
+  UserBranchData,
+} from '@login/login/interfaces';
 import { Appointment } from '../entities/appointment.entity';
-import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import {
+  Auth,
+  GetUser,
+  GetUserBranch,
+} from '@login/login/admin/auth/decorators';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
@@ -215,11 +223,11 @@ export class AppointmentController {
   findAll(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    /*     @GetUser() user?: UserData, */
+    @GetUserBranch() userBranch?: UserBranchData,
   ): Promise<Appointment[]> {
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
-    return this.appointmentService.findAll(start, end /* , user */);
+    return this.appointmentService.findAll(start, end, userBranch);
   }
 
   /**

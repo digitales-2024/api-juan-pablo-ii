@@ -11,3 +11,4 @@ export { Module } from './module.interface';
 export { Permission } from './permission.interface';
 export { ModuleData } from './module.interface';
 export { PermissionData } from './permission.interface';
+export { UserBranchData } from './user-branch.type';

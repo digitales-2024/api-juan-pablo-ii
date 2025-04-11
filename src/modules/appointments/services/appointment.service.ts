@@ -4,7 +4,11 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import {
+  HttpResponse,
+  UserData,
+  UserBranchData,
+} from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { appointmentErrorMessages } from '../errors/errors-appointments';
@@ -161,8 +165,9 @@ model Branch {
   async findAll(
     startDate?: Date,
     endDate?: Date,
-    /*    user?: UserData, */
+    userBranch?: UserBranchData,
   ): Promise<Appointment[]> {
+    console.log('🚀 ~ AppointmentService ~ userBranch:', userBranch);
     this.logger.log(
       `findAll called with startDate: ${startDate}, endDate: ${endDate}`,
     );
