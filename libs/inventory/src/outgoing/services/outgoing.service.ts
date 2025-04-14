@@ -7,7 +7,7 @@ import {
 } from '../entities/outgoing.entity';
 import { CreateOutgoingDto } from '../dto/create-outgoing.dto';
 import { UpdateOutgoingDto } from '../dto/update-outgoing.dto';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateOutgoingUseCase } from '../use-cases/create-outgoing.use-case';
 import { UpdateOutgoingUseCase } from '../use-cases/update-outgoing.use-case';
@@ -357,20 +357,60 @@ export class OutgoingService {
   /**
    * Obtiene todos las salidas con sus relaciones detalladas.
    *
+   * @param userBranch - Datos del usuario y su sucursal para filtrar resultados
    * @returns Una promesa que resuelve con una lista de salidas detallados.
    * @throws {Error} Si ocurre un error al obtener los salidas.
    */
-  async findAllWithRelations(): Promise<DetailedOutgoing[]> {
+  async findAllWithRelations(
+    userBranch?: UserBranchData,
+  ): Promise<DetailedOutgoing[]> {
     try {
+      // Crear el filtro basado en el rol del usuario
+      const branchFilter = this.createBranchFilter(userBranch);
+
+      this.logger.log(
+        `Buscando salidas con filtro: ${JSON.stringify(branchFilter)}`,
+      );
+
       const outgoingData =
-        await this.outgoingRepository.getAllDetailedOutgoing();
+        await this.outgoingRepository.getAllDetailedOutgoing(branchFilter);
+
       if (!outgoingData) {
-        throw new BadRequestException('Ingreso no encontrado');
+        throw new BadRequestException('Salida no encontrada');
       }
+
       return outgoingData;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
+  }
+  /**
+   * Crea un filtro de sucursal basado en los datos del usuario
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns Filtro para usar en consultas Prisma
+   */
+  private createBranchFilter(userBranch?: UserBranchData): any {
+    // Si no hay datos de usuario o es SuperAdmin, no aplicar filtro por sucursal
+    if (
+      !userBranch ||
+      userBranch.isSuperAdmin ||
+      userBranch.rol === 'SUPER_ADMIN' ||
+      userBranch.rol === 'MEDICO'
+    ) {
+      return {};
+    }
+
+    // Si es un usuario administrativo, filtrar por su sucursal
+    if (userBranch.rol === 'ADMINISTRATIVO' && userBranch.branchId) {
+      // La relación es a través de Storage.branch.id
+      return {
+        Storage: {
+          branchId: userBranch.branchId,
+        },
+      };
+    }
+
+    return {};
   }
 
   /**

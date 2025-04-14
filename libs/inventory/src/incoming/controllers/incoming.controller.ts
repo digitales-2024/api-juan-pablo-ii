@@ -9,7 +9,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { IncomingService } from '../services/incoming.service';
-import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import {
+  Auth,
+  GetUser,
+  GetUserBranch,
+} from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
   ApiOperation,
@@ -19,7 +23,7 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import {
   CreateIncomingDto,
   UpdateIncomingDto,
@@ -117,8 +121,10 @@ export class IncomingController {
     description: 'Lista de todos los ingresos',
     type: [DetailedIncoming],
   })
-  findAllWithRelations(): Promise<DetailedIncoming[]> {
-    return this.incomingService.findAllWithRelations();
+  findAllWithRelations(
+    @GetUserBranch() userBranch?: UserBranchData,
+  ): Promise<DetailedIncoming[]> {
+    return this.incomingService.findAllWithRelations(userBranch);
   }
 
   /**

@@ -9,9 +9,12 @@ import {
 } from '@nestjs/swagger';
 import { ProductStock, StockByStorage } from '../entities/stock.entity';
 import { ProductUse } from '@prisma/client';
+import { UserBranchData } from '@login/login/interfaces';
+import { Auth, GetUserBranch } from '@login/login/admin/auth/decorators';
 
 @ApiTags('Stock')
 @Controller({ path: 'stock', version: '1' })
+@Auth()
 export class StockController {
   constructor(private readonly stockService: StockService) {}
 
@@ -50,8 +53,10 @@ export class StockController {
     description: 'Stock de todos los productos en todos los almacenes',
     type: [StockByStorage],
   })
-  async getStockForAllStorages(): Promise<StockByStorage[]> {
-    return this.stockService.getStockForAllStorages();
+  async getStockForAllStorages(
+    @GetUserBranch() userBranch?: UserBranchData,
+  ): Promise<StockByStorage[]> {
+    return this.stockService.getStockForAllStorages(userBranch);
   }
 
   /**

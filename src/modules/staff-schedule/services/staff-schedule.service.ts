@@ -6,7 +6,7 @@ import { staffScheduleErrorMessages } from '../errors/errors-staff-schedule';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateStaffScheduleDto } from '../dto/create-staff-schedule.dto';
 import { UpdateStaffScheduleDto } from '../dto/update-staff-schedule.dto';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { DeleteStaffSchedulesDto } from '../dto/delete-staff-schedule.dto';
 import {
@@ -75,19 +75,53 @@ export class StaffScheduleService {
 
   /**
    * Obtiene la lista de todos los horarios del personal con información básica del staff y la sucursal
+   * @param userBranch - Datos del usuario y su sucursal para filtrar resultados
    * @returns Lista de horarios con nombre y apellido del staff y nombre de la sucursal
    * @throws Lanza un error en caso de fallo al obtener los datos
    */
-  async findAll(): Promise<StaffSchedule[]> {
+  async findAll(userBranch?: UserBranchData): Promise<StaffSchedule[]> {
     try {
+      // Crear el filtro basado en el rol del usuario
+      const branchFilter = this.createBranchFilter(userBranch);
+
+      this.logger.log(
+        `Buscando horarios con filtro: ${JSON.stringify(branchFilter)}`,
+      );
+
       const staffSchedule =
-        await this.staffScheduleRepository.findWithRelations(
-          
-        );
+        await this.staffScheduleRepository.findWithRelations(branchFilter);
       return staffSchedule.reverse();
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
+  }
+
+  /**
+   * Crea un filtro de sucursal basado en los datos del usuario
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns Filtro para usar en consultas Prisma
+   */
+  private createBranchFilter(userBranch?: UserBranchData): any {
+    // Si no hay datos de usuario o es SuperAdmin, no aplicar filtro por sucursal
+    if (
+      !userBranch ||
+      userBranch.isSuperAdmin ||
+      userBranch.rol === 'SUPER_ADMIN' ||
+      userBranch.rol === 'MEDICO'
+    ) {
+      return {};
+    }
+
+    // Si es un usuario administrativo, filtrar por su sucursal
+    if (userBranch.rol === 'ADMINISTRATIVO' && userBranch.branchId) {
+      return {
+        where: {
+          branchId: userBranch.branchId,
+        },
+      };
+    }
+
+    return {};
   }
 
   /**

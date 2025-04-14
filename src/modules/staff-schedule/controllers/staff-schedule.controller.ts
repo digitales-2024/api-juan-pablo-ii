@@ -9,7 +9,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { StaffScheduleService } from '../services/staff-schedule.service';
-import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import {
+  Auth,
+  GetUser,
+  GetUserBranch,
+} from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
   ApiOperation,
@@ -20,7 +24,7 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import { StaffSchedule } from '../entities/staff-schedule.entity';
 import { BaseApiResponse } from 'src/dto/BaseApiResponse.dto';
 import { CreateStaffScheduleDto } from '../dto/create-staff-schedule.dto';
@@ -35,7 +39,8 @@ import { Logger } from '@nestjs/common';
  */
 @ApiTags('StaffSchedule')
 @ApiBadRequestResponse({
-  description: 'Bad Request - Error en la validación de datos o solicitud incorrecta',
+  description:
+    'Bad Request - Error en la validación de datos o solicitud incorrecta',
 })
 @ApiUnauthorizedResponse({
   description: 'Unauthorized - No autorizado para realizar esta operación',
@@ -45,7 +50,7 @@ import { Logger } from '@nestjs/common';
 export class StaffScheduleController {
   private readonly logger = new Logger(StaffScheduleController.name);
 
-  constructor(private readonly staffScheduleService: StaffScheduleService) { }
+  constructor(private readonly staffScheduleService: StaffScheduleService) {}
 
   /**
    * Crea un nuevo horario
@@ -68,7 +73,9 @@ export class StaffScheduleController {
    * Obtiene horarios filtrados por branch y/o staff
    */
   @Get('filter')
-  @ApiOperation({ summary: 'Filtrar horarios por criterios (sucursal, personal y días)' })
+  @ApiOperation({
+    summary: 'Filtrar horarios por criterios (sucursal, personal y días)',
+  })
   @ApiQuery({ name: 'branchId', required: false, example: 'uuid-ejemplo' })
   @ApiQuery({ name: 'staffId', required: false, example: 'uuid-ejemplo' })
   @ApiQuery({ name: 'daysOfWeek', required: false, example: '[1,3,5]' })
@@ -76,8 +83,12 @@ export class StaffScheduleController {
     description: 'Horarios encontrados',
     type: [StaffSchedule],
   })
-  async findByCriteria(@Query() query: FindStaffSchedulesQueryDto): Promise<StaffSchedule[]> {
-    this.logger.debug(`Solicitud de filtrado - Query: ${JSON.stringify(query)}`);
+  async findByCriteria(
+    @Query() query: FindStaffSchedulesQueryDto,
+  ): Promise<StaffSchedule[]> {
+    this.logger.debug(
+      `Solicitud de filtrado - Query: ${JSON.stringify(query)}`,
+    );
     return this.staffScheduleService.findManyByStaffAndBranch(query);
   }
 
@@ -105,8 +116,10 @@ export class StaffScheduleController {
     description: 'Lista de todos los horarios',
     type: [StaffSchedule],
   })
-  findAll(): Promise<StaffSchedule[]> {
-    return this.staffScheduleService.findAll();
+  findAll(
+    @GetUserBranch() userBranch?: UserBranchData,
+  ): Promise<StaffSchedule[]> {
+    return this.staffScheduleService.findAll(userBranch);
   }
 
   /**
@@ -163,6 +176,9 @@ export class StaffScheduleController {
     @Body() deleteStaffSchedulesDto: DeleteStaffSchedulesDto,
     @GetUser() user: UserData,
   ): Promise<BaseApiResponse<StaffSchedule[]>> {
-    return this.staffScheduleService.reactivateMany(deleteStaffSchedulesDto.ids, user);
+    return this.staffScheduleService.reactivateMany(
+      deleteStaffSchedulesDto.ids,
+      user,
+    );
   }
 }

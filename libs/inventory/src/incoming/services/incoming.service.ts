@@ -7,7 +7,7 @@ import {
 } from '../entities/incoming.entity';
 import { CreateIncomingDto } from '../dto/create-incoming.dto';
 import { UpdateIncomingDto } from '../dto/update-incoming.dto';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { CreateIncomingUseCase } from '../use-cases/create-incoming.use-case';
 import { UpdateIncomingUseCase } from '../use-cases/update-incoming.use-case';
@@ -107,16 +107,6 @@ export class IncomingService {
     firstTransferOperation: boolean,
   ): Promise<BaseApiResponse<DetailedIncoming>> {
     try {
-      // const currentIncoming = await this.findById(id);
-
-      // if (!validateChanges(updateIncomingDto, currentIncoming)) {
-      //   return {
-      //     success: true,
-      //     message: 'No se detectaron cambios en el ingreso',
-      //     data: await this.incomingRepository.findDetailedIncomingById(id),
-      //   };
-      // }
-
       this.logger.log('isTransference Incoming', firstTransferOperation);
 
       return await this.updateIncomingStorageUseCase.execute(
@@ -361,16 +351,28 @@ export class IncomingService {
   /**
    * Obtiene todos los ingresos con sus relaciones detalladas.
    *
+   * @param userBranch - Datos del usuario y su sucursal para filtrar resultados
    * @returns Una promesa que resuelve con una lista de ingresos detallados.
    * @throws {Error} Si ocurre un error al obtener los ingresos.
    */
-  async findAllWithRelations(): Promise<DetailedIncoming[]> {
+  async findAllWithRelations(
+    userBranch?: UserBranchData,
+  ): Promise<DetailedIncoming[]> {
     try {
+      // Crear el filtro basado en el rol del usuario
+      const branchFilter = this.createBranchFilter(userBranch);
+
+      this.logger.log(
+        `Buscando ingresos con filtro: ${JSON.stringify(branchFilter)}`,
+      );
+
       const incomingData =
-        await this.incomingRepository.getAllDetailedIncoming();
+        await this.incomingRepository.getAllDetailedIncoming(branchFilter);
+
       if (!incomingData) {
         throw new BadRequestException('Ingreso no encontrado');
       }
+
       return incomingData;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
@@ -413,5 +415,34 @@ export class IncomingService {
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
+  }
+
+  /**
+   * Crea un filtro de sucursal basado en los datos del usuario
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns Filtro para usar en consultas Prisma
+   */
+  private createBranchFilter(userBranch?: UserBranchData): any {
+    // Si no hay datos de usuario o es SuperAdmin, no aplicar filtro por sucursal
+    if (
+      !userBranch ||
+      userBranch.isSuperAdmin ||
+      userBranch.rol === 'SUPER_ADMIN' ||
+      userBranch.rol === 'MEDICO'
+    ) {
+      return {};
+    }
+
+    // Si es un usuario administrativo, filtrar por su sucursal
+    if (userBranch.rol === 'ADMINISTRATIVO' && userBranch.branchId) {
+      // La relación es a través de Storage.branch.id
+      return {
+        Storage: {
+          branchId: userBranch.branchId,
+        },
+      };
+    }
+
+    return {};
   }
 }

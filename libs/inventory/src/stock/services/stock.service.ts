@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { StockRepository } from '../repositories/stock.repository';
 import { UpdateStockUseCase } from '../use-cases/update-stock.use-case';
 import { CreateStockUseCase } from '../use-cases/create-stock.use-case';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import { ProductStock, StockByStorage } from '../entities/stock.entity';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { stockErrorMessages } from '../errors/errors-stock';
@@ -64,19 +64,59 @@ export class StockService {
   }
 
   // Función para obtener todos los stocks de todos los almacenes
-  async getStockForAllStorages(): Promise<StockByStorage[]> {
+  // Función para obtener todos los stocks de todos los almacenes
+  async getStockForAllStorages(
+    userBranch?: UserBranchData,
+  ): Promise<StockByStorage[]> {
     try {
+      // Crear el filtro basado en el rol del usuario
+      const branchFilter = this.createBranchFilter(userBranch);
+
+      this.logger.log(
+        `Buscando stock con filtro: ${JSON.stringify(branchFilter)}`,
+      );
+
       const byStock =
-        await this.stockRepository.getStockByIdStorageByIdProduct();
+        await this.stockRepository.getStockByIdStorageByIdProductUser(
+          undefined,
+          undefined,
+          branchFilter,
+        );
+
       if (byStock.length === 0) {
         throw new Error('No se encontro stock de productos en los almacenes');
       }
+
       return byStock;
     } catch (error) {
       this.logger.error('Error fetching stock for all storages', error);
       this.errorHandler.handleError(error, 'getting');
       throw error;
     }
+  }
+
+  /**
+   * Crea un filtro de sucursal basado en los datos del usuario
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns Filtro para usar en consultas Prisma
+   */
+  private createBranchFilter(userBranch?: UserBranchData): any {
+    // Si no hay datos de usuario o es SuperAdmin, no aplicar filtro por sucursal
+    if (
+      !userBranch ||
+      userBranch.isSuperAdmin ||
+      userBranch.rol === 'SUPER_ADMIN' ||
+      userBranch.rol === 'MEDICO'
+    ) {
+      return {};
+    }
+
+    // Si es un usuario administrativo, filtrar por su sucursal
+    if (userBranch.rol === 'ADMINISTRATIVO' && userBranch.branchId) {
+      return { branchId: userBranch.branchId };
+    }
+
+    return {};
   }
 
   // Función para obtener el stock de un almacén específico y de un producto específico
