@@ -4,7 +4,11 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import {
+  HttpResponse,
+  UserData,
+  UserBranchData,
+} from '@login/login/interfaces';
 import { validateArray, validateChanges } from '@prisma/prisma/utils';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { appointmentErrorMessages } from '../errors/errors-appointments';
@@ -118,69 +122,142 @@ export class AppointmentService {
     }
   }
 
-  /**
-   * Obtiene todas las citas médicas
-   */
-
   /* 
-  registros optenidos 
+  //usuario logeado SuperAdmin
+  ~ AppointmentService ~ userBranch: {
+    id: '6d7c4e62-68b2-446e-8859-55cfc7c94301',
+    isSuperAdmin: true,
+    rol: 'SUPER_ADMIN',
+    staffId: null,
+    branchId: null
+  }
+
+    //usuario logeado ADMINISTRATIVO / MEDICO
+  ~ AppointmentService ~ userBranch: {
+  id: '8995a857-c3d1-4254-af10-b6950dfb9c83',
+  isSuperAdmin: false,
+  rol: 'ADMINISTRATIVO',
+  staffId: '21476c22-e1a3-48a5-b203-8a5f97f900f0',
+  branchId: 'da51497f-63a5-47f5-a0ae-f75cc94af50a'
+}
+  //TABLA DE REGISTROS
   model Appointment {
   id                 String            @id @default(uuid())
   branchId           String
-etc...
+  etc ...
 }
-fin
+  */
 
-  🚀 ~ AppointmentService ~ user: {
-    id: '8995a857-c3d1-4254-af10-b6950dfb9c83',
-    name: 'alexjoseluis',
-    email: 'alexjoseluis@admin.com',
-    phone: '+51923456899',
-    isSuperAdmin: false,
-    roles: [
-      {
-        id: 'e63269a1-1476-4de3-8be4-f23f65e8af40',
-        name: 'ADMINISTRATIVO' otros roles //SUPER_ADMIN
-      }
-    ]
-  } 
-    
-  model Staff {
-  id           String          @id @default(uuid())
-  userId       String?
-  name         String
-  branchId     String?
-  branch       Branch?         @relation(fields: [branchId], references: [id])
-}
-  
-model Branch {
-  id       String  @id @default(uuid())
-  name     String //solo existen dos sucursales JLBYR, Yanahuara
- etc...
-}*/
+  /**
+   * Obtiene todas las citas médicas
+   */
   async findAll(
     startDate?: Date,
     endDate?: Date,
-    /*    user?: UserData, */
+    userBranch?: UserBranchData,
   ): Promise<Appointment[]> {
+    console.log('🚀 ~ AppointmentService ~ userBranch:', userBranch);
     this.logger.log(
       `findAll called with startDate: ${startDate}, endDate: ${endDate}`,
     );
     try {
+      // Crear el filtro base dependiendo del tipo de usuario
+      const branchFilter = this.createBranchFilter(userBranch);
+
       if (startDate && endDate) {
         const appointments = await this.appointmentRepository.findByDateRange(
           startDate,
           endDate,
-          /*      user, */
+          branchFilter,
         );
-        this.logger.log(`Appointments found: ${JSON.stringify(appointments)}`);
+        this.logger.log(`Appointments found: ${appointments.length}`);
         return appointments;
       }
-      const allAppointments = await this.appointmentRepository.findMany();
-      this.logger.log(
-        `All appointments found: ${JSON.stringify(allAppointments)}`,
-      );
+
+      // Aplicar el mismo filtro para todas las consultas
+      const allAppointments = await this.appointmentRepository.findMany({
+        where: {
+          isActive: true,
+          ...branchFilter,
+        },
+        orderBy: {
+          start: 'desc',
+        },
+      });
+
+      this.logger.log(`All appointments found: ${allAppointments.length}`);
       return allAppointments;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Crea un filtro de sucursal basado en los datos del usuario
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns Filtro para usar en consultas Prisma
+   */
+  private createBranchFilter(userBranch?: UserBranchData): any {
+    // Si no hay datos de usuario o es SuperAdmin, no aplicar filtro por sucursal
+    if (
+      !userBranch ||
+      userBranch.isSuperAdmin ||
+      userBranch.rol === 'SUPER_ADMIN' ||
+      userBranch.rol === 'MEDICO'
+    ) {
+      return {};
+    }
+
+    // Si es un usuario administrativo, filtrar por su sucursal
+    if (userBranch.rol === 'ADMINISTRATIVO' && userBranch.branchId) {
+      return { branchId: userBranch.branchId };
+    }
+
+    return {};
+  }
+
+  /**
+   * Obtiene todas las citas médicas de forma paginada
+   */
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    userBranch?: UserBranchData,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    try {
+      return await this.findAppointmentsPaginatedUseCase.execute(
+        page,
+        limit,
+        userBranch,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca citas médicas por estado de forma paginada
+   * @param status Estado de las citas a buscar (opcional). Usar undefined para obtener TODAS las citas
+   * @param page Número de página
+   * @param limit Límite de registros por página
+   * @returns Lista paginada de citas médicas que coinciden con el estado especificado o TODAS las citas si no se especifica
+   */
+  async findByStatus(
+    status?: AppointmentStatus,
+    page: number = 1,
+    limit: number = 10,
+    userBranch?: UserBranchData,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    this.logger.log(
+      `findByStatus called with status: ${status || 'TODAS LAS CITAS'}, page: ${page}, limit: ${limit}`,
+    );
+    try {
+      return await this.findAppointmentsByStatusUseCase.execute(
+        status,
+        page,
+        limit,
+        userBranch,
+      );
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }
@@ -308,46 +385,6 @@ model Branch {
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'updating');
-    }
-  }
-
-  /**
-   * Obtiene todas las citas médicas de forma paginada
-   */
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<{ appointments: Appointment[]; total: number }> {
-    try {
-      return await this.findAppointmentsPaginatedUseCase.execute(page, limit);
-    } catch (error) {
-      this.errorHandler.handleError(error, 'getting');
-    }
-  }
-
-  /**
-   * Busca citas médicas por estado de forma paginada
-   * @param status Estado de las citas a buscar (opcional). Usar undefined para obtener TODAS las citas
-   * @param page Número de página
-   * @param limit Límite de registros por página
-   * @returns Lista paginada de citas médicas que coinciden con el estado especificado o TODAS las citas si no se especifica
-   */
-  async findByStatus(
-    status?: AppointmentStatus,
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<{ appointments: Appointment[]; total: number }> {
-    this.logger.log(
-      `findByStatus called with status: ${status || 'TODAS LAS CITAS'}, page: ${page}, limit: ${limit}`,
-    );
-    try {
-      return await this.findAppointmentsByStatusUseCase.execute(
-        status,
-        page,
-        limit,
-      );
-    } catch (error) {
-      this.errorHandler.handleError(error, 'getting');
     }
   }
 

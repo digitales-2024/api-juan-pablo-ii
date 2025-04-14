@@ -6,7 +6,7 @@ import { IOrderGenerator } from '../interfaces';
 import { BaseErrorHandler } from 'src/common/error-handlers/service-error.handler';
 import { orderErrorMessages } from '../errors/errors-order';
 import { OrderStatus, OrderType } from '../interfaces/order.types';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import {
   CreateOrderDto,
   DeleteOrdersDto,
@@ -319,24 +319,101 @@ export class OrderService {
   // }
 
   /**
-   * Obtiene todas las órdenes
-   * @returns Arreglo de órdenes
-   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   * Crea un filtro de sucursal basado en los datos del usuario
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns true si no se debe aplicar ningún filtro, false si se debe filtrar
    */
-  async findAll(): Promise<DetailedOrder[]> {
+  private shouldApplyBranchFilter(userBranch?: UserBranchData): boolean {
+    return (
+      userBranch &&
+      !userBranch.isSuperAdmin &&
+      userBranch.rol === 'ADMINISTRATIVO' &&
+      !!userBranch.branchId
+    );
+  }
+
+  /**
+   * Extrae el branchId desde el campo metadata (que puede ser string o objeto)
+   * @param metadata - Campo metadata de la orden
+   * @returns branchId extraído o null si no se encuentra
+   */
+  private extractBranchIdFromMetadata(metadata: any): string | null {
     try {
-      return this.orderRepository.findMany({
-        // where: {
-        //   isActive: true,
-        //funcion para filtrar registros por rol de personal y sucursal que creo el registro
-        // },
+      // Si es string, convertirlo a objeto
+      const metadataObj =
+        typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+
+      // Extraer el branchId del objeto
+      return metadataObj?.orderDetails?.branchId || null;
+    } catch (error) {
+      this.logger.warn(
+        `Error al extraer branchId de metadata: ${error.message}`,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Filtra un array de órdenes según la sucursal del usuario
+   * @param orders - Array de órdenes a filtrar
+   * @param userBranch - Datos del usuario y sucursal
+   * @returns Array de órdenes filtrado
+   */
+  private filterOrdersByBranch<T extends Order>(
+    orders: T[],
+    userBranch?: UserBranchData,
+  ): T[] {
+    // Si no es necesario filtrar, devolver todas las órdenes
+    if (!this.shouldApplyBranchFilter(userBranch)) {
+      return orders;
+    }
+
+    // Filtrar las órdenes por branchId
+    return orders.filter((order) => {
+      const orderBranchId = this.extractBranchIdFromMetadata(order.metadata);
+      return orderBranchId === userBranch.branchId;
+    });
+  }
+
+  /**
+   * Obtiene todas las órdenes, filtrando por sucursal si el usuario es administrativo
+   * @param userBranch - Datos del usuario y su sucursal
+   * @returns Array de órdenes filtrado según permisos del usuario
+   */
+  async findAll(userBranch?: UserBranchData): Promise<DetailedOrder[]> {
+    try {
+      this.logger.log(
+        `Buscando órdenes${userBranch ? ' con filtro de usuario' : ''}`,
+      );
+
+      // Obtener todas las órdenes
+      const allOrders = (await this.orderRepository.findMany({
+        where: {
+          isActive: true,
+        },
         include: {
           payments: true,
         },
         orderBy: {
           date: 'desc',
         },
-      }) as Promise<DetailedOrder[]>;
+      })) as DetailedOrder[];
+
+      // Si no hay necesidad de filtrar por sucursal, devolver todas las órdenes
+      if (!this.shouldApplyBranchFilter(userBranch)) {
+        this.logger.log(`Retornando todas las órdenes (${allOrders.length})`);
+        return allOrders;
+      }
+
+      // Filtrar órdenes por sucursal del usuario
+      const filteredOrders = this.filterOrdersByBranch(allOrders, userBranch);
+
+      this.logger.log(
+        `Filtrado por sucursal: ${userBranch.branchId}. ` +
+          `Total: ${filteredOrders.length} de ${allOrders.length} órdenes`,
+      );
+
+      return filteredOrders;
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

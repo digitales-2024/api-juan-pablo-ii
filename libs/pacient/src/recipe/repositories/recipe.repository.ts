@@ -47,8 +47,13 @@ export class PrescriptionRepository extends BaseRepository<Prescription> {
   async findPrescriptionsWithPatient(
     limit: number = 10,
     offset: number = 0,
+    branchFilter: any = {}, // Este parámetro ya está, pero no se usa
   ): Promise<PrescriptionWithPatient[]> {
     const prescriptions = await this.prisma.prescription.findMany({
+      where: {
+        isActive: true,
+        ...branchFilter, // Aplicamos aquí el filtro de sucursal
+      },
       orderBy: {
         createdAt: 'desc',
       },

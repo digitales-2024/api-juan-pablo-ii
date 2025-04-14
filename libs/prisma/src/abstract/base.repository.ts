@@ -15,7 +15,7 @@ export abstract class BaseRepository<T extends { id: string }> {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly modelName: keyof PrismaService,
-  ) { }
+  ) {}
 
   /**
    * Crea una nueva entidad en la base de datos

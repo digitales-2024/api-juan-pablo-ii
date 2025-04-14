@@ -8,7 +8,11 @@ import {
   Get,
 } from '@nestjs/common';
 import { OrderService } from '../services/order.service';
-import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import {
+  Auth,
+  GetUser,
+  GetUserBranch,
+} from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
   ApiOperation,
@@ -18,7 +22,7 @@ import {
   ApiOkResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import { DetailedOrder, Order } from '../entities/order.entity';
 import {
   CreateOrderDto,
@@ -66,8 +70,10 @@ export class OrderController {
     description: 'Lista de todas las órdenes',
     type: [DetailedOrder],
   })
-  findAll(): Promise<DetailedOrder[]> {
-    return this.orderService.findAll();
+  findAll(
+    @GetUserBranch() userBranch?: UserBranchData,
+  ): Promise<DetailedOrder[]> {
+    return this.orderService.findAll(userBranch);
   }
 
   @Get('/active')

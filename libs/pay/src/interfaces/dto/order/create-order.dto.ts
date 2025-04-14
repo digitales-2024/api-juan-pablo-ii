@@ -5,7 +5,6 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
-  IsObject,
   IsJSON,
 } from 'class-validator';
 import { OrderStatus, OrderType } from '../../order.types';

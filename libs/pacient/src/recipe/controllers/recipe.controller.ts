@@ -11,7 +11,11 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { PrescriptionService } from '../services/recipe.service';
-import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import {
+  Auth,
+  GetUser,
+  GetUserBranch,
+} from '@login/login/admin/auth/decorators';
 import {
   ApiTags,
   ApiOperation,
@@ -22,7 +26,7 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { UserData } from '@login/login/interfaces';
+import { UserBranchData, UserData } from '@login/login/interfaces';
 import {
   CreatePrescriptionDto,
   UpdatePrescriptionDto,
@@ -122,8 +126,13 @@ export class PrescriptionController {
   findByPrescriptionsWithPatients(
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+    @GetUserBranch() userBranch?: UserBranchData,
   ): Promise<PrescriptionWithPatient[]> {
-    return this.prescriptionService.findPrescriptionsWithPatient(limit, offset);
+    return this.prescriptionService.findPrescriptionsWithPatient(
+      limit,
+      offset,
+      userBranch,
+    );
   }
 
   /**

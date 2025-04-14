@@ -21,9 +21,17 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { HttpResponse, UserData } from '@login/login/interfaces';
+import {
+  HttpResponse,
+  UserData,
+  UserBranchData,
+} from '@login/login/interfaces';
 import { Appointment } from '../entities/appointment.entity';
-import { Auth, GetUser } from '@login/login/admin/auth/decorators';
+import {
+  Auth,
+  GetUser,
+  GetUserBranch,
+} from '@login/login/admin/auth/decorators';
 import { DeleteAppointmentsDto } from '../dto/delete-appointments.dto';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto';
 import { NoShowAppointmentDto } from '../dto/no-show-appointment.dto';
@@ -93,8 +101,9 @@ export class AppointmentController {
   async findAllPaginated(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
+    @GetUserBranch() userBranch?: UserBranchData,
   ): Promise<{ appointments: Appointment[]; total: number }> {
-    return this.appointmentService.findAllPaginated(page, limit);
+    return this.appointmentService.findAllPaginated(page, limit, userBranch);
   }
 
   /**
@@ -125,12 +134,18 @@ export class AppointmentController {
   async findAllStatusPaginated(
     @Query('page') page: string,
     @Query('limit') limit: string,
+    @GetUserBranch() userBranch?: UserBranchData,
   ): Promise<{ appointments: Appointment[]; total: number }> {
     // Convertir explícitamente a números y proporcionar valores por defecto
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 10;
 
-    return this.appointmentService.findByStatus(undefined, pageNum, limitNum);
+    return this.appointmentService.findByStatus(
+      undefined,
+      pageNum,
+      limitNum,
+      userBranch,
+    );
   }
 
   /**
@@ -171,6 +186,7 @@ export class AppointmentController {
     @Param('status') status: string,
     @Query('page') page: string,
     @Query('limit') limit: string,
+    @GetUserBranch() userBranch?: UserBranchData,
   ): Promise<{ appointments: Appointment[]; total: number }> {
     // Convertir explícitamente a números y proporcionar valores por defecto
     const pageNum = page ? parseInt(page, 10) : 1;
@@ -191,6 +207,7 @@ export class AppointmentController {
       appointmentStatus,
       pageNum,
       limitNum,
+      userBranch,
     );
   }
 
@@ -215,11 +232,11 @@ export class AppointmentController {
   findAll(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    /*     @GetUser() user?: UserData, */
+    @GetUserBranch() userBranch?: UserBranchData,
   ): Promise<Appointment[]> {
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
-    return this.appointmentService.findAll(start, end /* , user */);
+    return this.appointmentService.findAll(start, end, userBranch);
   }
 
   /**
