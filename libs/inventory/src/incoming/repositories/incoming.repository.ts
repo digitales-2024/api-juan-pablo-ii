@@ -65,11 +65,21 @@ export class IncomingRepository extends BaseRepository<Incoming> {
     });
   }
 
-  //Evaluar donde seleccionar los registros activos
-  async getAllDetailedIncoming(): Promise<DetailedIncoming[]> {
+  /**
+   * Obtiene todos los ingresos con detalles completos, opcionalmente filtrados por sucursal
+   * @param branchFilter - Filtro opcional de sucursal
+   * @returns Lista de ingresos con detalles
+   */
+  async getAllDetailedIncoming(
+    branchFilter: any = {},
+  ): Promise<DetailedIncoming[]> {
     return this.prisma.incoming.findMany({
+      where: {
+        isActive: true, // Solo obtener registros activos
+        ...branchFilter, // Aplicar filtro de sucursal si existe
+      },
       orderBy: {
-        createdAt: 'desc', // Sort from newest to oldest
+        createdAt: 'desc', // Ordenar del más reciente al más antiguo
       },
       include: {
         Storage: {

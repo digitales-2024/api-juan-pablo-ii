@@ -50,8 +50,7 @@ import { PaginationDto } from '../dto/pagination.dto';
 @Auth()
 @UseInterceptors(ClassSerializerInterceptor)
 export class EventController {
-
-  constructor(private readonly eventService: EventService) { }
+  constructor(private readonly eventService: EventService) {}
 
   /**
    * Obtiene eventos filtrados por staffId, tipo, sucursal y estado.
@@ -81,7 +80,8 @@ export class EventController {
     name: 'status',
     required: false,
     enum: EventStatus,
-    description: 'Estado del evento (PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW)',
+    description:
+      'Estado del evento (PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW)',
     example: EventStatus.CONFIRMED,
   })
   @ApiQuery({
@@ -222,7 +222,7 @@ export class EventController {
   @ApiParam({
     name: 'scheduleId',
     description: 'ID del horario del staff',
-    example: 'uuid-del-horario'
+    example: 'uuid-del-horario',
   })
   @ApiOkResponse({
     description: 'Eventos encontrados para el horario',
@@ -230,27 +230,29 @@ export class EventController {
     headers: {
       'X-Total-Count': {
         description: 'Número total de registros disponibles',
-        schema: { type: 'integer' }
-      }
-    }
+        schema: { type: 'integer' },
+      },
+    },
   })
   async findEventsByStaffSchedule(
     @Param('scheduleId') scheduleId: string,
-    @Query() pagination: PaginationDto
+    @Query() pagination: PaginationDto,
   ): Promise<{ events: Event[]; total: number }> {
     return this.eventService.findEventsByStaffSchedule(
       scheduleId,
       pagination.page,
-      Math.min(pagination.limit, 50) // Limitar máximo 50 registros por página
+      Math.min(pagination.limit, 50), // Limitar máximo 50 registros por página
     );
   }
 
   @Delete('by-schedule/:scheduleId')
-  @ApiOperation({ summary: 'Eliminar todos los eventos por ID de horario de staff' })
+  @ApiOperation({
+    summary: 'Eliminar todos los eventos por ID de horario de staff',
+  })
   @ApiParam({
     name: 'scheduleId',
     description: 'ID del horario del staff',
-    example: 'uuid-del-horario'
+    example: 'uuid-del-horario',
   })
   @ApiOkResponse({
     description: 'Eventos eliminados exitosamente',
@@ -258,9 +260,8 @@ export class EventController {
   })
   async deleteEventsByStaffSchedule(
     @Param('scheduleId') scheduleId: string,
-    @GetUser() user: UserData
+    @GetUser() user: UserData,
   ): Promise<BaseApiResponse<number>> {
     return this.eventService.deleteEventsByStaffSchedule(scheduleId, user);
   }
-
 }

@@ -65,9 +65,19 @@ export class OutgoingRepository extends BaseRepository<Outgoing> {
     });
   }
 
-  //Evaluar donde seleccionar los registros activos
-  async getAllDetailedOutgoing(): Promise<DetailedOutgoing[]> {
+  /**
+   * Obtiene todos los registros de salida con detalles, opcionalmente filtrados por sucursal
+   * @param branchFilter - Filtro opcional de sucursal
+   * @returns Lista de salidas con detalles
+   */
+  async getAllDetailedOutgoing(
+    branchFilter: any = {},
+  ): Promise<DetailedOutgoing[]> {
     return this.prisma.outgoing.findMany({
+      where: {
+        isActive: true, // Solo obtener registros activos
+        ...branchFilter, // Aplicar filtro de sucursal si existe
+      },
       orderBy: {
         createdAt: 'desc',
       },

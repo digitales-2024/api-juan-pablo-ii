@@ -671,4 +671,203 @@ export class StockRepository extends BaseRepository<Stock> {
   //   });
   // }
   // //fin funciones privadas
+
+  //funcion para obtener el stock de un producto en un almacén específico pero con el rol de usuario logeado y su sucursal
+  async getStockByIdStorageByIdProductUser(
+    storageId?: string,
+    productId?: string,
+    branchFilter: any = {}, // Nuevo parámetro para el filtro de sucursal
+  ): Promise<StockByStorage[]> {
+    if (!storageId && !productId) {
+      return this.getAllStoragesWithProductsUser(branchFilter);
+    }
+
+    if (!storageId && productId) {
+      return this.getAllStoragesWithSpecificProductUser(
+        productId,
+        branchFilter,
+      );
+    }
+
+    return this.getSpecificStorageWithProductsUser(
+      storageId,
+      productId,
+      branchFilter,
+    );
+  }
+
+  // Función privada para obtener todos los almacenes con sus productos
+  private async getAllStoragesWithProductsUser(
+    branchFilter: any = {},
+  ): Promise<StockByStorage[]> {
+    const allStorages = await this.prisma.storage.findMany({
+      where: {
+        isActive: true,
+        ...branchFilter, // Aplicar filtro de sucursal
+      },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        typeStorageId: true,
+        branchId: true,
+        staffId: true,
+        TypeStorage: {
+          select: {
+            description: true,
+          },
+        },
+        branch: {
+          select: {
+            address: true,
+          },
+        },
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    const stockByStorage = [];
+
+    for (const storage of allStorages) {
+      stockByStorage.push({
+        idStorage: storage.id,
+        name: storage.name,
+        location: storage.location,
+        address: storage.branch.address,
+        staff: `${storage.staff.name} ${storage.staff.lastName}`,
+        description: storage.TypeStorage.description,
+        stock: await this.getStockByStorage(storage.id),
+      });
+    }
+
+    return stockByStorage;
+  }
+
+  // Función privada para obtener todos los almacenes con un producto específico
+  private async getAllStoragesWithSpecificProductUser(
+    productId: string,
+    branchFilter: any = {},
+  ): Promise<StockByStorage[]> {
+    const allStorages = await this.prisma.storage.findMany({
+      where: {
+        isActive: true,
+        ...branchFilter, // Aplicar filtro de sucursal
+      },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        typeStorageId: true,
+        branchId: true,
+        staffId: true,
+        TypeStorage: {
+          select: {
+            description: true,
+          },
+        },
+        branch: {
+          select: {
+            address: true,
+          },
+        },
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    const stockByStorage = [];
+
+    for (const storage of allStorages) {
+      stockByStorage.push({
+        idStorage: storage.id,
+        name: storage.name,
+        location: storage.location,
+        address: storage.branch.address,
+        staff: `${storage.staff.name} ${storage.staff.lastName}`,
+        description: storage.TypeStorage.description,
+        stock: await this.getStockByStorage(storage.id, productId),
+      });
+    }
+
+    return stockByStorage;
+  }
+
+  // Función privada para obtener un almacén específico con sus productos
+  private async getSpecificStorageWithProductsUser(
+    storageId: string,
+    productId?: string,
+    branchFilter: any = {},
+  ): Promise<StockByStorage[]> {
+    try {
+      const storage = await this.fetchStorageByIdWithFilter(
+        storageId,
+        branchFilter,
+      );
+      const stockByStorage = [];
+
+      stockByStorage.push({
+        idStorage: storage.id,
+        name: storage.name,
+        location: storage.location,
+        address: storage.branch.address,
+        staff: `${storage.staff.name} ${storage.staff.lastName}`,
+        description: storage.TypeStorage.description,
+        stock: await this.getStockByStorage(storageId, productId),
+      });
+
+      return stockByStorage;
+    } catch (error) {
+      throw new Error(
+        `Failed to get specific storage with products: ${error.message}`,
+      );
+    }
+  }
+
+  // Nueva función privada para obtener un almacén por su ID con filtro
+  private async fetchStorageByIdWithFilter(
+    storageId: string,
+    branchFilter: any = {},
+  ) {
+    return await this.prisma.storage.findFirst({
+      where: {
+        id: storageId,
+        isActive: true,
+        ...branchFilter, // Aplicar filtro de sucursal
+      },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        typeStorageId: true,
+        branchId: true,
+        staffId: true,
+        TypeStorage: {
+          select: {
+            description: true,
+          },
+        },
+        branch: {
+          select: {
+            address: true,
+          },
+        },
+        staff: {
+          select: {
+            name: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  }
+  //fin
 }

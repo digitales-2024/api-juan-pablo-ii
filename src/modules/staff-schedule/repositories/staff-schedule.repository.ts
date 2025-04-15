@@ -25,15 +25,15 @@ export class StaffScheduleRepository extends BaseRepository<StaffSchedule> {
         staff: {
           select: {
             name: true,
-            lastName: true
-          }
+            lastName: true,
+          },
         },
         branch: {
           select: {
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     });
     if (!schedule) {
       throw new BadRequestException('Horario del personal no encontrado');
@@ -41,32 +41,43 @@ export class StaffScheduleRepository extends BaseRepository<StaffSchedule> {
     return schedule;
   }
 
+  /**
+   * Busca horarios de personal con sus relaciones, opcionalmente filtrados por sucursal
+   * @param params - Parámetros de filtrado opcionales
+   * @returns Lista de horarios con relaciones
+   */
   async findWithRelations(params?: any): Promise<StaffSchedule[]> {
-    this.logger.warn(`[DEBUG] Consulta Prisma: ${JSON.stringify(params)}`);
+    this.logger.debug(`[DEBUG] Consulta Prisma: ${JSON.stringify(params)}`);
 
     try {
       const results = await this.findMany({
         ...params,
+        where: {
+          isActive: true,
+          ...(params?.where ? params.where : {}),
+        },
         include: {
           staff: {
             select: {
               name: true,
-              lastName: true
-            }
+              lastName: true,
+            },
           },
           branch: {
             select: {
-              name: true
-            }
-          }
-        }
+              name: true,
+            },
+          },
+        },
       });
 
       this.logger.debug(`Resultados encontrados: ${results.length}`);
       return results;
-
     } catch (error) {
-      this.logger.error(`Error en findWithRelations: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error en findWithRelations: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
