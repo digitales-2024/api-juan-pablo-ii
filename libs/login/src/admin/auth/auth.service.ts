@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '@prisma/prisma';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   /**
@@ -48,11 +50,6 @@ export class AuthService {
 
       // Actualizamos el ultimo login del usuario
       await this.userService.updateLastLogin(userDB.id);
-
-      // Indicar que el usuario debe cambiar la contraseña si es la primera vez que inicia sesión
-      /*   if (userDB.mustChangePassword) {
-        throw new ForbiddenException('You must change your password');
-      } */
 
       // Genera el token
       const token = this.getJwtToken({ id: userDB.id });
@@ -103,6 +100,62 @@ export class AuthService {
         ),
       });
 
+      // Buscar branchId si es necesario
+      let branchId: string | null = null;
+      let isStaff = false;
+
+      // Todos los usuarios que no son superAdmin intentamos buscarlos como personal
+      if (!userDB.isSuperAdmin) {
+        this.logger.log(
+          `Usuario ${userDB.email} no es superAdmin, buscando como staff...`,
+        );
+
+        const staff = await this.prisma.staff.findFirst({
+          where: {
+            userId: userDB.id,
+            isActive: true,
+          },
+          select: {
+            id: true,
+            branchId: true,
+            name: true,
+          },
+        });
+
+        if (staff) {
+          isStaff = true;
+          branchId = staff.branchId;
+          this.logger.log(
+            `Usuario ${userDB.email} encontrado como staff: ${staff.name}, branchId: ${branchId}`,
+          );
+        } else {
+          this.logger.log(
+            `Usuario ${userDB.email} no tiene perfil de staff asociado`,
+          );
+        }
+      } else {
+        this.logger.log(
+          `Usuario ${userDB.email} es superAdmin, no requiere branchId`,
+        );
+      }
+
+      // Datos de contexto para el logging
+      console.log(
+        'CONTEXTO DE AUTENTICACIÓN:',
+        JSON.stringify(
+          {
+            userId: userDB.id,
+            email: userDB.email,
+            isSuperAdmin: userDB.isSuperAdmin,
+            isStaff: isStaff,
+            branchId: branchId,
+            roles: userDB.roles,
+          },
+          null,
+          2,
+        ),
+      );
+
       res.json({
         id: userDB.id,
         name: userDB.name,
@@ -110,6 +163,9 @@ export class AuthService {
         phone: userDB.phone,
         isSuperAdmin: userDB.isSuperAdmin,
         roles: userDB.roles,
+        token: token,
+        branchId, // Esto ya estaba implementado correctamente
+        isStaff, // Añadimos esta información adicional
       });
     } catch (error) {
       this.logger.error(
