@@ -17,7 +17,7 @@ ENV DIR=/app
 WORKDIR $DIR
 
 # Definir PORT por defecto
-ENV PORT=3000
+ENV PORT=5000
 
 # Etapa de dependencias
 FROM base AS deps
