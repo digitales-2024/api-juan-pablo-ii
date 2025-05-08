@@ -183,7 +183,7 @@ model Patient {
   notes                  String? @db.Text
   patientPhoto           String? @db.Text
 
-  //no tocar
+  //no tocar datos de auditoria
   isActive       Boolean          @default(true)
   createdAt      DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime         @updatedAt
