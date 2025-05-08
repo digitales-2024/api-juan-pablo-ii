@@ -19,7 +19,7 @@ export class UpdateStaffUseCase {
     private readonly staffRepository: StaffRepository,
     private readonly staffTypeRepository: StaffTypeRepository,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   /**
    * Valida si ya existe personal con el DNI proporcionado, excluyendo al personal actual
@@ -28,10 +28,13 @@ export class UpdateStaffUseCase {
    * @returns {Promise<boolean>} True si existe otro personal con el DNI, false en caso contrario
    * @private
    */
-  private async validateDNIExists(dni: string, currentStaffId: string): Promise<boolean> {
+  private async validateDNIExists(
+    dni: string,
+    currentStaffId: string,
+  ): Promise<boolean> {
     const existingStaff = await this.staffRepository.findStaffByDNI(dni);
     // Filtra para excluir al personal actual y verifica si hay otros con el mismo DNI
-    return existingStaff.some(staff => staff.id !== currentStaffId);
+    return existingStaff.some((staff) => staff.id !== currentStaffId);
   }
 
   /**
@@ -47,11 +50,16 @@ export class UpdateStaffUseCase {
     updateStaffDto: UpdateStaffDto,
     user: UserData,
   ): Promise<BaseApiResponse<Staff>> {
-    const staffType = await this.staffTypeRepository.findById(
-      updateStaffDto.staffTypeId,
-    );
-    if (!staffType) {
-      throw new BadRequestException('El tipo de personal no existe');
+    console.log('🚀 ~ UpdateStaffUseCase ~ id:', id);
+    console.log('🚀 ~ UpdateStaffUseCase ~ updateStaffDto:', updateStaffDto);
+
+    if (updateStaffDto.staffTypeId) {
+      const staffType = await this.staffTypeRepository.findById(
+        updateStaffDto.staffTypeId,
+      );
+      if (!staffType) {
+        throw new BadRequestException('El tipo de personal no existe');
+      }
     }
 
     // Solo validar el DNI si se está intentando actualizar
