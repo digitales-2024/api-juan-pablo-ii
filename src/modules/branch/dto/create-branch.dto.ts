@@ -22,7 +22,7 @@ export class CreateBranchDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim().toLowerCase())
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @ApiProperty({
