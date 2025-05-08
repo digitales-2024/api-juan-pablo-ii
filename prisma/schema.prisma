@@ -159,7 +159,7 @@ model Patient {
   id                     String  @id @unique @default(uuid())
   name                   String
   lastName               String?
-  dni                    String
+  dni                    String @unique
   birthDate              String? @db.VarChar(20)
   gender                 String?
   address                String? @db.VarChar(255)
