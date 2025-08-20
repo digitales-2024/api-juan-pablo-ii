@@ -93,7 +93,9 @@ export class StaffService {
    */
   async findAll(): Promise<Staff[]> {
     try {
-      return await this.staffRepository.findMany();
+      return await this.staffRepository.findMany({
+        orderBy: { createdAt: 'desc' },
+      });
     } catch (error) {
       this.errorHandler.handleError(error, 'getting');
     }

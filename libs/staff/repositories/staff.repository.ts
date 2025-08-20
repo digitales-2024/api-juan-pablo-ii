@@ -66,13 +66,15 @@ export class StaffRepository extends BaseRepository<Staff> {
             },
           },
           cmp: data.cmp,
-          ...(data.branchId ? {
-            branch: {
-              connect: {
-                id: data.branchId
+          ...(data.branchId
+            ? {
+                branch: {
+                  connect: {
+                    id: data.branchId,
+                  },
+                },
               }
-            }
-          } : {}),
+            : {}),
         },
         select: {
           id: true,
@@ -162,6 +164,8 @@ export class StaffRepository extends BaseRepository<Staff> {
    * @returns El personal actualizado
    */
   async updateStaff(id: string, data: any): Promise<Staff> {
+    console.log('🚀 ~ StaffRepository ~ updateStaff ~ data:', data);
+    console.log('🚀 ~ StaffRepository ~ updateStaff ~ id:', id);
     // Construir el objeto de datos para Prisma
     const updateData: any = { ...data };
 
@@ -182,8 +186,8 @@ export class StaffRepository extends BaseRepository<Staff> {
     } else if (data.branchId) {
       updateData.branch = {
         connect: {
-          id: data.branchId
-        }
+          id: data.branchId,
+        },
       };
       // Eliminar branchId para evitar conflictos con la relación
       delete updateData.branchId;
@@ -193,8 +197,8 @@ export class StaffRepository extends BaseRepository<Staff> {
     if (data.staffTypeId) {
       updateData.staffType = {
         connect: {
-          id: data.staffTypeId
-        }
+          id: data.staffTypeId,
+        },
       };
       // Eliminar staffTypeId para evitar conflictos con la relación
       delete updateData.staffTypeId;
