@@ -1,5 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { addDays, eachWeekOfInterval, setHours, setMinutes, startOfDay, endOfDay, isValid, lastDayOfMonth } from 'date-fns';
+import {
+  addDays,
+  eachWeekOfInterval,
+  setHours,
+  setMinutes,
+  startOfDay,
+  endOfDay,
+  isValid,
+  lastDayOfMonth,
+} from 'date-fns';
 import { formatInTimeZone, toDate } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 
@@ -25,12 +34,16 @@ const TIMEZONE = 'America/Lima';
 export class RecurrenceParser {
   private readonly logger = new Logger(RecurrenceParser.name);
 
-  generateDates(startDate: Date, recurrenceRule: RecurrenceRule, daysOfWeek: string[]): Date[] {
+  generateDates(
+    startDate: Date,
+    recurrenceRule: RecurrenceRule,
+    daysOfWeek: string[],
+  ): Date[] {
     try {
       this.logger.debug('Entrada de generateDates:', {
         startDate: startDate.toISOString(),
         recurrenceRule,
-        daysOfWeek
+        daysOfWeek,
       });
 
       // Validar fecha inicial
@@ -49,51 +62,69 @@ export class RecurrenceParser {
         // Si la fecha no es válida (como 31 de febrero), usamos el último día del mes
         if (!isValid(parsedUntilDate)) {
           parsedUntilDate = lastDayOfMonth(new Date(year, month - 1, 1));
-          this.logger.debug(`Fecha ajustada al último día del mes: ${parsedUntilDate.toISOString()}`);
+          this.logger.debug(
+            `Fecha ajustada al último día del mes: ${parsedUntilDate.toISOString()}`,
+          );
         }
       } catch (error) {
-        throw new Error(`Error al procesar la fecha final: ${recurrenceRule.until}`);
+        throw new Error(
+          `Error al procesar la fecha final: ${recurrenceRule.until}`,
+        );
       }
 
       this.logger.debug('Fechas parseadas:', {
         parsedStartDate: startDate.toISOString(),
-        parsedUntilDate: parsedUntilDate.toISOString()
+        parsedUntilDate: parsedUntilDate.toISOString(),
       });
       // Convertir fechas a la zona horaria correcta
       const localStartDate = toDate(startDate, { timeZone: TIMEZONE });
-      const untilDate = toDate(endOfDay(parsedUntilDate), { timeZone: TIMEZONE });
-
-      this.logger.debug('Fechas en zona horaria local:', {
-        localStartDate: formatInTimeZone(localStartDate, TIMEZONE, 'yyyy-MM-dd HH:mm:ss', { locale: es }),
-        untilDate: formatInTimeZone(untilDate, TIMEZONE, 'yyyy-MM-dd HH:mm:ss', { locale: es })
+      const untilDate = toDate(endOfDay(parsedUntilDate), {
+        timeZone: TIMEZONE,
       });
 
-      const weekDayNumbers = daysOfWeek.map(day => WEEKDAYS[day]);
+      this.logger.debug('Fechas en zona horaria local:', {
+        localStartDate: formatInTimeZone(
+          localStartDate,
+          TIMEZONE,
+          'yyyy-MM-dd HH:mm:ss',
+          { locale: es },
+        ),
+        untilDate: formatInTimeZone(
+          untilDate,
+          TIMEZONE,
+          'yyyy-MM-dd HH:mm:ss',
+          { locale: es },
+        ),
+      });
+
+      const weekDayNumbers = daysOfWeek.map((day) => WEEKDAYS[day]);
       const dates: Date[] = [];
 
       const weeks = eachWeekOfInterval({
         start: startOfDay(localStartDate),
-        end: untilDate
+        end: untilDate,
       }).filter((_, index) => index % recurrenceRule.interval === 0);
 
       this.logger.debug(`Generando fechas para ${weeks.length} semanas`);
 
-      weeks.forEach(week => {
-        weekDayNumbers.forEach(dayNumber => {
+      weeks.forEach((week) => {
+        weekDayNumbers.forEach((dayNumber) => {
           const date = addDays(week, dayNumber);
 
           if (date >= localStartDate && date <= untilDate) {
             const eventDate = toDate(
               setMinutes(
                 setHours(date, localStartDate.getHours()),
-                localStartDate.getMinutes()
+                localStartDate.getMinutes(),
               ),
-              { timeZone: TIMEZONE }
+              { timeZone: TIMEZONE },
             );
 
             if (isValid(eventDate)) {
               dates.push(eventDate);
-              this.logger.debug(`Fecha agregada: ${formatInTimeZone(eventDate, TIMEZONE, 'yyyy-MM-dd HH:mm:ss')}`);
+              this.logger.debug(
+                `Fecha agregada: ${formatInTimeZone(eventDate, TIMEZONE, 'yyyy-MM-dd HH:mm:ss')}`,
+              );
             } else {
               this.logger.warn(`Fecha inválida generada para: ${date}`);
             }
