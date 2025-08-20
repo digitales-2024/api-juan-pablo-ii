@@ -1,322 +1,529 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🔐 Módulo Login - Documentación Técnica
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 🎯 Descripción General
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+El módulo **Login** es el sistema central de autenticación y autorización del API Juan Pablo II. Maneja la autenticación de usuarios, gestión de roles y permisos, auditoría de acciones, y administración del sistema.
 
-## Descripcion
+## 🏗️ Arquitectura del Módulo
 
-[Nest](https://docs.nestjs.com/) Crear un Proyecto - Documentacion oficial Nest.
-
-[Crear Libreria Nest](https://docs.nestjs.com/cli/libraries) Crea una libreria documentacion oficial Nest.
-
-## Crear y Usar la Libreria Login en un Proyecto
-
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://thumbs.dreamstime.com/b/team-hierarchy-connection-group-digital-digitalteam-high-quality-photo-208264515.jpg" width="300" alt="Nest Logo" /></a>
-</p>
-
-```bash
-
-# Crear una libreria en el proyecto con el nombre del repositorio "login".
-
-nest g library login
-
-# La configuracion al usar el comando sera.
-
-? What... ? @login
-
-# Se creara una carpeta "libs" que administra librearias creadas ubicamos "login".
-
-# El comando configurara las dependencias de la libreria creada dentro del proyecto en los archivos.
-
-tsconfig.json
-
-package.json
-
-# La estructura de libs con la libreria login debe de ser la siguente.
-
-libs
-└───login
-    │   tsconfig.lib.json
-    │
-    └───src
-            index.ts
-            login.module.ts
-            login.service.spec.ts
-            login.service.ts
-
-# Podemos crear mas librerias dentro de libs con.
-
-nest g library nueva-libreria
-
-# Y podemos gestionar logica para esa nueva librearia como crear un CRUD basico con el comando Cli de nest.
-
-nest g resource nuevo-modulo --no-spec
-
-Api
-
-Yes
-
-# //Pero no nos enfocaremos en el crud//
-
-# Vamos a reemplazar la libreria "login" con el repositorio Git de Login con.
-
-git clone https://github.com/alexfloresv/login.git
-
-# Para este paso tenemos que ubicarnos dentro de libs y reemplar a login.
-# las depencias ya estan creadas al crear la libreria "login" con el nombre del repositorio Git
-
+### **Estructura de Directorios**
 ```
-## Importacion de la libreria Login a el Proyecto
-
-```bash
-# Ingresamos al modulo principal del Proyecto
-
-app.module.ts
-
-# Importamos la libreria
-
-import { LoginModule } from '@login/login';// Importar librearía de login
-import { AdminModule } from '@login/login/admin/admin.module'; // Importar AdminModule para acceder a toda la lógica de autentificacion de admin
-import { UsersModule } from '@login/login/admin/users/users.module'; // Importar UsersModule para acceder a toda la lógica CRUD de creación de usuarios
-
-imports: [LoginModule,AdminModule, UsersModule], // Importar LoginModule para acceder a toda la lógica
-
-# Configuramos el archivo  "main.ts" del proyecto principal  con la Importacion de "cookieParser".
-
-import * as cookieParser from 'cookie-parser';// Importar cookieParser
-
-# Agregamos el uso de esta libreria dentro de la funcion principal
-
-app.use(cookieParser());//parsear cookies
-
-
+📁 login/
+├── 📁 src/
+│   ├── 📁 admin/              # Administración del sistema
+│   │   ├── 📁 auth/           # Autenticación y autorización
+│   │   │   ├── 📁 decorators/ # Decoradores personalizados
+│   │   │   ├── 📁 guards/     # Guards de seguridad
+│   │   │   ├── 📁 strategies/ # Estrategias de Passport
+│   │   │   ├── 📁 dto/        # DTOs de autenticación
+│   │   │   └── 📁 interfaces/ # Interfaces de usuario
+│   │   ├── 📁 users/          # Gestión de usuarios
+│   │   ├── 📁 rol/            # Gestión de roles
+│   │   ├── 📁 modules/        # Gestión de módulos
+│   │   ├── 📁 permissions/    # Gestión de permisos
+│   │   └── 📁 audit/          # Auditoría de acciones
+│   ├── 📁 email/              # Servicios de email
+│   ├── 📁 event-emitter/      # Emisión de eventos
+│   ├── 📁 interfaces/         # Interfaces compartidas
+│   ├── 📁 seeds/              # Datos iniciales
+│   ├── 📁 utils/              # Utilidades
+│   ├── login.module.ts        # Configuración del módulo
+│   └── README.md              # Esta documentación
 ```
 
-## Configuracion estandar de paquetes de NodeJs
+### **Patrón Arquitectónico**
+- **JWT Strategy** para autenticación basada en tokens
+- **Role-Based Access Control (RBAC)** para autorización
+- **Audit Trail** para seguimiento de acciones
+- **Event-Driven** para notificaciones
 
-```bash
-# Una vez Importada la libreria configuramos las dependencias que usa la libreria
-# Dentro del proyecto principal en "package.json".
+## 🔧 Dependencias del Módulo
 
-"dependencies": {
-    "@nestjs-modules/mailer": "^2.0.2",
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/config": "^3.2.3",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/event-emitter": "^2.0.4",
-    "@nestjs/jwt": "^10.2.0",
-    "@nestjs/mapped-types": "*",
-    "@nestjs/passport": "^10.0.3",
-    "@nestjs/platform-express": "^10.0.0",
-    "@nestjs/swagger": "^7.4.0",
-    "@prisma/client": "^5.20.0",
-    "bcrypt": "5.1.1",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
-    "cookie-parser": "^1.4.6",
-    "ejs": "^3.1.10",
-    "express-session": "^1.18.0",
-    "generate-password": "^1.7.1",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0",
-    "passport-jwt": "^4.0.1",
-    "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1",
-    "uuid": "^10.0.0"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^19.3.0",
-    "@commitlint/config-conventional": "^19.2.2",
-    "@nestjs/cli": "^10.0.0",
-    "@nestjs/schematics": "^10.0.0",
-    "@nestjs/testing": "^10.0.0",
-    "@types/bcrypt": "^5.0.2",
-    "@types/cookie-parser": "^1.4.7",
-    "@types/express": "^4.17.17",
-    "@types/express-session": "^1.18.0",
-    "@types/jest": "^29.5.2",
-    "@types/node": "^20.3.1",
-    "@types/passport-jwt": "^4.0.1",
-    "@types/supertest": "^6.0.0",
-    "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^8.42.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.0.0",
-    "husky": "^8.0.0",
-    "jest": "^29.5.0",
-    "lint-staged": "^15.2.8",
-    "prettier": "^3.3.3",
-    "prisma": "^5.20.0",
-    "source-map-support": "^0.5.21",
-    "supertest": "^7.0.0",
-    "ts-jest": "^29.1.0",
-    "ts-loader": "^9.4.3",
-    "ts-node": "^10.9.1",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.3"
-  },
-
-  # Una vez configurada las depencias usar el comando
-
-$ npm i
-
-```
-
-## Configuracion de la base de datos que usa la libreria Login
-
-```bash
-# Creamos las tablas basicas que usa la libreria usando el ORM Prisma
-# Instamos Prisma en el proyecto principal si no esta aun instalado con.
-
-npm install prisma -g
-
-prisma init
-
-# Configuracion del archivo .env
-# Copiamos y pegamos la configuracion de .env que se encuentra dentro de la libreria en el archivo.
-
-env.txt
-
-# Configuramos env para que apunte a nuestra base de datos
-# Esta configuracion apunta a una base de datos llamada login 
-
-DATABASE_URL="postgresql://admin:admin@localhost:5432/login?schema=public"
-
-# Copiar y pegar la estructura de tablas de la libreria login que esta en el archivo.
-
-schemaLogin.txt
-
-# El archivo se encuetra dentro de la libreria login copiamos esta estructura.
-# Al proyecto principal dentro del archivo.
-
-schema.prisma
-
-# ejecutamos la Migracion de la estructura a nuestra base de datos con el comando
-
-npx prisma migrate dev
-
-# Fin de la configuracion de la libreria login
-
-
-```
-
-## Uso de la libreria 
-
-```bash
-# Ejecutamos el Proyecto Principal con
-
-$ npm run start:dev
-
-# verificamos que no envie errores si es el caso verificar las depencias  en los archivos 
-# Antes mencionados del proyecto principal
-
-tsconfig.json
-
-package.json
-
-# Iniciamos Postman o otro para enviar solicitudes al backend
-
-# Primero crearemos el super admin con
-
-# crear super admin usuario
-
-@post
-http://localhost:3000/seeds
-
-# Login usuario
-
-@post
-http://localhost:3000/auth/login
-
-# Cerrar Seccion user
-@post
-http://localhost:3000/auth/logout
-
-# Ver todos los usuarios
-@get
-http://localhost:3000/users
-
-# Para crear un nuevo usuario es necesario un rol iremos la tabla rol de la base de datos
-# y agregaremos de manera forzada un nuevo rol como id en el registro ingresaremos
-# "1634ead1-8146-47ac-8aa7-4cf97f76efc3" y llenamos los campos 
-
-id:1634ead1-8146-47ac-8aa7-4cf97f76efc3 ; name:usuario ; description:usuario ; isActive:t ("t=true; f=false") ; createAt: ; updatedAt: ;
-
-# Ahora podemos crear usuarios
-
-#  crea usuarios
-
-@post
-http://localhost:3000/users
-
-# enviar json* contraseña con mayusculas minimas (1) y minimo (1) numero y minimo de caracteres de contraseña (6)
-{
-"name": "usuarioNuevo",
-"email": "usuario.nuevo@gmail.com",
-"password": "Usuario1234",
-"phone": "",
-"roles": [
-"1634ead1-8146-47ac-8aa7-4cf97f76efc3"
+### **Módulos Internos**
+```typescript
+imports: [
+  AdminModule,           // Administración del sistema
+  PrismaModule,         // Acceso a base de datos
+  SeedsModule,          // Datos iniciales
+  TypedEventEmitterModule, // Eventos tipados
+  EventEmitterModule,   // Eventos del sistema
+  EmailModule,          // Servicios de email
 ]
-}
-
-# Actualizamos usuarios
-
-@Patch
-http://localhost:3000/users/"id del usuario creado "
-
-# enviar json*
-
-{
-"name": "tuNombre"
-}
-
-# Eliminar usuario
-
-@delete
-http://localhost:3000/users/"id-del usuario"}
-
-# Fin uso de entrade datos que maneja la libreria Login
-
-# Usar restringcion de login usando el decorador de. 
-
-@Auth
-
-# En el sistema para ingresar al sistema invocalo en el contralador del Proyecto Principal
-
 ```
 
-## Soporte
+### **Dependencias Externas**
+- `@nestjs/jwt` - Manejo de JWT
+- `@nestjs/passport` - Estrategias de autenticación
+- `passport-jwt` - Estrategia JWT para Passport
+- `bcrypt` - Encriptación de contraseñas
+- `@nestjs/event-emitter` - Sistema de eventos
 
-Documetacion Nest [read more here](https://docs.nestjs.com/support).
+## 📊 Modelos de Datos
 
-## Stay in touch
+### **Entidades Principales**
+```typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  isSuperAdmin: boolean;
+  lastLogin: DateTime;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
 
-- Author - [Alx,Fernado]
-- Website - [https://nestjs.com](https://nestjs.com/)
+interface Rol {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
 
-## License
+interface Permission {
+  id: string;
+  cod: string;
+  name: string;
+  description?: string;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
 
-Nest is [MIT licensed](https://nestjs.com).
+interface Module {
+  id: string;
+  cod: string;
+  name: string;
+  description?: string;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
+
+interface Audit {
+  id: string;
+  userId: string;
+  action: string;
+  module: string;
+  details: Json;
+  ipAddress: string;
+  userAgent: string;
+  createdAt: DateTime;
+}
+```
+
+### **Relaciones**
+```typescript
+// Usuario puede tener múltiples roles
+UserRol {
+  userId: string;
+  rolId: string;
+  isActive: boolean;
+}
+
+// Roles pueden tener múltiples permisos por módulo
+RolModulePermissions {
+  rolId: string;
+  moduleId: string;
+  permissionId: string;
+  isActive: boolean;
+}
+```
+
+## 🚀 Funcionalidades Principales
+
+### **1. Autenticación (Auth)**
+**Propósito**: Autenticación de usuarios mediante JWT
+
+**Flujo de Autenticación**:
+1. Usuario envía credenciales (email/password)
+2. Sistema valida credenciales contra base de datos
+3. Si son válidas, genera JWT token
+4. Retorna token y datos del usuario
+5. Token se usa para requests posteriores
+
+**Estrategias de Passport**:
+```typescript
+// JWT Strategy
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(private authService: AuthService) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET,
+    });
+  }
+
+  async validate(payload: any) {
+    return this.authService.validateUser(payload.sub);
+  }
+}
+```
+
+### **2. Autorización (RBAC)**
+**Propósito**: Control de acceso basado en roles y permisos
+
+**Sistema de Permisos**:
+- **Roles**: Conjunto de permisos agrupados
+- **Permisos**: Acciones específicas (CREATE, READ, UPDATE, DELETE)
+- **Módulos**: Áreas del sistema (appointments, patients, etc.)
+
+**Decoradores de Autorización**:
+```typescript
+@Auth()                    // Requiere autenticación
+@Roles('ADMIN', 'DOCTOR')  // Requiere roles específicos
+@Permissions('CREATE')     // Requiere permisos específicos
+@GetUser() user: UserData  // Obtiene usuario autenticado
+```
+
+### **3. Gestión de Usuarios**
+**Funcionalidades**:
+- CRUD de usuarios
+- Asignación de roles
+- Cambio de contraseñas
+- Activación/desactivación de usuarios
+- Historial de login
+
+### **4. Auditoría**
+**Propósito**: Registro de todas las acciones importantes
+
+**Eventos Auditados**:
+- Login/Logout
+- Creación/Modificación/Eliminación de datos
+- Cambios de configuración
+- Accesos a recursos sensibles
+
+## 📡 Endpoints API
+
+### **Autenticación**
+```typescript
+// POST /api/v1/auth/login
+Body: {
+  email: string;
+  password: string;
+}
+Response: {
+  token: string;
+  user: UserData;
+  permissions: string[];
+}
+
+// POST /api/v1/auth/logout
+Headers: Authorization: Bearer <token>
+Response: { message: string }
+
+// POST /api/v1/auth/refresh
+Headers: Authorization: Bearer <token>
+Response: { token: string }
+```
+
+### **Gestión de Usuarios**
+```typescript
+// GET /api/v1/admin/users
+// POST /api/v1/admin/users
+// PUT /api/v1/admin/users/:id
+// DELETE /api/v1/admin/users/:id
+// POST /api/v1/admin/users/:id/change-password
+```
+
+### **Gestión de Roles**
+```typescript
+// GET /api/v1/admin/roles
+// POST /api/v1/admin/roles
+// PUT /api/v1/admin/roles/:id
+// DELETE /api/v1/admin/roles/:id
+// POST /api/v1/admin/roles/:id/permissions
+```
+
+### **Auditoría**
+```typescript
+// GET /api/v1/admin/audit
+Query: {
+  userId?: string;
+  module?: string;
+  action?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+```
+
+## 🔒 Seguridad
+
+### **Encriptación de Contraseñas**
+```typescript
+// Encriptación con bcrypt
+const hashedPassword = await bcrypt.hash(password, 10);
+
+// Verificación
+const isPasswordValid = await bcrypt.compare(password, hashedPassword);
+```
+
+### **JWT Configuration**
+```typescript
+JwtModule.register({
+  secret: process.env.JWT_SECRET,
+  signOptions: { 
+    expiresIn: '24h',
+    issuer: 'juan-pablo-api',
+    audience: 'juan-pablo-users'
+  },
+})
+```
+
+### **Guards de Seguridad**
+```typescript
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  canActivate(context: ExecutionContext) {
+    // Lógica adicional de validación
+    return super.canActivate(context);
+  }
+}
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    
+    if (!requiredRoles) return true;
+    
+    const { user } = context.switchToHttp().getRequest();
+    return requiredRoles.some((role) => user.roles?.includes(role));
+  }
+}
+```
+
+## 🔄 Eventos y Notificaciones
+
+### **Eventos del Sistema**
+```typescript
+// Eventos de autenticación
+UserLoginEvent {
+  userId: string;
+  email: string;
+  ipAddress: string;
+  userAgent: string;
+  timestamp: DateTime;
+}
+
+UserLogoutEvent {
+  userId: string;
+  timestamp: DateTime;
+}
+
+// Eventos de auditoría
+AuditEvent {
+  userId: string;
+  action: string;
+  module: string;
+  details: any;
+  ipAddress: string;
+}
+```
+
+### **Notificaciones por Email**
+- Confirmación de registro
+- Recuperación de contraseña
+- Alertas de seguridad
+- Notificaciones de cambios de rol
+
+## 📊 Validaciones de Negocio
+
+### **Reglas de Autenticación**
+1. **Contraseñas**: Mínimo 8 caracteres, mayúsculas, minúsculas, números
+2. **Sesiones**: Máximo 24 horas de sesión activa
+3. **Intentos**: Máximo 5 intentos fallidos antes de bloqueo temporal
+4. **Cambio de Contraseña**: Obligatorio en primer login
+
+### **Reglas de Autorización**
+1. **Roles**: Usuario debe tener al menos un rol activo
+2. **Permisos**: Permisos se validan por módulo y acción
+3. **Jerarquía**: SuperAdmin tiene acceso completo
+4. **Sucursal**: Acceso limitado por sucursal del usuario
+
+## 🗄️ Acceso a Datos
+
+### **Queries Principales**
+```typescript
+// Validación de usuario
+async validateUser(userId: string): Promise<User | null> {
+  return this.prisma.user.findUnique({
+    where: { id: userId, isActive: true },
+    include: {
+      userRols: {
+        where: { isActive: true },
+        include: {
+          rol: {
+            include: {
+              rolModulePermissions: {
+                where: { isActive: true },
+                include: {
+                  module: true,
+                  permission: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// Obtener permisos del usuario
+async getUserPermissions(userId: string): Promise<string[]> {
+  const user = await this.validateUser(userId);
+  const permissions = [];
+  
+  user.userRols.forEach(userRol => {
+    userRol.rol.rolModulePermissions.forEach(rmp => {
+      permissions.push(`${rmp.module.cod}:${rmp.permission.cod}`);
+    });
+  });
+  
+  return [...new Set(permissions)];
+}
+```
+
+## 🧪 Testing
+
+### **Tipos de Tests**
+1. **Unit Tests**: Servicios de autenticación
+2. **Integration Tests**: Flujo completo de login
+3. **E2E Tests**: Endpoints de autenticación
+4. **Security Tests**: Validación de permisos
+
+### **Casos de Prueba Críticos**
+- Login con credenciales válidas
+- Login con credenciales inválidas
+- Validación de JWT expirado
+- Verificación de permisos por rol
+- Auditoría de acciones
+
+## 🔧 Configuración
+
+### **Variables de Entorno**
+```env
+# JWT Configuration
+JWT_SECRET=your-super-secret-key
+JWT_EXPIRES_IN=24h
+JWT_ISSUER=juan-pablo-api
+JWT_AUDIENCE=juan-pablo-users
+
+# Password Policy
+PASSWORD_MIN_LENGTH=8
+PASSWORD_REQUIRE_UPPERCASE=true
+PASSWORD_REQUIRE_LOWERCASE=true
+PASSWORD_REQUIRE_NUMBERS=true
+
+# Session Management
+SESSION_TIMEOUT_HOURS=24
+MAX_LOGIN_ATTEMPTS=5
+LOGIN_LOCKOUT_MINUTES=30
+
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+```
+
+### **Configuración del Módulo**
+```typescript
+@Module({
+  imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN },
+    }),
+    PassportModule,
+    EventEmitterModule.forRoot(),
+  ],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    RolesGuard,
+    PermissionsGuard,
+  ],
+  exports: [AuthService, JwtStrategy],
+})
+```
+
+## 📈 Métricas y Monitoreo
+
+### **Métricas de Seguridad**
+- Intentos de login fallidos
+- Tokens JWT expirados
+- Accesos denegados por permisos
+- Actividad de usuarios por rol
+
+### **Logs de Seguridad**
+- Todos los intentos de login
+- Cambios de contraseña
+- Asignación/remoción de roles
+- Accesos a recursos sensibles
+
+## 🚨 Manejo de Errores
+
+### **Errores Específicos**
+```typescript
+class InvalidCredentialsError extends Error {
+  constructor() {
+    super('Credenciales inválidas');
+  }
+}
+
+class InsufficientPermissionsError extends Error {
+  constructor(requiredPermission: string) {
+    super(`Permiso requerido: ${requiredPermission}`);
+  }
+}
+
+class UserInactiveError extends Error {
+  constructor() {
+    super('Usuario inactivo');
+  }
+}
+```
+
+### **Códigos de Error**
+- `401`: No autenticado
+- `403`: Sin permisos suficientes
+- `429`: Demasiados intentos de login
+- `422`: Datos de entrada inválidos
+
+## 🔄 Seeds y Datos Iniciales
+
+### **Datos por Defecto**
+```typescript
+// Usuario SuperAdmin
+{
+  email: 'admin@juanpablo.com',
+  password: 'Admin123!',
+  name: 'Administrador',
+  isSuperAdmin: true,
+  isActive: true,
+}
+
+// Roles básicos
+- SUPER_ADMIN: Acceso completo
+- DOCTOR: Gestión de citas y pacientes
+- NURSE: Gestión de citas
+- RECEPTIONIST: Gestión básica
+- PATIENT: Acceso limitado
+```
+
+---
+
+*Documentación del módulo Login - Sistema API Juan Pablo II*
