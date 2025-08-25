@@ -103,6 +103,40 @@ export class PacientController {
   }
 
   /**
+   * Busca pacientes por DNI parcial (mínimo 5 dígitos)
+   * Endpoint optimizado para búsqueda en tiempo real
+   */
+  @Get('search/dni')
+  @ApiOperation({ 
+    summary: 'Buscar pacientes por DNI parcial',
+    description: 'Busca pacientes que coincidan con el DNI parcial proporcionado. Mínimo 5 dígitos requeridos.'
+  })
+  @ApiQuery({ 
+    name: 'dni', 
+    description: 'DNI parcial del paciente (mínimo 5 dígitos)',
+    example: '12345'
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Límite de resultados (máximo 10)',
+    required: false,
+    example: 10
+  })
+  @ApiOkResponse({
+    description: 'Pacientes encontrados por DNI parcial',
+    type: [Patient],
+  })
+  @ApiBadRequestResponse({
+    description: 'DNI debe tener al menos 5 dígitos',
+  })
+  searchByPartialDni(
+    @Query('dni') dni: string,
+    @Query('limit') limit?: string,
+  ): Promise<Patient[]> {
+    return this.pacientService.searchByPartialDni(dni, limit ? parseInt(limit) : 10);
+  }
+
+  /**
    * Obtiene un paciente por su ID
    */
   @ApiOperation({ summary: 'Obtener paciente por ID' })
