@@ -165,7 +165,7 @@ export class AppointmentService {
       const branchFilter = this.createBranchFilter(userBranch);
 
       if (startDate && endDate) {
-        const appointments = await this.appointmentRepository.findByDateRange(
+        const appointments = await this.appointmentRepository.findByDateRangeSimple(
           startDate,
           endDate,
           branchFilter,
@@ -254,6 +254,60 @@ export class AppointmentService {
     try {
       return await this.findAppointmentsByStatusUseCase.execute(
         status,
+        page,
+        limit,
+        userBranch,
+      );
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
+   * Busca citas médicas en un rango de fechas específico
+   * @param startDate Fecha de inicio en formato ISO (YYYY-MM-DD)
+   * @param endDate Fecha de fin en formato ISO (YYYY-MM-DD)
+   * @param page Número de página
+   * @param limit Límite de registros por página
+   * @param userBranch Información de la sucursal del usuario
+   * @returns Lista paginada de citas médicas en el rango de fechas especificado
+   */
+  async findByDateRange(
+    startDate: string,
+    endDate: string,
+    page: number = 1,
+    limit: number = 10,
+    userBranch?: UserBranchData,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    this.logger.log(
+      `findByDateRange called with startDate: ${startDate}, endDate: ${endDate}, page: ${page}, limit: ${limit}`,
+    );
+    
+    try {
+      // Validar el formato de las fechas
+      // Asegurar que las fechas se interpreten en la zona horaria de Lima (UTC-5)
+      const startDateTime = new Date(startDate + 'T00:00:00-05:00');
+      const endDateTime = new Date(endDate + 'T23:59:59-05:00');
+      
+      if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+        throw new BadRequestException(
+          'Formato de fecha inválido. Use YYYY-MM-DD',
+        );
+      }
+      
+      if (startDateTime > endDateTime) {
+        throw new BadRequestException(
+          'La fecha de inicio debe ser menor o igual a la fecha de fin',
+        );
+      }
+      
+      this.logger.log(
+        `📅 Fechas ajustadas para búsqueda: startDateTime: ${startDateTime.toISOString()}, endDateTime: ${endDateTime.toISOString()}`,
+      );
+      
+      return await this.appointmentRepository.findByDateRange(
+        startDateTime,
+        endDateTime,
         page,
         limit,
         userBranch,
