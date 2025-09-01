@@ -6,6 +6,7 @@ import {
   Delete,
   Post,
   Get,
+  Query,
 } from '@nestjs/common';
 import { OrderService } from '../services/order.service';
 import {
@@ -116,6 +117,20 @@ export class OrderController {
   })
   async findByStatus(@Param('status') status: OrderStatus): Promise<Order[]> {
     return this.orderService.findOrderByStatus(status);
+  }
+
+  @Get('date-range')
+  @ApiOperation({ summary: 'Get orders by date range' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of orders within the specified date range',
+    type: [DetailedOrder],
+  })
+  async findByDateRange(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ): Promise<DetailedOrder[]> {
+    return this.orderService.findOrdersByDateRange(startDate, endDate);
   }
 
   @Get('/detailed/code/:code')
