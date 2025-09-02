@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { AppointmentRepository } from '../repositories/appointment.repository';
 import { HttpResponse, UserData } from '@login/login/interfaces';
 import { AuditService } from '@login/login/admin/audit/audit.service';
@@ -45,7 +40,7 @@ export class RescheduleAppointmentUseCase {
         rescheduleAppointmentDto,
       );
 
-      // 3. Validar solo conflictos básicos (sin validar turnos disponibles)
+      // 3. Validar disponibilidad y conflictos
       await this.validateAvailabilityAndConflicts(newAppointmentData, id);
 
       // 4. Ejecutar reprogramación en transacción
@@ -63,10 +58,7 @@ export class RescheduleAppointmentUseCase {
         data: result,
       };
     } catch (error) {
-      this.logger.error(
-        `Error al reprogramar cita ${id}: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Error al reprogramar cita ${id}: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -77,10 +69,9 @@ export class RescheduleAppointmentUseCase {
       throw new NotFoundException(`Cita con ID ${id} no encontrada`);
     }
 
-    // Permitir reprogramar cualquier cita que no esté completada o cancelada
-    if (['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status)) {
+    if (!['PENDING', 'CONFIRMED'].includes(appointment.status)) {
       throw new BadRequestException(
-        `No se pueden reprogramar citas con estado: ${appointment.status}`,
+        `Solo se pueden reprogramar citas pendientes o confirmadas. Estado actual: ${appointment.status}`,
       );
     }
 
@@ -143,17 +134,27 @@ export class RescheduleAppointmentUseCase {
     };
   }
 
-  private async validateAvailabilityAndConflicts(
-    newData: any,
-    excludeAppointmentId: string,
-  ) {
+  private async validateAvailabilityAndConflicts(newData: any, excludeAppointmentId: string) {
     const { start, end, targetStaffId, targetBranchId } = newData;
 
-    // Para reprogramaciones, saltamos la validación de turnos disponibles
-    // Solo verificamos conflictos básicos con otras citas confirmadas
+    // Verificar que hay turnos disponibles para el staff en la sucursal
     this.logger.debug(
-      `Validando conflictos básicos para staff: ${targetStaffId}, sucursal: ${targetBranchId}`,
+      `Validando turnos para staff: ${targetStaffId}, sucursal: ${targetBranchId}`,
     );
+
+    const availableTurn = await this.eventService.findAvailableTurn(targetStaffId, start, end);
+    if (!availableTurn) {
+      throw new BadRequestException(
+        'No hay turnos disponibles para el personal médico en el horario y sucursal solicitados',
+      );
+    }
+
+    // Verificar que el turno corresponde a la sucursal correcta
+    if (availableTurn.branchId !== targetBranchId) {
+      throw new BadRequestException(
+        'El personal médico no tiene turnos disponibles en la sucursal seleccionada',
+      );
+    }
 
     // Verificar conflictos con otras citas confirmadas
     const conflictingAppointments = await this.appointmentRepository.findMany({
@@ -176,8 +177,6 @@ export class RescheduleAppointmentUseCase {
         'Ya existe una cita confirmada para este personal en el horario seleccionado',
       );
     }
-
-    this.logger.debug('Validación de conflictos completada - No hay conflictos');
   }
 
   private async executeRescheduleTransaction(
@@ -190,32 +189,51 @@ export class RescheduleAppointmentUseCase {
     return await this.prisma.$transaction(async (tx) => {
       const { start, end, targetStaffId, targetBranchId } = newData;
 
-      // 1. Crear nuevo evento para la nueva cita
-      const newEvent = await tx.event.create({
-        data: {
-          title: `Cita - ${originalAppointment.patient?.name || 'Paciente'}`,
-          type: 'TURNO',
-          start,
-          end,
-          staffId: targetStaffId,
-          branchId: targetBranchId,
-          status: 'PENDING',
-        },
-      });
-      this.logger.debug(`Nuevo evento ${newEvent.id} creado para la cita reprogramada`);
+      // 1. Actualizar o crear evento
+      let eventId = originalAppointment.eventId;
+      
+      if (eventId) {
+        // Actualizar evento existente
+        await tx.event.update({
+          where: { id: eventId },
+          data: {
+            start,
+            end,
+            staffId: targetStaffId,
+            branchId: targetBranchId,
+            updatedAt: new Date(),
+          },
+        });
+        this.logger.debug(`Evento ${eventId} actualizado con nueva información`);
+      } else {
+        // Crear nuevo evento si no existe
+        const newEvent = await tx.event.create({
+          data: {
+            title: `Cita - ${originalAppointment.patient?.name || 'Paciente'}`,
+            type: 'TURNO',
+            start,
+            end,
+            staffId: targetStaffId,
+            branchId: targetBranchId,
+            status: 'PENDING',
+          },
+        });
+        eventId = newEvent.id;
+        this.logger.debug(`Nuevo evento ${eventId} creado`);
+      }
 
-      // 2. Marcar cita original como reprogramada y desligar del evento
+      // 2. Marcar cita original como reprogramada
       await tx.appointment.update({
         where: { id: originalAppointmentId },
         data: {
           status: 'RESCHEDULED',
           rescheduleReason: rescheduleDto.rescheduleReason,
-          eventId: null, // Desligar del evento original
           updatedAt: new Date(),
         },
       });
 
       // 3. Crear nueva cita con los datos actualizados
+      const { id: _, ...appointmentDataWithoutId } = originalAppointment;
       const newAppointment = await tx.appointment.create({
         data: {
           staffId: targetStaffId,
@@ -230,7 +248,7 @@ export class RescheduleAppointmentUseCase {
           notes: originalAppointment.notes,
           rescheduledFromId: originalAppointmentId,
           rescheduleReason: rescheduleDto.rescheduleReason,
-          eventId: newEvent.id, // Usar el nuevo evento
+          eventId,
           orderId: originalAppointment.orderId,
         },
         include: {
@@ -243,20 +261,6 @@ export class RescheduleAppointmentUseCase {
       });
 
       this.logger.debug(`Nueva cita creada con ID: ${newAppointment.id}`);
-
-      // 4. Cancelar el evento original si existe
-      if (originalAppointment.eventId) {
-        await tx.event.update({
-          where: { id: originalAppointment.eventId },
-          data: {
-            status: 'CANCELLED',
-            isCancelled: true,
-            cancellationReason: `Cita reprogramada a ${newEvent.id}`,
-            updatedAt: new Date(),
-          },
-        });
-        this.logger.debug(`Evento original ${originalAppointment.eventId} cancelado`);
-      }
 
       // 4. Actualizar órdenes asociadas
       const orders = await this.orderService.findOrdersByReferenceId(originalAppointmentId);

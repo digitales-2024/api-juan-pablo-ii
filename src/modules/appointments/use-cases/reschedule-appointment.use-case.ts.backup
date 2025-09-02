@@ -1,0 +1,442 @@
+import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+import { AppointmentRepository } from '../repositories/appointment.repository';
+import { HttpResponse, UserData } from '@login/login/interfaces';
+import { AuditService } from '@login/login/admin/audit/audit.service';
+import { AuditActionType } from '@prisma/client';
+import { PrismaService } from '@prisma/prisma';
+import { Appointment } from '../entities/appointment.entity';
+import { OrderService } from '@pay/pay/services/order.service';
+import { RescheduleAppointmentDto } from '../dto/reschedule-appointment.dto';
+import * as moment from 'moment-timezone';
+import { EventService } from '@calendar/calendar/event/services/event.service';
+
+@Injectable()
+export class RescheduleAppointmentUseCase {
+  private readonly logger = new Logger(RescheduleAppointmentUseCase.name);
+  private readonly timeZone = 'America/Lima';
+
+  constructor(
+    private readonly appointmentRepository: AppointmentRepository,
+    private readonly auditService: AuditService,
+    private readonly orderService: OrderService,
+    private readonly prisma: PrismaService,
+    private readonly eventService: EventService,
+  ) {}
+
+  async execute(
+    id: string,
+    rescheduleAppointmentDto: RescheduleAppointmentDto,
+    user: UserData,
+  ): Promise<HttpResponse<Appointment>> {
+    try {
+      this.logger.debug(`Iniciando reprogramación completa de cita ${id}`);
+
+      // 1. Validar cita original
+      const originalAppointment = await this.validateOriginalAppointment(id);
+
+      // 2. Preparar datos para la nueva cita
+      const newAppointmentData = await this.prepareNewAppointmentData(
+        originalAppointment,
+        rescheduleAppointmentDto,
+      );
+
+      // 3. Validar disponibilidad y conflictos
+      await this.validateAvailabilityAndConflicts(newAppointmentData, id);
+
+      // 4. Ejecutar reprogramación en transacción
+      const result = await this.executeRescheduleTransaction(
+        originalAppointment,
+        newAppointmentData,
+        rescheduleAppointmentDto,
+        user,
+        id,
+      );
+
+      return {
+        statusCode: 200,
+        message: 'Cita reprogramada exitosamente',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error(`Error al reprogramar cita ${id}: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  private async validateOriginalAppointment(id: string): Promise<Appointment> {
+    const appointment = await this.appointmentRepository.findById(id);
+    if (!appointment) {
+      throw new NotFoundException(`Cita con ID ${id} no encontrada`);
+    }
+
+    if (!['PENDING', 'CONFIRMED'].includes(appointment.status)) {
+      throw new BadRequestException(
+        `Solo se pueden reprogramar citas pendientes o confirmadas. Estado actual: ${appointment.status}`,
+      );
+    }
+
+    return appointment;
+  }
+
+  private async prepareNewAppointmentData(
+    originalAppointment: Appointment,
+    rescheduleDto: RescheduleAppointmentDto,
+  ) {
+    // Calcular nueva fecha de inicio y fin
+    const start = new Date(rescheduleDto.newDateTime);
+    const originalDuration = moment(originalAppointment.end).diff(
+      moment(originalAppointment.start),
+      'minutes',
+    );
+    const end = moment(start).add(originalDuration, 'minutes').toDate();
+
+    // Validar que la fecha esté alineada a intervalos de 15 minutos
+    const startLima = moment(start).tz(this.timeZone);
+    if (
+      startLima.minutes() % 15 !== 0 ||
+      startLima.seconds() !== 0 ||
+      startLima.milliseconds() !== 0
+    ) {
+      throw new BadRequestException('La hora debe estar alineada a intervalos de 15 minutos');
+    }
+
+    // Determinar valores objetivo
+    const targetStaffId = rescheduleDto.newStaffId || originalAppointment.staffId;
+    const targetBranchId = rescheduleDto.newBranchId || originalAppointment.branchId;
+
+    // Validar que el personal médico exista y esté activo
+    if (rescheduleDto.newStaffId) {
+      const staff = await this.prisma.staff.findFirst({
+        where: { id: rescheduleDto.newStaffId, isActive: true },
+      });
+      if (!staff) {
+        throw new BadRequestException('Personal médico no encontrado o inactivo');
+      }
+    }
+
+    // Validar que la sucursal exista y esté activa
+    if (rescheduleDto.newBranchId) {
+      const branch = await this.prisma.branch.findFirst({
+        where: { id: rescheduleDto.newBranchId, isActive: true },
+      });
+      if (!branch) {
+        throw new BadRequestException('Sucursal no encontrada o inactiva');
+      }
+    }
+
+    return {
+      start,
+      end,
+      targetStaffId,
+      targetBranchId,
+      originalDuration,
+      startLima,
+    };
+  }
+
+  private async validateAvailabilityAndConflicts(newData: any, excludeAppointmentId: string) {
+    const { start, end, targetStaffId, targetBranchId } = newData;
+
+    // Verificar que hay turnos disponibles para el staff en la sucursal
+    this.logger.debug(
+      `Validando turnos para staff: ${targetStaffId}, sucursal: ${targetBranchId}`,
+    );
+
+    const availableTurn = await this.eventService.findAvailableTurn(targetStaffId, start, end);
+    if (!availableTurn) {
+      throw new BadRequestException(
+        'No hay turnos disponibles para el personal médico en el horario y sucursal solicitados',
+      );
+    }
+
+    // Verificar que el turno corresponde a la sucursal correcta
+    if (availableTurn.branchId !== targetBranchId) {
+      throw new BadRequestException(
+        'El personal médico no tiene turnos disponibles en la sucursal seleccionada',
+      );
+    }
+
+    // Verificar conflictos con otras citas confirmadas
+    const conflictingAppointments = await this.appointmentRepository.findMany({
+      where: {
+        staffId: targetStaffId,
+        status: 'CONFIRMED',
+        isActive: true,
+        id: { not: excludeAppointmentId },
+        OR: [
+          {
+            AND: [{ start: { lt: end } }, { end: { gt: start } }],
+          },
+          { start: { equals: start } },
+        ],
+      },
+    });
+
+    if (conflictingAppointments.length > 0) {
+      throw new BadRequestException(
+        'Ya existe una cita confirmada para este personal en el horario seleccionado',
+      );
+    }
+  }
+
+  private async executeRescheduleTransaction(
+    originalAppointment: Appointment,
+    newData: any,
+    rescheduleDto: RescheduleAppointmentDto,
+    user: UserData,
+    originalAppointmentId: string,
+  ): Promise<Appointment> {
+    return await this.prisma.$transaction(async (tx) => {
+      const { start, end, targetStaffId, targetBranchId } = newData;
+
+      // 1. Actualizar o crear evento
+      let eventId = originalAppointment.eventId;
+      
+      if (eventId) {
+        // Actualizar evento existente
+        await tx.event.update({
+          where: { id: eventId },
+          data: {
+            start,
+            end,
+            staffId: targetStaffId,
+            branchId: targetBranchId,
+            updatedAt: new Date(),
+          },
+        });
+        this.logger.debug(`Evento ${eventId} actualizado con nueva información`);
+      } else {
+        // Crear nuevo evento si no existe
+        const newEvent = await tx.event.create({
+          data: {
+            title: `Cita - ${originalAppointment.patient?.name || 'Paciente'}`,
+            type: 'TURNO',
+            start,
+            end,
+            staffId: targetStaffId,
+            branchId: targetBranchId,
+            status: 'PENDING',
+          },
+        });
+        eventId = newEvent.id;
+        this.logger.debug(`Nuevo evento ${eventId} creado`);
+      }
+
+      // 2. Marcar cita original como reprogramada
+      await tx.appointment.update({
+        where: { id: originalAppointmentId },
+        data: {
+          status: 'RESCHEDULED',
+          rescheduleReason: rescheduleDto.rescheduleReason,
+          updatedAt: new Date(),
+        },
+      });
+
+      // 3. Crear nueva cita con los datos actualizados
+      const { id: _, ...appointmentDataWithoutId } = originalAppointment;
+      const newAppointment = await tx.appointment.create({
+        data: {
+          ...appointmentDataWithoutId,
+          start,
+          end,
+          staffId: targetStaffId,
+          branchId: targetBranchId,
+          status: originalAppointment.status, // Mantener el estado original (PENDING/CONFIRMED)
+          rescheduledFromId: originalAppointmentId,
+          rescheduleReason: rescheduleDto.rescheduleReason,
+          eventId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        include: {
+          staff: true,
+          service: true,
+          branch: true,
+          patient: true,
+          event: true,
+        },
+      });
+
+      this.logger.debug(`Nueva cita creada con ID: ${newAppointment.id}`);
+
+      // 4. Actualizar órdenes asociadas
+      const orders = await this.orderService.findOrdersByReferenceId(originalAppointmentId);
+      if (orders && orders.length > 0) {
+        for (const order of orders) {
+          try {
+            await this.orderService.update(
+              order.id,
+              { referenceId: newAppointment.id },
+              user,
+            );
+            this.logger.debug(`Orden ${order.id} actualizada`);
+          } catch (orderError) {
+            this.logger.error(`Error al actualizar orden ${order.id}: ${orderError.message}`);
+          }
+        }
+      }
+
+      // 5. Registrar auditoría
+      await this.auditService.create({
+        entityId: originalAppointmentId,
+        entityType: 'Appointment',
+        action: AuditActionType.UPDATE,
+        performedById: user.id,
+        createdAt: new Date(),
+      });
+
+      return newAppointment;
+    });
+  }
+}
+            const end = new Date(start.getTime() + 15 * 60 * 1000); // 15 minutos después
+
+            this.logger.debug(`Nueva fecha inicio (UTC): ${start.toISOString()}`);
+            this.logger.debug(`Nueva fecha fin (UTC): ${end.toISOString()}`);
+            this.logger.debug(`Nueva fecha inicio Lima: ${moment(start).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
+            this.logger.debug(`Nueva fecha fin Lima: ${moment(end).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
+
+            // Validar alineación a slots de 15 mins (00, 15, 30, 45)
+            const startLima = moment(start).tz(this.timeZone);
+            if (startLima.minutes() % 15 !== 0 || startLima.seconds() !== 0 || startLima.milliseconds() !== 0) {
+                throw new BadRequestException('La hora de inicio debe estar alineada a intervalos de 15 minutos');
+            }
+
+            // Buscar TURNOS del doctor que contengan el slot
+            this.logger.debug(`Buscando TURNO para staff: ${originalAppointment.staffId}`);
+            const validTurn = await this.eventService.findAvailableTurn(
+                originalAppointment.staffId,
+                start,
+                end
+            );
+
+            if (!validTurn) {
+                this.logger.warn(`No se encontró TURNO disponible para el staff ${originalAppointment.staffId}`);
+                this.logger.warn(`Rango buscado (UTC): ${start.toISOString()} - ${end.toISOString()}`);
+                this.logger.warn(`Rango buscado (Lima): ${moment(start).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')} - ${moment(end).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
+                throw new BadRequestException('No hay turnos disponibles para este horario');
+            }
+
+            // Verificar solapamientos
+            const overlappingAppointments = await this.appointmentRepository.findMany({
+                where: {
+                    staffId: originalAppointment.staffId,
+                    status: 'CONFIRMED',
+                    isActive: true,
+                    OR: [
+                        {
+                            AND: [
+                                { start: { lt: end } },
+                                { end: { gt: start } }
+                            ]
+                        },
+                        { start: { equals: start } }
+                    ]
+                }
+            });
+
+            if (overlappingAppointments.length > 0) {
+                this.logger.warn(`Citas CONFIRMADAS solapadas encontradas: ${JSON.stringify(overlappingAppointments)}`);
+                throw new BadRequestException('Ya existe una cita confirmada para este doctor en esta fecha y hora');
+            }
+
+            // Manejar el evento si existe en la cita original
+            let eventId = null;
+            if (originalAppointment.eventId) {
+                try {
+                    // Verificar que el evento exista
+                    const currentEvent = await this.eventService.findOne(originalAppointment.eventId);
+                    if (!currentEvent) {
+                        this.logger.warn(`No se encontró el evento ${originalAppointment.eventId} de la cita original`);
+                        throw new BadRequestException('El evento asociado a la cita no existe');
+                    }
+
+                    // Actualizar el evento con las nuevas fechas usando EventService
+                    await this.eventService.directUpdate(originalAppointment.eventId, {
+                        start: start,
+                        end: end,
+                        updatedAt: new Date()
+                    });
+
+                    this.logger.debug(`Evento ${originalAppointment.eventId} actualizado con nuevas fechas`);
+                    eventId = originalAppointment.eventId;
+                } catch (eventError) {
+                    this.logger.error(`Error al procesar el evento: ${eventError.message}`);
+                    throw new BadRequestException('Error al actualizar el evento asociado');
+                }
+            }
+
+            // PRIMERO: Actualizar la cita original y remover su eventId
+            await this.appointmentRepository.update(id, {
+                status: 'RESCHEDULED',
+                rescheduleReason: rescheduleAppointmentDto.rescheduleReason,
+                eventId: null // Removemos el eventId de la cita original
+            });
+
+            this.logger.debug(`Cita original ${id} actualizada a estado RESCHEDULED y eventId removido`);
+
+            // SEGUNDO: Crear nueva cita con el eventId
+            const { id: _, ...appointmentWithoutId } = originalAppointment;
+            const newAppointment = await this.appointmentRepository.create({
+                ...appointmentWithoutId,
+                start: start,
+                end: end,
+                status: originalAppointment.status,
+                rescheduledFromId: id,
+                rescheduleReason: rescheduleAppointmentDto.rescheduleReason,
+                eventId: eventId // Asignamos el eventId que ya fue liberado de la cita original
+            });
+
+            this.logger.debug(`Nueva cita creada con ID: ${newAppointment.id} y eventId: ${eventId}`);
+
+            // Verificación final
+            const finalAppointment = await this.appointmentRepository.findById(newAppointment.id);
+            if (!finalAppointment?.eventId && eventId) {
+                this.logger.error(`Verificación final falló: La nueva cita ${newAppointment.id} no tiene eventId`);
+                // Intentar recuperar
+                await this.appointmentRepository.update(newAppointment.id, { eventId });
+                
+                // Verificar una vez más
+                const recheck = await this.appointmentRepository.findById(newAppointment.id);
+                if (!recheck?.eventId) {
+                    throw new BadRequestException('Error en la verificación final de la reprogramación');
+                }
+            }
+
+            // Buscar órdenes asociadas a la cita original
+            const orders = await this.orderService.findOrdersByReferenceId(id);
+
+            // Actualizar las órdenes para que apunten a la nueva cita
+            if (orders && orders.length > 0) {
+                for (const order of orders) {
+                    try {
+                        await this.orderService.update(order.id, {
+                            referenceId: newAppointment.id
+                        }, user);
+                        this.logger.debug(`Orden ${order.id} actualizada con nuevo referenceId: ${newAppointment.id}`);
+                    } catch (orderError) {
+                        this.logger.error(`Error al actualizar la orden ${order.id}: ${orderError.message}`);
+                    }
+                }
+            }
+
+            // Registrar auditoría
+            await this.auditService.create({
+                entityId: originalAppointment.id,
+                entityType: 'Appointment',
+                action: AuditActionType.UPDATE,
+                performedById: user.id,
+                createdAt: new Date(),
+            });
+
+            return {
+                statusCode: 200,
+                message: 'Cita reprogramada exitosamente',
+                data: newAppointment,
+            };
+        } catch (error) {
+            this.logger.error(`Error al reprogramar cita: ${error.message}`, error.stack);
+            throw error;
+        }
+    }
+}
