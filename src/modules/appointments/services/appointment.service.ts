@@ -72,11 +72,13 @@ export class AppointmentService {
   async create(
     createAppointmentDto: CreateAppointmentDto,
     user: UserData,
+    skipTurnValidation: boolean = false,
   ): Promise<HttpResponse<Appointment>> {
     try {
       return await this.createAppointmentUseCase.execute(
         createAppointmentDto,
         user,
+        skipTurnValidation,
       );
     } catch (error) {
       this.errorHandler.handleError(error, 'creating');

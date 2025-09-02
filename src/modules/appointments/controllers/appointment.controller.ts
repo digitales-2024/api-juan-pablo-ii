@@ -64,11 +64,18 @@ export class AppointmentController {
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o horario no disponible',
   })
+  @ApiQuery({
+    name: 'skipTurnValidation',
+    required: false,
+    type: Boolean,
+    description: 'Omitir validación de turnos del médico (permite crear citas fuera de horario)',
+  })
   create(
     @Body() createAppointmentDto: CreateAppointmentDto,
     @GetUser() user: UserData,
+    @Query('skipTurnValidation') skipTurnValidation?: boolean,
   ): Promise<HttpResponse<Appointment>> {
-    return this.appointmentService.create(createAppointmentDto, user);
+    return this.appointmentService.create(createAppointmentDto, user, skipTurnValidation || false);
   }
 
   /**
