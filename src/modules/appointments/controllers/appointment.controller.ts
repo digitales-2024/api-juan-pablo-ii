@@ -64,11 +64,18 @@ export class AppointmentController {
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos o horario no disponible',
   })
+  @ApiQuery({
+    name: 'skipTurnValidation',
+    required: false,
+    type: Boolean,
+    description: 'Omitir validación de turnos del médico (permite crear citas fuera de horario)',
+  })
   create(
     @Body() createAppointmentDto: CreateAppointmentDto,
     @GetUser() user: UserData,
+    @Query('skipTurnValidation') skipTurnValidation?: boolean,
   ): Promise<HttpResponse<Appointment>> {
-    return this.appointmentService.create(createAppointmentDto, user);
+    return this.appointmentService.create(createAppointmentDto, user, skipTurnValidation || false);
   }
 
   /**
@@ -144,6 +151,67 @@ export class AppointmentController {
       undefined,
       pageNum,
       limitNum,
+      userBranch,
+    );
+  }
+
+  /**
+   * Obtiene citas médicas filtradas por rango de fechas
+   */
+  @Get('by-date-range')
+  @Auth()
+  @ApiOperation({
+    summary: 'Obtener citas médicas por rango de fechas',
+    description:
+      'Endpoint para obtener citas médicas filtradas por un rango específico de fechas.',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: true,
+    type: String,
+    description: 'Fecha de inicio en formato ISO (YYYY-MM-DD)',
+    example: '2024-01-01',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: true,
+    type: String,
+    description: 'Fecha de fin en formato ISO (YYYY-MM-DD)',
+    example: '2024-01-31',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página para la paginación',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de registros por página',
+    example: 10,
+  })
+  @ApiOkResponse({
+    description: 'Lista de citas médicas filtradas por fecha',
+    type: [Appointment],
+  })
+  @ApiBadRequestResponse({
+    description: 'Fechas inválidas o formato incorrecto',
+  })
+  async findByDateRange(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @GetUserBranch() userBranch?: UserBranchData,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    return this.appointmentService.findByDateRange(
+      startDate,
+      endDate,
+      page,
+      limit,
       userBranch,
     );
   }

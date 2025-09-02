@@ -11,21 +11,22 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
     super(prisma, 'appointment'); // Tabla del esquema de prisma
   }
 
-  // Función para obtener todas las citas médicas CONFIRMADAS asociadas a un staff (usuario)
+  // Función para obtener citas médicas CONFIRMADAS de un profesional de la salud específico
   async getConfirmedAppointmentsByUserId(
     userId: string,
   ): Promise<AppointmentResponse[]> {
-    // 1. Primero verificamos que el usuario está asociado a un staff
+    // 1. Verificamos que el usuario está asociado a un staff
     const staff = await this.prisma.staff.findFirst({
       where: { userId, isActive: true },
       select: { id: true, name: true, lastName: true },
     });
 
     if (!staff) {
-      throw new Error('Usuario no asociado a ningún staff médico activo');
+      throw new Error('Usuario no asociado a ningún staff activo');
     }
 
-    // 2. Obtenemos todas las citas confirmadas para este staff con sus relaciones
+    // 2. Obtenemos todas las citas confirmadas para este staff
+    // Incluimos tanto las citas directamente asignadas como las que fueron reprogramadas hacia este staff
     const appointments = await this.prisma.appointment.findMany({
       where: {
         staffId: staff.id,
@@ -84,21 +85,22 @@ export class ApponitmentUserRepository extends BaseRepository<AppointmentMedical
     }));
   }
 
-  // Función para obtener todas las citas médicas COMPLETADAS asociadas a un staff (usuario)
+  // Función para obtener citas médicas COMPLETADAS de un profesional de la salud específico
   async getCompletedAppointmentsByUserId(
     userId: string,
   ): Promise<AppointmentResponse[]> {
-    // 1. Primero verificamos que el usuario está asociado a un staff
+    // 1. Verificamos que el usuario está asociado a un staff
     const staff = await this.prisma.staff.findFirst({
       where: { userId, isActive: true },
       select: { id: true, name: true, lastName: true },
     });
 
     if (!staff) {
-      throw new Error('Usuario no asociado a ningún staff médico activo');
+      throw new Error('Usuario no asociado a ningún staff activo');
     }
 
-    // 2. Obtenemos todas las citas completadas para este staff con sus relaciones
+    // 2. Obtenemos todas las citas completadas para este staff
+    // Incluimos tanto las citas directamente asignadas como las que fueron reprogramadas hacia este staff
     const appointments = await this.prisma.appointment.findMany({
       where: {
         staffId: staff.id,

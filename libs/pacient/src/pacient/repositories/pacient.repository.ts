@@ -29,6 +29,30 @@ export class PacientRepository extends BaseRepository<Patient> {
     });
   }
 
+  /**
+   * Busca pacientes por DNI parcial optimizado para búsqueda en tiempo real
+   * @param partialDni - DNI parcial (mínimo 5 dígitos)
+   * @param limit - Límite de resultados (máximo 10)
+   * @returns Array de pacientes que coinciden con el DNI parcial
+   */
+  async searchByPartialDni(
+    partialDni: string,
+    limit: number = 10,
+  ): Promise<Patient[]> {
+    return this.prisma.patient.findMany({
+      where: {
+        dni: {
+          startsWith: partialDni,
+        },
+        isActive: true, // Solo pacientes activos
+      },
+      take: limit,
+      orderBy: {
+        dni: 'asc', // Ordenar por DNI para resultados consistentes
+      },
+    });
+  }
+
   async findFirstPatients(limit: number = 10): Promise<Patient[]> {
     return this.prisma.patient.findMany({
       take: limit,

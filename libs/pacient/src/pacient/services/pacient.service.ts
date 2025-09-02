@@ -162,6 +162,50 @@ export class PacientService {
   }
 
   /**
+   * Busca pacientes por DNI parcial (mínimo 5 dígitos)
+   * Optimizado para búsqueda en tiempo real
+   * @param dni - DNI parcial del paciente (mínimo 5 dígitos)
+   * @param limit - Límite de resultados (máximo 10)
+   * @returns Array de pacientes que coinciden con el DNI parcial
+   */
+  async searchByPartialDni(
+    dni: string,
+    limit: number = 10,
+  ): Promise<Patient[]> {
+    try {
+      // Validar que el DNI tenga al menos 5 dígitos
+      if (!dni || dni.length < 5) {
+        throw new BadRequestException('DNI debe tener al menos 5 dígitos');
+      }
+
+      // Validar que el DNI contenga solo números
+      if (!/^\d+$/.test(dni)) {
+        throw new BadRequestException('DNI debe contener solo números');
+      }
+
+      // Limitar el número de resultados
+      const searchLimit = Math.min(limit, 10);
+
+      this.logger.log(
+        `Searching patients with DNI starting with: ${dni} (limit: ${searchLimit})`,
+      );
+
+      const results = await this.pacientRepository.searchByPartialDni(
+        dni,
+        searchLimit,
+      );
+
+      this.logger.log(`Found ${results.length} patients matching DNI: ${dni}`);
+      return results;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
+  /**
    * Desactiva múltiples pacientes
    * @param deletePacientDto - DTO con los IDs de los pacientes a desactivar
    * @param user - Datos del usuario que realiza la operación

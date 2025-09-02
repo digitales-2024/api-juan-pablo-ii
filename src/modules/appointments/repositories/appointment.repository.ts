@@ -8,10 +8,115 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
     super(prisma, 'appointment');
   }
 
+  /**
+   * Busca citas médicas en un rango de fechas con paginación
+   * @param startDate Fecha de inicio
+   * @param endDate Fecha de fin
+   * @param page Número de página
+   * @param limit Límite de registros por página
+   * @param userBranch Información de la sucursal del usuario
+   * @returns Objeto con citas paginadas y total de registros
+   */
   async findByDateRange(
     startDate: Date,
     endDate: Date,
-    branchFilter: any = {}, // Agregar parámetro para el filtro de sucursal
+    page: number = 1,
+    limit: number = 10,
+    userBranch?: any,
+  ): Promise<{ appointments: Appointment[]; total: number }> {
+    const skip = (page - 1) * limit;
+    
+    // Construir filtro de sucursal si existe
+    const branchFilter = userBranch?.branchId
+      ? { branchId: userBranch.branchId }
+      : {};
+
+    const whereCondition = {
+      start: {
+        gte: startDate,
+        lte: endDate,
+      },
+      isActive: true,
+      ...branchFilter,
+    };
+
+    const selectCondition = {
+      id: true,
+      eventId: true,
+      staffId: true,
+      serviceId: true,
+      branchId: true,
+      patientId: true,
+      start: true,
+      end: true,
+      status: true,
+      cancellationReason: true,
+      isActive: true,
+      rescheduledFromId: true,
+      type: true,
+      notes: true,
+      createdAt: true,
+      updatedAt: true,
+      patient: {
+        select: {
+          id: true,
+          name: true,
+          lastName: true,
+          dni: true,
+        },
+      },
+      staff: {
+        select: {
+          id: true,
+          name: true,
+          lastName: true,
+          userId: true,
+          cmp: true,
+        },
+      },
+      service: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      branch: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    };
+
+    // Ejecutar ambas consultas en paralelo
+    const [appointments, totalResult] = await Promise.all([
+      this.findMany({
+        where: whereCondition,
+        select: selectCondition,
+        skip,
+        take: limit,
+        orderBy: { start: 'desc' },
+      }),
+      this.findMany({ where: whereCondition }),
+    ]);
+
+    return {
+      appointments,
+      total: totalResult.length,
+    };
+  }
+
+  /**
+   * Busca citas médicas en un rango de fechas (sin paginación)
+   * @param startDate Fecha de inicio
+   * @param endDate Fecha de fin
+   * @param branchFilter Filtro de sucursal
+   * @returns Array de citas médicas
+   */
+  async findByDateRangeSimple(
+    startDate: Date,
+    endDate: Date,
+    branchFilter: any = {},
   ): Promise<Appointment[]> {
     return this.findMany({
       where: {
@@ -20,7 +125,7 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
           lte: endDate,
         },
         isActive: true,
-        ...branchFilter, // Añadir el filtro de sucursal si existe
+        ...branchFilter,
       },
       select: {
         id: true,
@@ -35,7 +140,6 @@ export class AppointmentRepository extends BaseRepository<Appointment> {
         cancellationReason: true,
         isActive: true,
         rescheduledFromId: true,
-        appointmentId: true,
         type: true,
         notes: true,
         createdAt: true,
