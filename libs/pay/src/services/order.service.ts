@@ -522,6 +522,46 @@ export class OrderService {
     }
   }
 
+  /**
+   * Busca órdenes por rango de fechas
+   * @param startDate - Fecha de inicio (formato YYYY-MM-DD)
+   * @param endDate - Fecha de fin (formato YYYY-MM-DD)
+   * @returns Arreglo de órdenes dentro del rango de fechas especificado
+   * @throws {BadRequestException} Si hay un error al obtener las órdenes
+   */
+  async findOrdersByDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<DetailedOrder[]> {
+    try {
+      // Convertir las fechas de string a Date, ajustando la zona horaria
+      const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
+      const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
+
+      this.logger.debug(
+        `Buscando órdenes entre ${startDateTime.toISOString()} y ${endDateTime.toISOString()}`,
+      );
+
+      return this.orderRepository.findMany({
+        where: {
+          isActive: true,
+          date: {
+            gte: startDateTime,
+            lte: endDateTime,
+          },
+        },
+        orderBy: {
+          date: 'desc',
+        },
+        include: {
+          payments: true,
+        },
+      }) as Promise<DetailedOrder[]>;
+    } catch (error) {
+      this.errorHandler.handleError(error, 'getting');
+    }
+  }
+
   async submitDraftOrder(
     id: string,
     submitDto: SubmitDraftOrderDto,

@@ -22,6 +22,7 @@ export class CreateAppointmentUseCase {
   async execute(
     createAppointmentDto: CreateAppointmentDto,
     user: UserData,
+    skipTurnValidation: boolean = false, // Nuevo parámetro opcional
   ): Promise<HttpResponse<Appointment>> {
     try {
       // Las fechas ya vienen en UTC desde el frontend
@@ -50,22 +51,26 @@ export class CreateAppointmentUseCase {
         throw new BadRequestException('La hora de inicio debe estar alineada a intervalos de 15 minutos');
       }
 
-      // 3. Buscar TURNOS del doctor que contengan el slot
-      this.logger.debug(`Buscando TURNO para staff: ${createAppointmentDto.staffId}`);
-      const validTurn = await this.eventService.findAvailableTurn(
-        createAppointmentDto.staffId,
-        start,
-        end
-      );
+      // 3. Buscar TURNOS del doctor que contengan el slot (solo si no se omite la validación)
+      if (!skipTurnValidation) {
+        this.logger.debug(`Buscando TURNO para staff: ${createAppointmentDto.staffId}`);
+        const validTurn = await this.eventService.findAvailableTurn(
+          createAppointmentDto.staffId,
+          start,
+          end,
+        );
 
-      if (!validTurn) {
-        this.logger.warn(`No se encontró TURNO disponible para el staff ${createAppointmentDto.staffId}`);
-        this.logger.warn(`Rango buscado (UTC): ${start.toISOString()} - ${end.toISOString()}`);
-        this.logger.warn(`Rango buscado (Lima): ${moment(start).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')} - ${moment(end).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
-        throw new BadRequestException('No hay turnos disponibles para este horario');
+        if (!validTurn) {
+          this.logger.warn(`No se encontró TURNO disponible para el staff ${createAppointmentDto.staffId}`);
+          this.logger.warn(`Rango buscado (UTC): ${start.toISOString()} - ${end.toISOString()}`);
+          this.logger.warn(`Rango buscado (Lima): ${moment(start).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')} - ${moment(end).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss')}`);
+          throw new BadRequestException('No hay turnos disponibles para este horario');
+        }
+
+        this.logger.debug(`TURNO encontrado: ${JSON.stringify(validTurn)}`);
+      } else {
+        this.logger.debug(`Validación de TURNO omitida - Creando cita fuera de horario normal`);
       }
-
-      this.logger.debug(`TURNO encontrado: ${JSON.stringify(validTurn)}`);
 
       // 4. Verificar solapamientos
       const overlappingAppointments = await this.appointmentRepository.findMany({

@@ -1,183 +1,577 @@
-```bash
+# 📦 Módulo Inventory - Documentación Técnica
 
-# Libreria de inventario de los productos y reportes de stocks y registro de ingresos salidas y stocks.
+## 🎯 Descripción General
 
-#flujo grama : https://miro.com/app/board/uXjVLCz5TeU=/?share_link_id=745684739583
+El módulo **Inventory** es el sistema de gestión de inventario médico que controla productos, almacenes, movimientos de stock, y todo el flujo de entrada y salida de productos médicos. Maneja categorías, tipos de productos, almacenes, y movimientos con auditoría completa.
 
+## 🏗️ Arquitectura del Módulo
 
+### **Estructura de Directorios**
 ```
-## Se usa indexacion en el nombre de tipo Gin para busquedas rapidas por nombre
-Asegurarse que el archivo de migraciòn contenga esta linea que no añade prisma por defecto
-```bash
--- CreateIndex
-CREATE EXTENSION IF NOT EXISTS pg_trgm; --Esta linea
-CREATE INDEX "Producto_name_idx" ON "Producto" USING GIN ("name" gin_trgm_ops);
+📁 inventory/
+├── 📁 src/
+│   ├── 📁 category/              # Gestión de categorías de productos
+│   ├── 📁 type-product/          # Tipos de productos (subcategorías)
+│   ├── 📁 product/               # Productos médicos
+│   ├── 📁 type-storage/          # Tipos de almacén
+│   ├── 📁 storage/               # Almacenes físicos
+│   ├── 📁 type-movement/         # Tipos de movimientos
+│   ├── 📁 movement/              # Movimientos de inventario
+│   ├── 📁 incoming/              # Entradas de productos
+│   ├── 📁 outgoing/              # Salidas de productos
+│   ├── 📁 stock/                 # Control de stock
+│   ├── 📁 compensation/          # Compensaciones de inventario
+│   ├── 📁 events/                # Eventos del módulo
+│   ├── inventory.module.ts       # Configuración del módulo
+│   └── README.md                 # Esta documentación
 ```
 
-Revisar los siguientes enlaces:
-- [Resolución del problema de la extensión pg_trgm en el algoritmo Gin](https://github.com/prisma/prisma/issues/7515)
-- [Documentación de tipos de indexación en prisma](https://www.prisma.io/docs/orm/prisma-schema/data-model/indexes)
-- [Si se usa el algoritmo Gist](https://www.prisma.io/docs/orm/prisma-schema/data-model/indexes)
-- [Video explicativo de la indexación en Prisma](https://www.youtube.com/watch?v=OzCYQzEYAXE&pp=ygURUFJJU01BIElOREVYQVRJT04%3D)
+### **Patrón Arquitectónico**
+- **Clean Architecture** con separación de responsabilidades
+- **Use Cases** para operaciones específicas
+- **Repository Pattern** para acceso a datos
+- **Event-Driven** para actualizaciones automáticas de stock
 
-# tabla
+## 🔧 Dependencias del Módulo
 
-// Tabla Categoria
-model Categoria {
-id String @id @default(uuid())
-name String // Nombre de la categoría (ej. 'Medicamentos', 'Cosméticos', 'Materiales', etc.)
-description String? // Descripción opcional que proporciona más detalles sobre la categoría
+### **Módulos Internos**
+```typescript
+imports: [
+  AuditModule,           // Auditoría de acciones
+  // Módulos específicos de inventario
+]
+```
 
-isActive Boolean @default(true) // Campo para controlar si la categoría está activa o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
-Producto Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a una categoría.
+### **Dependencias Externas**
+- `@nestjs/common` - Decoradores y utilidades
+- `@nestjs/swagger` - Documentación API
+- `@prisma/client` - Tipos de base de datos
+- `class-validator` - Validación de datos
+- `class-transformer` - Transformación de datos
+
+## 📊 Modelos de Datos
+
+### **Entidades Principales**
+
+#### **Categorías y Productos**
+```typescript
+interface Categoria {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 }
 
-// Tabla TipoProducto
-model TipoProducto {
-id String @id @default(uuid())
-name String // Nombre del tipo de producto (subcategoría), como 'Antibióticos', 'Bloqueadores solares', 'Gasas', etc.
-description String? // Descripción opcional del tipo de producto (detalles adicionales o especificaciones)
-
-isActive Boolean @default(true) // Campo para controlar si el tipo de producto está activo o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
-Producto Producto[] // Relación con la tabla Producto. Un producto puede estar asociado a un tipo de producto específico.
+interface TipoProducto {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 }
 
-// Tabla Producto
-model Producto {
-id String @id @default(uuid())
+interface Producto {
+  id: string;
+  categoriaId: string;
+  tipoProductoId: string;
+  name: string;
+  precio: number;
+  unidadMedida?: string;
+  proveedor?: string;
+  uso: ProductUse;
+  usoProducto?: string;
+  description?: string;
+  codigoProducto?: string;
+  descuento?: number;
+  observaciones?: string;
+  condicionesAlmacenamiento?: string;
+  isActive: boolean;
+  imagenUrl?: string;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
+```
 
-// Relación con Categoria y TipoProducto
-categoriaId String
-categoria Categoria @relation(fields: [categoriaId], references: [id])
-tipoProductoId String
-tipoProducto TipoProducto @relation(fields: [tipoProductoId], references: [id])
-
-// Información básica del producto
-name String // Nombre del producto (ej. 'Paracetamol', 'Protector solar', 'Gasas estériles', etc.)
-precio Float // Precio de venta del producto (sin descuentos)
-unidadMedida String? // Unidad de medida (ml, kg, caja, etc.)
-proveedor String? // Fabricante o proveedor
-uso String? // Paciente, cliente, personal, etc.
-usoProducto String? // Venta, uso interno, etc.
-description String? //
-codigoProducto String? // Código de barras o código único del producto
-descuento Float? // Descuento aplicado, si aplica
-observaciones String? // Observaciones adicionales
-condicionesAlmacenamiento String? // Condiciones de almacenamiento (ej. "refrigerar")
-isActive Boolean @default(true)
-imagenUrl String? // URL de la imagen del producto
-
-// Fechas de control
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
-
-// Relación con el inventario (Almacen)
-Storage Storage[] // Relación con Almacen (para el inventario)
-Movement Movement[]
+#### **Almacenes y Stock**
+```typescript
+interface TypeStorage {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 }
 
-model TypeStorage {
-id String @id @default(uuid())
-name String // Ejemplo: "Producto Terminado", "Materia Prima", etc.
-description String? // Descripción opcional del tipo de almacén
-branchId String? // Clave foránea a Sucursal o local
-staffId String? // Clave foránea a Personal empleado responsable del almacén
-isActive Boolean @default(true) // Campo para controlar si está activo o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
-
-Storage Storage[] // Relación con la tabla Almacen
+interface Storage {
+  id: string;
+  name: string;
+  location?: string;
+  typeStorageId: string;
+  branchId?: string;
+  staffId?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 }
 
-//tabla almacen
-model Storage {
-id String @id @default(uuid())
-productId String
-Producto Producto @relation(fields: [productId], references: [id])
-name String // Nombre del almacén
-location String? // Ubicación física del almacén
-typeStorageId String
-TypeStorage TypeStorage @relation(fields: [typeStorageId], references: [id]) // Relación con TipoAlmacen
+interface Stock {
+  id: string;
+  storageId: string;
+  productId: string;
+  stock: number;
+  price: number;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
+```
 
-stock Float @default(0) // Stock disponible en este almacén
-
-Incoming Incoming[] // Relación con Ingreso
-Outgoing Outgoing[] // Relación con Salida
-isActive Boolean @default(true) // Campo para controlar si está activo o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
+#### **Movimientos**
+```typescript
+interface MovementType {
+  id: string;
+  orderId?: string;
+  referenceId?: string;
+  name?: string;
+  description?: string;
+  state: boolean;
+  isIncoming?: boolean;
+  tipoExterno?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 }
 
-//tabla tipo movimiento
-model MovementType {
-id String @id @default(uuid())
-orderId String?
-Order Order? @relation(fields: [orderId], references: [id])
-referenceId String? // Referencia a un registro etc
-name String? // venta, compra, devolución, etc.
-description String? // Descripción opcional del tipo de movimiento
-state Boolean @default(false) // Estado que controla si el flujo se concreta o no (false = no afecta al stock)
-isIncoming Boolean? // Booleano para identificar si es un "Ingreso" o "Salida"
-tipoExterno String? // Puede ser "Venta", "Compra", "Devolución", etc.
-isActive Boolean @default(true) // Campo para controlar si está activo o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
-Movement Movement[]
+interface Movement {
+  id: string;
+  movementTypeId: string;
+  storageId: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  total: number;
+  reference?: string;
+  notes?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 }
 
-// tabla movimientos
-model Movement {
-id String @id @default(uuid())
-movementTypeId String?
-MovementType MovementType? @relation(fields: [movementTypeId], references: [id])
-incomingId String?
-Incoming Incoming? @relation(fields: [incomingId], references: [id])
-outgoingId String?
-Outgoing Outgoing? @relation(fields: [outgoingId], references: [id])
-productId String
-Producto Producto @relation(fields: [productId], references: [id])
-quantity Float // Cantidad de producto que se movió
-date DateTime @default(now()) @db.Timestamptz(6)
-state Boolean @default(false) // Estado para registrar si el movimiento ha sido procesado o no
-isActive Boolean @default(true) // Campo para controlar si está activo o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
+interface Incoming {
+  id: string;
+  storageId: string;
+  supplierId?: string;
+  orderId?: string;
+  reference?: string;
+  notes?: string;
+  total: number;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 }
 
-//tabla ingresos
-model Incoming {
-id String @id @default(uuid())
-name String?
-description String?
-storageId String
-Storage Storage @relation(fields: [storageId], references: [id])
-date DateTime @default(now()) @db.Timestamptz(6)
-state Boolean @default(false) // Estado que indica si el ingreso es concreto (true) o está en proceso (false)
-referenceId String? // Referencia a un registro etc
-isActive Boolean @default(true) // Campo para controlar si está activo o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
+interface Outgoing {
+  id: string;
+  storageId: string;
+  customerId?: string;
+  orderId?: string;
+  reference?: string;
+  notes?: string;
+  total: number;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
+```
 
-Movement Movement[] // Relación con Movimiento
+### **Enums Utilizados**
+```typescript
+enum ProductUse {
+  VENTA      // Para venta directa
+  INTERNO    // Para uso interno
 }
 
-//tabla salidas
-model Outgoing {
-id String @id @default(uuid())
-name String?
-description String?
-storageId String
-Storage Storage @relation(fields: [storageId], references: [id])
-date DateTime @default(now()) @db.Timestamptz(6)
-state Boolean @default(false) // Estado que indica si la salida es concreta (true) o está en proceso (false)
-referenceId String? // Referencia a un registro etc
-isActive Boolean @default(true) // Campo para controlar si está activo o no
-createdAt DateTime @default(now()) @db.Timestamptz(6)
-updatedAt DateTime @updatedAt
-
-Movement Movement[] // Relación con Movimiento
+enum MovementState {
+  PENDING    // Pendiente de procesar
+  COMPLETED  // Completado
+  CANCELLED  // Cancelado
 }
+```
+
+## 🚀 Casos de Uso (Use Cases)
+
+### **1. Gestión de Productos**
+- **CreateProductUseCase**: Crear nuevo producto
+- **UpdateProductUseCase**: Actualizar producto existente
+- **DeleteProductsUseCase**: Eliminar productos (soft delete)
+- **ReactivateProductUseCase**: Reactivar productos eliminados
+
+### **2. Gestión de Almacenes**
+- **CreateStorageUseCase**: Crear nuevo almacén
+- **UpdateStorageUseCase**: Actualizar almacén
+- **DeleteStorageUseCase**: Eliminar almacén
+- **ReactivateStorageUseCase**: Reactivar almacén
+
+### **3. Gestión de Movimientos**
+- **CreateMovementUseCase**: Registrar movimiento de inventario
+- **UpdateMovementUseCase**: Actualizar movimiento
+- **DeleteMovementUseCase**: Eliminar movimiento
+- **ReactivateMovementUseCase**: Reactivar movimiento
+
+### **4. Gestión de Stock**
+- **CreateStockUseCase**: Crear registro de stock
+- **UpdateStockUseCase**: Actualizar stock
+- **CompensationService**: Compensaciones de inventario
+
+### **5. Entradas y Salidas**
+- **CreateIncomingUseCase**: Registrar entrada de productos
+- **UpdateIncomingUseCase**: Actualizar entrada
+- **CreateOutgoingUseCase**: Registrar salida de productos
+- **UpdateOutgoingUseCase**: Actualizar salida
+
+## 📡 Endpoints API
+
+### **Categorías**
+```typescript
+// GET /api/v1/inventory/categories
+// POST /api/v1/inventory/categories
+// PUT /api/v1/inventory/categories/:id
+// DELETE /api/v1/inventory/categories/:id
+// POST /api/v1/inventory/categories/:id/reactivate
+```
+
+### **Tipos de Producto**
+```typescript
+// GET /api/v1/inventory/type-products
+// POST /api/v1/inventory/type-products
+// PUT /api/v1/inventory/type-products/:id
+// DELETE /api/v1/inventory/type-products/:id
+// POST /api/v1/inventory/type-products/:id/reactivate
+```
+
+### **Productos**
+```typescript
+// GET /api/v1/inventory/products
+// POST /api/v1/inventory/products
+// PUT /api/v1/inventory/products/:id
+// DELETE /api/v1/inventory/products/:id
+// POST /api/v1/inventory/products/:id/reactivate
+// GET /api/v1/inventory/products/search?q=paracetamol
+```
+
+### **Almacenes**
+```typescript
+// GET /api/v1/inventory/storages
+// POST /api/v1/inventory/storages
+// PUT /api/v1/inventory/storages/:id
+// DELETE /api/v1/inventory/storages/:id
+// POST /api/v1/inventory/storages/:id/reactivate
+```
+
+### **Movimientos**
+```typescript
+// GET /api/v1/inventory/movements
+// POST /api/v1/inventory/movements
+// PUT /api/v1/inventory/movements/:id
+// DELETE /api/v1/inventory/movements/:id
+// POST /api/v1/inventory/movements/:id/reactivate
+```
+
+### **Stock**
+```typescript
+// GET /api/v1/inventory/stock
+// GET /api/v1/inventory/stock/:storageId
+// GET /api/v1/inventory/stock/product/:productId
+// PUT /api/v1/inventory/stock/:id
+```
+
+### **Entradas**
+```typescript
+// GET /api/v1/inventory/incoming
+// POST /api/v1/inventory/incoming
+// PUT /api/v1/inventory/incoming/:id
+// DELETE /api/v1/inventory/incoming/:id
+// POST /api/v1/inventory/incoming/:id/reactivate
+```
+
+### **Salidas**
+```typescript
+// GET /api/v1/inventory/outgoing
+// POST /api/v1/inventory/outgoing
+// PUT /api/v1/inventory/outgoing/:id
+// DELETE /api/v1/inventory/outgoing/:id
+// POST /api/v1/inventory/outgoing/:id/reactivate
+```
+
+## 🔒 Seguridad y Autorización
+
+### **Decoradores de Autenticación**
+```typescript
+@Auth()                    // Requiere autenticación
+@GetUser() user: UserData  // Obtiene datos del usuario
+@GetUserBranch() branch: UserBranchData  // Obtiene sucursal del usuario
+```
+
+### **Validaciones de Permisos**
+- Solo personal autorizado puede gestionar inventario
+- Validación por sucursal del usuario
+- Auditoría de todas las operaciones críticas
+
+## 🔄 Eventos y Notificaciones
+
+### **Eventos del Sistema**
+```typescript
+// Al crear movimiento
+MovementCreatedEvent {
+  movementId: string;
+  productId: string;
+  storageId: string;
+  quantity: number;
+  type: 'INCOMING' | 'OUTGOING';
+}
+
+// Al actualizar stock
+StockUpdatedEvent {
+  productId: string;
+  storageId: string;
+  oldStock: number;
+  newStock: number;
+  movementId: string;
+}
+
+// Alerta de stock bajo
+LowStockAlertEvent {
+  productId: string;
+  storageId: string;
+  currentStock: number;
+  minimumStock: number;
+}
+```
+
+### **Suscripciones a Eventos**
+```typescript
+@EventPattern('movement.created')
+@EventPattern('stock.updated')
+@EventPattern('low.stock.alert')
+```
+
+## 📊 Validaciones de Negocio
+
+### **Reglas de Inventario**
+1. **Stock Negativo**: No permitir stock negativo sin compensación
+2. **Movimientos**: Todo movimiento debe tener tipo y referencia
+3. **Precios**: Precios deben ser positivos
+4. **Cantidades**: Cantidades deben ser positivas
+5. **Almacenes**: Productos solo pueden estar en almacenes activos
+
+### **Validaciones de Datos**
+```typescript
+// Ejemplo de validación en DTO
+@IsString()
+@IsNotEmpty()
+name: string;
+
+@IsNumber()
+@IsPositive()
+precio: number;
+
+@IsEnum(ProductUse)
+uso: ProductUse;
+
+@IsOptional()
+@IsString()
+description?: string;
+```
+
+## 🗄️ Acceso a Datos
+
+### **Repository Pattern**
+```typescript
+class ProductRepository {
+  async create(data: CreateProductData): Promise<Producto>
+  async findById(id: string): Promise<Producto | null>
+  async findByName(name: string): Promise<Producto[]>
+  async update(id: string, data: UpdateProductData): Promise<Producto>
+  async delete(id: string): Promise<void>
+  async findPaginated(filters: ProductFilters): Promise<PaginatedResult<Producto>>
+}
+
+class StockRepository {
+  async findByStorage(storageId: string): Promise<Stock[]>
+  async findByProduct(productId: string): Promise<Stock[]>
+  async updateStock(storageId: string, productId: string, quantity: number): Promise<Stock>
+  async getLowStockProducts(threshold: number): Promise<Stock[]>
+}
+
+class MovementRepository {
+  async create(data: CreateMovementData): Promise<Movement>
+  async findByStorage(storageId: string): Promise<Movement[]>
+  async findByProduct(productId: string): Promise<Movement[]>
+  async findByDateRange(startDate: Date, endDate: Date): Promise<Movement[]>
+}
+```
+
+### **Queries Principales**
+- Búsqueda de productos por nombre/código
+- Consulta de stock por almacén
+- Movimientos por rango de fechas
+- Productos con stock bajo
+- Historial de movimientos por producto
+
+## 🧪 Testing
+
+### **Tipos de Tests Requeridos**
+1. **Unit Tests**: Casos de uso individuales
+2. **Integration Tests**: Flujo completo de movimientos
+3. **E2E Tests**: Endpoints completos
+4. **Repository Tests**: Acceso a datos
+
+### **Casos de Prueba Críticos**
+- Creación de producto con categoría válida
+- Movimiento de entrada con actualización de stock
+- Movimiento de salida con stock suficiente
+- Movimiento de salida con stock insuficiente
+- Compensación de inventario
+- Búsqueda de productos con filtros
+
+## 🔧 Configuración
+
+### **Variables de Entorno**
+```env
+# Configuración de inventario
+INVENTORY_LOW_STOCK_THRESHOLD=10
+INVENTORY_MAX_STOCK_ALERT=1000
+INVENTORY_AUTO_COMPENSATION=true
+
+# Configuración de búsqueda
+INVENTORY_SEARCH_MIN_LENGTH=3
+INVENTORY_SEARCH_MAX_RESULTS=50
+```
+
+### **Configuración del Módulo**
+```typescript
+@Module({
+  imports: [AuditModule],
+  controllers: [
+    CategoryController,
+    TypeProductController,
+    ProductController,
+    TypeStorageController,
+    StorageController,
+    TypeMovementController,
+    MovementController,
+    IncomingController,
+    OutgoingController,
+    StockController,
+  ],
+  providers: [
+    // Services
+    CategoryService,
+    TypeProductService,
+    ProductService,
+    TypeStorageService,
+    StorageService,
+    TypeMovementService,
+    MovementService,
+    IncomingService,
+    OutgoingService,
+    StockService,
+    CompensationService,
+    
+    // Repositories
+    CategoryRepository,
+    TypeProductRepository,
+    ProductRepository,
+    TypeStorageRepository,
+    StorageRepository,
+    TypeMovementRepository,
+    MovementRepository,
+    IncomingRepository,
+    OutgoingRepository,
+    StockRepository,
+    
+    // Use Cases
+    // ... todos los use cases
+    
+    // Event Subscribers
+    InventoryEventSubscriber,
+  ],
+  exports: [
+    ProductService,
+    StockService,
+    MovementService,
+  ],
+})
+```
+
+## 📈 Métricas y Monitoreo
+
+### **Métricas Clave**
+- Rotación de inventario por producto
+- Productos con stock bajo
+- Movimientos por tipo y período
+- Valor total del inventario
+- Productos más vendidos
+
+### **Logs Importantes**
+- Creación de productos
+- Movimientos de inventario
+- Alertas de stock bajo
+- Compensaciones de inventario
+- Errores de validación
+
+## 🚨 Manejo de Errores
+
+### **Errores Específicos**
+```typescript
+class InsufficientStockError extends Error {
+  constructor(productId: string, required: number, available: number) {
+    super(`Stock insuficiente para producto ${productId}. Requerido: ${required}, Disponible: ${available}`);
+  }
+}
+
+class InvalidMovementError extends Error {
+  constructor(message: string) {
+    super(`Movimiento inválido: ${message}`);
+  }
+}
+
+class ProductNotFoundError extends Error {
+  constructor(productId: string) {
+    super(`Producto no encontrado: ${productId}`);
+  }
+}
+```
+
+### **Códigos de Error**
+- `400`: Datos de entrada inválidos
+- `404`: Producto/almacén no encontrado
+- `409`: Stock insuficiente
+- `422`: Movimiento inválido
+- `500`: Error interno del servidor
+
+## 🔄 Compensaciones de Inventario
+
+### **Tipos de Compensación**
+1. **Stock Negativo**: Cuando se vende más de lo disponible
+2. **Diferencias de Inventario**: Ajustes por conteo físico
+3. **Mermas**: Pérdidas por caducidad o daños
+4. **Transferencias**: Movimientos entre almacenes
+
+### **Proceso de Compensación**
+```typescript
+class CompensationService {
+  async compensateNegativeStock(movementId: string): Promise<void>
+  async adjustInventory(productId: string, storageId: string, adjustment: number): Promise<void>
+  async processTransfer(fromStorageId: string, toStorageId: string, productId: string, quantity: number): Promise<void>
+}
+```
+
+---
+
+*Documentación del módulo Inventory - Sistema API Juan Pablo II*
+
