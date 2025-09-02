@@ -328,7 +328,7 @@ export class CreateMedicalPrescriptionUseCase {
         await this.appointmentService.getServicePriceByAppointmentId(
           appointment.id,
         );
-      if (!servicePrice) {
+      if (servicePrice === null || servicePrice === undefined) {
         throw new BadRequestException(
           `No se pudo obtener el precio del servicio con ID ${appointment.serviceId}`,
         );

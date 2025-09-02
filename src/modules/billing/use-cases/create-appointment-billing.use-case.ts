@@ -96,7 +96,7 @@ export class CreateAppointmentOrderUseCase {
         await this.appointmentService.getServicePriceByAppointmentId(
           appointmentId,
         );
-      if (!servicePrice) {
+      if (servicePrice === null || servicePrice === undefined) {
         throw new BadRequestException(
           `No se pudo obtener el precio del servicio con ID ${appointment.serviceId}`,
         );
